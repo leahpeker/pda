@@ -187,9 +187,17 @@ class _DayEventCard extends StatelessWidget {
     final bgColor = colors.$1;
     final fgColor = colors.$2;
     final timeFmt = DateFormat('h:mm a');
+    final dateFmt = DateFormat('MMM d');
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime.toLocal();
-    final timeRange = '${timeFmt.format(start)} \u2013 ${timeFmt.format(end)}';
+    final isSameDay =
+        start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day;
+    final timeRange =
+        isSameDay
+            ? '${timeFmt.format(start)} \u2013 ${timeFmt.format(end)}'
+            : '${dateFmt.format(start)} ${timeFmt.format(start)} \u2013 ${dateFmt.format(end)} ${timeFmt.format(end)}';
 
     return GestureDetector(
       onTap: () => showEventDetail(context, event),
