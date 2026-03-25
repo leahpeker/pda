@@ -6,6 +6,7 @@ from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
 from pydantic import BaseModel
+
 from users.models import User
 from users.permissions import PermissionKey
 from users.roles import PROTECTED_ROLE_NAMES, Role

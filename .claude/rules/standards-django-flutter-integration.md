@@ -231,15 +231,16 @@ Relative URLs work in production (same origin) but break in dev (different ports
 ## Makefile CI Pipeline
 
 ```makefile
-ci: lint check test frontend-lint frontend-test
+ci: lint check test typecheck frontend-lint frontend-test
 ```
 
 Both stacks must pass before any commit:
-1. `lint` — autoflake + isort + black (Python)
+1. `lint` — ruff (lint + format, Python)
 2. `check` — Django system checks
 3. `test` — pytest
-4. `frontend-lint` — dart format check + dart analyze
-5. `frontend-test` — flutter test
+4. `typecheck` — ty (type checking, Python)
+5. `frontend-lint` — dart format check + dart analyze
+6. `frontend-test` — flutter test
 
 Never run `flutter test` directly — always via `make ci` or `make frontend-test`.
 

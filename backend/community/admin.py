@@ -1,5 +1,6 @@
-from community.models import Event, JoinRequest
 from django.contrib import admin
+
+from community.models import Event, JoinRequest
 
 
 @admin.register(JoinRequest)

@@ -1,6 +1,6 @@
 # Python Linter
 
-Run the project's linting pipeline: autoflake (remove unused imports) → isort (sort imports) → black (format).
+Run the project's linting and formatting pipeline: ruff check (lint + auto-fix) → ruff format.
 
 ## Usage
 
@@ -14,27 +14,26 @@ Run the project's linting pipeline: autoflake (remove unused imports) → isort 
 make lint
 ```
 
-This runs `autoflake --in-place --remove-all-unused-imports --remove-unused-variables --recursive`, then `isort`, then `black` on `listings/`, `config/`, and `tests/` inside `backend/`.
+This runs `ruff check --fix` (unused imports, import sorting, pyupgrade) then `ruff format` on the entire `backend/` directory.
 
 ## Individual Tools
 
 ```bash
-# Format with black
-cd backend && uv run python -m black listings/ config/ tests/
+# Lint + auto-fix
+cd backend && uv run ruff check --fix .
 
-# Sort imports
-cd backend && uv run python -m isort listings/ config/ tests/
+# Format only
+cd backend && uv run ruff format .
 
-# Remove unused imports
-cd backend && uv run python -m autoflake --in-place --remove-all-unused-imports --remove-unused-variables --recursive listings/ config/ tests/
+# Check without fixing (CI mode)
+cd backend && uv run ruff check . && uv run ruff format --check .
 
-# Static analysis (not part of make lint, but available)
-cd backend && uv run python -m flake8 listings/ config/ tests/
-cd backend && uv run python -m mypy listings/ config/
+# Type check
+cd backend && uv run ty check .
 ```
 
 ## Full CI Check
 
 ```bash
-make ci    # lint → check → test → frontend-test
+make ci    # lint → check → test → typecheck → frontend-lint → frontend-test
 ```

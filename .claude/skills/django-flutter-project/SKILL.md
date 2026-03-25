@@ -108,9 +108,8 @@ dependencies = [
 dev = [
     "pytest>=8.4",
     "pytest-django>=4.11",
-    "autoflake",
-    "black",
-    "isort",
+    "ruff",
+    "ty",
 ]
 
 [tool.pytest.ini_options]
@@ -125,18 +124,27 @@ filterwarnings = [
     "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning:ninja.signature.utils",
 ]
 
-[tool.black]
-line-length = 100
+[tool.ty.rules]
+# Django uses metaprogramming for Model.objects, Model.DoesNotExist, etc.
+unresolved-attribute = "warn"
+invalid-argument-type = "warn"
 
-[tool.isort]
-profile = "black"
-line_length = 100
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["F", "I", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
 ```
 
 ### Makefile
 
 ```makefile
-.PHONY: install run test lint check migrate createsuperuser seed db-start db-stop ci dev \
+.PHONY: install run test lint format typecheck lint-file typecheck-file check migrate \
+        createsuperuser seed db-start db-stop ci dev \
         frontend-install frontend-run frontend-build frontend-codegen frontend-lint \
         frontend-format frontend-test
 
@@ -151,16 +159,20 @@ run:
 test:
 	cd backend && uv run python -m pytest tests/ -v
 
-clean:
-	cd backend && uv run autoflake --remove-all-unused-imports --remove-unused-variables -r --in-place .
+lint:
+	cd backend && uv run ruff check --fix . && uv run ruff format .
 
 format:
-	cd backend && uv run black .
+	cd backend && uv run ruff format .
 
-sort-imports:
-	cd backend && uv run isort .
+typecheck:
+	cd backend && uv run ty check .
 
-lint: clean sort-imports format
+lint-file:
+	@uv run ruff check --fix "$(FILE)" && uv run ruff format "$(FILE)"
+
+typecheck-file:
+	@uv run ty check "$(FILE)"
 
 check:
 	cd backend && uv run python manage.py check
@@ -201,7 +213,7 @@ frontend-test:
 	cd frontend && flutter test
 
 # CI (run before every commit)
-ci: lint check test frontend-lint frontend-test
+ci: lint check test typecheck frontend-lint frontend-test
 
 # Dev (concurrent backend + frontend)
 dev:

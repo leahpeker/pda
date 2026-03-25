@@ -1,8 +1,6 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from community.models import Event, JoinRequest, JoinRequestStatus
 from django.conf import settings
 from django.core.mail import send_mail
 from ninja import Router
@@ -10,6 +8,8 @@ from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
 from pydantic import BaseModel
 from users.permissions import PermissionKey
+
+from community.models import Event, JoinRequest, JoinRequestStatus
 
 router = Router()
 
@@ -55,11 +55,11 @@ class EventIn(BaseModel):
 
 
 class EventPatchIn(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    start_datetime: Optional[datetime] = None
-    end_datetime: Optional[datetime] = None
-    location: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
+    start_datetime: datetime | None = None
+    end_datetime: datetime | None = None
+    location: str | None = None
 
 
 @router.post("/join-request/", response={201: JoinRequestOut, 400: ErrorOut}, auth=None)

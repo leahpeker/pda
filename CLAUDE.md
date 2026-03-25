@@ -19,11 +19,12 @@ make db-stop          # Stop local PostgreSQL
 make install          # Install dependencies (uv sync + flutter pub get)
 make run              # Run Django dev server on localhost:8000
 make test             # Run pytest
-make lint             # Run autoflake + isort + black
+make lint             # Run ruff (lint + format)
+make typecheck        # Run ty type checker
 make migrate          # makemigrations + migrate
 make createsuperuser  # Create Django admin user
 make check            # Django system checks
-make ci               # Full pre-commit check (lint + check + test + frontend-lint + frontend-test)
+make ci               # Full pre-commit check (lint + check + test + typecheck + frontend-lint + frontend-test)
 make dev              # Run Django + Flutter concurrently
 ```
 

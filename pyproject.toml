@@ -20,9 +20,8 @@ dependencies = [
 dev = [
     "pytest>=8.4",
     "pytest-django>=4.11",
-    "autoflake",
-    "black",
-    "isort",
+    "ruff",
+    "ty",
 ]
 
 [tool.pytest.ini_options]
@@ -40,9 +39,18 @@ filterwarnings = [
     "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning:ninja.signature.utils",
 ]
 
-[tool.black]
-line-length = 100
+[tool.ty.rules]
+# Django uses metaprogramming for Model.objects, Model.DoesNotExist, etc.
+# ty (beta) can't resolve these yet — ignore until ty ships Django support.
+unresolved-attribute = "warn"
+invalid-argument-type = "warn"
 
-[tool.isort]
-profile = "black"
-line_length = 100
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["F", "I", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
