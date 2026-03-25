@@ -38,6 +38,12 @@ class Event(models.Model):
     end_datetime = models.DateTimeField()
     location = models.CharField(max_length=300, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        'users.User',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='created_events',
+    )
 
     class Meta:
         ordering = ["start_datetime"]

@@ -22,47 +22,15 @@ class DayView extends StatefulWidget {
 
 class _DayViewState extends State<DayView> {
   late DateTime _selectedDay;
-  late ScrollController _scrollController;
-
-  static const double _hourHeight = 60.0;
-  static const double _totalHeight = _hourHeight * 24;
-  static const double _timeColumnWidth = 56.0;
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day);
-    _scrollController = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrentHour());
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  DateTime _today() {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day);
-  }
-
-  bool _isToday() {
-    final today = _today();
-    return _selectedDay.year == today.year &&
-        _selectedDay.month == today.month &&
-        _selectedDay.day == today.day;
-  }
-
-  void _scrollToCurrentHour() {
-    if (!_scrollController.hasClients) return;
-    final now = DateTime.now();
-    final targetOffset = (now.hour - 1) * _hourHeight;
-    final clamped = targetOffset.clamp(
-      0.0,
-      _scrollController.position.maxScrollExtent,
+    _selectedDay = DateTime(
+      widget.selectedDate.year,
+      widget.selectedDate.month,
+      widget.selectedDate.day,
     );
-    _scrollController.jumpTo(clamped);
   }
 
   void _goToPrevDay() {
@@ -91,28 +59,20 @@ class _DayViewState extends State<DayView> {
   }
 
   List<Event> _eventsForSelectedDay() {
-    return widget.events.where((e) {
+    final results = widget.events.where((e) {
       final start = e.startDatetime.toLocal();
       return start.year == _selectedDay.year &&
           start.month == _selectedDay.month &&
           start.day == _selectedDay.day;
     }).toList();
-  }
-
-  double _topForTime(DateTime time) {
-    final local = time.toLocal();
-    return (local.hour + local.minute / 60.0) * _hourHeight;
-  }
-
-  double _heightForEvent(Event event) {
-    final start = event.startDatetime.toLocal();
-    final end = event.endDatetime.toLocal();
-    final durationMinutes = end.difference(start).inMinutes.toDouble();
-    return durationMinutes.clamp(30.0, double.infinity);
+    results.sort((a, b) => a.startDatetime.compareTo(b.startDatetime));
+    return results;
   }
 
   @override
   Widget build(BuildContext context) {
+    final events = _eventsForSelectedDay();
+
     return Column(
       children: [
         _DayHeader(
@@ -121,70 +81,25 @@ class _DayViewState extends State<DayView> {
           onNext: _goToNextDay,
           onTap: _openDatePicker,
         ),
+        const Divider(height: 1),
         Expanded(
-          child: Stack(
-            children: [
-              SingleChildScrollView(
-                controller: _scrollController,
-                child: SizedBox(
-                  height: _totalHeight,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _TimeLabelsColumn(
-                        hourHeight: _hourHeight,
-                        columnWidth: _timeColumnWidth,
-                      ),
-                      Expanded(
-                        child: _EventArea(
-                          events: _eventsForSelectedDay(),
-                          totalHeight: _totalHeight,
-                          hourHeight: _hourHeight,
-                          showCurrentTimeLine: _isToday(),
-                          topForTime: _topForTime,
-                          heightForEvent: _heightForEvent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (_eventsForSelectedDay().isEmpty)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.calendar_today_outlined,
-                            size: 48,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.3),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No events today',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.4),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          child: _buildBody(context, events),
         ),
       ],
+    );
+  }
+
+  Widget _buildBody(BuildContext context, List<Event> events) {
+    if (events.isEmpty) {
+      return _EmptyDayState();
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        return _DayEventCard(event: events[index]);
+      },
     );
   }
 }
@@ -230,172 +145,64 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-class _TimeLabelsColumn extends StatelessWidget {
-  final double hourHeight;
-  final double columnWidth;
-
-  const _TimeLabelsColumn({
-    required this.hourHeight,
-    required this.columnWidth,
-  });
-
-  String _labelForHour(int hour) {
-    if (hour == 0) return '12am';
-    if (hour < 12) return '${hour}am';
-    if (hour == 12) return '12pm';
-    return '${hour - 12}pm';
-  }
-
+class _EmptyDayState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: columnWidth,
-      child: Stack(
-        children: List.generate(24, (hour) {
-          return Positioned(
-            top: hour * hourHeight - 8,
-            left: 0,
-            right: 0,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Text(
-                  _labelForHour(hour),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _EventArea extends StatelessWidget {
-  final List<Event> events;
-  final double totalHeight;
-  final double hourHeight;
-  final bool showCurrentTimeLine;
-  final double Function(DateTime) topForTime;
-  final double Function(Event) heightForEvent;
-
-  const _EventArea({
-    required this.events,
-    required this.totalHeight,
-    required this.hourHeight,
-    required this.showCurrentTimeLine,
-    required this.topForTime,
-    required this.heightForEvent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        _HourDividers(totalHeight: totalHeight, hourHeight: hourHeight),
-        ..._buildEventBlocks(context),
-        if (showCurrentTimeLine) _CurrentTimeLine(topForTime: topForTime),
-      ],
-    );
-  }
-
-  List<Widget> _buildEventBlocks(BuildContext context) {
-    return events.map((event) {
-      final top = topForTime(event.startDatetime);
-      final height = heightForEvent(event);
-      return Positioned(
-        top: top,
-        left: 2,
-        right: 4,
-        height: height,
-        child: _EventBlock(event: event),
-      );
-    }).toList();
-  }
-}
-
-class _HourDividers extends StatelessWidget {
-  final double totalHeight;
-  final double hourHeight;
-
-  const _HourDividers({required this.totalHeight, required this.hourHeight});
-
-  @override
-  Widget build(BuildContext context) {
-    final dividerColor = Theme.of(
-      context,
-    ).colorScheme.outlineVariant.withValues(alpha: 0.5);
-    return Stack(
-      children: List.generate(24, (hour) {
-        return Positioned(
-          top: hour * hourHeight,
-          left: 0,
-          right: 0,
-          child: Divider(height: 1, color: dividerColor),
-        );
-      }),
-    );
-  }
-}
-
-class _CurrentTimeLine extends StatelessWidget {
-  final double Function(DateTime) topForTime;
-
-  const _CurrentTimeLine({required this.topForTime});
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final top = topForTime(now);
-    return Positioned(
-      top: top,
-      left: 0,
-      right: 0,
-      child: Row(
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
+          Icon(
+            Icons.calendar_today_outlined,
+            size: 48,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No events today',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ),
-          Expanded(child: Container(height: 1.5, color: Colors.red)),
         ],
       ),
     );
   }
 }
 
-class _EventBlock extends StatelessWidget {
+class _DayEventCard extends StatelessWidget {
   final Event event;
 
-  const _EventBlock({required this.event});
+  const _DayEventCard({required this.event});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colors = eventColors(event.id);
     final bgColor = colors.$1;
     final fgColor = colors.$2;
+    final timeFmt = DateFormat('h:mm a');
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime.toLocal();
-    final timeFmt = DateFormat('h:mm a');
-    final timeLabel = '${timeFmt.format(start)} – ${timeFmt.format(end)}';
+    final timeRange = '${timeFmt.format(start)} \u2013 ${timeFmt.format(end)}';
 
     return GestureDetector(
       onTap: () => showEventDetail(context, event),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 1),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withValues(alpha: 0.08),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -403,25 +210,53 @@ class _EventBlock extends StatelessWidget {
               event.title,
               style: TextStyle(
                 color: fgColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 4),
             Text(
-              timeLabel,
+              timeRange,
               style: TextStyle(
-                color: fgColor.withValues(alpha: 0.8),
-                fontSize: 11,
+                color: fgColor.withValues(alpha: 0.85),
+                fontSize: 13,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
+            if (event.location.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Icon(Icons.place_outlined, size: 13, color: fgColor.withValues(alpha: 0.7)),
+                  const SizedBox(width: 3),
+                  Expanded(
+                    child: Text(
+                      event.location,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: fgColor.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (event.description.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                event.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: fgColor.withValues(alpha: 0.75),
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 }
-

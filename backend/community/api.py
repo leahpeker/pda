@@ -40,6 +40,7 @@ class EventOut(BaseModel):
     start_datetime: datetime
     end_datetime: datetime
     location: str
+    created_by_id: str | None = None
 
 
 class ErrorOut(BaseModel):
@@ -155,6 +156,7 @@ def list_events(request):
             start_datetime=e.start_datetime,
             end_datetime=e.end_datetime,
             location=e.location,
+            created_by_id=str(e.created_by_id) if e.created_by_id else None,
         )
         for e in events
     ]
@@ -162,15 +164,13 @@ def list_events(request):
 
 @router.post("/events/", response={201: EventOut, 403: ErrorOut}, auth=JWTAuth())
 def create_event(request, payload: EventIn):
-    if not request.auth.has_permission(PermissionKey.MANAGE_EVENTS):
-        return 403, ErrorOut(detail="Permission denied.")
-
     event = Event.objects.create(
         title=payload.title,
         description=payload.description,
         start_datetime=payload.start_datetime,
         end_datetime=payload.end_datetime,
         location=payload.location,
+        created_by=request.auth,
     )
     return 201, EventOut(
         id=str(event.id),
@@ -179,18 +179,21 @@ def create_event(request, payload: EventIn):
         start_datetime=event.start_datetime,
         end_datetime=event.end_datetime,
         location=event.location,
+        created_by_id=str(event.created_by_id) if event.created_by_id else None,
     )
 
 
 @router.patch("/events/{event_id}/", response={200: EventOut, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth())
 def update_event(request, event_id: UUID, payload: EventPatchIn):
-    if not request.auth.has_permission(PermissionKey.MANAGE_EVENTS):
-        return 403, ErrorOut(detail="Permission denied.")
-
     try:
         event = Event.objects.get(id=event_id)
     except Event.DoesNotExist:
         return 404, ErrorOut(detail="Event not found.")
+
+    is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
+    is_creator = event.created_by_id == request.auth.pk
+    if not is_manager and not is_creator:
+        return 403, ErrorOut(detail="Permission denied.")
 
     if payload.title is not None:
         event.title = payload.title
@@ -211,18 +214,21 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         start_datetime=event.start_datetime,
         end_datetime=event.end_datetime,
         location=event.location,
+        created_by_id=str(event.created_by_id) if event.created_by_id else None,
     )
 
 
 @router.delete("/events/{event_id}/", response={204: None, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth())
 def delete_event(request, event_id: UUID):
-    if not request.auth.has_permission(PermissionKey.MANAGE_EVENTS):
-        return 403, ErrorOut(detail="Permission denied.")
-
     try:
         event = Event.objects.get(id=event_id)
     except Event.DoesNotExist:
         return 404, ErrorOut(detail="Event not found.")
+
+    is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
+    is_creator = event.created_by_id == request.auth.pk
+    if not is_manager and not is_creator:
+        return 403, ErrorOut(detail="Permission denied.")
 
     event.delete()
     return 204, None
