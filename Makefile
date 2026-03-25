@@ -1,4 +1,5 @@
-.PHONY: help install run test lint check migrate createsuperuser seed db-start db-stop ci dev \
+.PHONY: help install run test lint format typecheck lint-file typecheck-file check migrate \
+        createsuperuser seed db-start db-stop ci dev \
         frontend-install frontend-run frontend-build frontend-codegen frontend-lint \
         frontend-format frontend-test frontend-fix
 
@@ -7,7 +8,8 @@ help:
 	@echo "  make install          Install dependencies (uv sync + flutter pub get)"
 	@echo "  make run              Run Django dev server (localhost:8000)"
 	@echo "  make test             Run pytest suite"
-	@echo "  make lint             Run autoflake + isort + black"
+	@echo "  make lint             Run ruff (lint + format)"
+	@echo "  make typecheck        Run ty type checker"
 	@echo "  make check            Run Django system checks"
 	@echo "  make migrate          makemigrations + migrate"
 	@echo "  make createsuperuser  Create Django admin user"
@@ -26,7 +28,7 @@ help:
 	@echo ""
 	@echo "Workflow commands:"
 	@echo "  make dev              Run Django + Flutter concurrently"
-	@echo "  make ci               Run all pre-commit checks (lint, check, test, frontend-lint, frontend-test)"
+	@echo "  make ci               Run all pre-commit checks (lint, check, test, typecheck, frontend-lint, frontend-test)"
 
 # Backend
 install:
@@ -39,16 +41,20 @@ run:
 test:
 	cd backend && uv run python -m pytest tests/ -v
 
-clean:
-	cd backend && uv run autoflake --remove-all-unused-imports --remove-unused-variables -r --in-place .
+lint:
+	cd backend && uv run ruff check --fix . && uv run ruff format .
 
 format:
-	cd backend && uv run black .
+	cd backend && uv run ruff format .
 
-sort-imports:
-	cd backend && uv run isort .
+typecheck:
+	cd backend && uv run ty check .
 
-lint: clean sort-imports format
+lint-file:
+	@uv run ruff check --fix "$(FILE)" && uv run ruff format "$(FILE)"
+
+typecheck-file:
+	@uv run ty check "$(FILE)"
 
 check:
 	cd backend && uv run python manage.py check
@@ -92,7 +98,7 @@ frontend-test:
 	cd frontend && flutter test
 
 # CI (run before every commit)
-ci: lint check test frontend-lint frontend-test
+ci: lint check test typecheck frontend-lint frontend-test
 
 # Dev (concurrent backend + frontend)
 dev:

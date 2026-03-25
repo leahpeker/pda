@@ -6,6 +6,7 @@ COPY frontend/pubspec.yaml frontend/pubspec.lock ./
 RUN flutter pub get
 
 COPY frontend/ ./
+RUN dart run build_runner build --delete-conflicting-outputs
 RUN flutter build web --release --dart-define=API_URL=
 
 # Stage 2: Python/Django runtime
@@ -22,6 +23,7 @@ COPY backend/ ./backend/
 COPY static/ ./static/
 
 COPY --from=flutter-build /app/frontend/build/web/ ./backend/staticfiles/flutter/
+COPY --from=flutter-build /app/frontend/build/web/index.html ./backend/templates/flutter/index.html
 
 RUN DJANGO_SETTINGS_MODULE=config.settings \
     SECRET_KEY=collectstatic-placeholder \

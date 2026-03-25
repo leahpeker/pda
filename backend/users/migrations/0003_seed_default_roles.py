@@ -21,7 +21,6 @@ def delete_default_roles(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("users", "0002_add_role_model"),
     ]

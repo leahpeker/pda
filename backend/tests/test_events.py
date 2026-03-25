@@ -1,9 +1,7 @@
 import pytest
-
 from community.models import Event
 from users.permissions import PermissionKey
 from users.roles import Role
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -72,19 +70,20 @@ class TestEventManagement:
         assert data["location"] == "Online"
         assert "id" in data
 
-    def test_create_event_requires_permission(self, api_client, auth_headers):
+    def test_create_event_any_member(self, api_client, auth_headers):
+        """Any authenticated member can create events (no manage_events required)."""
         response = api_client.post(
             "/api/community/events/",
             {
-                "title": "Blocked Event",
+                "title": "Member Event",
                 "start_datetime": "2026-05-01T18:00:00Z",
                 "end_datetime": "2026-05-01T20:00:00Z",
             },
             content_type="application/json",
             **auth_headers,
         )
-        assert response.status_code == 403
-        assert response.json()["detail"] == "Permission denied."
+        assert response.status_code == 201
+        assert response.json()["title"] == "Member Event"
 
     def test_create_event_requires_auth(self, api_client):
         response = api_client.post(
