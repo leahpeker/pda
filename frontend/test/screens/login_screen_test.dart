@@ -21,6 +21,27 @@ void main() {
     );
   }
 
+  testWidgets('login form has autofill hints for password manager support', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pump();
+
+    final textFields = find.byType(TextField);
+    expect(textFields, findsNWidgets(2));
+
+    // Email field should have email autofill hint
+    final emailField = tester.widget<TextField>(textFields.at(0));
+    expect(emailField.autofillHints, contains(AutofillHints.email));
+
+    // Password field should have password autofill hint
+    final passwordField = tester.widget<TextField>(textFields.at(1));
+    expect(passwordField.autofillHints, contains(AutofillHints.password));
+
+    // Fields should be wrapped in an AutofillGroup
+    expect(find.byType(AutofillGroup), findsOneWidget);
+  });
+
   testWidgets('email field shows error for value without @', (tester) async {
     await tester.pumpWidget(buildSubject());
     await tester.pump();
