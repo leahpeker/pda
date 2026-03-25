@@ -5,10 +5,6 @@ import 'package:pda/models/user.dart';
 import 'package:pda/providers/user_management_provider.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 
-// TODO: Restrict this screen to users with the `manage_users` permission once
-// the User model includes a `roles` field. For now any authenticated user can
-// access it (the route already requires auth).
-
 class MembersScreen extends ConsumerWidget {
   const MembersScreen({super.key});
 

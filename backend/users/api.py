@@ -69,6 +69,7 @@ class UserOut(BaseModel):
     email: str
     first_name: str
     last_name: str
+    is_superuser: bool = False
     roles: list[RoleOut]
 
     @classmethod
@@ -78,6 +79,7 @@ class UserOut(BaseModel):
             email=user.email,
             first_name=user.first_name,
             last_name=user.last_name,
+            is_superuser=user.is_superuser,
             roles=[
                 RoleOut(
                     id=str(r.id), name=r.name, is_default=r.is_default, permissions=r.permissions

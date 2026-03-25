@@ -28,18 +28,21 @@ class AppScaffold extends ConsumerWidget {
               onPressed: () => context.go('/calendar'),
               child: const Text('Calendar'),
             ),
-            TextButton(
-              onPressed: () => context.go('/members'),
-              child: const Text('Members'),
-            ),
-            TextButton(
-              onPressed: () => context.go('/join-requests'),
-              child: const Text('Join requests'),
-            ),
-            TextButton(
-              onPressed: () => context.go('/events/manage'),
-              child: const Text('Manage events'),
-            ),
+            if (user.hasPermission('create_user'))
+              TextButton(
+                onPressed: () => context.go('/members'),
+                child: const Text('Members'),
+              ),
+            if (user.hasPermission('approve_join_requests'))
+              TextButton(
+                onPressed: () => context.go('/join-requests'),
+                child: const Text('Join requests'),
+              ),
+            if (user.hasPermission('manage_events'))
+              TextButton(
+                onPressed: () => context.go('/events/manage'),
+                child: const Text('Manage events'),
+              ),
             TextButton(
               onPressed: () => ref.read(authProvider.notifier).logout(),
               child: const Text('Logout'),

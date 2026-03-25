@@ -108,7 +108,6 @@ class _EventDetailContent extends ConsumerWidget {
         const SizedBox(height: 24),
         const Divider(),
         const SizedBox(height: 8),
-        // TODO: gate on manage_events permission once User model has roles
         _AdminActions(event: event),
       ],
     );
@@ -230,6 +229,14 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    final user = ref.watch(authProvider).valueOrNull;
+    if (user == null) return const SizedBox.shrink();
+
+    final isCreator = widget.event.createdById == user.id;
+    final isManager = user.hasPermission('manage_events');
+    if (!isCreator && !isManager) return const SizedBox.shrink();
+
     return Row(
       children: [
         OutlinedButton.icon(

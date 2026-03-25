@@ -25,21 +25,35 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authProvider);
-      final isAuthenticated = authState.valueOrNull != null;
+      final user = authState.valueOrNull;
+      final isAuthenticated = user != null;
       final isLoading = authState.isLoading;
 
       if (isLoading) return null;
 
-      final protectedRoutes = [
+      final authRequiredRoutes = [
         '/calendar',
         '/members',
         '/join-requests',
         '/events/manage',
       ];
-      final isProtected = protectedRoutes.contains(state.matchedLocation);
+      final isProtected = authRequiredRoutes.contains(state.matchedLocation);
 
       if (isProtected && !isAuthenticated) {
         return '/login?redirect=${state.matchedLocation}';
+      }
+
+      if (isAuthenticated) {
+        final loc = state.matchedLocation;
+        if (loc == '/members' && !user.hasPermission('create_user')) {
+          return '/calendar';
+        }
+        if (loc == '/join-requests' && !user.hasPermission('approve_join_requests')) {
+          return '/calendar';
+        }
+        if (loc == '/events/manage' && !user.hasPermission('manage_events')) {
+          return '/calendar';
+        }
       }
 
       return null;

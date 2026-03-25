@@ -12,6 +12,7 @@ abstract class Event with _$Event {
     required DateTime startDatetime,
     required DateTime endDatetime,
     required String location,
+    String? createdById,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
