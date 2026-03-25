@@ -709,10 +709,7 @@ class _CoHostPicker extends ConsumerWidget {
     return usersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error:
-          (e, _) => Text(
-            'Could not load users: $e',
-            style: const TextStyle(fontSize: 13),
-          ),
+          (e, _) => const SizedBox.shrink(), // silently hide if no permission
       data: (users) {
         final candidates = users.where((u) => u.id != creatorId).toList();
         if (candidates.isEmpty) {

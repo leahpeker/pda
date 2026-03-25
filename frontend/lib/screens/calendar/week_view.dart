@@ -87,6 +87,51 @@ class _WeekViewState extends State<WeekView> {
     return results;
   }
 
+  Widget _buildBody(BuildContext context, List<DateTime> days) {
+    final allEvents = days.expand((d) => _eventsForDay(d));
+    final hasAnyEvents = allEvents.isNotEmpty;
+    final columns = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children:
+          days.map((day) {
+            return Expanded(
+              child: _DayEventsColumn(day: day, events: _eventsForDay(day)),
+            );
+          }).toList(),
+    );
+
+    if (hasAnyEvents) return columns;
+
+    return Stack(
+      children: [
+        columns,
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 40,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.2),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'No events this week',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -125,20 +170,7 @@ class _WeekViewState extends State<WeekView> {
         const Divider(height: 1),
         _DayHeaderRow(days: days, isToday: _isToday),
         const Divider(height: 1),
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                days.map((day) {
-                  return Expanded(
-                    child: _DayEventsColumn(
-                      day: day,
-                      events: _eventsForDay(day),
-                    ),
-                  );
-                }).toList(),
-          ),
-        ),
+        Expanded(child: _buildBody(context, days)),
       ],
     );
   }
