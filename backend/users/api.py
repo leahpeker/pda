@@ -1,6 +1,7 @@
 import secrets
 import string
 
+from django.db import models
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
@@ -211,6 +212,35 @@ def create_user(request, payload: UserCreateIn):
             last_name=user.last_name,
             temporary_password=temp_password,
         ),
+    )
+
+
+class UserSearchOut(BaseModel):
+    id: str
+    display_name: str
+
+
+@router.get("/users/search/", response={200: list[UserSearchOut]}, auth=JWTAuth())
+def search_users(request, q: str = ""):
+    # TODO: make smarter once we have engagement/activity data (rank by activity, mutual events, etc.)
+    qs = User.objects.filter(is_active=True).exclude(pk=request.auth.pk)
+    q = q.strip()
+    if q:
+        qs = qs.filter(
+            models.Q(first_name__icontains=q)
+            | models.Q(last_name__icontains=q)
+            | models.Q(email__icontains=q)
+        )
+    qs = qs.order_by("first_name", "last_name")[:10]
+    return Status(
+        200,
+        [
+            UserSearchOut(
+                id=str(u.id),
+                display_name=f"{u.first_name} {u.last_name}".strip() or u.email,
+            )
+            for u in qs
+        ],
     )
 
 

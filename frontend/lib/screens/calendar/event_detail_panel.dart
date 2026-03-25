@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/providers/auth_provider.dart';
-import 'package:pda/providers/user_management_provider.dart';
 
 /// Shows the event detail panel as a bottom sheet (narrow) or side panel (wide).
 void showEventDetail(BuildContext context, Event event) {
@@ -65,10 +64,18 @@ class _EventDetailContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Always use the live event so RSVP state and edits are reflected immediately.
+    final liveEvent =
+        ref
+            .watch(eventsProvider)
+            .valueOrNull
+            ?.firstWhere((e) => e.id == event.id, orElse: () => event) ??
+        event;
+
     final dateFmt = DateFormat('EEEE, MMMM d, y');
     final timeFmt = DateFormat('h:mm a');
-    final start = event.startDatetime.toLocal();
-    final end = event.endDatetime.toLocal();
+    final start = liveEvent.startDatetime.toLocal();
+    final end = liveEvent.endDatetime.toLocal();
     final isSameDay =
         start.year == end.year &&
         start.month == end.month &&
@@ -76,8 +83,10 @@ class _EventDetailContent extends ConsumerWidget {
 
     // Build host display string
     final hostNames = <String>[];
-    if (event.createdByName != null) hostNames.add(event.createdByName!);
-    hostNames.addAll(event.coHostNames);
+    if (liveEvent.createdByName != null) {
+      hostNames.add(liveEvent.createdByName!);
+    }
+    hostNames.addAll(liveEvent.coHostNames);
 
     return ListView(
       controller: scrollController,
@@ -88,7 +97,7 @@ class _EventDetailContent extends ConsumerWidget {
           children: [
             Expanded(
               child: Text(
-                event.title,
+                liveEvent.title,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
@@ -117,47 +126,47 @@ class _EventDetailContent extends ConsumerWidget {
             text: '${dateFmt.format(end)} ${timeFmt.format(end)}',
           ),
         ],
-        if (event.location.isNotEmpty) ...[
+        if (liveEvent.location.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _DetailRow(icon: Icons.place, text: event.location),
+          _DetailRow(icon: Icons.place, text: liveEvent.location),
         ],
         if (hostNames.isNotEmpty) ...[
           const SizedBox(height: 8),
           _DetailRow(icon: Icons.person_outline, text: hostNames.join(', ')),
         ],
-        if (event.whatsappLink.isNotEmpty) ...[
+        if (liveEvent.whatsappLink.isNotEmpty) ...[
           const SizedBox(height: 8),
           _LinkRow(
             icon: Icons.chat,
             label: 'WhatsApp group',
-            url: event.whatsappLink,
+            url: liveEvent.whatsappLink,
           ),
         ],
-        if (event.partifulLink.isNotEmpty) ...[
+        if (liveEvent.partifulLink.isNotEmpty) ...[
           const SizedBox(height: 8),
           _LinkRow(
             icon: Icons.celebration,
             label: 'Partiful',
-            url: event.partifulLink,
+            url: liveEvent.partifulLink,
           ),
         ],
-        if (event.description.isNotEmpty) ...[
+        if (liveEvent.description.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(
-            event.description,
+            liveEvent.description,
             style: const TextStyle(fontSize: 15, height: 1.6),
           ),
         ],
-        if (event.rsvpEnabled) ...[
+        if (liveEvent.rsvpEnabled) ...[
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 8),
-          _RSVPSection(event: event),
+          _RSVPSection(event: liveEvent),
         ],
         const SizedBox(height: 24),
         const Divider(),
         const SizedBox(height: 8),
-        _AdminActions(event: event),
+        _AdminActions(event: liveEvent),
       ],
     );
   }
@@ -611,6 +620,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late DateTime _end;
   late bool _rsvpEnabled;
   late Set<String> _coHostIds;
+  late Map<String, String> _coHostNames; // id → displayName, for chip labels
   // which field the inline calendar is editing: 'start', 'end', or null (hidden)
   String? _calendarTarget;
 
@@ -630,6 +640,10 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _end = e.endDatetime.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
       _coHostIds = Set<String>.from(e.coHostIds);
+      _coHostNames = {
+        for (var i = 0; i < e.coHostIds.length; i++)
+          if (i < e.coHostNames.length) e.coHostIds[i]: e.coHostNames[i],
+      };
     } else {
       _title = TextEditingController();
       _description = TextEditingController();
@@ -641,6 +655,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _end = _start.add(const Duration(hours: 1));
       _rsvpEnabled = false;
       _coHostIds = {};
+      _coHostNames = {};
     }
   }
 
@@ -862,7 +877,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 const SizedBox(height: 8),
                 _CoHostPicker(
                   selectedIds: _coHostIds,
-                  creatorId: widget.event?.createdById,
+                  selectedNames: _coHostNames,
                   onChanged: (ids) => setState(() => _coHostIds = ids),
                 ),
               ],
@@ -963,59 +978,178 @@ class _DateTimeRow extends StatelessWidget {
   }
 }
 
-class _CoHostPicker extends ConsumerWidget {
+/// A simple value object for co-host search results.
+class _CoHostResult {
+  final String id;
+  final String displayName;
+  const _CoHostResult({required this.id, required this.displayName});
+}
+
+class _CoHostPicker extends ConsumerStatefulWidget {
   final Set<String> selectedIds;
-  final String? creatorId;
+
+  /// Map of id → displayName for already-selected co-hosts (populated from event).
+  final Map<String, String> selectedNames;
   final ValueChanged<Set<String>> onChanged;
 
   const _CoHostPicker({
     required this.selectedIds,
+    required this.selectedNames,
     required this.onChanged,
-    this.creatorId,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final usersAsync = ref.watch(usersProvider);
+  ConsumerState<_CoHostPicker> createState() => _CoHostPickerState();
+}
 
-    return usersAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error:
-          (e, _) => const SizedBox.shrink(), // silently hide if no permission
-      data: (users) {
-        final candidates = users.where((u) => u.id != creatorId).toList();
-        if (candidates.isEmpty) {
-          return const Text(
-            'No other members available.',
-            style: TextStyle(fontSize: 13),
-          );
-        }
-        return Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children:
-              candidates.map((u) {
-                final name =
-                    '${u.firstName} ${u.lastName}'.trim().isNotEmpty
-                        ? '${u.firstName} ${u.lastName}'.trim()
-                        : u.email;
-                final selected = selectedIds.contains(u.id);
-                return FilterChip(
-                  label: Text(name, style: const TextStyle(fontSize: 13)),
-                  selected: selected,
-                  onSelected: (val) {
-                    final next = Set<String>.from(selectedIds);
-                    if (val) {
-                      next.add(u.id);
-                    } else {
-                      next.remove(u.id);
-                    }
-                    onChanged(next);
-                  },
-                );
-              }).toList(),
-        );
-      },
+class _CoHostPickerState extends ConsumerState<_CoHostPicker> {
+  final _controller = TextEditingController();
+  List<_CoHostResult> _results = [];
+  bool _searching = false;
+  // Local copy of names for selected ids (needed to display chips for selections
+  // made during this session that may not yet be in widget.selectedNames).
+  late Map<String, String> _knownNames;
+
+  @override
+  void initState() {
+    super.initState();
+    _knownNames = Map<String, String>.from(widget.selectedNames);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search(String q) async {
+    if (q.trim().isEmpty) {
+      setState(() => _results = []);
+      return;
+    }
+    setState(() => _searching = true);
+    try {
+      final api = ref.read(apiClientProvider);
+      final resp = await api.get(
+        '/api/auth/users/search/',
+        queryParameters: {'q': q.trim()},
+      );
+      final data = (resp.data as List<dynamic>?) ?? [];
+      setState(() {
+        _results =
+            data
+                .map(
+                  (item) => _CoHostResult(
+                    id: item['id'] as String,
+                    displayName: item['display_name'] as String,
+                  ),
+                )
+                .toList();
+      });
+    } catch (_) {
+      setState(() => _results = []);
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  void _toggle(String id, String name) {
+    _knownNames[id] = name;
+    final next = Set<String>.from(widget.selectedIds);
+    if (next.contains(id)) {
+      next.remove(id);
+    } else {
+      next.add(id);
+    }
+    widget.onChanged(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selected = widget.selectedIds;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Selected chips
+        if (selected.isNotEmpty) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children:
+                selected.map((id) {
+                  final name = _knownNames[id] ?? id;
+                  return Chip(
+                    label: Text(name, style: const TextStyle(fontSize: 13)),
+                    onDeleted: () => _toggle(id, name),
+                    deleteIconColor: theme.colorScheme.onSurfaceVariant,
+                  );
+                }).toList(),
+          ),
+          const SizedBox(height: 8),
+        ],
+        // Search field
+        TextField(
+          controller: _controller,
+          decoration: InputDecoration(
+            hintText: 'Search by name…',
+            border: const OutlineInputBorder(),
+            isDense: true,
+            suffixIcon:
+                _searching
+                    ? const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                    : null,
+          ),
+          onChanged: _search,
+        ),
+        // Results
+        if (_results.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children:
+                  _results.map((r) {
+                    final isSelected = selected.contains(r.id);
+                    return ListTile(
+                      dense: true,
+                      title: Text(
+                        r.displayName,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      trailing:
+                          isSelected
+                              ? Icon(
+                                Icons.check,
+                                size: 16,
+                                color: theme.colorScheme.primary,
+                              )
+                              : null,
+                      onTap: () {
+                        _toggle(r.id, r.displayName);
+                        if (!isSelected) {
+                          _controller.clear();
+                          setState(() => _results = []);
+                        }
+                      },
+                    );
+                  }).toList(),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
