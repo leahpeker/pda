@@ -23,6 +23,7 @@ COPY backend/ ./backend/
 COPY static/ ./static/
 
 COPY --from=flutter-build /app/frontend/build/web/ ./backend/staticfiles/flutter/
+COPY --from=flutter-build /app/frontend/build/web/index.html ./backend/templates/flutter/index.html
 
 RUN DJANGO_SETTINGS_MODULE=config.settings \
     SECRET_KEY=collectstatic-placeholder \
