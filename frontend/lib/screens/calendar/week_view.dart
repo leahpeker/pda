@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 
 const double _kHourHeight = 60.0;
@@ -128,13 +129,19 @@ class _WeekViewState extends State<WeekView> {
     return durationMinutes < _kMinEventHeight ? _kMinEventHeight : durationMinutes;
   }
 
-  Widget _buildEventBlockContent(Event event, double height, DateFormat timeFmt, DateTime startLocal) {
+  Widget _buildEventBlockContent(
+    Event event,
+    double height,
+    DateFormat timeFmt,
+    DateTime startLocal,
+    Color textColor,
+  ) {
     if (height < 20) {
       return Text(
         event.title,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textColor),
       );
     }
     return Column(
@@ -144,13 +151,13 @@ class _WeekViewState extends State<WeekView> {
           event.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textColor),
         ),
         Text(
           timeFmt.format(startLocal),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 10),
+          style: TextStyle(fontSize: 10, color: textColor),
         ),
       ],
     );
@@ -221,6 +228,7 @@ class _WeekViewState extends State<WeekView> {
               final height = _eventHeight(e, day);
               final startLocal = e.startDatetime.toLocal();
               final timeFmt = DateFormat('h:mm a');
+              final colors = eventColors(e.id);
               return Positioned(
                 top: top,
                 left: 1,
@@ -230,11 +238,11 @@ class _WeekViewState extends State<WeekView> {
                   onTap: () => showEventDetail(context, e),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
+                      color: colors.$1,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: _buildEventBlockContent(e, height, timeFmt, startLocal),
+                    child: _buildEventBlockContent(e, height, timeFmt, startLocal, colors.$2),
                   ),
                 ),
               );

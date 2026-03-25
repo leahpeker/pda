@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:pda/models/event.dart';
+import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 
 class DayView extends StatefulWidget {
@@ -378,7 +379,9 @@ class _EventBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colors = eventColors(event.id);
+    final bgColor = colors.$1;
+    final fgColor = colors.$2;
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime.toLocal();
     final timeFmt = DateFormat('h:mm a');
@@ -389,7 +392,7 @@ class _EventBlock extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 1),
         decoration: BoxDecoration(
-          color: colorScheme.primaryContainer,
+          color: bgColor,
           borderRadius: BorderRadius.circular(4),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -399,7 +402,7 @@ class _EventBlock extends StatelessWidget {
             Text(
               event.title,
               style: TextStyle(
-                color: colorScheme.onPrimaryContainer,
+                color: fgColor,
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
               ),
@@ -409,7 +412,7 @@ class _EventBlock extends StatelessWidget {
             Text(
               timeLabel,
               style: TextStyle(
-                color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                color: fgColor.withValues(alpha: 0.8),
                 fontSize: 11,
               ),
               maxLines: 1,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/screens/calendar/event_colors.dart';
 
 class MonthView extends StatefulWidget {
   final List<Event> events;
@@ -262,8 +263,8 @@ class _MonthViewState extends State<MonthView> {
         .map(
           (e) => _EventChip(
             title: e.title,
-            color: colorScheme.primaryContainer,
-            textColor: colorScheme.onPrimaryContainer,
+            color: eventColors(e.id).$1,
+            textColor: eventColors(e.id).$2,
           ),
         )
         .toList();
