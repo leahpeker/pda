@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/providers/auth_provider.dart';
@@ -348,39 +347,53 @@ class _EventFormDialogState extends State<EventFormDialog> {
     super.dispose();
   }
 
-  Future<void> _pickStart() async {
-    final picked = await showOmniDateTimePicker(
+  Future<void> _pickDateRange() async {
+    final range = await showDateRangePicker(
       context: context,
-      initialDate: _start,
+      initialDateRange: DateTimeRange(start: _start, end: _end),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      is24HourMode: false,
-      isShowSeconds: false,
-      minutesInterval: 5,
-      borderRadius: const BorderRadius.all(Radius.circular(16)),
+      helpText: 'Select event dates',
     );
-    if (picked == null) return;
+    if (range == null) return;
     setState(() {
-      _start = picked;
+      _start = DateTime(
+        range.start.year, range.start.month, range.start.day,
+        _start.hour, _start.minute,
+      );
+      _end = DateTime(
+        range.end.year, range.end.month, range.end.day,
+        _end.hour, _end.minute,
+      );
       if (_end.isBefore(_start)) {
         _end = _start.add(const Duration(hours: 1));
       }
     });
   }
 
-  Future<void> _pickEnd() async {
-    final picked = await showOmniDateTimePicker(
+  Future<void> _pickStartTime() async {
+    final picked = await showTimePicker(
       context: context,
-      initialDate: _end,
-      firstDate: _start,
-      lastDate: DateTime(2100),
-      is24HourMode: false,
-      isShowSeconds: false,
-      minutesInterval: 5,
-      borderRadius: const BorderRadius.all(Radius.circular(16)),
+      initialTime: TimeOfDay.fromDateTime(_start),
     );
     if (picked == null) return;
-    setState(() => _end = picked);
+    setState(() {
+      _start = DateTime(_start.year, _start.month, _start.day, picked.hour, picked.minute);
+      if (_end.isBefore(_start)) {
+        _end = _start.add(const Duration(hours: 1));
+      }
+    });
+  }
+
+  Future<void> _pickEndTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_end),
+    );
+    if (picked == null) return;
+    setState(() {
+      _end = DateTime(_end.year, _end.month, _end.day, picked.hour, picked.minute);
+    });
   }
 
   void _submit() {
@@ -399,7 +412,8 @@ class _EventFormDialogState extends State<EventFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFmt = DateFormat('EEE, MMM d, y · h:mm a');
+    final dateFmt = DateFormat('EEE, MMM d, y');
+    final timeFmt = DateFormat('h:mm a');
     final theme = Theme.of(context);
 
     return AlertDialog(
@@ -423,20 +437,21 @@ class _EventFormDialogState extends State<EventFormDialog> {
                   validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
-                // Start date/time picker
-                _DateTimePickerField(
-                  label: 'Start *',
-                  value: _start,
-                  formatted: dateFmt.format(_start),
-                  onTap: _pickStart,
+                // Date/time rows — Google Calendar style
+                _DateTimeRow(
+                  label: 'Start',
+                  date: dateFmt.format(_start),
+                  time: timeFmt.format(_start),
+                  onDateTap: _pickDateRange,
+                  onTimeTap: _pickStartTime,
                 ),
-                const SizedBox(height: 12),
-                // End date/time picker
-                _DateTimePickerField(
-                  label: 'End *',
-                  value: _end,
-                  formatted: dateFmt.format(_end),
-                  onTap: _pickEnd,
+                const SizedBox(height: 8),
+                _DateTimeRow(
+                  label: 'End',
+                  date: dateFmt.format(_end),
+                  time: timeFmt.format(_end),
+                  onDateTap: _pickDateRange,
+                  onTimeTap: _pickEndTime,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -520,32 +535,76 @@ class _EventFormDialogState extends State<EventFormDialog> {
   }
 }
 
-class _DateTimePickerField extends StatelessWidget {
+class _DateTimeRow extends StatelessWidget {
   final String label;
-  final DateTime value;
-  final String formatted;
-  final VoidCallback onTap;
+  final String date;
+  final String time;
+  final VoidCallback onDateTap;
+  final VoidCallback onTimeTap;
 
-  const _DateTimePickerField({
+  const _DateTimeRow({
     required this.label,
-    required this.value,
-    required this.formatted,
-    required this.onTap,
+    required this.date,
+    required this.time,
+    required this.onDateTap,
+    required this.onTimeTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_month_outlined),
+    final theme = Theme.of(context);
+    final chipColor = theme.colorScheme.surfaceContainerHighest;
+    final textStyle = theme.textTheme.bodyMedium;
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 40,
+          child: Text(label, style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          )),
         ),
-        child: Text(formatted, style: Theme.of(context).textTheme.bodyLarge),
-      ),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: onDateTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: chipColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 14),
+                const SizedBox(width: 6),
+                Text(date, style: textStyle),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: onTimeTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: chipColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.schedule_outlined, size: 14),
+                const SizedBox(width: 6),
+                Text(time, style: textStyle),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
