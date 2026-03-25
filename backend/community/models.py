@@ -37,6 +37,9 @@ class Event(models.Model):
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     location = models.CharField(max_length=300, blank=True)
+    whatsapp_link = models.URLField(blank=True)
+    partiful_link = models.URLField(blank=True)
+    rsvp_enabled = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         'users.User',

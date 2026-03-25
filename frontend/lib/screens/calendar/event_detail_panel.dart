@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/providers/auth_provider.dart';
@@ -98,11 +99,36 @@ class _EventDetailContent extends ConsumerWidget {
           const SizedBox(height: 8),
           _DetailRow(icon: Icons.place, text: event.location),
         ],
+        if (event.whatsappLink.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _DetailRow(icon: Icons.chat, text: event.whatsappLink),
+        ],
+        if (event.partifulLink.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _DetailRow(icon: Icons.celebration, text: event.partifulLink),
+        ],
         if (event.description.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(
             event.description,
             style: const TextStyle(fontSize: 15, height: 1.6),
+          ),
+        ],
+        if (event.rsvpEnabled) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.how_to_reg, size: 16, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'RSVP enabled',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ],
         const SizedBox(height: 24),
@@ -198,9 +224,9 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
   }
 
   Future<void> _edit() async {
-    final result = await showDialog<Map<String, String>>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (ctx) => _EditEventDialog(event: widget.event),
+      builder: (ctx) => EventFormDialog(event: widget.event),
     );
     if (result == null) return;
 
@@ -262,36 +288,54 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
   }
 }
 
-class _EditEventDialog extends StatefulWidget {
-  final Event event;
+/// Shared form dialog for creating and editing events.
+/// Pass [event] to pre-fill fields for editing; omit for create mode.
+class EventFormDialog extends StatefulWidget {
+  final Event? event;
 
-  const _EditEventDialog({required this.event});
+  const EventFormDialog({super.key, this.event});
 
   @override
-  State<_EditEventDialog> createState() => _EditEventDialogState();
+  State<EventFormDialog> createState() => _EventFormDialogState();
 }
 
-class _EditEventDialogState extends State<_EditEventDialog> {
+class _EventFormDialogState extends State<EventFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _title;
   late final TextEditingController _description;
   late final TextEditingController _location;
-  late final TextEditingController _start;
-  late final TextEditingController _end;
+  late final TextEditingController _whatsappLink;
+  late final TextEditingController _partifulLink;
+  late DateTime _start;
+  late DateTime _end;
+  late bool _rsvpEnabled;
+
+  bool get _isEdit => widget.event != null;
 
   @override
   void initState() {
     super.initState();
-    final iso = DateFormat("yyyy-MM-dd'T'HH:mm");
-    _title = TextEditingController(text: widget.event.title);
-    _description = TextEditingController(text: widget.event.description);
-    _location = TextEditingController(text: widget.event.location);
-    _start = TextEditingController(
-      text: iso.format(widget.event.startDatetime.toLocal()),
-    );
-    _end = TextEditingController(
-      text: iso.format(widget.event.endDatetime.toLocal()),
-    );
+    final e = widget.event;
+    if (e != null) {
+      _title = TextEditingController(text: e.title);
+      _description = TextEditingController(text: e.description);
+      _location = TextEditingController(text: e.location);
+      _whatsappLink = TextEditingController(text: e.whatsappLink);
+      _partifulLink = TextEditingController(text: e.partifulLink);
+      _start = e.startDatetime.toLocal();
+      _end = e.endDatetime.toLocal();
+      _rsvpEnabled = e.rsvpEnabled;
+    } else {
+      _title = TextEditingController();
+      _description = TextEditingController();
+      _location = TextEditingController();
+      _whatsappLink = TextEditingController();
+      _partifulLink = TextEditingController();
+      final now = DateTime.now();
+      _start = DateTime(now.year, now.month, now.day, now.hour + 1);
+      _end = _start.add(const Duration(hours: 1));
+      _rsvpEnabled = false;
+    }
   }
 
   @override
@@ -299,9 +343,44 @@ class _EditEventDialogState extends State<_EditEventDialog> {
     _title.dispose();
     _description.dispose();
     _location.dispose();
-    _start.dispose();
-    _end.dispose();
+    _whatsappLink.dispose();
+    _partifulLink.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickStart() async {
+    final picked = await showOmniDateTimePicker(
+      context: context,
+      initialDate: _start,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      is24HourMode: false,
+      isShowSeconds: false,
+      minutesInterval: 5,
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
+    );
+    if (picked == null) return;
+    setState(() {
+      _start = picked;
+      if (_end.isBefore(_start)) {
+        _end = _start.add(const Duration(hours: 1));
+      }
+    });
+  }
+
+  Future<void> _pickEnd() async {
+    final picked = await showOmniDateTimePicker(
+      context: context,
+      initialDate: _end,
+      firstDate: _start,
+      lastDate: DateTime(2100),
+      is24HourMode: false,
+      isShowSeconds: false,
+      minutesInterval: 5,
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
+    );
+    if (picked == null) return;
+    setState(() => _end = picked);
   }
 
   void _submit() {
@@ -310,15 +389,21 @@ class _EditEventDialogState extends State<_EditEventDialog> {
       'title': _title.text.trim(),
       'description': _description.text.trim(),
       'location': _location.text.trim(),
-      'start_datetime': _start.text.trim(),
-      'end_datetime': _end.text.trim(),
+      'whatsapp_link': _whatsappLink.text.trim(),
+      'partiful_link': _partifulLink.text.trim(),
+      'start_datetime': _start.toUtc().toIso8601String(),
+      'end_datetime': _end.toUtc().toIso8601String(),
+      'rsvp_enabled': _rsvpEnabled,
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final dateFmt = DateFormat('EEE, MMM d, y · h:mm a');
+    final theme = Theme.of(context);
+
     return AlertDialog(
-      title: const Text('Edit event'),
+      title: Text(_isEdit ? 'Edit event' : 'Add event'),
       content: SizedBox(
         width: 480,
         child: Form(
@@ -326,6 +411,7 @@ class _EditEventDialogState extends State<_EditEventDialog> {
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextFormField(
                   controller: _title,
@@ -333,38 +419,33 @@ class _EditEventDialogState extends State<_EditEventDialog> {
                     labelText: 'Title *',
                     border: OutlineInputBorder(),
                   ),
-                  validator:
-                      (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                // Start date/time picker
+                _DateTimePickerField(
+                  label: 'Start *',
+                  value: _start,
+                  formatted: dateFmt.format(_start),
+                  onTap: _pickStart,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _start,
-                  decoration: const InputDecoration(
-                    labelText: 'Start (YYYY-MM-DDTHH:MM)',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Required';
-                    if (DateTime.tryParse(v.trim()) == null) {
-                      return 'Invalid date';
-                    }
-                    return null;
-                  },
+                // End date/time picker
+                _DateTimePickerField(
+                  label: 'End *',
+                  value: _end,
+                  formatted: dateFmt.format(_end),
+                  onTap: _pickEnd,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 TextFormField(
-                  controller: _end,
+                  controller: _location,
                   decoration: const InputDecoration(
-                    labelText: 'End (YYYY-MM-DDTHH:MM)',
+                    labelText: 'Location',
                     border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.place_outlined),
                   ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Required';
-                    if (DateTime.tryParse(v.trim()) == null) {
-                      return 'Invalid date';
-                    }
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -372,16 +453,53 @@ class _EditEventDialogState extends State<_EditEventDialog> {
                   decoration: const InputDecoration(
                     labelText: 'Description',
                     border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
                   ),
                   maxLines: 3,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text('Links', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _whatsappLink,
+                  decoration: const InputDecoration(
+                    labelText: 'WhatsApp group link (optional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.chat_outlined),
+                  ),
+                  keyboardType: TextInputType.url,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
-                  controller: _location,
-                  decoration: const InputDecoration(
-                    labelText: 'Location',
-                    border: OutlineInputBorder(),
+                  controller: _partifulLink,
+                  decoration: InputDecoration(
+                    labelText: 'Partiful link (optional)',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.celebration_outlined),
+                    helperText: _rsvpEnabled
+                        ? 'Consider using app RSVPs instead of Partiful'
+                        : null,
+                    helperStyle: TextStyle(color: theme.colorScheme.tertiary),
                   ),
+                  keyboardType: TextInputType.url,
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: _rsvpEnabled,
+                  onChanged: (v) => setState(() => _rsvpEnabled = v),
+                  title: const Text('Enable RSVPs'),
+                  subtitle: _rsvpEnabled && _partifulLink.text.trim().isNotEmpty
+                      ? Text(
+                          'You have a Partiful link set — consider using one or the other',
+                          style: TextStyle(color: theme.colorScheme.tertiary),
+                        )
+                      : null,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ],
             ),
@@ -393,8 +511,41 @@ class _EditEventDialogState extends State<_EditEventDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Save')),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(_isEdit ? 'Save' : 'Add'),
+        ),
       ],
+    );
+  }
+}
+
+class _DateTimePickerField extends StatelessWidget {
+  final String label;
+  final DateTime value;
+  final String formatted;
+  final VoidCallback onTap;
+
+  const _DateTimePickerField({
+    required this.label,
+    required this.value,
+    required this.formatted,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          suffixIcon: const Icon(Icons.calendar_month_outlined),
+        ),
+        child: Text(formatted, style: Theme.of(context).textTheme.bodyLarge),
+      ),
     );
   }
 }

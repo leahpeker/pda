@@ -40,6 +40,9 @@ class EventOut(BaseModel):
     start_datetime: datetime
     end_datetime: datetime
     location: str
+    whatsapp_link: str = ""
+    partiful_link: str = ""
+    rsvp_enabled: bool = False
     created_by_id: str | None = None
 
 
@@ -53,6 +56,9 @@ class EventIn(BaseModel):
     start_datetime: datetime
     end_datetime: datetime
     location: str = ""
+    whatsapp_link: str = ""
+    partiful_link: str = ""
+    rsvp_enabled: bool = False
 
 
 class EventPatchIn(BaseModel):
@@ -61,6 +67,9 @@ class EventPatchIn(BaseModel):
     start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str | None = None
+    whatsapp_link: str | None = None
+    partiful_link: str | None = None
+    rsvp_enabled: bool | None = None
 
 
 @router.post("/join-request/", response={201: JoinRequestOut, 400: ErrorOut}, auth=None)
@@ -162,6 +171,9 @@ def _event_out(event: Event) -> EventOut:
         start_datetime=event.start_datetime,
         end_datetime=event.end_datetime,
         location=event.location,
+        whatsapp_link=event.whatsapp_link,
+        partiful_link=event.partiful_link,
+        rsvp_enabled=event.rsvp_enabled,
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
     )
 
@@ -180,6 +192,9 @@ def create_event(request, payload: EventIn):
         start_datetime=payload.start_datetime,
         end_datetime=payload.end_datetime,
         location=payload.location,
+        whatsapp_link=payload.whatsapp_link,
+        partiful_link=payload.partiful_link,
+        rsvp_enabled=payload.rsvp_enabled,
         created_by=request.auth,
     )
     return Status(201, _event_out(event))
@@ -209,6 +224,12 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         event.end_datetime = payload.end_datetime
     if payload.location is not None:
         event.location = payload.location
+    if payload.whatsapp_link is not None:
+        event.whatsapp_link = payload.whatsapp_link
+    if payload.partiful_link is not None:
+        event.partiful_link = payload.partiful_link
+    if payload.rsvp_enabled is not None:
+        event.rsvp_enabled = payload.rsvp_enabled
 
     event.save()
     return Status(200, _event_out(event))

@@ -12,6 +12,9 @@ abstract class Event with _$Event {
     required DateTime startDatetime,
     required DateTime endDatetime,
     required String location,
+    @Default('') String whatsappLink,
+    @Default('') String partifulLink,
+    @Default(false) bool rsvpEnabled,
     String? createdById,
   }) = _Event;
 
