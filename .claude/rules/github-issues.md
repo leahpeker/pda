@@ -22,6 +22,9 @@ Prefix with scope tag in brackets, then a concise description:
 | `[fe/be]` or `[be/fe]` | Both (lead with the heavier side) |
 | `[bot]` | WhatsApp bot microservice |
 | `[infra]` | Infrastructure, deployment, config |
+| `[tooling]` | Dev tooling, linters, formatters, CI pipeline |
+
+Use the most specific scope that fits. For new areas not listed above, use a short lowercase tag (e.g., `[docs]`, `[ci]`).
 
 ## Labels
 
