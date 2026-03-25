@@ -22,33 +22,36 @@ void _showBottomSheet(BuildContext context, Event event) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (_) => DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.9,
-      expand: false,
-      builder: (ctx, controller) => _EventDetailContent(
-        event: event,
-        scrollController: controller,
-      ),
-    ),
+    builder:
+        (_) => DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder:
+              (ctx, controller) => _EventDetailContent(
+                event: event,
+                scrollController: controller,
+              ),
+        ),
   );
 }
 
 void _showSidePanel(BuildContext context, Event event) {
   showDialog(
     context: context,
-    builder: (_) => Align(
-      alignment: Alignment.centerRight,
-      child: Material(
-        elevation: 8,
-        child: SizedBox(
-          width: 400,
-          height: double.infinity,
-          child: _EventDetailContent(event: event),
+    builder:
+        (_) => Align(
+          alignment: Alignment.centerRight,
+          child: Material(
+            elevation: 8,
+            child: SizedBox(
+              width: 400,
+              height: double.infinity,
+              child: _EventDetailContent(event: event),
+            ),
+          ),
         ),
-      ),
-    ),
   );
 }
 
@@ -85,10 +88,7 @@ class _EventDetailContent extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _DetailRow(
-          icon: Icons.calendar_today,
-          text: dateFmt.format(start),
-        ),
+        _DetailRow(icon: Icons.calendar_today, text: dateFmt.format(start)),
         const SizedBox(height: 8),
         _DetailRow(
           icon: Icons.schedule,
@@ -126,7 +126,11 @@ class _DetailRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -157,20 +161,23 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
   Future<void> _delete() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete event'),
-        content: Text('Delete "${widget.event.title}"? This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete event'),
+            content: Text(
+              'Delete "${widget.event.title}"? This cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
     if (confirmed != true) return;
 
@@ -182,9 +189,9 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete event: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete event: $e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -209,9 +216,9 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update event: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to update event: $e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -233,8 +240,15 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
         const SizedBox(width: 12),
         OutlinedButton.icon(
           onPressed: _delete,
-          icon: Icon(Icons.delete, size: 16, color: Theme.of(context).colorScheme.error),
-          label: Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          icon: Icon(
+            Icons.delete,
+            size: 16,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          label: Text(
+            'Delete',
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
         ),
       ],
     );
@@ -265,8 +279,12 @@ class _EditEventDialogState extends State<_EditEventDialog> {
     _title = TextEditingController(text: widget.event.title);
     _description = TextEditingController(text: widget.event.description);
     _location = TextEditingController(text: widget.event.location);
-    _start = TextEditingController(text: iso.format(widget.event.startDatetime.toLocal()));
-    _end = TextEditingController(text: iso.format(widget.event.endDatetime.toLocal()));
+    _start = TextEditingController(
+      text: iso.format(widget.event.startDatetime.toLocal()),
+    );
+    _end = TextEditingController(
+      text: iso.format(widget.event.endDatetime.toLocal()),
+    );
   }
 
   @override
@@ -304,8 +322,12 @@ class _EditEventDialogState extends State<_EditEventDialog> {
               children: [
                 TextFormField(
                   controller: _title,
-                  decoration: const InputDecoration(labelText: 'Title *', border: OutlineInputBorder()),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Title *',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator:
+                      (v) => v == null || v.trim().isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -316,7 +338,9 @@ class _EditEventDialogState extends State<_EditEventDialog> {
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Required';
-                    if (DateTime.tryParse(v.trim()) == null) return 'Invalid date';
+                    if (DateTime.tryParse(v.trim()) == null) {
+                      return 'Invalid date';
+                    }
                     return null;
                   },
                 ),
@@ -329,20 +353,28 @@ class _EditEventDialogState extends State<_EditEventDialog> {
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Required';
-                    if (DateTime.tryParse(v.trim()) == null) return 'Invalid date';
+                    if (DateTime.tryParse(v.trim()) == null) {
+                      return 'Invalid date';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _description,
-                  decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _location,
-                  decoration: const InputDecoration(labelText: 'Location', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Location',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ],
             ),

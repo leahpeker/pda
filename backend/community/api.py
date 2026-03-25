@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from community.models import Event, JoinRequest, JoinRequestStatus
 from django.conf import settings
 from django.core.mail import send_mail
 from ninja import Router
+from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
 from pydantic import BaseModel
-
-from community.models import Event, JoinRequest, JoinRequestStatus
 from users.permissions import PermissionKey
 
 router = Router()
@@ -65,7 +65,7 @@ class EventPatchIn(BaseModel):
 @router.post("/join-request/", response={201: JoinRequestOut, 400: ErrorOut}, auth=None)
 def submit_join_request(request, payload: JoinRequestIn):
     if not payload.name.strip() or not payload.email.strip() or not payload.why_join.strip():
-        return 400, ErrorOut(detail="Name, email, and why_join are required.")
+        return Status(400, ErrorOut(detail="Name, email, and why_join are required."))
 
     join_request = JoinRequest.objects.create(
         name=payload.name,
@@ -90,29 +90,35 @@ def submit_join_request(request, payload: JoinRequestIn):
             fail_silently=True,
         )
 
-    return 201, JoinRequestOut(
-        id=str(join_request.id),
-        name=join_request.name,
-        email=join_request.email,
-        status=join_request.status,
+    return Status(
+        201,
+        JoinRequestOut(
+            id=str(join_request.id),
+            name=join_request.name,
+            email=join_request.email,
+            status=join_request.status,
+        ),
     )
 
 
 @router.get("/join-requests/", response={200: list[JoinRequestOut], 403: ErrorOut}, auth=JWTAuth())
 def list_join_requests(request):
     if not request.auth.has_permission(PermissionKey.APPROVE_JOIN_REQUESTS):
-        return 403, ErrorOut(detail="Permission denied.")
+        return Status(403, ErrorOut(detail="Permission denied."))
 
     join_requests = JoinRequest.objects.all()
-    return 200, [
-        JoinRequestOut(
-            id=str(jr.id),
-            name=jr.name,
-            email=jr.email,
-            status=jr.status,
-        )
-        for jr in join_requests
-    ]
+    return Status(
+        200,
+        [
+            JoinRequestOut(
+                id=str(jr.id),
+                name=jr.name,
+                email=jr.email,
+                status=jr.status,
+            )
+            for jr in join_requests
+        ],
+    )
 
 
 @router.patch(
@@ -122,48 +128,54 @@ def list_join_requests(request):
 )
 def update_join_request_status(request, id: UUID, payload: JoinRequestStatusIn):
     if not request.auth.has_permission(PermissionKey.APPROVE_JOIN_REQUESTS):
-        return 403, ErrorOut(detail="Permission denied.")
+        return Status(403, ErrorOut(detail="Permission denied."))
 
     valid_statuses = [JoinRequestStatus.APPROVED, JoinRequestStatus.REJECTED]
     if payload.status not in valid_statuses:
-        return 400, ErrorOut(detail=f"Status must be one of: {', '.join(valid_statuses)}.")
+        return Status(400, ErrorOut(detail=f"Status must be one of: {', '.join(valid_statuses)}."))
 
     try:
         join_request = JoinRequest.objects.get(id=id)
     except JoinRequest.DoesNotExist:
-        return 404, ErrorOut(detail="Join request not found.")
+        return Status(404, ErrorOut(detail="Join request not found."))
 
     join_request.status = payload.status
     join_request.save()
 
-    return 200, JoinRequestOut(
-        id=str(join_request.id),
-        name=join_request.name,
-        email=join_request.email,
-        status=join_request.status,
+    return Status(
+        200,
+        JoinRequestOut(
+            id=str(join_request.id),
+            name=join_request.name,
+            email=join_request.email,
+            status=join_request.status,
+        ),
     )
 
 
 @router.get("/events/", response={200: list[EventOut]}, auth=JWTAuth())
 def list_events(request):
     events = Event.objects.all()
-    return 200, [
-        EventOut(
-            id=str(e.id),
-            title=e.title,
-            description=e.description,
-            start_datetime=e.start_datetime,
-            end_datetime=e.end_datetime,
-            location=e.location,
-        )
-        for e in events
-    ]
+    return Status(
+        200,
+        [
+            EventOut(
+                id=str(e.id),
+                title=e.title,
+                description=e.description,
+                start_datetime=e.start_datetime,
+                end_datetime=e.end_datetime,
+                location=e.location,
+            )
+            for e in events
+        ],
+    )
 
 
 @router.post("/events/", response={201: EventOut, 403: ErrorOut}, auth=JWTAuth())
 def create_event(request, payload: EventIn):
     if not request.auth.has_permission(PermissionKey.MANAGE_EVENTS):
-        return 403, ErrorOut(detail="Permission denied.")
+        return Status(403, ErrorOut(detail="Permission denied."))
 
     event = Event.objects.create(
         title=payload.title,
@@ -172,25 +184,30 @@ def create_event(request, payload: EventIn):
         end_datetime=payload.end_datetime,
         location=payload.location,
     )
-    return 201, EventOut(
-        id=str(event.id),
-        title=event.title,
-        description=event.description,
-        start_datetime=event.start_datetime,
-        end_datetime=event.end_datetime,
-        location=event.location,
+    return Status(
+        201,
+        EventOut(
+            id=str(event.id),
+            title=event.title,
+            description=event.description,
+            start_datetime=event.start_datetime,
+            end_datetime=event.end_datetime,
+            location=event.location,
+        ),
     )
 
 
-@router.patch("/events/{event_id}/", response={200: EventOut, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth())
+@router.patch(
+    "/events/{event_id}/", response={200: EventOut, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth()
+)
 def update_event(request, event_id: UUID, payload: EventPatchIn):
     if not request.auth.has_permission(PermissionKey.MANAGE_EVENTS):
-        return 403, ErrorOut(detail="Permission denied.")
+        return Status(403, ErrorOut(detail="Permission denied."))
 
     try:
         event = Event.objects.get(id=event_id)
     except Event.DoesNotExist:
-        return 404, ErrorOut(detail="Event not found.")
+        return Status(404, ErrorOut(detail="Event not found."))
 
     if payload.title is not None:
         event.title = payload.title
@@ -204,25 +221,30 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         event.location = payload.location
 
     event.save()
-    return 200, EventOut(
-        id=str(event.id),
-        title=event.title,
-        description=event.description,
-        start_datetime=event.start_datetime,
-        end_datetime=event.end_datetime,
-        location=event.location,
+    return Status(
+        200,
+        EventOut(
+            id=str(event.id),
+            title=event.title,
+            description=event.description,
+            start_datetime=event.start_datetime,
+            end_datetime=event.end_datetime,
+            location=event.location,
+        ),
     )
 
 
-@router.delete("/events/{event_id}/", response={204: None, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth())
+@router.delete(
+    "/events/{event_id}/", response={204: None, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth()
+)
 def delete_event(request, event_id: UUID):
     if not request.auth.has_permission(PermissionKey.MANAGE_EVENTS):
-        return 403, ErrorOut(detail="Permission denied.")
+        return Status(403, ErrorOut(detail="Permission denied."))
 
     try:
         event = Event.objects.get(id=event_id)
     except Event.DoesNotExist:
-        return 404, ErrorOut(detail="Event not found.")
+        return Status(404, ErrorOut(detail="Event not found."))
 
     event.delete()
-    return 204, None
+    return Status(204, None)

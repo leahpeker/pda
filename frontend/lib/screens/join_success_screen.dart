@@ -29,10 +29,10 @@ class JoinSuccessScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Thanks for reaching out. A member of our vetting group will review your request '
                   'and get back to you via email.',
-                  style: const TextStyle(fontSize: 16, height: 1.6),
+                  style: TextStyle(fontSize: 16, height: 1.6),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),

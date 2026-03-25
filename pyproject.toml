@@ -31,9 +31,12 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 addopts = "--verbose --strict-markers --tb=short --reuse-db"
-markers = ["django_db: Mark test as requiring database access"]
+markers = [
+    "django_db: Mark test as requiring database access",
+    "unit: Mark test as a unit test (no database or external dependencies)",
+    "integration: Mark test as an integration test",
+]
 filterwarnings = [
-    "ignore:No directory at.*staticfiles:UserWarning:django.core.handlers.base",
     "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning:ninja.signature.utils",
 ]
 

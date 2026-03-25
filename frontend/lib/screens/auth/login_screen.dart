@@ -73,9 +73,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
-                    validator:
-                        (v) =>
-                            v == null || v.trim().isEmpty ? 'Required' : null,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (!v.contains('@')) return 'Enter a valid email';
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(

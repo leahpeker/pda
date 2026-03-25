@@ -304,8 +304,9 @@ class _EventFormDialogState extends State<_EventFormDialog> {
   String? _validateIso8601(String? value) {
     if (value == null || value.trim().isEmpty) return 'Required';
     final parsed = DateTime.tryParse(value.trim());
-    if (parsed == null)
+    if (parsed == null) {
       return 'Enter a valid ISO 8601 datetime (e.g. 2026-06-15T18:00:00)';
+    }
     return null;
   }
 
