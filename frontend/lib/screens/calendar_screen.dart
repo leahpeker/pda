@@ -17,6 +17,22 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   _CalendarView _view = _CalendarView.month;
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedDate = DateTime(now.year, now.month, now.day);
+  }
+
+  void _onDateChanged(DateTime date) {
+    setState(() => _selectedDate = date);
+  }
+
+  void _onViewChanged(_CalendarView view) {
+    setState(() => _view = view);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +44,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         children: [
           _ViewSwitcher(
             selected: _view,
-            onSelected: (v) => setState(() => _view = v),
+            onSelected: _onViewChanged,
           ),
           Expanded(
             child: eventsAsync.when(
@@ -45,11 +61,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget _buildView(events) {
     switch (_view) {
       case _CalendarView.month:
-        return MonthView(events: events);
+        return MonthView(
+          events: events,
+          selectedDate: _selectedDate,
+          onDateChanged: _onDateChanged,
+          onDayTapped: (date) {
+            setState(() {
+              _selectedDate = date;
+              _view = _CalendarView.day;
+            });
+          },
+        );
       case _CalendarView.week:
-        return WeekView(events: events);
+        return WeekView(
+          events: events,
+          selectedDate: _selectedDate,
+          onDateChanged: _onDateChanged,
+        );
       case _CalendarView.day:
-        return DayView(events: events);
+        return DayView(
+          events: events,
+          selectedDate: _selectedDate,
+          onDateChanged: _onDateChanged,
+        );
     }
   }
 }

@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
-import 'package:pda/screens/calendar/event_detail_panel.dart';
 
 class MonthView extends StatefulWidget {
   final List<Event> events;
-  const MonthView({super.key, required this.events});
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateChanged;
+  final ValueChanged<DateTime> onDayTapped;
+
+  const MonthView({
+    super.key,
+    required this.events,
+    required this.selectedDate,
+    required this.onDateChanged,
+    required this.onDayTapped,
+  });
 
   @override
   State<MonthView> createState() => _MonthViewState();
@@ -30,8 +39,7 @@ class _MonthViewState extends State<MonthView> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _focusedMonth = DateTime(now.year, now.month);
+    _focusedMonth = DateTime(widget.selectedDate.year, widget.selectedDate.month);
   }
 
   void _goToPreviousMonth() {
@@ -88,17 +96,6 @@ class _MonthViewState extends State<MonthView> {
     return widget.events.where((e) => _isSameDay(e.startDatetime.toLocal(), day)).toList();
   }
 
-  void _showDayBottomSheet(BuildContext context, DateTime day, List<Event> events) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => _DayBottomSheet(day: day, events: events),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final gridDays = _buildGridDays();
@@ -113,6 +110,20 @@ class _MonthViewState extends State<MonthView> {
     );
   }
 
+  Future<void> _openDatePicker(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _focusedMonth,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() {
+      _focusedMonth = DateTime(picked.year, picked.month);
+    });
+    widget.onDateChanged(picked);
+  }
+
   Widget _buildMonthHeader(BuildContext context, String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -124,7 +135,10 @@ class _MonthViewState extends State<MonthView> {
             onPressed: _goToPreviousMonth,
             tooltip: 'Previous month',
           ),
-          Text(label, style: Theme.of(context).textTheme.titleMedium),
+          GestureDetector(
+            onTap: () => _openDatePicker(context),
+            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+          ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: _goToNextMonth,
@@ -180,7 +194,7 @@ class _MonthViewState extends State<MonthView> {
     final isCurrentMonth = _isCurrentMonth(day);
 
     return GestureDetector(
-      onTap: () => _showDayBottomSheet(context, day, events),
+      onTap: () => widget.onDayTapped(day),
       child: Container(
         constraints: const BoxConstraints(minHeight: _minCellHeight),
         decoration: BoxDecoration(
@@ -305,89 +319,3 @@ class _EventChip extends StatelessWidget {
   }
 }
 
-class _DayBottomSheet extends StatelessWidget {
-  final DateTime day;
-  final List<Event> events;
-
-  const _DayBottomSheet({required this.day, required this.events});
-
-  @override
-  Widget build(BuildContext context) {
-    final dateLabel = DateFormat('EEEE, MMMM d').format(day);
-
-    return DraggableScrollableSheet(
-      initialChildSize: 0.4,
-      minChildSize: 0.25,
-      maxChildSize: 0.85,
-      expand: false,
-      builder: (context, scrollController) {
-        return Column(
-          children: [
-            _buildHandle(context),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: Text(dateLabel, style: Theme.of(context).textTheme.titleMedium),
-            ),
-            const Divider(height: 1),
-            Expanded(child: _buildEventList(context, scrollController)),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildHandle(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 4),
-      child: Container(
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Theme.of(context).dividerColor,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEventList(BuildContext context, ScrollController scrollController) {
-    if (events.isEmpty) {
-      return Center(
-        child: Text(
-          'No events',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      controller: scrollController,
-      itemCount: events.length,
-      itemBuilder: (context, index) => _EventListItem(event: events[index]),
-    );
-  }
-}
-
-class _EventListItem extends StatelessWidget {
-  final Event event;
-
-  const _EventListItem({required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    final timeFmt = DateFormat('h:mm a');
-    final startTime = timeFmt.format(event.startDatetime.toLocal());
-    final endTime = timeFmt.format(event.endDatetime.toLocal());
-
-    return ListTile(
-      onTap: () => showEventDetail(context, event),
-      leading: Icon(Icons.event, color: Theme.of(context).colorScheme.primary),
-      title: Text(event.title, style: Theme.of(context).textTheme.bodyMedium),
-      subtitle: Text(
-        '$startTime – $endTime',
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-      ),
-      trailing: const Icon(Icons.chevron_right),
-    );
-  }
-}

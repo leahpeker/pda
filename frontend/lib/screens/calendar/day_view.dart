@@ -5,7 +5,15 @@ import 'package:pda/screens/calendar/event_detail_panel.dart';
 
 class DayView extends StatefulWidget {
   final List<Event> events;
-  const DayView({super.key, required this.events});
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateChanged;
+
+  const DayView({
+    super.key,
+    required this.events,
+    required this.selectedDate,
+    required this.onDateChanged,
+  });
 
   @override
   State<DayView> createState() => _DayViewState();
@@ -22,7 +30,7 @@ class _DayViewState extends State<DayView> {
   @override
   void initState() {
     super.initState();
-    _selectedDay = _today();
+    _selectedDay = DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day);
     _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrentHour());
   }
@@ -57,15 +65,28 @@ class _DayViewState extends State<DayView> {
   }
 
   void _goToPrevDay() {
-    setState(() {
-      _selectedDay = _selectedDay.subtract(const Duration(days: 1));
-    });
+    final newDay = _selectedDay.subtract(const Duration(days: 1));
+    setState(() => _selectedDay = newDay);
+    widget.onDateChanged(newDay);
   }
 
   void _goToNextDay() {
-    setState(() {
-      _selectedDay = _selectedDay.add(const Duration(days: 1));
-    });
+    final newDay = _selectedDay.add(const Duration(days: 1));
+    setState(() => _selectedDay = newDay);
+    widget.onDateChanged(newDay);
+  }
+
+  Future<void> _openDatePicker() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDay,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    final newDay = DateTime(picked.year, picked.month, picked.day);
+    setState(() => _selectedDay = newDay);
+    widget.onDateChanged(newDay);
   }
 
   List<Event> _eventsForSelectedDay() {
@@ -97,32 +118,69 @@ class _DayViewState extends State<DayView> {
           selectedDay: _selectedDay,
           onPrev: _goToPrevDay,
           onNext: _goToNextDay,
+          onTap: _openDatePicker,
         ),
         Expanded(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: SizedBox(
-              height: _totalHeight,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _TimeLabelsColumn(
-                    hourHeight: _hourHeight,
-                    columnWidth: _timeColumnWidth,
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                controller: _scrollController,
+                child: SizedBox(
+                  height: _totalHeight,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _TimeLabelsColumn(
+                        hourHeight: _hourHeight,
+                        columnWidth: _timeColumnWidth,
+                      ),
+                      Expanded(
+                        child: _EventArea(
+                          events: _eventsForSelectedDay(),
+                          totalHeight: _totalHeight,
+                          hourHeight: _hourHeight,
+                          showCurrentTimeLine: _isToday(),
+                          topForTime: _topForTime,
+                          heightForEvent: _heightForEvent,
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: _EventArea(
-                      events: _eventsForSelectedDay(),
-                      totalHeight: _totalHeight,
-                      hourHeight: _hourHeight,
-                      showCurrentTimeLine: _isToday(),
-                      topForTime: _topForTime,
-                      heightForEvent: _heightForEvent,
+                ),
+              ),
+              if (_eventsForSelectedDay().isEmpty)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 48,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.3),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No events today',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+            ],
           ),
         ),
       ],
@@ -134,11 +192,13 @@ class _DayHeader extends StatelessWidget {
   final DateTime selectedDay;
   final VoidCallback onPrev;
   final VoidCallback onNext;
+  final VoidCallback onTap;
 
   const _DayHeader({
     required this.selectedDay,
     required this.onPrev,
     required this.onNext,
+    required this.onTap,
   });
 
   @override
@@ -154,7 +214,10 @@ class _DayHeader extends StatelessWidget {
             tooltip: 'Previous day',
             onPressed: onPrev,
           ),
-          Text(label, style: Theme.of(context).textTheme.titleMedium),
+          GestureDetector(
+            onTap: onTap,
+            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+          ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             tooltip: 'Next day',

@@ -6,12 +6,19 @@ import 'package:pda/screens/calendar/event_detail_panel.dart';
 const double _kHourHeight = 60.0;
 const double _kTimeGutterWidth = 56.0;
 const double _kMinEventHeight = 30.0;
-const double _kTotalHeight = _kHourHeight * 24;
 const int _kScrollToHour = 8;
 
 class WeekView extends StatefulWidget {
   final List<Event> events;
-  const WeekView({super.key, required this.events});
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateChanged;
+
+  const WeekView({
+    super.key,
+    required this.events,
+    required this.selectedDate,
+    required this.onDateChanged,
+  });
 
   @override
   State<WeekView> createState() => _WeekViewState();
@@ -24,7 +31,7 @@ class _WeekViewState extends State<WeekView> {
   @override
   void initState() {
     super.initState();
-    _weekStart = _mondayOf(DateTime.now());
+    _weekStart = _mondayOf(widget.selectedDate);
     _scrollController = ScrollController(
       initialScrollOffset: _kScrollToHour * _kHourHeight,
     );
@@ -51,6 +58,18 @@ class _WeekViewState extends State<WeekView> {
     setState(() {
       _weekStart = _weekStart.add(const Duration(days: 7));
     });
+  }
+
+  Future<void> _openDatePicker() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _weekStart,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() => _weekStart = _mondayOf(picked));
+    widget.onDateChanged(picked);
   }
 
   List<DateTime> get _weekDays {
@@ -86,64 +105,30 @@ class _WeekViewState extends State<WeekView> {
     }).toList();
   }
 
+  bool get _hasAnyEventsThisWeek {
+    return _weekDays.any((day) => _eventsForDay(day).isNotEmpty);
+  }
+
   double _eventTopOffset(Event event, DateTime day) {
     final dayStart = DateTime(day.year, day.month, day.day);
     final start = event.startDatetime.toLocal();
     final effectiveStart = start.isBefore(dayStart) ? dayStart : start;
-    final minutesFromMidnight =
-        effectiveStart.hour * 60 + effectiveStart.minute;
+    final minutesFromMidnight = effectiveStart.hour * 60 + effectiveStart.minute;
     return minutesFromMidnight * 1.0;
   }
 
   double _eventHeight(Event event, DateTime day) {
     final dayStart = DateTime(day.year, day.month, day.day);
     final dayEnd = dayStart.add(const Duration(days: 1));
-
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime.toLocal();
-
     final effectiveStart = start.isBefore(dayStart) ? dayStart : start;
     final effectiveEnd = end.isAfter(dayEnd) ? dayEnd : end;
-
-    final durationMinutes =
-        effectiveEnd.difference(effectiveStart).inMinutes.toDouble();
-    return durationMinutes < _kMinEventHeight
-        ? _kMinEventHeight
-        : durationMinutes;
+    final durationMinutes = effectiveEnd.difference(effectiveStart).inMinutes.toDouble();
+    return durationMinutes < _kMinEventHeight ? _kMinEventHeight : durationMinutes;
   }
 
-  Widget _buildEventBlock(Event event, DateTime day, double columnWidth) {
-    final theme = Theme.of(context);
-    final top = _eventTopOffset(event, day);
-    final height = _eventHeight(event, day);
-    final startLocal = event.startDatetime.toLocal();
-    final timeFmt = DateFormat('h:mm a');
-
-    return Positioned(
-      top: top,
-      left: 1,
-      right: 1,
-      height: height,
-      child: GestureDetector(
-        onTap: () => showEventDetail(context, event),
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: _buildEventBlockContent(event, height, timeFmt, startLocal),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEventBlockContent(
-    Event event,
-    double height,
-    DateFormat timeFmt,
-    DateTime startLocal,
-  ) {
+  Widget _buildEventBlockContent(Event event, double height, DateFormat timeFmt, DateTime startLocal) {
     if (height < 20) {
       return Text(
         event.title,
@@ -171,99 +156,118 @@ class _WeekViewState extends State<WeekView> {
     );
   }
 
-  Widget _buildDayColumn(DateTime day, double columnWidth) {
+  Widget _buildHeaderRow(List<DateTime> days, double columnWidth) {
     final theme = Theme.of(context);
-    final isToday = _isToday(day);
-    final dayEvents = _eventsForDay(day);
 
-    final headerBackground =
-        isToday ? theme.colorScheme.primary : Colors.transparent;
-    final headerForeground = isToday
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface;
+    final dayHeaders = days.map((day) {
+      final isToday = _isToday(day);
+      final headerBackground = isToday ? theme.colorScheme.primary : Colors.transparent;
+      final headerForeground = isToday ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface;
 
-    return SizedBox(
-      width: columnWidth,
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: headerBackground,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  DateFormat('EEE').format(day),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: headerForeground,
-                  ),
-                ),
-                Text(
-                  '${day.day}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: headerForeground,
-                  ),
-                ),
-              ],
-            ),
+      return SizedBox(
+        width: columnWidth,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: headerBackground,
+            borderRadius: BorderRadius.circular(6),
           ),
-          Expanded(
-            child: Stack(
-              children: [
-                // Hour grid lines
-                ...List.generate(24, (hour) {
-                  return Positioned(
-                    top: hour * _kHourHeight,
-                    left: 0,
-                    right: 0,
-                    child: Divider(
-                      height: 1,
-                      thickness: 0.5,
-                      color: theme.dividerColor,
-                    ),
-                  );
-                }),
-                // Event blocks
-                ...dayEvents.map((e) => _buildEventBlock(e, day, columnWidth)),
-              ],
-            ),
+          child: Column(
+            children: [
+              Text(
+                DateFormat('EEE').format(day),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: headerForeground),
+              ),
+              Text(
+                '${day.day}',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: headerForeground),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      );
+    }).toList();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(width: _kTimeGutterWidth),
+        ...dayHeaders,
+      ],
     );
   }
 
-  Widget _buildTimeGutter() {
+  Widget _buildHourRow(int hour, List<DateTime> days, double columnWidth, ThemeData theme) {
+    final dayCells = days.map((day) {
+      final dayEvents = _eventsForDay(day).where((e) {
+        final top = _eventTopOffset(e, day);
+        return top >= hour * _kHourHeight && top < (hour + 1) * _kHourHeight;
+      }).toList();
+
+      return SizedBox(
+        width: columnWidth,
+        height: _kHourHeight,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Divider(height: 1, thickness: 0.5, color: theme.dividerColor),
+            ),
+            ...dayEvents.map((e) {
+              final top = _eventTopOffset(e, day) - hour * _kHourHeight;
+              final height = _eventHeight(e, day);
+              final startLocal = e.startDatetime.toLocal();
+              final timeFmt = DateFormat('h:mm a');
+              return Positioned(
+                top: top,
+                left: 1,
+                right: 1,
+                height: height,
+                child: GestureDetector(
+                  onTap: () => showEventDetail(context, e),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: _buildEventBlockContent(e, height, timeFmt, startLocal),
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }).toList();
+
     return SizedBox(
-      width: _kTimeGutterWidth,
-      child: Column(
+      height: _kHourHeight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Spacer to match the day header height
-          const SizedBox(height: 60),
           SizedBox(
-            height: _kTotalHeight,
-            child: Stack(
-              children: List.generate(24, (hour) {
-                return Positioned(
-                  top: hour * _kHourHeight - 8,
-                  left: 0,
-                  right: 4,
+            width: _kTimeGutterWidth,
+            height: _kHourHeight,
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Transform.translate(
+                  offset: const Offset(0, -8),
                   child: Text(
                     _hourLabel(hour),
                     textAlign: TextAlign.right,
                     style: const TextStyle(fontSize: 10, color: Colors.grey),
                   ),
-                );
-              }),
+                ),
+              ),
             ),
           ),
+          ...dayCells,
         ],
       ),
     );
@@ -275,7 +279,6 @@ class _WeekViewState extends State<WeekView> {
 
     return Column(
       children: [
-        // Navigation header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
@@ -287,10 +290,13 @@ class _WeekViewState extends State<WeekView> {
                 tooltip: 'Previous week',
               ),
               Expanded(
-                child: Text(
-                  _weekRangeLabel(),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium,
+                child: GestureDetector(
+                  onTap: _openDatePicker,
+                  child: Text(
+                    _weekRangeLabel(),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
               ),
               IconButton(
@@ -302,40 +308,53 @@ class _WeekViewState extends State<WeekView> {
           ),
         ),
         const Divider(height: 1),
-        // Calendar grid
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
               final availableWidth = constraints.maxWidth - _kTimeGutterWidth;
               final columnWidth = availableWidth / 7;
+              final days = _weekDays;
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              return Stack(
                 children: [
-                  // Time gutter (fixed, not scrollable horizontally)
-                  SingleChildScrollView(
-                    controller: _scrollController,
-                    child: _buildTimeGutter(),
+                  Column(
+                    children: [
+                      _buildHeaderRow(days, columnWidth),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          itemCount: 24,
+                          itemBuilder: (context, hour) =>
+                              _buildHourRow(hour, days, columnWidth, theme),
+                        ),
+                      ),
+                    ],
                   ),
-                  // Day columns
-                  Expanded(
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      child: SizedBox(
-                        height: _kTotalHeight + 60,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: _weekDays.map((day) {
-                            return SizedBox(
-                              width: columnWidth,
-                              height: _kTotalHeight + 60,
-                              child: _buildDayColumn(day, columnWidth),
-                            );
-                          }).toList(),
+                  if (!_hasAnyEventsThisWeek)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 48,
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No events this week',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               );
             },
