@@ -3,15 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pda/services/api_error.dart';
 
 void main() {
-  RequestOptions _options() => RequestOptions(path: '/test');
+  RequestOptions options() => RequestOptions(path: '/test');
 
   group('ApiError.from', () {
     test('returns invalidCredentials for 401 DioException', () {
       final error = DioException(
-        requestOptions: _options(),
+        requestOptions: options(),
         type: DioExceptionType.badResponse,
         response: Response(
-          requestOptions: _options(),
+          requestOptions: options(),
           statusCode: 401,
           data: {'detail': 'Invalid credentials'},
         ),
@@ -23,10 +23,10 @@ void main() {
 
     test('returns validationError with detail for 400 DioException', () {
       final error = DioException(
-        requestOptions: _options(),
+        requestOptions: options(),
         type: DioExceptionType.badResponse,
         response: Response(
-          requestOptions: _options(),
+          requestOptions: options(),
           statusCode: 400,
           data: {'detail': 'Name, email, and why_join are required.'},
         ),
@@ -42,10 +42,10 @@ void main() {
 
     test('returns validationError with detail for 422 DioException', () {
       final error = DioException(
-        requestOptions: _options(),
+        requestOptions: options(),
         type: DioExceptionType.badResponse,
         response: Response(
-          requestOptions: _options(),
+          requestOptions: options(),
           statusCode: 422,
           data: {'detail': 'Validation failed'},
         ),
@@ -58,9 +58,9 @@ void main() {
 
     test('returns serverError for 500 DioException', () {
       final error = DioException(
-        requestOptions: _options(),
+        requestOptions: options(),
         type: DioExceptionType.badResponse,
-        response: Response(requestOptions: _options(), statusCode: 500),
+        response: Response(requestOptions: options(), statusCode: 500),
       );
 
       final result = ApiError.from(error);
@@ -69,7 +69,7 @@ void main() {
 
     test('returns networkError for connectionError DioException', () {
       final error = DioException(
-        requestOptions: _options(),
+        requestOptions: options(),
         type: DioExceptionType.connectionError,
       );
 
@@ -79,7 +79,7 @@ void main() {
 
     test('returns networkError for connectionTimeout DioException', () {
       final error = DioException(
-        requestOptions: _options(),
+        requestOptions: options(),
         type: DioExceptionType.connectionTimeout,
       );
 
@@ -96,10 +96,10 @@ void main() {
 
     test('returns validationError with fallback when detail is missing', () {
       final error = DioException(
-        requestOptions: _options(),
+        requestOptions: options(),
         type: DioExceptionType.badResponse,
         response: Response(
-          requestOptions: _options(),
+          requestOptions: options(),
           statusCode: 400,
           data: 'not a map',
         ),
