@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from users.models import User
+from users.roles import PROTECTED_ROLE_NAMES, Role
 
 
 @admin.register(User)
@@ -28,3 +29,19 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_default", "permission_count")
+    readonly_fields = ("id",)
+
+    def permission_count(self, obj):
+        return len(obj.permissions)
+
+    permission_count.short_description = "Permissions"
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.name in PROTECTED_ROLE_NAMES:
+            return False
+        return super().has_delete_permission(request, obj)

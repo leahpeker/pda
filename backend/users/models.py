@@ -3,6 +3,8 @@ import uuid
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from users.roles import Role  # noqa: F401 — re-exported so Django discovers it in the users app
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
