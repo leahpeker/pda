@@ -34,8 +34,8 @@ void main() {
     await container
         .read(joinRequestProvider.notifier)
         .submit(
-          name: 'Test',
-          email: 'test@example.com',
+          displayName: 'Test Person',
+          phoneNumber: '+12025551234',
           pronouns: '',
           howTheyHeard: '',
           whyJoin: 'Testing',
@@ -60,7 +60,7 @@ void main() {
               path: '/api/community/join-request/',
             ),
             statusCode: 400,
-            data: {'detail': 'Name, email, and why_join are required.'},
+            data: {'detail': 'display_name and why_join are required.'},
           ),
         ),
       );
@@ -72,7 +72,7 @@ void main() {
       expect(state.error, isA<ValidationError>());
       expect(
         (state.error! as ValidationError).detail,
-        'Name, email, and why_join are required.',
+        'display_name and why_join are required.',
       );
     });
 

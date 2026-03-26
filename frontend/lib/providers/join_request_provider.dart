@@ -7,8 +7,9 @@ class JoinRequestNotifier extends AsyncNotifier<void> {
   Future<void> build() async {}
 
   Future<void> submit({
-    required String name,
-    required String email,
+    required String displayName,
+    required String phoneNumber,
+    String email = '',
     required String pronouns,
     required String howTheyHeard,
     required String whyJoin,
@@ -19,7 +20,8 @@ class JoinRequestNotifier extends AsyncNotifier<void> {
       await api.post(
         '/api/community/join-request/',
         data: {
-          'name': name,
+          'display_name': displayName,
+          'phone_number': phoneNumber,
           'email': email,
           'pronouns': pronouns,
           'how_they_heard': howTheyHeard,

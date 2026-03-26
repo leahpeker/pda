@@ -155,7 +155,7 @@ class _JoinRequestCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    request.name,
+                    request.displayName,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -163,7 +163,14 @@ class _JoinRequestCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text(request.email, style: const TextStyle(color: Colors.grey)),
+            Text(
+              request.phoneNumber,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            if (request.email.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(request.email, style: const TextStyle(color: Colors.grey)),
+            ],
             if (request.pronouns.isNotEmpty) ...[
               const SizedBox(height: 2),
               Text(

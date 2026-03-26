@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:pda/providers/join_request_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+
+final _displayNameRegex = RegExp(r'^[a-zA-Z ]+$');
 
 class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key});
@@ -14,15 +17,16 @@ class JoinScreen extends ConsumerStatefulWidget {
 
 class _JoinScreenState extends ConsumerState<JoinScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _pronounsController = TextEditingController();
   final _howController = TextEditingController();
   final _whyController = TextEditingController();
+  String _phoneNumber = '';
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _displayNameController.dispose();
     _emailController.dispose();
     _pronounsController.dispose();
     _howController.dispose();
@@ -32,10 +36,12 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_phoneNumber.isEmpty) return;
     await ref
         .read(joinRequestProvider.notifier)
         .submit(
-          name: _nameController.text.trim(),
+          displayName: _displayNameController.text.trim(),
+          phoneNumber: _phoneNumber,
           email: _emailController.text.trim(),
           pronouns: _pronounsController.text.trim(),
           howTheyHeard: _howController.text.trim(),
@@ -70,33 +76,59 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'We review all requests. You\'ll hear from us once a vetting member has reviewed your submission.',
+                      'We review all requests. You\'ll hear from us once a '
+                      'vetting member has reviewed your submission.',
                       style: TextStyle(color: Colors.grey[600], fontSize: 15),
                     ),
                     const SizedBox(height: 32),
                     TextFormField(
-                      controller: _nameController,
+                      controller: _displayNameController,
                       decoration: const InputDecoration(
-                        labelText: 'Name *',
+                        labelText: 'Display name *',
+                        hintText: 'e.g. Alex R',
+                        helperText:
+                            'Letters and spaces only; at least first name + '
+                            'last initial',
                         border: OutlineInputBorder(),
                       ),
-                      validator:
-                          (v) =>
-                              v == null || v.trim().isEmpty ? 'Required' : null,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Required';
+                        if (!_displayNameRegex.hasMatch(v.trim())) {
+                          return 'Letters and spaces only';
+                        }
+                        if (v.trim().length > 64) return 'Max 64 characters';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    IntlPhoneField(
+                      initialCountryCode: 'US',
+                      decoration: const InputDecoration(
+                        labelText: 'WhatsApp phone number *',
+                        border: OutlineInputBorder(),
+                        helperText:
+                            'Use the same phone number you use (or will use) '
+                            'in the PDA WhatsApp community.',
+                        helperMaxLines: 2,
+                      ),
+                      onChanged: (phone) {
+                        _phoneNumber = phone.completeNumber;
+                      },
+                      validator: (phone) {
+                        if (phone == null || phone.number.isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
-                        labelText: 'Email *',
+                        labelText: 'Email (optional)',
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Required';
-                        if (!v.contains('@')) return 'Enter a valid email';
-                        return null;
-                      },
                     ),
                     const SizedBox(height: 16),
                     TextFormField(

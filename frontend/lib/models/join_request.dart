@@ -1,6 +1,7 @@
 class JoinRequest {
   final String id;
-  final String name;
+  final String displayName;
+  final String phoneNumber;
   final String email;
   final String pronouns;
   final String howTheyHeard;
@@ -10,7 +11,8 @@ class JoinRequest {
 
   const JoinRequest({
     required this.id,
-    required this.name,
+    required this.displayName,
+    required this.phoneNumber,
     required this.email,
     required this.pronouns,
     required this.howTheyHeard,
@@ -22,8 +24,9 @@ class JoinRequest {
   factory JoinRequest.fromJson(Map<String, dynamic> json) {
     return JoinRequest(
       id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
+      displayName: json['display_name'] as String,
+      phoneNumber: json['phone_number'] as String,
+      email: json['email'] as String? ?? '',
       pronouns: json['pronouns'] as String,
       howTheyHeard: json['how_they_heard'] as String,
       whyJoin: json['why_join'] as String,
