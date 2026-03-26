@@ -1,0 +1,321 @@
+"""Tests for event RSVP endpoints and event detail GET."""
+
+import pytest
+from community.models import Event, EventRSVP, RSVPStatus
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def rsvp_event(db, test_user):
+    return Event.objects.create(
+        title="RSVP Event",
+        description="An event with RSVPs enabled",
+        start_datetime="2026-06-01T18:00:00Z",
+        end_datetime="2026-06-01T20:00:00Z",
+        location="Community Space",
+        rsvp_enabled=True,
+        created_by=test_user,
+    )
+
+
+@pytest.fixture
+def no_rsvp_event(db):
+    return Event.objects.create(
+        title="No RSVP Event",
+        start_datetime="2026-06-02T18:00:00Z",
+        end_datetime="2026-06-02T20:00:00Z",
+        rsvp_enabled=False,
+    )
+
+
+@pytest.fixture
+def other_user(db):
+    from users.models import User
+
+    return User.objects.create_user(
+        phone_number="+12025550302",
+        password="otherpass",
+        display_name="Other Member",
+    )
+
+
+@pytest.fixture
+def other_headers(other_user):
+    from ninja_jwt.tokens import RefreshToken
+
+    refresh = RefreshToken.for_user(other_user)
+    return {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}  # type: ignore
+
+
+# ---------------------------------------------------------------------------
+# TestGetEvent
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestGetEvent:
+    def test_get_event_authenticated(self, api_client, auth_headers, rsvp_event):
+        response = api_client.get(f"/api/community/events/{rsvp_event.id}/", **auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == str(rsvp_event.id)
+        assert data["title"] == "RSVP Event"
+
+    def test_get_event_unauthenticated(self, api_client, rsvp_event):
+        response = api_client.get(f"/api/community/events/{rsvp_event.id}/")
+        assert response.status_code == 200
+        data = response.json()
+        # Links hidden for unauthenticated
+        assert data["whatsapp_link"] == ""
+        assert data["rsvp_enabled"] is False
+
+    def test_get_event_not_found(self, api_client, auth_headers):
+        response = api_client.get(
+            "/api/community/events/00000000-0000-0000-0000-000000000000/",
+            **auth_headers,
+        )
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Event not found."
+
+
+# ---------------------------------------------------------------------------
+# TestRSVP
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestRSVP:
+    def test_rsvp_attending(self, api_client, auth_headers, rsvp_event):
+        response = api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["my_rsvp"] == RSVPStatus.ATTENDING
+
+    def test_rsvp_maybe(self, api_client, auth_headers, rsvp_event):
+        response = api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.MAYBE},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["my_rsvp"] == RSVPStatus.MAYBE
+
+    def test_rsvp_cant_go(self, api_client, auth_headers, rsvp_event):
+        response = api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.CANT_GO},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["my_rsvp"] == RSVPStatus.CANT_GO
+
+    def test_rsvp_invalid_status(self, api_client, auth_headers, rsvp_event):
+        response = api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": "going"},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 400
+
+    def test_rsvp_disabled_event(self, api_client, auth_headers, no_rsvp_event):
+        response = api_client.post(
+            f"/api/community/events/{no_rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 400
+        assert "not enabled" in response.json()["detail"]
+
+    def test_rsvp_event_not_found(self, api_client, auth_headers):
+        response = api_client.post(
+            "/api/community/events/00000000-0000-0000-0000-000000000000/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 404
+
+    def test_rsvp_requires_auth(self, api_client, rsvp_event):
+        response = api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+        )
+        assert response.status_code == 401
+
+    def test_rsvp_upsert_updates_existing(self, api_client, auth_headers, rsvp_event):
+        api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+            **auth_headers,
+        )
+        response = api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.CANT_GO},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["my_rsvp"] == RSVPStatus.CANT_GO
+        # Still only one RSVP record
+        from users.models import User
+
+        user = User.objects.get(phone_number="+12025550101")
+        assert EventRSVP.objects.filter(event=rsvp_event, user=user).count() == 1
+
+    def test_rsvp_delete_success(self, api_client, auth_headers, rsvp_event, test_user):
+        EventRSVP.objects.create(event=rsvp_event, user=test_user, status=RSVPStatus.ATTENDING)
+        response = api_client.delete(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            **auth_headers,
+        )
+        assert response.status_code == 204
+        assert not EventRSVP.objects.filter(event=rsvp_event, user=test_user).exists()
+
+    def test_rsvp_delete_not_found(self, api_client, auth_headers, rsvp_event):
+        response = api_client.delete(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            **auth_headers,
+        )
+        assert response.status_code == 404
+        assert response.json()["detail"] == "RSVP not found."
+
+    def test_rsvp_delete_requires_auth(self, api_client, rsvp_event):
+        response = api_client.delete(f"/api/community/events/{rsvp_event.id}/rsvp/")
+        assert response.status_code == 401
+
+    def test_creator_sees_guest_phone_numbers(
+        self, api_client, auth_headers, rsvp_event, other_user, other_headers
+    ):
+        # other_user RSVPs
+        api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+            **other_headers,
+        )
+        # Creator fetches event
+        response = api_client.get(
+            f"/api/community/events/{rsvp_event.id}/",
+            **auth_headers,
+        )
+        assert response.status_code == 200
+        guests = response.json()["guests"]
+        assert len(guests) == 1
+        assert guests[0]["phone"] == other_user.phone_number
+
+    def test_non_creator_cannot_see_guest_phones(
+        self, api_client, auth_headers, rsvp_event, other_user, other_headers
+    ):
+        # creator RSVPs
+        api_client.post(
+            f"/api/community/events/{rsvp_event.id}/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+            **auth_headers,
+        )
+        # other_user (not creator) fetches event
+        response = api_client.get(
+            f"/api/community/events/{rsvp_event.id}/",
+            **other_headers,
+        )
+        assert response.status_code == 200
+        guests = response.json()["guests"]
+        assert len(guests) == 1
+        assert guests[0]["phone"] is None
+
+
+# ---------------------------------------------------------------------------
+# TestCreateEventWithCohosts
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestCreateEventWithCohosts:
+    def test_create_event_with_cohosts(self, api_client, auth_headers, other_user):
+        response = api_client.post(
+            "/api/community/events/",
+            {
+                "title": "Cohost Event",
+                "start_datetime": "2026-07-01T18:00:00Z",
+                "end_datetime": "2026-07-01T20:00:00Z",
+                "co_host_ids": [str(other_user.pk)],
+            },
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert str(other_user.pk) in data["co_host_ids"]
+        assert other_user.display_name in data["co_host_names"]
+
+    def test_create_event_with_rsvp_enabled(self, api_client, auth_headers):
+        response = api_client.post(
+            "/api/community/events/",
+            {
+                "title": "RSVP Event",
+                "start_datetime": "2026-07-01T18:00:00Z",
+                "end_datetime": "2026-07-01T20:00:00Z",
+                "rsvp_enabled": True,
+            },
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 201
+        assert response.json()["rsvp_enabled"] is True
+
+    def test_update_event_toggle_rsvp(self, api_client, auth_headers, rsvp_event):
+        response = api_client.patch(
+            f"/api/community/events/{rsvp_event.id}/",
+            {"rsvp_enabled": False},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["rsvp_enabled"] is False
+
+    def test_cohost_sees_guest_phones(
+        self, api_client, auth_headers, other_user, other_headers, test_user
+    ):
+        # Create event with other_user as co-host
+        create_resp = api_client.post(
+            "/api/community/events/",
+            {
+                "title": "Cohost Phone Test",
+                "start_datetime": "2026-08-01T18:00:00Z",
+                "end_datetime": "2026-08-01T20:00:00Z",
+                "rsvp_enabled": True,
+                "co_host_ids": [str(other_user.pk)],
+            },
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert create_resp.status_code == 201
+        event_id = create_resp.json()["id"]
+
+        # Creator RSVPs
+        api_client.post(
+            f"/api/community/events/{event_id}/rsvp/",
+            {"status": RSVPStatus.ATTENDING},
+            content_type="application/json",
+            **auth_headers,
+        )
+
+        # Co-host fetches — should see phones
+        response = api_client.get(f"/api/community/events/{event_id}/", **other_headers)
+        assert response.status_code == 200
+        guests = response.json()["guests"]
+        assert len(guests) == 1
+        assert guests[0]["phone"] == test_user.phone_number

@@ -878,157 +878,169 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     // Phone step
     if (_isMember == null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Member access', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 4),
-          Text(
-            'Links and RSVP are available to members only.',
-            style: TextStyle(
-              fontSize: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+      return _JuicyGate(
+        headline: '🔒 log in to see the juicy details',
+        subtext:
+            'links, RSVPs & more are for members only — enter your number to get in',
+        error: _error,
+        child: Form(
+          key: _phoneKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PhoneFormField(onChanged: (number) => _phoneNumber = number),
+              const SizedBox(height: 8),
+              FilledButton(
+                onPressed: _loading ? null : _checkPhone,
+                child:
+                    _loading
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Text('continue'),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Form(
-            key: _phoneKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                PhoneFormField(onChanged: (number) => _phoneNumber = number),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: _loading ? null : _checkPhone,
-                  child:
-                      _loading
-                          ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                          : const Text('Continue'),
-                ),
-              ],
-            ),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.error),
-            ),
-          ],
-        ],
+        ),
       );
     }
 
     // Login step (member found)
     if (_isMember == true) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Welcome back!', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 4),
-          Text(
-            'Enter your password to see member details.',
-            style: TextStyle(
-              fontSize: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Form(
-            key: _loginKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _passwordCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+      return _JuicyGate(
+        headline: '👋 hey, welcome back!',
+        subtext: 'pop in your password and we\'ll get you in',
+        error: _error,
+        child: Form(
+          key: _loginKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _passwordCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                obscureText: true,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Required';
+                  return null;
+                },
+                onFieldSubmitted: (_) => _login(),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  FilledButton(
+                    onPressed: _loading ? null : _login,
+                    child:
+                        _loading
+                            ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text('log in'),
                   ),
-                  obscureText: true,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Required';
-                    return null;
-                  },
-                  onFieldSubmitted: (_) => _login(),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    FilledButton(
-                      onPressed: _loading ? null : _login,
-                      child:
-                          _loading
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                              : const Text('Log in'),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: () => setState(() => _isMember = null),
-                      child: const Text('Back'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () => setState(() => _isMember = null),
+                    child: const Text('back'),
+                  ),
+                ],
+              ),
+            ],
           ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.error),
-            ),
-          ],
-        ],
+        ),
       );
     }
 
     // Not a member — prompt to join
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Not a member yet?', style: theme.textTheme.titleSmall),
-        const SizedBox(height: 4),
-        Text(
-          'Request to join the collective to see event details and RSVP.',
-          style: TextStyle(
-            fontSize: 14,
-            color: theme.colorScheme.onSurfaceVariant,
+    return _JuicyGate(
+      headline: '🌱 not a member yet?',
+      subtext: 'request to join the collective and unlock all the good stuff',
+      error: null,
+      child: Row(
+        children: [
+          FilledButton(
+            onPressed: () => context.push('/join'),
+            child: const Text('request to join'),
           ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: () => setState(() => _isMember = null),
+            child: const Text('back'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _JuicyGate extends StatelessWidget {
+  const _JuicyGate({
+    required this.headline,
+    required this.subtext,
+    required this.child,
+    required this.error,
+  });
+
+  final String headline;
+  final String subtext;
+  final Widget child;
+  final String? error;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            FilledButton(
-              onPressed: _loading ? null : () => context.push('/join'),
-              child: const Text('Request to join'),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            headline,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(width: 8),
-            TextButton(
-              onPressed: () => setState(() => _isMember = null),
-              child: const Text('Back'),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtext,
+            style: TextStyle(
+              fontSize: 13,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+          if (error != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              error!,
+              style: TextStyle(fontSize: 13, color: theme.colorScheme.error),
             ),
           ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
