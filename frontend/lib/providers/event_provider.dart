@@ -6,6 +6,8 @@ import 'package:pda/providers/auth_provider.dart';
 final _log = Logger('EventProvider');
 
 final eventsProvider = FutureProvider<List<Event>>((ref) async {
+  // Re-fetch when auth state changes so authenticated users see private fields.
+  ref.watch(authProvider);
   final api = ref.watch(apiClientProvider);
   try {
     final response = await api.get('/api/community/events/');

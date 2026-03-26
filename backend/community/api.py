@@ -5,10 +5,13 @@ from uuid import UUID
 
 import phonenumbers
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.core.mail import send_mail
+from django.http import HttpRequest
 from ninja import Router
 from ninja.responses import Status
-from ninja_jwt.authentication import JWTAuth
+from ninja.security import HttpBearer
+from ninja_jwt.authentication import JWTAuth, JWTBaseAuthentication
 from pydantic import BaseModel, Field
 from users.permissions import PermissionKey
 
@@ -25,6 +28,26 @@ from community.models import (
 logger = logging.getLogger("pda.community")
 
 router = Router()
+
+
+class OptionalJWTAuth(JWTBaseAuthentication, HttpBearer):
+    """JWT auth that returns AnonymousUser instead of None/401 when no/invalid token."""
+
+    def authenticate(self, request: HttpRequest, token: str):
+        try:
+            return self.jwt_authenticate(request, token)
+        except Exception:
+            return AnonymousUser()
+
+    def __call__(self, request: HttpRequest):
+        result = super().__call__(request)
+        # No Authorization header → super().__call__ returns None
+        if result is None:
+            return AnonymousUser()
+        return result
+
+
+_optional_jwt = OptionalJWTAuth()
 
 
 class GuidelinesOut(BaseModel):
@@ -366,9 +389,14 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
     co_hosts = list(event.co_hosts.all())
     creator = event.created_by
     creator_name = creator.display_name or creator.phone_number if creator else None
-    rsvps = list(event.rsvps.select_related("user").all()) if event.rsvp_enabled else []
+    authenticated = requesting_user is not None and not isinstance(requesting_user, AnonymousUser)
+    rsvps = (
+        list(event.rsvps.select_related("user").all())
+        if (event.rsvp_enabled and authenticated)
+        else []
+    )
     co_host_ids = {str(u.id) for u in co_hosts}
-    can_see_phones = requesting_user is not None and (
+    can_see_phones = authenticated and (
         (creator is not None and requesting_user.pk == creator.pk)
         or str(requesting_user.pk) in co_host_ids
     )
@@ -382,7 +410,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         for r in rsvps
     ]
     my_rsvp = None
-    if requesting_user is not None:
+    if authenticated:
         for r in rsvps:
             if r.user_id == requesting_user.pk:
                 my_rsvp = r.status
@@ -394,25 +422,58 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         start_datetime=event.start_datetime,
         end_datetime=event.end_datetime,
         location=event.location,
-        whatsapp_link=event.whatsapp_link,
-        partiful_link=event.partiful_link,
-        other_link=event.other_link,
-        rsvp_enabled=event.rsvp_enabled,
+        whatsapp_link=event.whatsapp_link if authenticated else "",
+        partiful_link=event.partiful_link if authenticated else "",
+        other_link=event.other_link if authenticated else "",
+        rsvp_enabled=event.rsvp_enabled if authenticated else False,
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
         created_by_name=creator_name,
         co_host_ids=[str(u.id) for u in co_hosts],
         co_host_names=[u.display_name or u.phone_number for u in co_hosts],
-        guests=guests,
+        guests=guests if authenticated else [],
         my_rsvp=my_rsvp,
     )
 
 
-@router.get("/events/", response={200: list[EventOut]}, auth=JWTAuth())
+class CheckPhoneOut(BaseModel):
+    exists: bool
+
+
+@router.get("/events/", response={200: list[EventOut]}, auth=_optional_jwt)
 def list_events(request):
     events = (
         Event.objects.select_related("created_by").prefetch_related("co_hosts", "rsvps__user").all()
     )
     return Status(200, [_event_out(e, request.auth) for e in events])
+
+
+@router.get("/events/{event_id}/", response={200: EventOut, 404: ErrorOut}, auth=_optional_jwt)
+def get_event(request, event_id: UUID):
+    try:
+        event = (
+            Event.objects.select_related("created_by")
+            .prefetch_related("co_hosts", "rsvps__user")
+            .get(id=event_id)
+        )
+    except Event.DoesNotExist:
+        return Status(404, ErrorOut(detail="Event not found."))
+    return Status(200, _event_out(event, request.auth))
+
+
+class CheckPhoneIn(BaseModel):
+    phone_number: str
+
+
+@router.post("/check-phone/", response={200: CheckPhoneOut}, auth=None)
+def check_phone(request, payload: CheckPhoneIn):
+    from users.models import User as UserModel
+
+    try:
+        normalized = _validate_phone(payload.phone_number)
+    except ValueError:
+        return Status(200, CheckPhoneOut(exists=False))
+    exists = UserModel.objects.filter(phone_number=normalized).exists()
+    return Status(200, CheckPhoneOut(exists=exists))
 
 
 @router.post("/events/", response={201: EventOut, 403: ErrorOut}, auth=JWTAuth())
