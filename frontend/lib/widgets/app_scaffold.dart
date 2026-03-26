@@ -14,9 +14,15 @@ class AppScaffold extends ConsumerWidget {
     final user = ref.watch(authProvider).valueOrNull;
     final isWide = MediaQuery.sizeOf(context).width >= 720;
 
+    final canPop = Navigator.of(context).canPop();
+
     return Scaffold(
       appBar: AppBar(
         title: null,
+        leading:
+            canPop
+                ? BackButton(onPressed: () => Navigator.of(context).pop())
+                : null,
         actions: isWide ? _wideNavItems(context, ref, user) : null,
       ),
       drawer: isWide ? null : _NavDrawer(user: user),

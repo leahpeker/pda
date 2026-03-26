@@ -102,10 +102,11 @@ class EventDetailContent extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              icon: Icon(fullPage ? Icons.arrow_back : Icons.close),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
+            if (!fullPage)
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 12),
