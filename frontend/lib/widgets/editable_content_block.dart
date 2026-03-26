@@ -1,13 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:markdown_toolbar/markdown_toolbar.dart';
-
 import '../providers/auth_provider.dart';
 import '../providers/editable_page_provider.dart';
 import 'autosave_mixin.dart';
+import 'markdown_editor.dart';
 
 class EditableContentBlock extends ConsumerStatefulWidget {
   const EditableContentBlock({super.key, required this.slug});
@@ -134,50 +132,19 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
                   onSave: _save,
                   onCancel: _cancelEdit,
                 ),
-              if (_editing) _buildToolbar(context),
-              Expanded(
-                child: _editing ? _buildEditor() : _buildViewer(context, page),
-              ),
+              if (_editing)
+                Expanded(
+                  child: MarkdownEditor(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    hintText: 'Enter page content…',
+                    expands: true,
+                  ),
+                )
+              else
+                Expanded(child: _buildViewer(context, page)),
             ],
           ),
-    );
-  }
-
-  Widget _buildToolbar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: MarkdownToolbar(
-        useIncludedTextField: false,
-        controller: _controller,
-        focusNode: _focusNode,
-        hideImage: true,
-        hideCheckbox: true,
-        hideHorizontalRule: true,
-        hideHeading: true,
-        collapsable: false,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-        iconColor: Theme.of(context).colorScheme.onSurface,
-      ),
-    );
-  }
-
-  Widget _buildEditor() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        maxLines: null,
-        expands: true,
-        textAlignVertical: TextAlignVertical.top,
-        inputFormatters: [LengthLimitingTextInputFormatter(50000)],
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Enter page content…',
-          alignLabelWithHint: true,
-        ),
-        style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
-      ),
     );
   }
 

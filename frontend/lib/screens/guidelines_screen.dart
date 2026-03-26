@@ -1,13 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:markdown_toolbar/markdown_toolbar.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/guidelines_provider.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
+import 'package:pda/widgets/markdown_editor.dart';
 
 class GuidelinesScreen extends ConsumerWidget {
   const GuidelinesScreen({super.key});
@@ -108,8 +107,17 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildHeader(context),
-        if (_editing) _buildToolbar(),
-        Expanded(child: _editing ? _buildEditor() : _buildViewer(context)),
+        if (_editing)
+          Expanded(
+            child: MarkdownEditor(
+              controller: _controller,
+              focusNode: _focusNode,
+              hintText: 'Write community guidelines in Markdown…',
+              expands: true,
+            ),
+          )
+        else
+          Expanded(child: _buildViewer(context)),
       ],
     );
   }
@@ -153,44 +161,6 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildToolbar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: MarkdownToolbar(
-        useIncludedTextField: false,
-        controller: _controller,
-        focusNode: _focusNode,
-        hideImage: true,
-        hideCheckbox: true,
-        hideHorizontalRule: true,
-        hideHeading: true,
-        collapsable: false,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-        iconColor: Theme.of(context).colorScheme.onSurface,
-      ),
-    );
-  }
-
-  Widget _buildEditor() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        maxLines: null,
-        expands: true,
-        textAlignVertical: TextAlignVertical.top,
-        inputFormatters: [LengthLimitingTextInputFormatter(50000)],
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Write community guidelines in Markdown…',
-          alignLabelWithHint: true,
-        ),
-        style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
       ),
     );
   }

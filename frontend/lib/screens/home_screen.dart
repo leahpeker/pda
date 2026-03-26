@@ -1,15 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:markdown_toolbar/markdown_toolbar.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/home_provider.dart';
 import 'package:pda/utils/launcher.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
+import 'package:pda/widgets/markdown_editor.dart';
 
 const _defaultContent = '''
 # Protein Deficients Anonymous
@@ -381,37 +380,11 @@ class _EditableSectionState extends ConsumerState<_EditableSection>
             ),
           ),
         if (_editing) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: MarkdownToolbar(
-              useIncludedTextField: false,
-              controller: _controller,
-              focusNode: _focusNode,
-              hideImage: true,
-              hideCheckbox: true,
-              hideHorizontalRule: true,
-              hideHeading: true,
-              collapsable: false,
-              backgroundColor:
-                  Theme.of(context).colorScheme.surfaceContainerHighest,
-              iconColor: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              maxLines: null,
-              minLines: 5,
-              inputFormatters: [LengthLimitingTextInputFormatter(50000)],
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Write content in Markdown…',
-                alignLabelWithHint: true,
-              ),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
-            ),
+          MarkdownEditor(
+            controller: _controller,
+            focusNode: _focusNode,
+            hintText: 'Write content in Markdown…',
+            minLines: 5,
           ),
         ] else ...[
           Markdown(
