@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/services/api_client.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/services/secure_storage.dart';
+
+final _log = Logger('AuthProvider');
 
 final secureStorageProvider = Provider<SecureStorageService>(
   (_) => SecureStorageService(),
@@ -22,7 +25,8 @@ class AuthNotifier extends AsyncNotifier<User?> {
       final api = ref.watch(apiClientProvider);
       final response = await api.get('/api/auth/me/');
       return User.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e) {
+      _log.warning('Token refresh failed, clearing session', e);
       await storage.clearTokens();
       return null;
     }
@@ -43,7 +47,9 @@ class AuthNotifier extends AsyncNotifier<User?> {
       );
       final meResponse = await api.get('/api/auth/me/');
       state = AsyncData(User.fromJson(meResponse.data as Map<String, dynamic>));
+      _log.info('Login successful');
     } catch (e, st) {
+      _log.warning('Login failed', e);
       state = AsyncError(ApiError.from(e), st);
     }
   }
@@ -72,6 +78,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
     final storage = ref.watch(secureStorageProvider);
     await storage.clearTokens();
     state = const AsyncData(null);
+    _log.info('User logged out');
   }
 }
 
