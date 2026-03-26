@@ -1,3 +1,4 @@
+import logging
 import secrets
 import string
 
@@ -12,6 +13,8 @@ from pydantic import BaseModel
 from users.models import User
 from users.permissions import PermissionKey
 from users.roles import PROTECTED_ROLE_NAMES, Role
+
+logger = logging.getLogger("pda.auth")
 
 router = Router()
 
@@ -185,6 +188,7 @@ def login(request, payload: LoginIn):
 
     user = authenticate(request, username=payload.phone_number, password=payload.password)
     if user is None:
+        logger.warning("Authentication failure: invalid credentials")
         return Status(401, ErrorOut(detail="Invalid credentials"))
     refresh = RefreshToken.for_user(user)
     return Status(200, TokenOut(access=str(refresh.access_token), refresh=str(refresh)))  # type: ignore

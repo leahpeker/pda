@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import datetime
 from uuid import UUID
@@ -20,6 +21,8 @@ from community.models import (
     JoinRequestStatus,
     RSVPStatus,
 )
+
+logger = logging.getLogger("pda.community")
 
 router = Router()
 
@@ -184,21 +187,25 @@ def submit_join_request(request, payload: JoinRequestIn):
         why_join=payload.why_join,
     )
 
+    logger.info("Join request submitted by %s", display_name)
+
     if settings.VETTING_EMAIL:
-        send_mail(
-            subject=f"New PDA Join Request: {display_name}",
-            message=(
-                f"Display Name: {display_name}\n"
-                f"Phone: {validated_phone}\n"
-                f"Email: {payload.email or '(not provided)'}\n"
-                f"Pronouns: {payload.pronouns}\n"
-                f"How they heard: {payload.how_they_heard}\n\n"
-                f"Why they want to join:\n{payload.why_join}"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL or "noreply@pda.org",
-            recipient_list=[settings.VETTING_EMAIL],
-            fail_silently=True,
-        )
+        try:
+            send_mail(
+                subject=f"New PDA Join Request: {display_name}",
+                message=(
+                    f"Display Name: {display_name}\n"
+                    f"Phone: {validated_phone}\n"
+                    f"Email: {payload.email or '(not provided)'}\n"
+                    f"Pronouns: {payload.pronouns}\n"
+                    f"How they heard: {payload.how_they_heard}\n\n"
+                    f"Why they want to join:\n{payload.why_join}"
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL or "noreply@pda.org",
+                recipient_list=[settings.VETTING_EMAIL],
+            )
+        except Exception:
+            logger.exception("Failed to send vetting email for join request")
 
     return Status(
         201,

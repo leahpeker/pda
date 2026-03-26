@@ -106,12 +106,12 @@ class TestSensitiveDataFilter:
             level=logging.INFO,
             pathname="test.py",
             lineno=1,
-            msg="User logged in: +15551234567",
+            msg="User logged in: +12025551234",
             args=None,
             exc_info=None,
         )
         f.filter(record)
-        assert "+15551234567" not in record.msg
+        assert "+12025551234" not in record.msg
         assert "[REDACTED]" in record.msg
 
     def test_redacts_phone_number_field(self):
@@ -121,12 +121,12 @@ class TestSensitiveDataFilter:
             level=logging.INFO,
             pathname="test.py",
             lineno=1,
-            msg='phone_number="+15551234567"',
+            msg='phone_number="+12025551234"',
             args=None,
             exc_info=None,
         )
         f.filter(record)
-        assert "+15551234567" not in record.msg
+        assert "+12025551234" not in record.msg
 
     def test_passes_clean_messages_through(self):
         f = SensitiveDataFilter()
@@ -213,3 +213,82 @@ class TestRequestLoggingMiddleware:
         assert record.path == "/api/auth/me/"  # type: ignore[attr-defined]
         assert record.status_code == 200  # type: ignore[attr-defined]
         assert hasattr(record, "duration_ms")
+
+
+class TestApplicationEventLogging:
+    """Tests for event logging in API views (Task 3)."""
+
+    @pytest.fixture(autouse=True)
+    def _enable_propagation(self):
+        pda_logger = logging.getLogger("pda")
+        original = pda_logger.propagate
+        pda_logger.propagate = True
+        yield
+        pda_logger.propagate = original
+
+    @pytest.mark.django_db
+    def test_join_request_submission_logs_at_info(self, caplog):
+        client = Client()
+        with caplog.at_level(logging.INFO, logger="pda.community"):
+            client.post(
+                "/api/community/join-request/",
+                data={
+                    "display_name": "Alice",
+                    "phone_number": "+12025551234",
+                    "why_join": "I love veganism",
+                },
+                content_type="application/json",
+            )
+        community_logs = [r for r in caplog.records if r.name == "pda.community"]
+        assert any("Join request" in r.getMessage() for r in community_logs)
+        info_logs = [r for r in community_logs if r.levelno == logging.INFO]
+        assert len(info_logs) >= 1
+        # Must not contain PII
+        for r in community_logs:
+            msg = r.getMessage()
+            assert "+12025551234" not in msg
+
+    @pytest.mark.django_db
+    def test_auth_failure_logs_at_warning(self, caplog):
+        from users.models import User
+
+        User.objects.create_user(phone_number="+14155551234", password="testpass")
+        client = Client()
+        with caplog.at_level(logging.WARNING, logger="pda.auth"):
+            client.post(
+                "/api/auth/login/",
+                data={"phone_number": "+14155551234", "password": "wrongpass"},
+                content_type="application/json",
+            )
+        auth_logs = [r for r in caplog.records if r.name == "pda.auth"]
+        assert any(r.levelno == logging.WARNING for r in auth_logs)
+
+    @pytest.mark.django_db
+    def test_email_failure_logs_at_error(self, caplog, settings):
+        settings.VETTING_EMAIL = "test@example.com"
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        client = Client()
+
+        def _fail_send_mail(*args, **kwargs):
+            raise Exception("SMTP down")
+
+        with (
+            caplog.at_level(logging.ERROR, logger="pda.community"),
+            pytest.MonkeyPatch.context() as mp,
+        ):
+            mp.setattr("community.api.send_mail", _fail_send_mail)
+            response = client.post(
+                "/api/community/join-request/",
+                data={
+                    "display_name": "Bob",
+                    "phone_number": "+13105551234",
+                    "why_join": "Community",
+                },
+                content_type="application/json",
+            )
+        # Join request should still succeed despite email failure
+        assert response.status_code == 201
+        error_logs = [
+            r for r in caplog.records if r.name == "pda.community" and r.levelno == logging.ERROR
+        ]
+        assert len(error_logs) >= 1
