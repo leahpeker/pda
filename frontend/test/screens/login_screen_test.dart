@@ -55,7 +55,7 @@ void main() {
     await tester.pump();
 
     // Tap login without entering phone number
-    await tester.tap(find.byType(ElevatedButton));
+    await tester.tap(find.byType(FilledButton));
     await tester.pump();
 
     expect(find.text('Required'), findsWidgets);

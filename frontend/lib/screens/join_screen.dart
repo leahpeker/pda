@@ -76,7 +76,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                     Text(
                       'We review all requests. You\'ll hear from us once a '
                       'vetting member has reviewed your submission.',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                      style: TextStyle(color: Colors.grey[700], fontSize: 15),
                     ),
                     const SizedBox(height: 32),
                     TextFormField(
@@ -172,9 +172,9 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: isLoading ? null : _submit,
-                        style: ElevatedButton.styleFrom(
+                        style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child:
