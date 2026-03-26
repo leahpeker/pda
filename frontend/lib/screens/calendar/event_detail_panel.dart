@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/utils/launcher.dart';
@@ -30,7 +31,7 @@ void _showBottomSheet(BuildContext context, Event event) {
           maxChildSize: 0.9,
           expand: false,
           builder:
-              (ctx, controller) => _EventDetailContent(
+              (ctx, controller) => EventDetailContent(
                 event: event,
                 scrollController: controller,
               ),
@@ -49,18 +50,24 @@ void _showSidePanel(BuildContext context, Event event) {
             child: SizedBox(
               width: 400,
               height: double.infinity,
-              child: _EventDetailContent(event: event),
+              child: EventDetailContent(event: event),
             ),
           ),
         ),
   );
 }
 
-class _EventDetailContent extends ConsumerWidget {
+class EventDetailContent extends ConsumerWidget {
   final Event event;
   final ScrollController? scrollController;
+  final bool fullPage;
 
-  const _EventDetailContent({required this.event, this.scrollController});
+  const EventDetailContent({
+    super.key,
+    required this.event,
+    this.scrollController,
+    this.fullPage = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,8 +108,17 @@ class _EventDetailContent extends ConsumerWidget {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
+            if (!fullPage)
+              IconButton(
+                tooltip: 'Open full page',
+                icon: const Icon(Icons.open_in_full),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  context.push('/events/${liveEvent.id}');
+                },
+              ),
             IconButton(
-              icon: const Icon(Icons.close),
+              icon: Icon(fullPage ? Icons.arrow_back : Icons.close),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],

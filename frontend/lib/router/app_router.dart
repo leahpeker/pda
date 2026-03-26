@@ -11,6 +11,7 @@ import 'package:pda/screens/join_screen.dart';
 import 'package:pda/screens/join_success_screen.dart';
 import 'package:pda/screens/members_screen.dart';
 import 'package:pda/screens/guidelines_screen.dart';
+import 'package:pda/screens/event_detail_screen.dart';
 import 'package:pda/screens/settings_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -33,23 +34,22 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (isLoading) return null;
 
-      final authRequiredRoutes = [
-        '/calendar',
-        '/guidelines',
-        '/members',
-        '/join-requests',
-        '/events/manage',
-        '/events/mine',
-        '/settings',
-      ];
-      final isProtected = authRequiredRoutes.contains(state.matchedLocation);
+      final loc = state.matchedLocation;
+      final isProtected =
+          loc == '/calendar' ||
+          loc == '/guidelines' ||
+          loc == '/members' ||
+          loc == '/join-requests' ||
+          loc == '/events/manage' ||
+          loc == '/events/mine' ||
+          loc == '/settings' ||
+          loc.startsWith('/events/');
 
       if (isProtected && !isAuthenticated) {
         return '/login?redirect=${state.matchedLocation}';
       }
 
       if (isAuthenticated) {
-        final loc = state.matchedLocation;
         if (loc == '/members' && !user.hasPermission('manage_users')) {
           return '/calendar';
         }
@@ -91,6 +91,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const GuidelinesScreen(),
       ),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+      GoRoute(
+        path: '/events/:id',
+        builder:
+            (_, state) =>
+                EventDetailScreen(eventId: state.pathParameters['id']!),
+      ),
     ],
   );
 });
