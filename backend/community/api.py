@@ -15,6 +15,7 @@ from community.models import (
     CommunityGuidelines,
     Event,
     EventRSVP,
+    HomePage,
     JoinRequest,
     JoinRequestStatus,
     RSVPStatus,
@@ -140,6 +141,22 @@ def update_guidelines(request, payload: GuidelinesPatchIn):
     g.content = payload.content
     g.save()
     return Status(200, GuidelinesOut(content=g.content, updated_at=g.updated_at))
+
+
+@router.get("/home/", response={200: GuidelinesOut}, auth=None)
+def get_home(request):
+    h = HomePage.get()
+    return Status(200, GuidelinesOut(content=h.content, updated_at=h.updated_at))
+
+
+@router.patch("/home/", response={200: GuidelinesOut, 403: ErrorOut}, auth=JWTAuth())
+def update_home(request, payload: GuidelinesPatchIn):
+    if not request.auth.has_permission(PermissionKey.MANAGE_GUIDELINES):
+        return Status(403, ErrorOut(detail="Permission denied."))
+    h = HomePage.get()
+    h.content = payload.content
+    h.save()
+    return Status(200, GuidelinesOut(content=h.content, updated_at=h.updated_at))
 
 
 @router.post("/join-request/", response={201: JoinRequestOut, 400: ErrorOut}, auth=None)

@@ -89,6 +89,25 @@ class CommunityGuidelines(models.Model):
         return obj
 
 
+class HomePage(models.Model):
+    """Singleton model — only one row ever exists (pk=1)."""
+
+    content = models.TextField(default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Home Page"
+        verbose_name_plural = "Home Page"
+
+    def __str__(self):
+        return "Home Page"
+
+    @classmethod
+    def get(cls) -> "HomePage":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class RSVPStatus(models.TextChoices):
     ATTENDING = "attending", "Attending"
     MAYBE = "maybe", "Maybe"
