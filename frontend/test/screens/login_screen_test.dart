@@ -36,6 +36,20 @@ void main() {
     expect(find.byType(AutofillGroup), findsOneWidget);
   });
 
+  testWidgets('password visibility toggle has accessible tooltip', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pump();
+
+    // The password visibility toggle IconButton should have a tooltip
+    final iconButtons = find.byType(IconButton);
+    // Find the one that's inside the password field (suffix icon)
+    final visibilityToggle = tester.widget<IconButton>(iconButtons.last);
+    expect(visibilityToggle.tooltip, isNotNull);
+    expect(visibilityToggle.tooltip, contains('password'));
+  });
+
   testWidgets('phone field shows error when empty', (tester) async {
     await tester.pumpWidget(buildSubject());
     await tester.pump();
