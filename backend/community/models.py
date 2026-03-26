@@ -94,6 +94,7 @@ class HomePage(models.Model):
 
     content = models.TextField(default="")
     join_content = models.TextField(default="")
+    donate_url = models.URLField(blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

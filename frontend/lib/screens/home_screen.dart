@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:markdown_toolbar/markdown_toolbar.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/home_provider.dart';
+import 'package:pda/utils/launcher.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 
 const _defaultContent = '''
@@ -49,6 +50,7 @@ class HomeScreen extends ConsumerWidget {
             (_, __) => _HomeBody(
               content: _defaultContent,
               joinContent: _defaultJoinContent,
+              donateUrl: '',
               canEdit: canEdit,
               isLoggedIn: isLoggedIn,
             ),
@@ -60,6 +62,7 @@ class HomeScreen extends ConsumerWidget {
                   home.joinContent.trim().isEmpty
                       ? _defaultJoinContent
                       : home.joinContent,
+              donateUrl: home.donateUrl,
               canEdit: canEdit,
               isLoggedIn: isLoggedIn,
             ),
@@ -71,12 +74,14 @@ class HomeScreen extends ConsumerWidget {
 class _HomeBody extends StatelessWidget {
   final String content;
   final String joinContent;
+  final String donateUrl;
   final bool canEdit;
   final bool isLoggedIn;
 
   const _HomeBody({
     required this.content,
     required this.joinContent,
+    required this.donateUrl,
     required this.canEdit,
     required this.isLoggedIn,
   });
@@ -99,6 +104,10 @@ class _HomeBody extends StatelessWidget {
                       context,
                     ).read(homePageNotifierProvider.notifier).saveContent(text),
               ),
+              if (donateUrl.isNotEmpty || canEdit) ...[
+                const Divider(height: 32),
+                _DonateCta(donateUrl: donateUrl, canEdit: canEdit),
+              ],
               if (!isLoggedIn || canEdit) ...[
                 const Divider(height: 32),
                 _EditableSection(
@@ -133,6 +142,132 @@ class _HomeBody extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DonateCta extends ConsumerStatefulWidget {
+  final String donateUrl;
+  final bool canEdit;
+
+  const _DonateCta({required this.donateUrl, required this.canEdit});
+
+  @override
+  ConsumerState<_DonateCta> createState() => _DonateCtaState();
+}
+
+class _DonateCtaState extends ConsumerState<_DonateCta> {
+  bool _editing = false;
+  late final TextEditingController _controller;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.donateUrl);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await ProviderScope.containerOf(context)
+          .read(homePageNotifierProvider.notifier)
+          .saveDonateUrl(_controller.text.trim());
+      if (mounted) setState(() => _editing = false);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final detail = (e.response?.data as Map?)?['detail'] ?? 'Failed to save.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(detail.toString())));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _cancel() {
+    _controller.text = widget.donateUrl;
+    setState(() => _editing = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.canEdit) ...[
+            Row(
+              children: [
+                const Text(
+                  'Donate button',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                if (!_editing)
+                  FilledButton.tonal(
+                    onPressed: () => setState(() => _editing = true),
+                    child: const Text('Edit'),
+                  ),
+                if (_editing) ...[
+                  TextButton(
+                    onPressed: _saving ? null : _cancel,
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child:
+                        _saving
+                            ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Text('Save'),
+                  ),
+                ],
+              ],
+            ),
+            if (_editing) ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _controller,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Donate URL',
+                  hintText: 'https://example.com/donate',
+                ),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 8),
+            ] else
+              const SizedBox(height: 12),
+          ],
+          if (widget.donateUrl.isNotEmpty)
+            Semantics(
+              button: true,
+              label: 'Donate',
+              child: FilledButton(
+                onPressed: () => openUrl(widget.donateUrl),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+                child: const Text('Donate', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+        ],
       ),
     );
   }

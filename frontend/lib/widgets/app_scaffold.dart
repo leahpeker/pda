@@ -150,6 +150,8 @@ class _NavDrawer extends ConsumerWidget {
         child: SafeArea(
           child: Column(
             children: [
+              const Spacer(),
+              const Divider(),
               ListTile(
                 leading: const Icon(Icons.volunteer_activism_outlined),
                 title: const Text('Donate'),
@@ -204,16 +206,6 @@ class _NavDrawer extends ConsumerWidget {
           label: 'Join requests',
           route: '/join-requests',
         ),
-      const _DrawerItem(
-        icon: Icons.volunteer_activism_outlined,
-        label: 'Donate',
-        route: '/donate',
-      ),
-      const _DrawerItem(
-        icon: Icons.handshake_outlined,
-        label: 'Volunteer',
-        route: '/volunteer',
-      ),
     ];
 
     return Drawer(
@@ -263,6 +255,26 @@ class _NavDrawer extends ConsumerWidget {
             ),
             // Bottom actions
             const Divider(),
+            ListTile(
+              leading: const Icon(Icons.volunteer_activism_outlined),
+              title: const Text('Donate'),
+              selected: currentPath.startsWith('/donate'),
+              selectedTileColor: theme.colorScheme.primaryContainer,
+              onTap: () {
+                Navigator.of(context).pop();
+                context.go('/donate');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.handshake_outlined),
+              title: const Text('Volunteer'),
+              selected: currentPath.startsWith('/volunteer'),
+              selectedTileColor: theme.colorScheme.primaryContainer,
+              onTap: () {
+                Navigator.of(context).pop();
+                context.go('/volunteer');
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.auto_stories_outlined),
               title: const Text('Guidelines'),

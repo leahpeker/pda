@@ -39,8 +39,6 @@ class _MonthViewState extends State<MonthView> {
   static const double _dayLabelHeight = 28.0;
   static const double _chipHeight = 18.0;
   static const double _chipSpacing = 2.0;
-  static const double _minCellHeight = 80.0;
-
   @override
   void initState() {
     super.initState();
@@ -192,26 +190,24 @@ class _MonthViewState extends State<MonthView> {
 
   Widget _buildGrid(BuildContext context, List<DateTime> days) {
     final rowCount = (days.length / 7).ceil();
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: rowCount,
-      itemBuilder: (context, rowIndex) {
+    return Column(
+      children: List.generate(rowCount, (rowIndex) {
         final rowDays = days.sublist(rowIndex * 7, (rowIndex + 1) * 7);
-        return _MonthRow(
-          days: rowDays,
-          allEvents: widget.events,
-          isToday: _isToday,
-          isCurrentMonth: _isCurrentMonth,
-          onDayTapped: widget.onDayTapped,
-          onEventTapped: (e) => showEventDetail(context, e),
-          minCellHeight: _minCellHeight,
-          dayLabelHeight: _dayLabelHeight,
-          chipHeight: _chipHeight,
-          chipSpacing: _chipSpacing,
-          maxEventRows: _maxEventRows,
+        return Expanded(
+          child: _MonthRow(
+            days: rowDays,
+            allEvents: widget.events,
+            isToday: _isToday,
+            isCurrentMonth: _isCurrentMonth,
+            onDayTapped: widget.onDayTapped,
+            onEventTapped: (e) => showEventDetail(context, e),
+            dayLabelHeight: _dayLabelHeight,
+            chipHeight: _chipHeight,
+            chipSpacing: _chipSpacing,
+            maxEventRows: _maxEventRows,
+          ),
         );
-      },
+      }),
     );
   }
 }
@@ -238,7 +234,6 @@ class _MonthRow extends StatelessWidget {
   final bool Function(DateTime) isCurrentMonth;
   final ValueChanged<DateTime> onDayTapped;
   final ValueChanged<Event> onEventTapped;
-  final double minCellHeight;
   final double dayLabelHeight;
   final double chipHeight;
   final double chipSpacing;
@@ -251,7 +246,6 @@ class _MonthRow extends StatelessWidget {
     required this.isCurrentMonth,
     required this.onDayTapped,
     required this.onEventTapped,
-    required this.minCellHeight,
     required this.dayLabelHeight,
     required this.chipHeight,
     required this.chipSpacing,
@@ -378,149 +372,135 @@ class _MonthRow extends StatelessWidget {
       }
     }
 
-    final eventsAreaHeight =
-        visibleRows * (chipHeight + chipSpacing) + chipHeight + chipSpacing;
-    final rowHeight = (dayLabelHeight + eventsAreaHeight + 4).clamp(
-      minCellHeight,
-      double.infinity,
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalWidth = constraints.maxWidth;
+        final colWidth = totalWidth / 7;
 
-    return SizedBox(
-      height: rowHeight,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final totalWidth = constraints.maxWidth;
-          final colWidth = totalWidth / 7;
-
-          return Stack(
-            children: [
-              // Day cell backgrounds + date labels + overflow indicators
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: List.generate(7, (col) {
-                  final day = days[col];
-                  final today = isToday(day);
-                  final currentMonth = isCurrentMonth(day);
-                  final overflow = overflowByCol[col] ?? 0;
-                  return Expanded(
-                    child: Semantics(
-                      button: true,
-                      label: DateFormat('MMMM d').format(day),
-                      child: InkWell(
-                        onTap: () => onDayTapped(day),
-                        splashColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(context).dividerColor,
-                              width: 0.5,
-                            ),
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _DayLabel(
-                                day: day,
-                                isToday: today,
-                                isCurrentMonth: currentMonth,
-                                height: dayLabelHeight,
-                              ),
-                              if (overflow > 0) ...[
-                                SizedBox(
-                                  height:
-                                      visibleRows * (chipHeight + chipSpacing),
-                                ),
-                                Text(
-                                  '+$overflow more',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-
-              // Event span bars
-              ...placements.where((p) => p.row < maxEventRows).map((p) {
-                final left = p.startCol * colWidth;
-                final width = (p.endCol - p.startCol + 1) * colWidth;
-                final top =
-                    dayLabelHeight + 4 + p.row * (chipHeight + chipSpacing);
-                final colors = eventColors(p.event.id);
-                // continues from previous row if startCol==0 and event started before this row
-                final continuesFromPrev =
-                    p.startCol == 0 &&
-                    p.event.startDatetime.toLocal().isBefore(
-                      DateTime(days[0].year, days[0].month, days[0].day),
-                    );
-                final continuesToNext =
-                    p.endCol == 6 &&
-                    p.event.endDatetime.toLocal().isAfter(
-                      DateTime(days[6].year, days[6].month, days[6].day + 1),
-                    );
-
-                final borderRadius = BorderRadius.horizontal(
-                  left:
-                      continuesFromPrev
-                          ? Radius.zero
-                          : const Radius.circular(3),
-                  right:
-                      continuesToNext ? Radius.zero : const Radius.circular(3),
-                );
-
-                return Positioned(
-                  left: left,
-                  top: top,
-                  width: width,
-                  height: chipHeight,
+        return Stack(
+          children: [
+            // Day cell backgrounds + date labels + overflow indicators
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: List.generate(7, (col) {
+                final day = days[col];
+                final today = isToday(day);
+                final currentMonth = isCurrentMonth(day);
+                final overflow = overflowByCol[col] ?? 0;
+                return Expanded(
                   child: Semantics(
                     button: true,
-                    label: p.event.title,
+                    label: DateFormat('MMMM d').format(day),
                     child: InkWell(
-                      onTap: () => onEventTapped(p.event),
+                      onTap: () => onDayTapped(day),
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
                       child: Container(
-                        margin: EdgeInsets.only(
-                          left: continuesFromPrev ? 0 : 1,
-                          right: continuesToNext ? 0 : 1,
-                        ),
                         decoration: BoxDecoration(
-                          color: colors.$1,
-                          borderRadius: borderRadius,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          p.event.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: colors.$2,
+                          border: Border.all(
+                            color: Theme.of(context).dividerColor,
+                            width: 0.5,
                           ),
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _DayLabel(
+                              day: day,
+                              isToday: today,
+                              isCurrentMonth: currentMonth,
+                              height: dayLabelHeight,
+                            ),
+                            if (overflow > 0) ...[
+                              SizedBox(
+                                height:
+                                    visibleRows * (chipHeight + chipSpacing),
+                              ),
+                              Text(
+                                '+$overflow more',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
                   ),
                 );
               }),
-            ],
-          );
-        },
-      ),
+            ),
+
+            // Event span bars
+            ...placements.where((p) => p.row < maxEventRows).map((p) {
+              final left = p.startCol * colWidth;
+              final width = (p.endCol - p.startCol + 1) * colWidth;
+              final top =
+                  dayLabelHeight + 4 + p.row * (chipHeight + chipSpacing);
+              final colors = eventColors(p.event.id);
+              // continues from previous row if startCol==0 and event started before this row
+              final continuesFromPrev =
+                  p.startCol == 0 &&
+                  p.event.startDatetime.toLocal().isBefore(
+                    DateTime(days[0].year, days[0].month, days[0].day),
+                  );
+              final continuesToNext =
+                  p.endCol == 6 &&
+                  p.event.endDatetime.toLocal().isAfter(
+                    DateTime(days[6].year, days[6].month, days[6].day + 1),
+                  );
+
+              final borderRadius = BorderRadius.horizontal(
+                left:
+                    continuesFromPrev ? Radius.zero : const Radius.circular(3),
+                right: continuesToNext ? Radius.zero : const Radius.circular(3),
+              );
+
+              return Positioned(
+                left: left,
+                top: top,
+                width: width,
+                height: chipHeight,
+                child: Semantics(
+                  button: true,
+                  label: p.event.title,
+                  child: InkWell(
+                    onTap: () => onEventTapped(p.event),
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    child: Container(
+                      margin: EdgeInsets.only(
+                        left: continuesFromPrev ? 0 : 1,
+                        right: continuesToNext ? 0 : 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.$1,
+                        borderRadius: borderRadius,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        p.event.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: colors.$2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 }

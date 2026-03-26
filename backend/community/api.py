@@ -208,19 +208,27 @@ def update_guidelines(request, payload: GuidelinesPatchIn):
 class HomePageOut(BaseModel):
     content: str
     join_content: str
+    donate_url: str
     updated_at: datetime
 
 
 class HomePagePatchIn(BaseModel):
     content: str | None = None
     join_content: str | None = None
+    donate_url: str | None = None
 
 
 @router.get("/home/", response={200: HomePageOut}, auth=None)
 def get_home(request):
     h = HomePage.get()
     return Status(
-        200, HomePageOut(content=h.content, join_content=h.join_content, updated_at=h.updated_at)
+        200,
+        HomePageOut(
+            content=h.content,
+            join_content=h.join_content,
+            donate_url=h.donate_url,
+            updated_at=h.updated_at,
+        ),
     )
 
 
@@ -233,9 +241,17 @@ def update_home(request, payload: HomePagePatchIn):
         h.content = payload.content
     if payload.join_content is not None:
         h.join_content = payload.join_content
+    if payload.donate_url is not None:
+        h.donate_url = payload.donate_url
     h.save()
     return Status(
-        200, HomePageOut(content=h.content, join_content=h.join_content, updated_at=h.updated_at)
+        200,
+        HomePageOut(
+            content=h.content,
+            join_content=h.join_content,
+            donate_url=h.donate_url,
+            updated_at=h.updated_at,
+        ),
     )
 
 
@@ -448,16 +464,19 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
     co_hosts = list(event.co_hosts.all())
     creator = event.created_by
     creator_name = creator.display_name or creator.phone_number if creator else None
-    authenticated = requesting_user is not None and not isinstance(requesting_user, AnonymousUser)
+    auth_user = (
+        requesting_user
+        if (requesting_user is not None and not isinstance(requesting_user, AnonymousUser))
+        else None
+    )
     rsvps = (
         list(event.rsvps.select_related("user").all())
-        if (event.rsvp_enabled and authenticated)
+        if (event.rsvp_enabled and auth_user is not None)
         else []
     )
     co_host_ids = {str(u.id) for u in co_hosts}
-    can_see_phones = authenticated and (
-        (creator is not None and requesting_user.pk == creator.pk)
-        or str(requesting_user.pk) in co_host_ids
+    can_see_phones = auth_user is not None and (
+        (creator is not None and auth_user.pk == creator.pk) or str(auth_user.pk) in co_host_ids
     )
     guests = [
         RSVPGuestOut(
@@ -469,9 +488,9 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         for r in rsvps
     ]
     my_rsvp = None
-    if authenticated:
+    if auth_user is not None:
         for r in rsvps:
-            if r.user_id == requesting_user.pk:
+            if r.user_id == auth_user.pk:
                 my_rsvp = r.status
                 break
     return EventOut(
@@ -481,15 +500,15 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         start_datetime=event.start_datetime,
         end_datetime=event.end_datetime,
         location=event.location,
-        whatsapp_link=event.whatsapp_link if authenticated else "",
-        partiful_link=event.partiful_link if authenticated else "",
-        other_link=event.other_link if authenticated else "",
-        rsvp_enabled=event.rsvp_enabled if authenticated else False,
+        whatsapp_link=event.whatsapp_link if auth_user is not None else "",
+        partiful_link=event.partiful_link if auth_user is not None else "",
+        other_link=event.other_link if auth_user is not None else "",
+        rsvp_enabled=event.rsvp_enabled if auth_user is not None else False,
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
         created_by_name=creator_name,
         co_host_ids=[str(u.id) for u in co_hosts],
         co_host_names=[u.display_name or u.phone_number for u in co_hosts],
-        guests=guests if authenticated else [],
+        guests=guests if auth_user is not None else [],
         my_rsvp=my_rsvp,
     )
 

@@ -135,6 +135,7 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock> {
         hideImage: true,
         hideCheckbox: true,
         hideHorizontalRule: true,
+        hideHeading: true,
         collapsable: false,
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         iconColor: Theme.of(context).colorScheme.onSurface,

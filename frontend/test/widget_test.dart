@@ -45,6 +45,7 @@ class _FakeHomeNotifier extends HomePageNotifier {
     return HomePage(
       content: 'Test content',
       joinContent: '',
+      donateUrl: '',
       updatedAt: DateTime(2026),
     );
   }
