@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import timedelta
 
 from django.core.management.base import BaseCommand
@@ -9,68 +10,95 @@ from community.models import Event, JoinRequest, JoinRequestStatus
 
 PASSWORD = "testpass123"
 
+
+@dataclass
+class SeedUser:
+    phone_number: str
+    display_name: str
+    is_superuser: bool
+
+
+@dataclass
+class SeedEvent:
+    title: str
+    description: str
+    delta_days: int
+    duration_hours: float
+    location: str
+
+
+@dataclass
+class SeedJoinRequest:
+    display_name: str
+    phone_number: str
+    email: str
+    pronouns: str
+    why_join: str
+    status: str
+
+
 SEED_USERS = [
-    {
-        "phone_number": "+15550990001",
-        "display_name": "Seed Admin",
-        "is_superuser": True,
-    },
-    {
-        "phone_number": "+15550990002",
-        "display_name": "Seed Member",
-        "is_superuser": False,
-    },
+    SeedUser(
+        phone_number="+15550990001",
+        display_name="Seed Admin",
+        is_superuser=True,
+    ),
+    SeedUser(
+        phone_number="+15550990002",
+        display_name="Seed Member",
+        is_superuser=False,
+    ),
 ]
 
 SEED_EVENTS = [
-    {
-        "title": "Vegan Potluck",
-        "description": "Bring your favourite plant-based dish to share!",
-        "delta_days": 7,
-        "duration_hours": 3,
-        "location": "Community Center",
-    },
-    {
-        "title": "Plant-Based Cooking Workshop",
-        "description": "Learn to make tofu scramble, cashew cheese, and more.",
-        "delta_days": 14,
-        "duration_hours": 2,
-        "location": "Kitchen Lab",
-    },
-    {
-        "title": "Movie Night: Cowspiracy",
-        "description": "Documentary screening followed by group discussion.",
-        "delta_days": 21,
-        "duration_hours": 2.5,
-        "location": "Living Room",
-    },
+    SeedEvent(
+        title="Vegan Potluck",
+        description="Bring your favourite plant-based dish to share!",
+        delta_days=7,
+        duration_hours=3,
+        location="Community Center",
+    ),
+    SeedEvent(
+        title="Plant-Based Cooking Workshop",
+        description="Learn to make tofu scramble, cashew cheese, and more.",
+        delta_days=14,
+        duration_hours=2,
+        location="Kitchen Lab",
+    ),
+    SeedEvent(
+        title="Movie Night: Cowspiracy",
+        description="Documentary screening followed by group discussion.",
+        delta_days=21,
+        duration_hours=2.5,
+        location="Living Room",
+    ),
 ]
 
 SEED_JOIN_REQUESTS = [
-    {
-        "display_name": "Alex Rivera",
-        "phone_number": "+15550990010",
-        "email": "alex@example.com",
-        "pronouns": "they/them",
-        "why_join": "I've been vegan for two years and want to connect with community.",
-        "status": JoinRequestStatus.PENDING,
-    },
-    {
-        "display_name": "Jordan Chen",
-        "phone_number": "+15550990011",
-        "email": "jordan@example.com",
-        "pronouns": "he/him",
-        "why_join": "Looking for local vegan friends and events.",
-        "status": JoinRequestStatus.APPROVED,
-    },
-    {
-        "display_name": "Sam Taylor",
-        "phone_number": "+15550990012",
-        "email": "sam@example.com",
-        "pronouns": "she/her",
-        "why_join": "Curious about veganism.",
-        "status": JoinRequestStatus.REJECTED,
-    },
+    SeedJoinRequest(
+        display_name="Alex Rivera",
+        phone_number="+15550990010",
+        email="alex@example.com",
+        pronouns="they/them",
+        why_join="I've been vegan for two years and want to connect with community.",
+        status=JoinRequestStatus.PENDING,
+    ),
+    SeedJoinRequest(
+        display_name="Jordan Chen",
+        phone_number="+15550990011",
+        email="jordan@example.com",
+        pronouns="he/him",
+        why_join="Looking for local vegan friends and events.",
+        status=JoinRequestStatus.APPROVED,
+    ),
+    SeedJoinRequest(
+        display_name="Sam Taylor",
+        phone_number="+15550990012",
+        email="sam@example.com",
+        pronouns="she/her",
+        why_join="Curious about veganism.",
+        status=JoinRequestStatus.REJECTED,
+    ),
 ]
 
 
@@ -88,21 +116,21 @@ class Command(BaseCommand):
         admin_role, _ = Role.objects.get_or_create(name="admin", defaults={"is_default": True})
         member_role, _ = Role.objects.get_or_create(name="member", defaults={"is_default": True})
 
-        admin_user = None
+        admin_user: User | None = None
         for data in SEED_USERS:
-            defaults = {"display_name": data["display_name"]}
-            if data["is_superuser"]:
+            defaults: dict[str, object] = {"display_name": data.display_name}
+            if data.is_superuser:
                 defaults["is_superuser"] = True
                 defaults["is_staff"] = True
 
             user, created = User.objects.get_or_create(
-                phone_number=data["phone_number"],
+                phone_number=data.phone_number,
                 defaults=defaults,
             )
             if created:
                 user.set_password(PASSWORD)
                 user.save()
-                if data["is_superuser"]:
+                if data.is_superuser:
                     user.roles.add(admin_role)
                 else:
                     user.roles.add(member_role)
@@ -110,43 +138,44 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"  Already exists: {user.display_name}")
 
-            if data["is_superuser"]:
+            if data.is_superuser:
                 admin_user = user
 
+        assert admin_user is not None, "SEED_USERS must contain a superuser entry"
         return admin_user
 
     def _seed_events(self, created_by: User) -> None:
         now = timezone.now()
         for data in SEED_EVENTS:
-            start = now + timedelta(days=data["delta_days"])
-            end = start + timedelta(hours=data["duration_hours"])
+            start = now + timedelta(days=data.delta_days)
+            end = start + timedelta(hours=data.duration_hours)
             _, created = Event.objects.get_or_create(
-                title=data["title"],
+                title=data.title,
                 defaults={
-                    "description": data["description"],
+                    "description": data.description,
                     "start_datetime": start,
                     "end_datetime": end,
-                    "location": data["location"],
+                    "location": data.location,
                     "created_by": created_by,
                 },
             )
             label = "Created" if created else "Already exists"
-            self.stdout.write(f"  {label} event: {data['title']}")
+            self.stdout.write(f"  {label} event: {data.title}")
 
     def _seed_join_requests(self) -> None:
         for data in SEED_JOIN_REQUESTS:
             _, created = JoinRequest.objects.get_or_create(
-                display_name=data["display_name"],
-                phone_number=data["phone_number"],
+                display_name=data.display_name,
+                phone_number=data.phone_number,
                 defaults={
-                    "email": data["email"],
-                    "pronouns": data["pronouns"],
-                    "why_join": data["why_join"],
-                    "status": data["status"],
+                    "email": data.email,
+                    "pronouns": data.pronouns,
+                    "why_join": data.why_join,
+                    "status": data.status,
                 },
             )
             label = "Created" if created else "Already exists"
-            self.stdout.write(f"  {label} join request: {data['display_name']}")
+            self.stdout.write(f"  {label} join request: {data.display_name}")
 
     def _print_summary(self) -> None:
         self.stdout.write("")
@@ -159,4 +188,4 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write("Credentials (all seed users):")
         for data in SEED_USERS:
-            self.stdout.write(f"  {data['display_name']}: {data['phone_number']} / {PASSWORD}")
+            self.stdout.write(f"  {data.display_name}: {data.phone_number} / {PASSWORD}")
