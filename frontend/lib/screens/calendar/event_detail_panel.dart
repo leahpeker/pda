@@ -102,25 +102,28 @@ class EventDetailContent extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            IconButton(
+              icon: Icon(fullPage ? Icons.arrow_back : Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             Expanded(
-              child: Text(
-                liveEvent.title,
-                style: Theme.of(context).textTheme.headlineSmall,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  liveEvent.title,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
               ),
             ),
             if (!fullPage)
               IconButton(
                 tooltip: 'Open full page',
-                icon: const Icon(Icons.open_in_full),
+                icon: const Icon(Icons.launch),
                 onPressed: () {
                   Navigator.of(context).pop();
                   context.push('/events/${liveEvent.id}');
                 },
               ),
-            IconButton(
-              icon: Icon(fullPage ? Icons.arrow_back : Icons.close),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
           ],
         ),
         const SizedBox(height: 16),
