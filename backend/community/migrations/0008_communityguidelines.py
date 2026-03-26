@@ -6,6 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ("community", "0007_event_other_link"),
+        ("community", "0007_joinrequest_phone_displayname"),
     ]
 
     operations = [
