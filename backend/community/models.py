@@ -44,6 +44,7 @@ class Event(models.Model):
     location = models.CharField(max_length=300, blank=True)
     whatsapp_link = models.URLField(blank=True)
     partiful_link = models.URLField(blank=True)
+    other_link = models.URLField(blank=True)
     rsvp_enabled = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     if TYPE_CHECKING:

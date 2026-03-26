@@ -26,6 +26,7 @@ abstract class Event with _$Event {
     required String location,
     @Default('') String whatsappLink,
     @Default('') String partifulLink,
+    @Default('') String otherLink,
     @Default(false) bool rsvpEnabled,
     String? createdById,
     String? createdByName,

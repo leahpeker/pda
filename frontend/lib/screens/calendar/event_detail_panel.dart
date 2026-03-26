@@ -150,6 +150,14 @@ class _EventDetailContent extends ConsumerWidget {
             url: liveEvent.partifulLink,
           ),
         ],
+        if (liveEvent.otherLink.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _LinkRow(
+            icon: Icons.link,
+            label: liveEvent.otherLink,
+            url: liveEvent.otherLink,
+          ),
+        ],
         if (liveEvent.description.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(
@@ -611,6 +619,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late final TextEditingController _location;
   late final TextEditingController _whatsappLink;
   late final TextEditingController _partifulLink;
+  late final TextEditingController _otherLink;
   late DateTime _start;
   late DateTime _end;
   late bool _rsvpEnabled;
@@ -631,6 +640,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _location = TextEditingController(text: e.location);
       _whatsappLink = TextEditingController(text: e.whatsappLink);
       _partifulLink = TextEditingController(text: e.partifulLink);
+      _otherLink = TextEditingController(text: e.otherLink);
       _start = e.startDatetime.toLocal();
       _end = e.endDatetime.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
@@ -645,6 +655,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _location = TextEditingController();
       _whatsappLink = TextEditingController();
       _partifulLink = TextEditingController();
+      _otherLink = TextEditingController();
       final now = DateTime.now();
       _start = DateTime(now.year, now.month, now.day, now.hour + 1);
       _end = _start.add(const Duration(hours: 1));
@@ -661,6 +672,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     _location.dispose();
     _whatsappLink.dispose();
     _partifulLink.dispose();
+    _otherLink.dispose();
     super.dispose();
   }
 
@@ -730,14 +742,22 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     });
   }
 
+  String _normalizeUrl(String raw) {
+    final s = raw.trim();
+    if (s.isEmpty) return s;
+    if (s.startsWith('http://') || s.startsWith('https://')) return s;
+    return 'https://$s';
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pop({
       'title': _title.text.trim(),
       'description': _description.text.trim(),
       'location': _location.text.trim(),
-      'whatsapp_link': _whatsappLink.text.trim(),
-      'partiful_link': _partifulLink.text.trim(),
+      'whatsapp_link': _normalizeUrl(_whatsappLink.text),
+      'partiful_link': _normalizeUrl(_partifulLink.text),
+      'other_link': _normalizeUrl(_otherLink.text),
       'start_datetime': _start.toUtc().toIso8601String(),
       'end_datetime': _end.toUtc().toIso8601String(),
       'rsvp_enabled': _rsvpEnabled,
@@ -836,6 +856,18 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                     prefixIcon: Icon(Icons.chat_outlined),
                   ),
                   keyboardType: TextInputType.url,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
+                    final normalized = _normalizeUrl(v.trim());
+                    final uri = Uri.tryParse(normalized);
+                    if (uri == null || !uri.hasAuthority) {
+                      return 'Enter a valid URL';
+                    }
+                    if (!uri.host.contains('whatsapp.com')) {
+                      return 'Must be a WhatsApp link (chat.whatsapp.com/...)';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -851,6 +883,36 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                     helperStyle: TextStyle(color: theme.colorScheme.tertiary),
                   ),
                   keyboardType: TextInputType.url,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
+                    final normalized = _normalizeUrl(v.trim());
+                    final uri = Uri.tryParse(normalized);
+                    if (uri == null || !uri.hasAuthority) {
+                      return 'Enter a valid URL';
+                    }
+                    if (!uri.host.contains('partiful.com')) {
+                      return 'Must be a Partiful link (partiful.com/...)';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _otherLink,
+                  decoration: const InputDecoration(
+                    labelText: 'Other link (optional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.link),
+                  ),
+                  keyboardType: TextInputType.url,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
+                    final uri = Uri.tryParse(_normalizeUrl(v.trim()));
+                    if (uri == null || !uri.hasAuthority) {
+                      return 'Enter a valid URL';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 const Divider(),

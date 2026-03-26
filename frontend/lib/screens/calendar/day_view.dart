@@ -33,6 +33,16 @@ class _DayViewState extends State<DayView> {
     );
   }
 
+  @override
+  void didUpdateWidget(DayView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final d = widget.selectedDate;
+    final normalized = DateTime(d.year, d.month, d.day);
+    if (normalized != _selectedDay) {
+      setState(() => _selectedDay = normalized);
+    }
+  }
+
   void _goToPrevDay() {
     final newDay = _selectedDay.subtract(const Duration(days: 1));
     setState(() => _selectedDay = newDay);
@@ -164,7 +174,7 @@ class _EmptyDayState extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'No events today',
+            'No events',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),

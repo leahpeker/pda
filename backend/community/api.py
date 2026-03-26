@@ -52,6 +52,7 @@ class EventOut(BaseModel):
     location: str
     whatsapp_link: str = ""
     partiful_link: str = ""
+    other_link: str = ""
     rsvp_enabled: bool = False
     created_by_id: str | None = None
     created_by_name: str | None = None
@@ -77,6 +78,7 @@ class EventIn(BaseModel):
     location: str = ""
     whatsapp_link: str = ""
     partiful_link: str = ""
+    other_link: str = ""
     rsvp_enabled: bool = False
     co_host_ids: list[str] = []
 
@@ -89,6 +91,7 @@ class EventPatchIn(BaseModel):
     location: str | None = None
     whatsapp_link: str | None = None
     partiful_link: str | None = None
+    other_link: str | None = None
     rsvp_enabled: bool | None = None
     co_host_ids: list[str] | None = None
 
@@ -241,6 +244,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         location=event.location,
         whatsapp_link=event.whatsapp_link,
         partiful_link=event.partiful_link,
+        other_link=event.other_link,
         rsvp_enabled=event.rsvp_enabled,
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
         created_by_name=creator_name,
@@ -271,6 +275,7 @@ def create_event(request, payload: EventIn):
         location=payload.location,
         whatsapp_link=payload.whatsapp_link,
         partiful_link=payload.partiful_link,
+        other_link=payload.other_link,
         rsvp_enabled=payload.rsvp_enabled,
         created_by=request.auth,
     )
@@ -308,6 +313,8 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         event.whatsapp_link = payload.whatsapp_link
     if payload.partiful_link is not None:
         event.partiful_link = payload.partiful_link
+    if payload.other_link is not None:
+        event.other_link = payload.other_link
     if payload.rsvp_enabled is not None:
         event.rsvp_enabled = payload.rsvp_enabled
     if payload.co_host_ids is not None:
