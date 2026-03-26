@@ -12,7 +12,7 @@ final _log = Logger('ErrorReporter');
 class ErrorReporter {
   ErrorReporter(this._storage) : _dio = Dio(BaseOptions(baseUrl: apiBaseUrl));
 
-  /// Test constructor that accepts a mock [Dio].
+  /// Creates an [ErrorReporter] with an injected [Dio] instance.
   ErrorReporter.withDio(this._storage, this._dio);
 
   final SecureStorageService _storage;

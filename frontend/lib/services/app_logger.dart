@@ -27,8 +27,13 @@ void setupLogging() {
 
 /// Sets up global error handlers that log unhandled exceptions.
 ///
+/// If [onError] is provided, it is called after logging each error —
+/// typically used to forward errors to a remote reporting service.
+///
 /// Call once in `main()` after `setupLogging()`.
-void setupErrorHandlers() {
+void setupErrorHandlers({
+  void Function(String error, String stackTrace)? onError,
+}) {
   final logger = Logger('Flutter');
 
   FlutterError.onError = (details) {
@@ -37,10 +42,12 @@ void setupErrorHandlers() {
       details.exception,
       details.stack,
     );
+    onError?.call(details.exceptionAsString(), details.stack?.toString() ?? '');
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
     logger.severe('Unhandled error', error, stack);
+    onError?.call(error.toString(), stack.toString());
     return true;
   };
 }
