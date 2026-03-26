@@ -96,26 +96,30 @@ class _NavDrawer extends ConsumerWidget {
     }
 
     final mainItems = <_DrawerItem>[
-      _DrawerItem(
+      const _DrawerItem(
         icon: Icons.calendar_month,
         label: 'Calendar',
         route: '/calendar',
       ),
-      _DrawerItem(
+      const _DrawerItem(
         icon: Icons.event_note,
         label: 'My events',
         route: '/events/mine',
       ),
       if (user!.hasPermission('manage_events'))
-        _DrawerItem(
+        const _DrawerItem(
           icon: Icons.edit_calendar,
           label: 'Manage events',
           route: '/events/manage',
         ),
       if (user!.hasPermission('manage_users'))
-        _DrawerItem(icon: Icons.group, label: 'Members', route: '/members'),
+        const _DrawerItem(
+          icon: Icons.group,
+          label: 'Members',
+          route: '/members',
+        ),
       if (user!.hasPermission('approve_join_requests'))
-        _DrawerItem(
+        const _DrawerItem(
           icon: Icons.how_to_reg,
           label: 'Join requests',
           route: '/join-requests',
