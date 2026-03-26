@@ -17,7 +17,7 @@ def test_user(db):
     from users.models import User
 
     return User.objects.create_user(
-        phone_number="+15550001001",
+        phone_number="+12025550101",
         password="testpass123",
         display_name="Test Member",
     )

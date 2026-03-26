@@ -12,7 +12,7 @@ def admin_user(db):
     from users.models import User
 
     user = User.objects.create_superuser(
-        phone_number="+15550000001",
+        phone_number="+12025550001",
         password="adminpass123",
         display_name="Admin User",
     )
@@ -33,7 +33,7 @@ def manage_users_user(db):
     from users.models import User
 
     user = User.objects.create_user(
-        phone_number="+15550000002",
+        phone_number="+12025550002",
         password="managerpass123",
         display_name="Manager",
     )
@@ -62,7 +62,7 @@ class TestAuth:
     def test_login_valid(self, api_client, test_user):
         response = api_client.post(
             "/api/auth/login/",
-            {"phone_number": "+15550001001", "password": "testpass123"},
+            {"phone_number": "+12025550101", "password": "testpass123"},
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -90,7 +90,7 @@ class TestAuth:
         response = api_client.get("/api/auth/me/", **auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert data["phone_number"] == "+15550001001"
+        assert data["phone_number"] == "+12025550101"
         assert data["display_name"] == "Test Member"
         assert "first_name" not in data
         assert "last_name" not in data
@@ -130,7 +130,7 @@ class TestRolesAndPermissions:
         from users.models import User
 
         superuser = User.objects.create_superuser(
-            phone_number="+15559999999", password="superpass123"
+            phone_number="+12025559999", password="superpass123"
         )
         assert superuser.roles.filter(name="admin").exists()
 
@@ -153,7 +153,7 @@ class TestUserManagementAPI:
     def test_create_user_requires_permission(self, api_client, auth_headers):
         response = api_client.post(
             "/api/auth/create-user/",
-            {"phone_number": "+15550009999"},
+            {"phone_number": "+12025550999"},
             content_type="application/json",
             **auth_headers,
         )
@@ -175,7 +175,7 @@ class TestUserManagementAPI:
     def test_create_user_duplicate_phone(self, api_client, admin_headers, test_user):
         response = api_client.post(
             "/api/auth/create-user/",
-            {"phone_number": "+15550001001"},
+            {"phone_number": "+12025550101"},
             content_type="application/json",
             **admin_headers,
         )
@@ -234,7 +234,7 @@ class TestUserManagementAPI:
     def test_delete_user_success(self, api_client, admin_headers):
         from users.models import User
 
-        other = User.objects.create_user(phone_number="+15550008888", password="pass123")
+        other = User.objects.create_user(phone_number="+12025550888", password="pass123")
         response = api_client.delete(f"/api/auth/users/{other.id}/", **admin_headers)
         assert response.status_code == 204
 
@@ -511,7 +511,7 @@ class TestJoinRequestManagement:
         from users.models import User
 
         user = User.objects.create_user(
-            phone_number="+15550000003",
+            phone_number="+12025550003",
             password="vettorpass123",
             display_name="Vettor",
         )
