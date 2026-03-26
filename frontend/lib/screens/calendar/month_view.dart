@@ -142,9 +142,21 @@ class _MonthViewState extends State<MonthView> {
             onPressed: _goToPreviousMonth,
             tooltip: 'Previous month',
           ),
-          GestureDetector(
-            onTap: () => _openDatePicker(context),
-            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+          Semantics(
+            button: true,
+            label: 'Pick month',
+            excludeSemantics: true,
+            child: InkWell(
+              onTap: () => _openDatePicker(context),
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
@@ -391,40 +403,47 @@ class _MonthRow extends StatelessWidget {
                   final currentMonth = isCurrentMonth(day);
                   final overflow = overflowByCol[col] ?? 0;
                   return Expanded(
-                    child: GestureDetector(
-                      onTap: () => onDayTapped(day),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                            width: 0.5,
-                          ),
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _DayLabel(
-                              day: day,
-                              isToday: today,
-                              isCurrentMonth: currentMonth,
-                              height: dayLabelHeight,
+                    child: Semantics(
+                      button: true,
+                      label: DateFormat('MMMM d').format(day),
+                      child: InkWell(
+                        onTap: () => onDayTapped(day),
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).dividerColor,
+                              width: 0.5,
                             ),
-                            if (overflow > 0) ...[
-                              SizedBox(
-                                height:
-                                    visibleRows * (chipHeight + chipSpacing),
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _DayLabel(
+                                day: day,
+                                isToday: today,
+                                isCurrentMonth: currentMonth,
+                                height: dayLabelHeight,
                               ),
-                              Text(
-                                '+$overflow more',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.primary,
+                              if (overflow > 0) ...[
+                                SizedBox(
+                                  height:
+                                      visibleRows * (chipHeight + chipSpacing),
                                 ),
-                              ),
+                                Text(
+                                  '+$overflow more',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -465,27 +484,33 @@ class _MonthRow extends StatelessWidget {
                   top: top,
                   width: width,
                   height: chipHeight,
-                  child: GestureDetector(
-                    onTap: () => onEventTapped(p.event),
-                    child: Container(
-                      margin: EdgeInsets.only(
-                        left: continuesFromPrev ? 0 : 1,
-                        right: continuesToNext ? 0 : 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.$1,
-                        borderRadius: borderRadius,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        p.event.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: colors.$2,
+                  child: Semantics(
+                    button: true,
+                    label: p.event.title,
+                    child: InkWell(
+                      onTap: () => onEventTapped(p.event),
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      child: Container(
+                        margin: EdgeInsets.only(
+                          left: continuesFromPrev ? 0 : 1,
+                          right: continuesToNext ? 0 : 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.$1,
+                          borderRadius: borderRadius,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          p.event.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: colors.$2,
+                          ),
                         ),
                       ),
                     ),
