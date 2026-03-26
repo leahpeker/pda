@@ -16,3 +16,9 @@ linter:
     require_trailing_commas: true
     sized_box_for_whitespace: true
     use_colored_box: true
+
+dart_code_metrics:
+  metrics:
+    cyclomatic-complexity: 15
+    maximum-nesting-level: 5
+    number-of-parameters: 5

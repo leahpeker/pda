@@ -1,7 +1,7 @@
 .PHONY: help install run test lint format typecheck lint-file typecheck-file check migrate \
-        createsuperuser seed db-start db-stop ci dev build-dev \
+        createsuperuser seed db-start db-stop ci dev build-dev complexity \
         frontend-install frontend-run frontend-run-html frontend-build frontend-codegen frontend-lint \
-        frontend-format frontend-test frontend-fix
+        frontend-format frontend-test frontend-fix frontend-complexity
 
 help:
 	@echo "Backend commands:"
@@ -14,6 +14,7 @@ help:
 	@echo "  make migrate          makemigrations + migrate"
 	@echo "  make createsuperuser  Create Django admin user"
 	@echo "  make seed             Seed database with sample data"
+	@echo "  make complexity       Run Python cognitive complexity check"
 	@echo "  make db-start         Start local PostgreSQL (Docker)"
 	@echo "  make db-stop          Stop local PostgreSQL (Docker)"
 	@echo ""
@@ -25,12 +26,13 @@ help:
 	@echo "  make frontend-lint      Run dart format check + dart analyze"
 	@echo "  make frontend-format    Auto-format Dart files"
 	@echo "  make frontend-fix       Auto-apply dart fix suggestions"
-	@echo "  make frontend-test      Run Flutter test suite"
+	@echo "  make frontend-test         Run Flutter test suite"
+	@echo "  make frontend-complexity   Run Dart code metrics check"
 	@echo ""
 	@echo "Workflow commands:"
 	@echo "  make build-dev        Install deps, codegen, migrate, then run dev"
 	@echo "  make dev              Run Django + Flutter concurrently"
-	@echo "  make ci               Run all pre-commit checks (lint, check, test, typecheck, frontend-lint, frontend-test)"
+	@echo "  make ci               Run all pre-commit checks (lint, check, test, typecheck, complexity, frontend-lint, frontend-test, frontend-complexity)"
 
 # Backend
 install:
@@ -51,6 +53,9 @@ format:
 
 typecheck:
 	cd backend && uv run ty check .
+
+complexity:
+	cd backend && uvx --with flake8-cognitive-complexity flake8 --max-cognitive-complexity 10 --select CCR001 .
 
 lint-file:
 	@uv run ruff check --fix "$(FILE)" && uv run ruff format "$(FILE)"
@@ -105,8 +110,11 @@ frontend-fix:
 frontend-test:
 	cd frontend && flutter test
 
+frontend-complexity:
+	dart pub global activate dart_code_metrics 2>/dev/null; dart pub global run dart_code_metrics:metrics analyze frontend/lib/ frontend/test/ --disable-sunset-warning --set-exit-on-violation-level=alarm
+
 # CI (run before every commit)
-ci: lint check test typecheck frontend-lint frontend-test
+ci: lint check test typecheck complexity frontend-lint frontend-test frontend-complexity
 
 # Install deps, codegen, migrate, then run dev
 build-dev: install frontend-codegen migrate dev

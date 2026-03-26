@@ -460,7 +460,7 @@ def update_join_request_status(request, id: UUID, payload: JoinRequestStatusIn):
     )
 
 
-def _event_out(event: Event, requesting_user=None) -> EventOut:
+def _event_out(event: Event, requesting_user=None) -> EventOut:  # noqa: CCR001 — see violation fix plan
     co_hosts = list(event.co_hosts.all())
     creator = event.created_by
     creator_name = creator.display_name or creator.phone_number if creator else None
@@ -579,7 +579,7 @@ def create_event(request, payload: EventIn):
 @router.patch(
     "/events/{event_id}/", response={200: EventOut, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth()
 )
-def update_event(request, event_id: UUID, payload: EventPatchIn):
+def update_event(request, event_id: UUID, payload: EventPatchIn):  # noqa: C901, CCR001 — see violation fix plan
     try:
         event = Event.objects.get(id=event_id)
     except Event.DoesNotExist:

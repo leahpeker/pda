@@ -111,7 +111,7 @@ class Command(BaseCommand):
         self._seed_join_requests()
         self._print_summary()
 
-    def _seed_users(self) -> User:
+    def _seed_users(self) -> User:  # noqa: CCR001 — see violation fix plan
         # Ensure roles exist before creating users (post_save signal needs admin role)
         admin_role, _ = Role.objects.get_or_create(name="admin", defaults={"is_default": True})
         member_role, _ = Role.objects.get_or_create(name="member", defaults={"is_default": True})

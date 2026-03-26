@@ -21,10 +21,11 @@ make run              # Run Django dev server on localhost:8000
 make test             # Run pytest
 make lint             # Run ruff (lint + format)
 make typecheck        # Run ty type checker
+make complexity       # Run Python cognitive complexity check
 make migrate          # makemigrations + migrate
 make createsuperuser  # Create Django admin user
 make check            # Django system checks
-make ci               # Full pre-commit check (lint + check + test + typecheck + frontend-lint + frontend-test)
+make ci               # Full pre-commit check (lint + check + test + typecheck + complexity + frontend-lint + frontend-test + frontend-complexity)
 make dev              # Run Django + Flutter concurrently
 ```
 
@@ -37,7 +38,8 @@ make frontend-build     # Build Flutter web release (requires API_URL env var)
 make frontend-codegen   # Regenerate freezed/riverpod/json code
 make frontend-lint      # dart format check + dart analyze
 make frontend-format    # Auto-format Dart files
-make frontend-test      # Run Flutter test suite
+make frontend-test         # Run Flutter test suite
+make frontend-complexity   # Run Dart code metrics check
 ```
 
 **Always run `make ci` before committing.**

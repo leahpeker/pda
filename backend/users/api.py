@@ -321,7 +321,7 @@ def create_user(request, payload: UserCreateIn):
     response={200: BulkUserCreateOut, 403: ErrorOut},
     auth=JWTAuth(),
 )
-def bulk_create_users(request, payload: BulkUserCreateIn):
+def bulk_create_users(request, payload: BulkUserCreateIn):  # noqa: CCR001 — see violation fix plan
     if not request.auth.has_permission(PermissionKey.MANAGE_USERS):
         return Status(403, ErrorOut(detail="Permission denied."))
 
@@ -463,7 +463,7 @@ def delete_user(request, user_id: str):
     response={200: UserOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
     auth=JWTAuth(),
 )
-def update_user_roles(request, user_id: str, payload: UserRolesIn):
+def update_user_roles(request, user_id: str, payload: UserRolesIn):  # noqa: CCR001 — see violation fix plan
     if not request.auth.has_permission(PermissionKey.MANAGE_USERS):
         return Status(403, ErrorOut(detail="Permission denied."))
     try:

@@ -53,7 +53,16 @@ line-length = 100
 target-version = "py313"
 
 [tool.ruff.lint]
-select = ["F", "I", "UP"]
+select = ["F", "I", "UP", "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-returns = 6
+max-branches = 12
+max-args = 5
+max-statements = 50
 
 [tool.ruff.format]
 quote-style = "double"
