@@ -292,3 +292,56 @@ class TestApplicationEventLogging:
             r for r in caplog.records if r.name == "pda.community" and r.levelno == logging.ERROR
         ]
         assert len(error_logs) >= 1
+
+
+class TestErrorReportEndpoint:
+    """Tests for POST /api/community/error-report/ (Task 4)."""
+
+    @pytest.fixture(autouse=True)
+    def _enable_propagation(self):
+        pda_logger = logging.getLogger("pda")
+        original = pda_logger.propagate
+        pda_logger.propagate = True
+        yield
+        pda_logger.propagate = original
+
+    @pytest.mark.django_db
+    def test_error_report_requires_auth(self):
+        client = Client()
+        response = client.post(
+            "/api/community/error-report/",
+            {"error": "Something broke"},
+            content_type="application/json",
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.django_db
+    def test_error_report_logs_at_error_level(self, caplog, auth_headers):
+        client = Client()
+        with caplog.at_level(logging.ERROR, logger="pda.frontend"):
+            response = client.post(
+                "/api/community/error-report/",
+                {
+                    "error": "Unhandled exception in CalendarScreen",
+                    "stack_trace": "at CalendarScreen.build line 42",
+                    "context": "/calendar",
+                },
+                content_type="application/json",
+                **auth_headers,
+            )
+        assert response.status_code == 201
+        frontend_logs = [r for r in caplog.records if r.name == "pda.frontend"]
+        assert len(frontend_logs) >= 1
+        assert frontend_logs[0].levelno == logging.ERROR
+        assert "CalendarScreen" in frontend_logs[0].getMessage()
+
+    @pytest.mark.django_db
+    def test_error_report_accepts_minimal_payload(self, auth_headers):
+        client = Client()
+        response = client.post(
+            "/api/community/error-report/",
+            {"error": "Something broke"},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 201

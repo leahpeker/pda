@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from users.permissions import PermissionKey
 
 from community.models import (
@@ -85,6 +85,16 @@ class EventOut(BaseModel):
 
 class RSVPIn(BaseModel):
     status: str
+
+
+class ErrorReportIn(BaseModel):
+    error: str = Field(max_length=2000)
+    stack_trace: str = Field(default="", max_length=10000)
+    context: str = Field(default="", max_length=500)
+
+
+class ErrorReportOut(BaseModel):
+    detail: str
 
 
 class ErrorOut(BaseModel):
@@ -217,6 +227,21 @@ def submit_join_request(request, payload: JoinRequestIn):
             status=join_request.status,
         ),
     )
+
+
+frontend_logger = logging.getLogger("pda.frontend")
+
+
+@router.post("/error-report/", response={201: ErrorReportOut}, auth=JWTAuth())
+def report_error(request, payload: ErrorReportIn):
+    frontend_logger.error(
+        "Frontend error: %s (context: %s)",
+        payload.error,
+        payload.context or "unknown",
+    )
+    if payload.stack_trace:
+        frontend_logger.error("Stack trace: %s", payload.stack_trace)
+    return Status(201, ErrorReportOut(detail="Error report received."))
 
 
 @router.get("/join-requests/", response={200: list[JoinRequestOut], 403: ErrorOut}, auth=JWTAuth())
