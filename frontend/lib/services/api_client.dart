@@ -67,7 +67,11 @@ class ApiClient {
     if (refresh == null) return false;
     try {
       final response = await Dio(
-        BaseOptions(baseUrl: apiBaseUrl),
+        BaseOptions(
+          baseUrl: apiBaseUrl,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
       ).post('/api/auth/refresh/', data: {'refresh': refresh});
       await _storage.saveTokens(
         access: response.data['access'] as String,

@@ -26,7 +26,7 @@ COPY --from=flutter-build /app/frontend/build/web/ ./backend/staticfiles/flutter
 COPY --from=flutter-build /app/frontend/build/web/index.html ./backend/templates/flutter/index.html
 
 RUN DJANGO_SETTINGS_MODULE=config.settings \
-    SECRET_KEY=collectstatic-placeholder \
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))") \
     uv run python backend/manage.py collectstatic --noinput
 
 EXPOSE ${PORT:-8000}

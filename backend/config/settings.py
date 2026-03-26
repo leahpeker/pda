@@ -18,7 +18,10 @@ if not SECRET_KEY:
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["*"]
+_allowed_hosts_env = os.environ.get("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = _allowed_hosts_env.split(",") if _allowed_hosts_env else ["*"]
+if IS_PRODUCTION and not _allowed_hosts_env:
+    raise ValueError("ALLOWED_HOSTS must be set in production")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -97,8 +100,20 @@ if IS_PRODUCTION:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# HTTPS / security headers
+if IS_PRODUCTION:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 # CORS
-if not IS_PRODUCTION:
+if IS_PRODUCTION:
+    _cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+    CORS_ALLOWED_ORIGINS = _cors_env.split(",") if _cors_env else []
+else:
     CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
 
 # Email

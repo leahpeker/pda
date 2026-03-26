@@ -199,11 +199,16 @@ def login(request, payload: LoginIn):
 
 @router.post("/refresh/", response={200: AccessOut, 401: ErrorOut}, auth=None)
 def refresh_token(request, payload: RefreshIn):
+    from ninja_jwt.exceptions import TokenError
+
     try:
         refresh = RefreshToken(payload.refresh)
         return Status(200, AccessOut(access=str(refresh.access_token)))
-    except Exception:
+    except TokenError:
         return Status(401, ErrorOut(detail="Invalid or expired refresh token"))
+    except Exception:
+        logger.exception("Unexpected error during token refresh")
+        return Status(401, ErrorOut(detail="Token refresh failed"))
 
 
 @router.get("/me/", response={200: UserOut, 401: ErrorOut}, auth=JWTAuth())

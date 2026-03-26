@@ -9,6 +9,7 @@ class TestEmailBackendConfig:
         """In production without EMAIL_HOST, email backend should be console (not SMTP)."""
         monkeypatch.setenv("RAILWAY_ENVIRONMENT", "production")
         monkeypatch.setenv("SECRET_KEY", "test-secret-key")
+        monkeypatch.setenv("ALLOWED_HOSTS", "example.com")
         monkeypatch.delenv("EMAIL_HOST", raising=False)
 
         # Re-import settings to pick up env changes
