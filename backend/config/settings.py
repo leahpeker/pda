@@ -18,10 +18,7 @@ if not SECRET_KEY:
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-_allowed_hosts_env = os.environ.get("ALLOWED_HOSTS", "")
-ALLOWED_HOSTS = _allowed_hosts_env.split(",") if _allowed_hosts_env else ["*"]
-if IS_PRODUCTION and not _allowed_hosts_env:
-    raise ValueError("ALLOWED_HOSTS must be set in production")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
