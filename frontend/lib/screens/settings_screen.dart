@@ -69,6 +69,11 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _showEditNameDialog(context, ref, user?.displayName),
           ),
           _SettingsTile(
+            icon: Icons.phone_outlined,
+            label: 'Phone',
+            value: user?.phoneNumber ?? '',
+          ),
+          _SettingsTile(
             icon: Icons.email_outlined,
             label: 'Email',
             value: (user?.email ?? '').trim().isEmpty ? 'Not set' : user!.email,
@@ -187,13 +192,13 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String? value;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _SettingsTile({
     required this.icon,
     required this.label,
-    required this.onTap,
     this.value,
+    this.onTap,
   });
 
   @override
@@ -207,7 +212,7 @@ class _SettingsTile extends StatelessWidget {
         ),
         title: Text(label),
         subtitle: value != null ? Text(value!) : null,
-        trailing: const Icon(Icons.chevron_right),
+        trailing: onTap != null ? const Icon(Icons.chevron_right) : null,
         onTap: onTap,
       ),
     );

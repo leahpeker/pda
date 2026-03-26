@@ -452,6 +452,69 @@ class _GuestChip extends StatefulWidget {
 
 class _GuestChipState extends State<_GuestChip> {
   bool _expanded = false;
+  OverlayEntry? _overlay;
+  final _link = LayerLink();
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlay?.remove();
+    _overlay = null;
+  }
+
+  void _showOverlay(String phone) {
+    if (_overlay != null) return;
+    _overlay = OverlayEntry(
+      builder:
+          (_) => GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: _removeOverlay,
+            child: Stack(
+              children: [
+                CompositedTransformFollower(
+                  link: _link,
+                  offset: const Offset(0, 20),
+                  child: Material(
+                    elevation: 4,
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey.shade900,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 7,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            size: 13,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(width: 6),
+                          SelectableText(
+                            phone,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontFamily: 'monospace',
+                              color: Colors.grey.shade100,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+    Overlay.of(context).insert(_overlay!);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -463,37 +526,19 @@ class _GuestChipState extends State<_GuestChip> {
     }
 
     if (isWide) {
-      return Tooltip(
-        richMessage: WidgetSpan(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.phone, size: 13, color: Colors.white),
-                const SizedBox(width: 5),
-                Text(
-                  phone,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ],
+      return CompositedTransformTarget(
+        link: _link,
+        child: MouseRegion(
+          onEnter: (_) => _showOverlay(phone),
+          onExit: (_) => _removeOverlay(),
+          cursor: SystemMouseCursors.basic,
+          child: Text(
+            widget.guest.name,
+            style: const TextStyle(
+              fontSize: 13,
+              decoration: TextDecoration.underline,
+              decorationStyle: TextDecorationStyle.dotted,
             ),
-          ),
-        ),
-        decoration: BoxDecoration(
-          color: Colors.black87,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          widget.guest.name,
-          style: const TextStyle(
-            fontSize: 13,
-            decoration: TextDecoration.underline,
-            decorationStyle: TextDecorationStyle.dotted,
           ),
         ),
       );
@@ -526,7 +571,7 @@ class _GuestChipState extends State<_GuestChip> {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 3),
-                  Text(
+                  SelectableText(
                     phone,
                     style: TextStyle(
                       fontSize: 11,
