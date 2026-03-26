@@ -102,11 +102,11 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                         child: IntlPhoneField(
                           initialCountryCode: 'US',
                           decoration: const InputDecoration(
-                            labelText: 'WhatsApp phone number *',
+                            labelText: 'Phone number *',
                             border: OutlineInputBorder(),
                             helperText:
-                                'Use the same phone number you use (or will use) '
-                                'in the PDA WhatsApp community.',
+                                'Use the phone number you use (or will use) '
+                                'to connect with the PDA community.',
                             helperMaxLines: 2,
                           ),
                           onChanged: (phone) {
