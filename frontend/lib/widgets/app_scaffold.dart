@@ -6,9 +6,8 @@ import 'package:pda/providers/auth_provider.dart';
 
 class AppScaffold extends ConsumerWidget {
   final Widget child;
-  final String? title;
 
-  const AppScaffold({super.key, required this.child, this.title});
+  const AppScaffold({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,7 +16,7 @@ class AppScaffold extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: isWide ? null : Text(title ?? 'PDA'),
+        title: null,
         actions: isWide ? _wideNavItems(context, ref, user) : null,
       ),
       drawer: isWide ? null : _NavDrawer(user: user),
@@ -27,47 +26,52 @@ class AppScaffold extends ConsumerWidget {
 
   List<Widget> _wideNavItems(BuildContext context, WidgetRef ref, User? user) {
     if (user == null) {
-      return [
-        TextButton(
-          onPressed: () => context.go('/login'),
-          child: const Text('Member login'),
-        ),
-      ];
+      return [const _NavButton(label: 'Member login', route: '/login')];
     }
 
     return [
-      TextButton(
-        onPressed: () => context.go('/calendar'),
-        child: const Text('Calendar'),
-      ),
-      TextButton(
-        onPressed: () => context.go('/events/mine'),
-        child: const Text('My events'),
-      ),
+      const _NavButton(label: 'Calendar', route: '/calendar'),
+      const _NavButton(label: 'My events', route: '/events/mine'),
       if (user.hasPermission('manage_events'))
-        TextButton(
-          onPressed: () => context.go('/events/manage'),
-          child: const Text('Manage events'),
-        ),
+        const _NavButton(label: 'Manage events', route: '/events/manage'),
       if (user.hasPermission('manage_users'))
-        TextButton(
-          onPressed: () => context.go('/members'),
-          child: const Text('Members'),
-        ),
+        const _NavButton(label: 'Members', route: '/members'),
       if (user.hasPermission('approve_join_requests'))
-        TextButton(
-          onPressed: () => context.go('/join-requests'),
-          child: const Text('Join requests'),
-        ),
-      TextButton(
-        onPressed: () => context.go('/settings'),
-        child: const Text('Settings'),
-      ),
+        const _NavButton(label: 'Join requests', route: '/join-requests'),
+      const _NavButton(label: 'Settings', route: '/settings'),
       TextButton(
         onPressed: () => ref.read(authProvider.notifier).logout(),
         child: const Text('Logout'),
       ),
     ];
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  final String label;
+  final String route;
+
+  const _NavButton({required this.label, required this.route});
+
+  @override
+  Widget build(BuildContext context) {
+    final currentPath = GoRouterState.of(context).uri.path;
+    final isActive = currentPath.startsWith(route);
+
+    return TextButton(
+      onPressed: () => context.go(route),
+      style:
+          isActive
+              ? TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                ),
+              )
+              : null,
+      child: Text(label),
+    );
   }
 }
 
@@ -79,6 +83,7 @@ class _NavDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final currentPath = GoRouterState.of(context).uri.path;
 
     if (user == null) {
       return Drawer(
@@ -155,6 +160,9 @@ class _NavDrawer extends ConsumerWidget {
                           (item) => ListTile(
                             leading: Icon(item.icon),
                             title: Text(item.label),
+                            selected: currentPath.startsWith(item.route),
+                            selectedTileColor:
+                                theme.colorScheme.primaryContainer,
                             onTap: () {
                               Navigator.of(context).pop();
                               context.go(item.route);
@@ -169,6 +177,8 @@ class _NavDrawer extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.settings_outlined),
               title: const Text('Settings'),
+              selected: currentPath.startsWith('/settings'),
+              selectedTileColor: theme.colorScheme.primaryContainer,
               onTap: () {
                 Navigator.of(context).pop();
                 context.go('/settings');

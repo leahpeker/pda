@@ -47,7 +47,6 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
     final requestsAsync = ref.watch(joinRequestsProvider);
 
     return AppScaffold(
-      title: 'Join Requests',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

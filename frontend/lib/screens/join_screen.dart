@@ -58,7 +58,6 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     final isLoading = state.isLoading;
 
     return AppScaffold(
-      title: 'Request to Join',
       child: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(

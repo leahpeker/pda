@@ -44,7 +44,6 @@ class _MembersScreenState extends ConsumerState<MembersScreen>
     final canManageRoles = currentUser?.hasPermission('manage_roles') ?? false;
 
     return AppScaffold(
-      title: 'Members',
       child: Column(
         children: [
           TabBar(

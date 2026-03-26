@@ -18,7 +18,6 @@ class EventManagementScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).valueOrNull;
 
     return AppScaffold(
-      title: myEventsOnly ? 'My Events' : 'Manage Events',
       child: eventsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Failed to load events: $e')),

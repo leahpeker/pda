@@ -62,7 +62,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final user = ref.watch(authProvider).valueOrNull;
 
     return AppScaffold(
-      title: 'Community Calendar',
       child: Stack(
         children: [
           Column(

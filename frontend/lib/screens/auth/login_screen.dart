@@ -46,7 +46,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = state.isLoading;
 
     return AppScaffold(
-      title: 'Member login',
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
