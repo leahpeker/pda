@@ -154,7 +154,7 @@ class _MemberCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        user.phoneNumber,
+                        user.email.isNotEmpty ? user.email : user.phoneNumber,
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
