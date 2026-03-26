@@ -12,10 +12,9 @@ def admin_user(db):
     from users.models import User
 
     user = User.objects.create_superuser(
-        email="admin@pda.org",
+        phone_number="+15550000001",
         password="adminpass123",
-        first_name="Admin",
-        last_name="User",
+        display_name="Admin User",
     )
     return user
 
@@ -34,8 +33,9 @@ def manage_users_user(db):
     from users.models import User
 
     user = User.objects.create_user(
-        email="manager@pda.org",
+        phone_number="+15550000002",
         password="managerpass123",
+        display_name="Manager",
     )
     role = Role.objects.create(
         name="manager", permissions=[PermissionKey.MANAGE_USERS, PermissionKey.MANAGE_ROLES]
@@ -62,7 +62,7 @@ class TestAuth:
     def test_login_valid(self, api_client, test_user):
         response = api_client.post(
             "/api/auth/login/",
-            {"email": "member@pda.org", "password": "testpass123"},
+            {"phone_number": "+15550001001", "password": "testpass123"},
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -73,16 +73,27 @@ class TestAuth:
     def test_login_invalid(self, api_client):
         response = api_client.post(
             "/api/auth/login/",
-            {"email": "nobody@pda.org", "password": "wrong"},
+            {"phone_number": "+19999999999", "password": "wrong"},
             content_type="application/json",
         )
         assert response.status_code == 401
+
+    def test_login_old_email_format_rejected(self, api_client, test_user):
+        response = api_client.post(
+            "/api/auth/login/",
+            {"email": "member@pda.org", "password": "testpass123"},
+            content_type="application/json",
+        )
+        assert response.status_code in (401, 422)
 
     def test_me_authenticated(self, api_client, test_user, auth_headers):
         response = api_client.get("/api/auth/me/", **auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert data["email"] == "member@pda.org"
+        assert data["phone_number"] == "+15550001001"
+        assert data["display_name"] == "Test Member"
+        assert "first_name" not in data
+        assert "last_name" not in data
         assert "roles" in data
 
     def test_me_unauthenticated(self, api_client):
@@ -118,7 +129,9 @@ class TestRolesAndPermissions:
     def test_superuser_gets_admin_role_on_create(self, db):
         from users.models import User
 
-        superuser = User.objects.create_superuser(email="super@pda.org", password="superpass123")
+        superuser = User.objects.create_superuser(
+            phone_number="+15559999999", password="superpass123"
+        )
         assert superuser.roles.filter(name="admin").exists()
 
     def test_has_permission_uses_prefetch_cache(self, test_user):
@@ -140,7 +153,7 @@ class TestUserManagementAPI:
     def test_create_user_requires_permission(self, api_client, auth_headers):
         response = api_client.post(
             "/api/auth/create-user/",
-            {"email": "new@pda.org"},
+            {"phone_number": "+15550009999"},
             content_type="application/json",
             **auth_headers,
         )
@@ -149,20 +162,20 @@ class TestUserManagementAPI:
     def test_create_user_success(self, api_client, admin_headers):
         response = api_client.post(
             "/api/auth/create-user/",
-            {"email": "new@pda.org", "first_name": "New", "last_name": "Member"},
+            {"phone_number": "+12025551234", "display_name": "New Member"},
             content_type="application/json",
             **admin_headers,
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["email"] == "new@pda.org"
+        assert data["phone_number"] == "+12025551234"
         assert "temporary_password" in data
         assert len(data["temporary_password"]) == 16
 
-    def test_create_user_duplicate_email(self, api_client, admin_headers, test_user):
+    def test_create_user_duplicate_phone(self, api_client, admin_headers, test_user):
         response = api_client.post(
             "/api/auth/create-user/",
-            {"email": "member@pda.org"},
+            {"phone_number": "+15550001001"},
             content_type="application/json",
             **admin_headers,
         )
@@ -171,14 +184,14 @@ class TestUserManagementAPI:
     def test_create_user_assigns_member_role_by_default(self, api_client, admin_headers):
         response = api_client.post(
             "/api/auth/create-user/",
-            {"email": "newmember@pda.org"},
+            {"phone_number": "+12125551234"},
             content_type="application/json",
             **admin_headers,
         )
         assert response.status_code == 201
         from users.models import User
 
-        user = User.objects.get(email="newmember@pda.org")
+        user = User.objects.get(phone_number="+12125551234")
         assert user.roles.filter(name="member").exists()
 
     def test_list_users_requires_manage_users(self, api_client, auth_headers):
@@ -193,12 +206,12 @@ class TestUserManagementAPI:
     def test_update_user(self, api_client, admin_headers, test_user):
         response = api_client.patch(
             f"/api/auth/users/{test_user.id}/",
-            {"first_name": "Updated"},
+            {"display_name": "Updated Name"},
             content_type="application/json",
             **admin_headers,
         )
         assert response.status_code == 200
-        assert response.json()["first_name"] == "Updated"
+        assert response.json()["display_name"] == "Updated Name"
 
     def test_delete_user_cannot_delete_self(self, api_client, admin_headers, admin_user):
         response = api_client.delete(
@@ -221,7 +234,7 @@ class TestUserManagementAPI:
     def test_delete_user_success(self, api_client, admin_headers):
         from users.models import User
 
-        other = User.objects.create_user(email="todelete@pda.org", password="pass123")
+        other = User.objects.create_user(phone_number="+15550008888", password="pass123")
         response = api_client.delete(f"/api/auth/users/{other.id}/", **admin_headers)
         assert response.status_code == 204
 
@@ -433,8 +446,9 @@ class TestJoinRequestManagement:
         from users.models import User
 
         user = User.objects.create_user(
-            email="vettor@pda.org",
+            phone_number="+15550000003",
             password="vettorpass123",
+            display_name="Vettor",
         )
         role = Role.objects.create(name="vettor", permissions=[PermissionKey.APPROVE_JOIN_REQUESTS])
         user.roles.add(role)
@@ -505,8 +519,6 @@ class TestJoinRequestManagement:
     def test_update_join_request_status_persists(
         self, api_client, vettor_headers, sample_join_request
     ):
-        pass
-
         api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
             {"status": "approved"},

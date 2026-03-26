@@ -14,8 +14,9 @@ def manage_events_user(db):
     from users.models import User
 
     user = User.objects.create_user(
-        email="eventmanager@pda.org",
+        phone_number="+14155551234",
         password="eventmanagerpass123",
+        display_name="Event Manager",
     )
     role = Role.objects.create(name="event_manager", permissions=[PermissionKey.MANAGE_EVENTS])
     user.roles.add(role)

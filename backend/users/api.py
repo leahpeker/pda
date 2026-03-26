@@ -1,6 +1,7 @@
 import secrets
 import string
 
+import phonenumbers
 from django.db import models
 from ninja import Router
 from ninja.responses import Status
@@ -35,13 +36,24 @@ def _is_last_admin(user: User) -> bool:
     return admin_role.users.count() <= 1
 
 
+def _validate_phone(raw: str) -> str:
+    """Parse, validate, and return E.164. Raises ValueError on invalid."""
+    try:
+        parsed = phonenumbers.parse(raw, None)
+    except phonenumbers.phonenumberutil.NumberParseException as e:
+        raise ValueError(str(e)) from e
+    if not phonenumbers.is_valid_number(parsed):
+        raise ValueError(f"Invalid phone number: {raw}")
+    return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+
+
 # ---------------------------------------------------------------------------
 # Schemas
 # ---------------------------------------------------------------------------
 
 
 class LoginIn(BaseModel):
-    email: str
+    phone_number: str
     password: str
 
 
@@ -67,9 +79,9 @@ class RoleOut(BaseModel):
 
 class UserOut(BaseModel):
     id: str
-    email: str
-    first_name: str
-    last_name: str
+    phone_number: str
+    display_name: str
+    email: str = ""
     is_superuser: bool = False
     roles: list[RoleOut]
 
@@ -77,9 +89,9 @@ class UserOut(BaseModel):
     def from_user(cls, user: User) -> "UserOut":
         return cls(
             id=str(user.id),
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
+            phone_number=user.phone_number,
+            display_name=user.display_name,
+            email=user.email or "",
             is_superuser=user.is_superuser,
             roles=[
                 RoleOut(
@@ -91,24 +103,23 @@ class UserOut(BaseModel):
 
 
 class UserCreateIn(BaseModel):
-    email: str
-    first_name: str = ""
-    last_name: str = ""
+    phone_number: str
+    display_name: str = ""
+    email: str = ""
     role_id: str | None = None
 
 
 class UserCreateOut(BaseModel):
     id: str
-    email: str
-    first_name: str
-    last_name: str
+    phone_number: str
+    display_name: str
     temporary_password: str
 
 
 class UserPatchIn(BaseModel):
+    phone_number: str | None = None
+    display_name: str | None = None
     email: str | None = None
-    first_name: str | None = None
-    last_name: str | None = None
     is_active: bool | None = None
 
 
@@ -144,7 +155,7 @@ class ErrorOut(BaseModel):
 def login(request, payload: LoginIn):
     from django.contrib.auth import authenticate
 
-    user = authenticate(request, username=payload.email, password=payload.password)
+    user = authenticate(request, username=payload.phone_number, password=payload.password)
     if user is None:
         return Status(401, ErrorOut(detail="Invalid credentials"))
     refresh = RefreshToken.for_user(user)
@@ -180,15 +191,20 @@ def create_user(request, payload: UserCreateIn):
     if not request.auth.has_permission(PermissionKey.CREATE_USER):
         return Status(403, ErrorOut(detail="Permission denied."))
 
-    if User.objects.filter(email=payload.email).exists():
-        return Status(400, ErrorOut(detail="A user with that email already exists."))
+    if User.objects.filter(phone_number=payload.phone_number).exists():
+        return Status(400, ErrorOut(detail="A user with that phone number already exists."))
+
+    try:
+        validated_phone = _validate_phone(payload.phone_number)
+    except ValueError as e:
+        return Status(400, ErrorOut(detail=str(e)))
 
     temp_password = _generate_temp_password()
     user = User.objects.create_user(
-        email=payload.email,
+        phone_number=validated_phone,
         password=temp_password,
-        first_name=payload.first_name,
-        last_name=payload.last_name,
+        display_name=payload.display_name,
+        email=payload.email,
     )
 
     if payload.role_id:
@@ -207,9 +223,8 @@ def create_user(request, payload: UserCreateIn):
         201,
         UserCreateOut(
             id=str(user.id),
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
+            phone_number=user.phone_number,
+            display_name=user.display_name,
             temporary_password=temp_password,
         ),
     )
@@ -222,22 +237,17 @@ class UserSearchOut(BaseModel):
 
 @router.get("/users/search/", response={200: list[UserSearchOut]}, auth=JWTAuth())
 def search_users(request, q: str = ""):
-    # TODO: make smarter once we have engagement/activity data (rank by activity, mutual events, etc.)
     qs = User.objects.filter(is_active=True).exclude(pk=request.auth.pk)
     q = q.strip()
     if q:
-        qs = qs.filter(
-            models.Q(first_name__icontains=q)
-            | models.Q(last_name__icontains=q)
-            | models.Q(email__icontains=q)
-        )
-    qs = qs.order_by("first_name", "last_name")[:10]
+        qs = qs.filter(models.Q(display_name__icontains=q) | models.Q(phone_number__icontains=q))
+    qs = qs.order_by("display_name")[:10]
     return Status(
         200,
         [
             UserSearchOut(
                 id=str(u.id),
-                display_name=f"{u.first_name} {u.last_name}".strip() or u.email,
+                display_name=u.display_name or u.phone_number,
             )
             for u in qs
         ],
@@ -252,7 +262,7 @@ def search_users(request, q: str = ""):
 def list_users(request):
     if not request.auth.has_permission(PermissionKey.MANAGE_USERS):
         return Status(403, ErrorOut(detail="Permission denied."))
-    users = User.objects.prefetch_related("roles").order_by("email")
+    users = User.objects.prefetch_related("roles").order_by("phone_number")
     return Status(200, [UserOut.from_user(u) for u in users])
 
 
@@ -269,14 +279,17 @@ def update_user(request, user_id: str, payload: UserPatchIn):
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="User not found."))
 
+    if payload.phone_number is not None:
+        if User.objects.exclude(pk=user_id).filter(phone_number=payload.phone_number).exists():
+            return Status(400, ErrorOut(detail="A user with that phone number already exists."))
+        try:
+            user.phone_number = _validate_phone(payload.phone_number)
+        except ValueError as e:
+            return Status(400, ErrorOut(detail=str(e)))
+    if payload.display_name is not None:
+        user.display_name = payload.display_name
     if payload.email is not None:
-        if User.objects.exclude(pk=user_id).filter(email=payload.email).exists():
-            return Status(400, ErrorOut(detail="A user with that email already exists."))
         user.email = payload.email
-    if payload.first_name is not None:
-        user.first_name = payload.first_name
-    if payload.last_name is not None:
-        user.last_name = payload.last_name
     if payload.is_active is not None:
         user.is_active = payload.is_active
     user.save()
