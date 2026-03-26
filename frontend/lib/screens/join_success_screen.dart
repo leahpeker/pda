@@ -17,7 +17,7 @@ class JoinSuccessScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.check_circle_outline,
+                  Icons.check_circle,
                   size: 72,
                   color: Colors.green,
                 ),

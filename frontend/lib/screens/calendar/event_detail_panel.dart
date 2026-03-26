@@ -115,7 +115,7 @@ class EventDetailContent extends ConsumerWidget {
             if (!fullPage)
               IconButton(
                 tooltip: 'Open full page',
-                icon: const Icon(Icons.launch),
+                icon: const Icon(Icons.open_in_new_outlined),
                 onPressed: () {
                   Navigator.of(context).pop();
                   context.push('/events/${liveEvent.id}');
@@ -125,10 +125,10 @@ class EventDetailContent extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         if (isSameDay) ...[
-          _DetailRow(icon: Icons.calendar_today, text: dateFmt.format(start)),
+          _DetailRow(icon: Icons.today_outlined, text: dateFmt.format(start)),
           const SizedBox(height: 8),
           _DetailRow(
-            icon: Icons.schedule,
+            icon: Icons.schedule_outlined,
             text: '${timeFmt.format(start)} – ${timeFmt.format(end)}',
           ),
         ] else ...[
@@ -140,35 +140,11 @@ class EventDetailContent extends ConsumerWidget {
         ],
         if (liveEvent.location.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _DetailRow(icon: Icons.place, text: liveEvent.location),
+          _DetailRow(icon: Icons.location_on_outlined, text: liveEvent.location),
         ],
         if (hostNames.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _DetailRow(icon: Icons.person_outline, text: hostNames.join(', ')),
-        ],
-        if (liveEvent.whatsappLink.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _LinkRow(
-            icon: Icons.chat,
-            label: 'WhatsApp group',
-            url: liveEvent.whatsappLink,
-          ),
-        ],
-        if (liveEvent.partifulLink.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _LinkRow(
-            icon: Icons.celebration,
-            label: 'Partiful',
-            url: liveEvent.partifulLink,
-          ),
-        ],
-        if (liveEvent.otherLink.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _LinkRow(
-            icon: Icons.link,
-            label: liveEvent.otherLink,
-            url: liveEvent.otherLink,
-          ),
+          _DetailRow(icon: Icons.person_pin_outlined, text: hostNames.join(', ')),
         ],
         if (liveEvent.description.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -177,16 +153,10 @@ class EventDetailContent extends ConsumerWidget {
             style: const TextStyle(fontSize: 15, height: 1.6),
           ),
         ],
-        if (liveEvent.rsvpEnabled) ...[
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 8),
-          _RSVPSection(event: liveEvent),
-        ],
         const SizedBox(height: 24),
         const Divider(),
         const SizedBox(height: 8),
-        _AdminActions(event: liveEvent),
+        _MemberSection(event: liveEvent),
       ],
     );
   }
@@ -301,7 +271,7 @@ class _RSVPSectionState extends ConsumerState<_RSVPSection> {
             children: [
               _RsvpButton(
                 label: 'Attending',
-                icon: Icons.check_circle_outline,
+                icon: Icons.sentiment_very_satisfied_outlined,
                 activeColor: Colors.green,
                 isActive: myRsvp == 'attending',
                 onTap:
@@ -313,7 +283,7 @@ class _RSVPSectionState extends ConsumerState<_RSVPSection> {
               const SizedBox(width: 8),
               _RsvpButton(
                 label: 'Maybe',
-                icon: Icons.help_outline,
+                icon: Icons.sentiment_neutral_outlined,
                 activeColor: Colors.orange,
                 isActive: myRsvp == 'maybe',
                 onTap:
@@ -322,7 +292,7 @@ class _RSVPSectionState extends ConsumerState<_RSVPSection> {
               const SizedBox(width: 8),
               _RsvpButton(
                 label: "Can't go",
-                icon: Icons.cancel_outlined,
+                icon: Icons.sentiment_dissatisfied_outlined,
                 activeColor: Colors.red,
                 isActive: myRsvp == 'cant_go',
                 onTap:
@@ -507,7 +477,7 @@ class _GuestChipState extends State<_GuestChip> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.phone,
+                            Icons.smartphone_outlined,
                             size: 13,
                             color: Colors.grey.shade300,
                           ),
@@ -588,7 +558,7 @@ class _GuestChipState extends State<_GuestChip> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.phone,
+                      Icons.smartphone_outlined,
                       size: 11,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -741,14 +711,14 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
       children: [
         OutlinedButton.icon(
           onPressed: _edit,
-          icon: const Icon(Icons.edit, size: 16),
+          icon: const Icon(Icons.edit_outlined, size: 16),
           label: const Text('Edit'),
         ),
         const SizedBox(width: 12),
         OutlinedButton.icon(
           onPressed: _delete,
           icon: Icon(
-            Icons.delete,
+            Icons.delete_outline,
             size: 16,
             color: Theme.of(context).colorScheme.error,
           ),
@@ -756,6 +726,305 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
             'Delete',
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Shows member-only content (links, RSVP, admin actions) or a login/join
+/// prompt for unauthenticated visitors.
+class _MemberSection extends ConsumerWidget {
+  final Event event;
+  const _MemberSection({required this.event});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).valueOrNull;
+    if (user != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (event.whatsappLink.isNotEmpty) ...[
+            _LinkRow(
+              icon: Icons.chat_bubble_outline,
+              label: 'WhatsApp group',
+              url: event.whatsappLink,
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (event.partifulLink.isNotEmpty) ...[
+            _LinkRow(
+              icon: Icons.celebration,
+              label: 'Partiful',
+              url: event.partifulLink,
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (event.otherLink.isNotEmpty) ...[
+            _LinkRow(
+              icon: Icons.link_outlined,
+              label: event.otherLink,
+              url: event.otherLink,
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (event.rsvpEnabled) ...[
+            const SizedBox(height: 8),
+            _RSVPSection(event: event),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+          ],
+          _AdminActions(event: event),
+        ],
+      );
+    }
+    return _LoginOrJoinSection(event: event);
+  }
+}
+
+/// Shown to unauthenticated visitors. Collects phone number, checks if they're
+/// a member, then either prompts login or prompts them to submit a join request.
+class _LoginOrJoinSection extends ConsumerStatefulWidget {
+  final Event event;
+  const _LoginOrJoinSection({required this.event});
+
+  @override
+  ConsumerState<_LoginOrJoinSection> createState() =>
+      _LoginOrJoinSectionState();
+}
+
+class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
+  final _phoneCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _phoneKey = GlobalKey<FormState>();
+  final _loginKey = GlobalKey<FormState>();
+
+  // null = phone step, true = login step, false = join step
+  bool? _isMember;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _phoneCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkPhone() async {
+    if (!(_phoneKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final api = ref.read(apiClientProvider);
+      final res = await api.post(
+        '/api/community/check-phone/',
+        data: {'phone_number': _phoneCtrl.text.trim()},
+      );
+      final exists = (res.data as Map<String, dynamic>)['exists'] as bool;
+      setState(() => _isMember = exists);
+    } catch (e) {
+      setState(() => _error = 'Something went wrong. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _login() async {
+    if (!(_loginKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .login(_phoneCtrl.text.trim(), _passwordCtrl.text);
+    } catch (e) {
+      setState(() => _error = 'Incorrect password. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Phone step
+    if (_isMember == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Member access',
+            style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Links and RSVP are available to members only.',
+            style: TextStyle(
+              fontSize: 14,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Form(
+            key: _phoneKey,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _phoneCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone number',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    keyboardType: TextInputType.phone,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                    onFieldSubmitted: (_) => _checkPhone(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _loading ? null : _checkPhone,
+                  child:
+                      _loading
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Text('Continue'),
+                ),
+              ],
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    // Login step (member found)
+    if (_isMember == true) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Welcome back!', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Text(
+            'Enter your password to see member details.',
+            style: TextStyle(
+              fontSize: 14,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Form(
+            key: _loginKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _passwordCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  obscureText: true,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    return null;
+                  },
+                  onFieldSubmitted: (_) => _login(),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    FilledButton(
+                      onPressed: _loading ? null : _login,
+                      child:
+                          _loading
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : const Text('Log in'),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () => setState(() => _isMember = null),
+                      child: const Text('Back'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: TextStyle(fontSize: 13, color: theme.colorScheme.error),
+            ),
+          ],
+        ],
+      );
+    }
+
+    // Not a member — prompt to join
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Not a member yet?', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(
+          'Request to join the collective to see event details and RSVP.',
+          style: TextStyle(
+            fontSize: 14,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            FilledButton(
+              onPressed: _loading ? null : () => context.push('/join'),
+              child: const Text('Request to join'),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: () => setState(() => _isMember = null),
+              child: const Text('Back'),
+            ),
+          ],
         ),
       ],
     );

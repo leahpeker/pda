@@ -163,7 +163,7 @@ class _WeekViewState extends State<WeekView> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.calendar_today_outlined,
+                              Icons.event_note_outlined,
                               size: 40,
                               color: theme.colorScheme.onSurface.withValues(
                                 alpha: 0.2,

@@ -42,7 +42,7 @@ class SettingsScreen extends ConsumerWidget {
                       radius: 16,
                       backgroundColor: Theme.of(context).colorScheme.surface,
                       child: Icon(
-                        Icons.camera_alt_outlined,
+                        Icons.add_a_photo_outlined,
                         size: 16,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -61,7 +61,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _SettingsTile(
-            icon: Icons.person_outline,
+            icon: Icons.badge_outlined,
             label: 'Name',
             value:
                 (user?.displayName ?? '').trim().isEmpty
@@ -70,12 +70,12 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _showEditNameDialog(context, ref, user?.displayName),
           ),
           _SettingsTile(
-            icon: Icons.phone_outlined,
+            icon: Icons.smartphone_outlined,
             label: 'Phone',
             value: user?.phoneNumber ?? '',
           ),
           _SettingsTile(
-            icon: Icons.email_outlined,
+            icon: Icons.mail_outline,
             label: 'Email',
             value: (user?.email ?? '').trim().isEmpty ? 'Not set' : user!.email,
             onTap: () => _showEditEmailDialog(context, ref, user?.email),

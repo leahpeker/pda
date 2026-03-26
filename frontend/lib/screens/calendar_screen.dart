@@ -85,7 +85,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               right: 24,
               child: FloatingActionButton.extended(
                 onPressed: _openCreateEvent,
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add_circle_outline),
                 label: const Text('Add event'),
               ),
             ),

@@ -74,7 +74,7 @@ class _EventManagementBody extends ConsumerWidget {
             alignment: Alignment.centerRight,
             child: FilledButton.icon(
               onPressed: () => _showCreateDialog(context, ref),
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_circle_outline),
               label: const Text('New event'),
             ),
           ),
@@ -89,7 +89,7 @@ class _EventManagementBody extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
-                            Icons.event_note,
+                            Icons.calendar_today_outlined,
                             size: 64,
                             color: Colors.grey,
                           ),
@@ -138,7 +138,7 @@ class _HostsLine extends StatelessWidget {
 
     return Row(
       children: [
-        const Icon(Icons.person_outline, size: 14, color: Colors.grey),
+        const Icon(Icons.person_pin_outlined, size: 14, color: Colors.grey),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
@@ -224,7 +224,7 @@ class _EventManagementRow extends ConsumerWidget {
                     Row(
                       children: [
                         const Icon(
-                          Icons.schedule,
+                          Icons.schedule_outlined,
                           size: 14,
                           color: Colors.grey,
                         ),
@@ -245,7 +245,7 @@ class _EventManagementRow extends ConsumerWidget {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          const Icon(Icons.place, size: 14, color: Colors.grey),
+                          const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(

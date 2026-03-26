@@ -180,7 +180,7 @@ class _EmptyDayState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.calendar_today_outlined,
+            Icons.event_note_outlined,
             size: 48,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),

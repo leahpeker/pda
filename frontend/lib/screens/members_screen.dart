@@ -101,13 +101,13 @@ class _MembersTab extends ConsumerWidget {
               children: [
                 OutlinedButton.icon(
                   onPressed: () => _showBulkAddDialog(context, ref),
-                  icon: const Icon(Icons.group_add, size: 18),
+                  icon: const Icon(Icons.group_add_outlined, size: 18),
                   label: const Text('Bulk add'),
                 ),
                 const SizedBox(width: 8),
                 FilledButton.icon(
                   onPressed: () => _showAddMemberDialog(context, ref),
-                  icon: const Icon(Icons.person_add, size: 18),
+                  icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
                   label: const Text('Add member'),
                 ),
               ],
@@ -123,7 +123,7 @@ class _MembersTab extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.people_outline, size: 64, color: Colors.grey),
+                      Icon(Icons.groups_outlined, size: 64, color: Colors.grey),
                       SizedBox(height: 16),
                       Text(
                         'No members found',
@@ -324,7 +324,7 @@ class _MemberCard extends ConsumerWidget {
               children: [
                 if (canManageRoles)
                   OutlinedButton.icon(
-                    icon: const Icon(Icons.shield_outlined, size: 16),
+                    icon: const Icon(Icons.verified_user_outlined, size: 16),
                     label: const Text('Edit roles'),
                     onPressed:
                         () => _showRoleEditor(
@@ -335,7 +335,7 @@ class _MemberCard extends ConsumerWidget {
                         ),
                   ),
                 OutlinedButton.icon(
-                  icon: const Icon(Icons.lock_reset, size: 16),
+                  icon: const Icon(Icons.key_outlined, size: 16),
                   label: const Text('Reset password'),
                   onPressed: () => _handleResetPassword(context, notifier),
                 ),
@@ -679,7 +679,7 @@ class _RolesTab extends ConsumerWidget {
                   alignment: Alignment.centerRight,
                   child: FilledButton.icon(
                     onPressed: () => _showCreateRoleDialog(context, ref),
-                    icon: const Icon(Icons.add, size: 18),
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
                     label: const Text('New role'),
                   ),
                 ),

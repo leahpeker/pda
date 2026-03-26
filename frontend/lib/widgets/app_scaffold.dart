@@ -144,7 +144,7 @@ class _NavDrawer extends ConsumerWidget {
         semanticLabel: 'Navigation menu',
         child: SafeArea(
           child: ListTile(
-            leading: const Icon(Icons.login),
+            leading: const Icon(Icons.login_outlined),
             title: const Text('Member login'),
             onTap: () {
               Navigator.of(context).pop();
@@ -156,32 +156,32 @@ class _NavDrawer extends ConsumerWidget {
     }
 
     final mainItems = <_DrawerItem>[
-      const _DrawerItem(icon: Icons.home_outlined, label: 'PDA', route: '/'),
+      const _DrawerItem(icon: Icons.eco_outlined, label: 'PDA', route: '/'),
       const _DrawerItem(
-        icon: Icons.calendar_month,
+        icon: Icons.calendar_month_outlined,
         label: 'Calendar',
         route: '/calendar',
       ),
       const _DrawerItem(
-        icon: Icons.event_note,
+        icon: Icons.bookmark_outline,
         label: 'My events',
         route: '/events/mine',
       ),
       if (user!.hasPermission('manage_events'))
         const _DrawerItem(
-          icon: Icons.edit_calendar,
+          icon: Icons.event_available_outlined,
           label: 'Manage events',
           route: '/events/manage',
         ),
       if (user!.hasPermission('manage_users'))
         const _DrawerItem(
-          icon: Icons.group,
+          icon: Icons.groups_outlined,
           label: 'Members',
           route: '/members',
         ),
       if (user!.hasPermission('approve_join_requests'))
         const _DrawerItem(
-          icon: Icons.how_to_reg,
+          icon: Icons.person_search_outlined,
           label: 'Join requests',
           route: '/join-requests',
         ),
@@ -235,7 +235,7 @@ class _NavDrawer extends ConsumerWidget {
             // Bottom actions
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.menu_book_outlined),
+              leading: const Icon(Icons.auto_stories_outlined),
               title: const Text('Guidelines'),
               selected: currentPath.startsWith('/guidelines'),
               selectedTileColor: theme.colorScheme.primaryContainer,
@@ -245,7 +245,7 @@ class _NavDrawer extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.settings_outlined),
+              leading: const Icon(Icons.tune_outlined),
               title: const Text('Settings'),
               selected: currentPath.startsWith('/settings'),
               selectedTileColor: theme.colorScheme.primaryContainer,
@@ -255,7 +255,7 @@ class _NavDrawer extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.logout, color: theme.colorScheme.error),
+              leading: Icon(Icons.logout_outlined, color: theme.colorScheme.error),
               title: Text(
                 'Logout',
                 style: TextStyle(color: theme.colorScheme.error),
