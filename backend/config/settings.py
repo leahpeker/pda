@@ -103,6 +103,42 @@ if not IS_PRODUCTION:
 # Email
 VETTING_EMAIL = os.environ.get("VETTING_EMAIL", "")
 
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {"()": "config.logging_config.JsonFormatter"},
+        "simple": {"format": "%(levelname)s %(name)s %(message)s"},
+    },
+    "filters": {
+        "sensitive": {"()": "config.logging_config.SensitiveDataFilter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json" if IS_PRODUCTION else "simple",
+            "filters": ["sensitive"],
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING" if IS_PRODUCTION else "DEBUG",
+    },
+    "loggers": {
+        "pda": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 if IS_PRODUCTION and os.environ.get("EMAIL_HOST"):
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
