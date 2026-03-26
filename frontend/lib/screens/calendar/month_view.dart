@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
+import 'package:pda/screens/calendar/month_placement_calculator.dart';
 
 class MonthView extends StatefulWidget {
   final List<Event> events;
@@ -212,21 +213,6 @@ class _MonthViewState extends State<MonthView> {
   }
 }
 
-/// Represents a positioned event span within a week row.
-class _SpanPlacement {
-  final Event event;
-  final int startCol; // 0–6
-  final int endCol; // 0–6 inclusive
-  final int row; // slot row index
-
-  const _SpanPlacement({
-    required this.event,
-    required this.startCol,
-    required this.endCol,
-    required this.row,
-  });
-}
-
 class _MonthRow extends StatelessWidget {
   final List<DateTime> days; // exactly 7
   final List<Event> allEvents;
@@ -252,107 +238,10 @@ class _MonthRow extends StatelessWidget {
     required this.maxEventRows,
   });
 
-  bool _dayContains(DateTime day, Event e) {
-    final dayStart = DateTime(day.year, day.month, day.day);
-    final dayEnd = dayStart.add(const Duration(days: 1));
-    final start = e.startDatetime.toLocal();
-    final end = e.endDatetime.toLocal();
-    return start.isBefore(dayEnd) && end.isAfter(dayStart);
-  }
-
-  /// Assign each event that appears in this row to a slot row (0, 1, 2…).
-  /// Multi-day events get clamped to the week boundaries and placed
-  /// consistently across the row.
-  List<_SpanPlacement> _computePlacements() {
-    final rowStart = days.first;
-    final rowEnd = days.last;
-
-    // Collect events that touch this row at all, deduplicated by id.
-    final seen = <String>{};
-    final rowEvents = <Event>[];
-    for (final day in days) {
-      for (final e in allEvents) {
-        if (!seen.contains(e.id) && _dayContains(day, e)) {
-          seen.add(e.id);
-          rowEvents.add(e);
-        }
-      }
-    }
-    // Sort by start time so earlier events get lower slot rows.
-    rowEvents.sort((a, b) => a.startDatetime.compareTo(b.startDatetime));
-
-    final placements = <_SpanPlacement>[];
-    // occupied[col] = set of row indices already taken in that column
-    final occupied = List.generate(7, (_) => <int>{});
-
-    for (final e in rowEvents) {
-      final eStart = e.startDatetime.toLocal();
-      final eEnd = e.endDatetime.toLocal();
-
-      // Clamp to row boundaries
-      int startCol = 0;
-      for (var c = 0; c < 7; c++) {
-        final d = days[c];
-        final ds = DateTime(d.year, d.month, d.day);
-        final es = DateTime(eStart.year, eStart.month, eStart.day);
-        if (ds.isAtSameMomentAs(es) || ds.isAfter(es)) {
-          startCol = c;
-          break;
-        }
-      }
-      int endCol = 6;
-      for (var c = 6; c >= 0; c--) {
-        final d = days[c];
-        final ds = DateTime(d.year, d.month, d.day);
-        // end is exclusive midnight so last day is eEnd - 1 day (if midnight)
-        final lastDay =
-            eEnd.hour == 0 && eEnd.minute == 0
-                ? DateTime(eEnd.year, eEnd.month, eEnd.day - 1)
-                : DateTime(eEnd.year, eEnd.month, eEnd.day);
-        if (ds.isAtSameMomentAs(lastDay) || ds.isBefore(lastDay)) {
-          endCol = c;
-          break;
-        }
-      }
-
-      // Clamp to rowStart/rowEnd
-      final rs = DateTime(rowStart.year, rowStart.month, rowStart.day);
-      final re = DateTime(rowEnd.year, rowEnd.month, rowEnd.day);
-      final es = DateTime(eStart.year, eStart.month, eStart.day);
-      final ee = DateTime(eEnd.year, eEnd.month, eEnd.day);
-      if (es.isAfter(re) || ee.isBefore(rs)) continue;
-
-      // Find the lowest row not taken by any column in this span
-      int slotRow = 0;
-      while (true) {
-        final blocked = List.generate(
-          endCol - startCol + 1,
-          (i) => occupied[startCol + i].contains(slotRow),
-        );
-        if (!blocked.any((b) => b)) break;
-        slotRow++;
-      }
-
-      for (var c = startCol; c <= endCol; c++) {
-        occupied[c].add(slotRow);
-      }
-
-      placements.add(
-        _SpanPlacement(
-          event: e,
-          startCol: startCol,
-          endCol: endCol,
-          row: slotRow,
-        ),
-      );
-    }
-
-    return placements;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final placements = _computePlacements();
+    final placements =
+        MonthPlacementCalculator(days: days, allEvents: allEvents).calculate();
     // visibleRows: highest slot row that fits within maxEventRows, clamped.
     final visibleMaxRow =
         placements.isEmpty

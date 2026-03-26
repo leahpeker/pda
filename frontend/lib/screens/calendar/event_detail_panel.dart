@@ -1209,6 +1209,178 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     });
   }
 
+  Widget _buildTitleField() {
+    return TextFormField(
+      controller: _title,
+      decoration: const InputDecoration(
+        labelText: 'Title *',
+        border: OutlineInputBorder(),
+      ),
+      textCapitalization: TextCapitalization.sentences,
+      validator: v.all([v.required(), v.maxLength(300)]),
+    );
+  }
+
+  List<Widget> _buildDateTimeSection(DateFormat dateFmt, DateFormat timeFmt) {
+    return [
+      _DateTimeRow(
+        label: 'Start',
+        date: dateFmt.format(_start),
+        time: timeFmt.format(_start),
+        isActive: _calendarTarget == 'start',
+        onDateTap: () => _toggleCalendar('start'),
+        onTimeTap: _pickStartTime,
+      ),
+      const SizedBox(height: 8),
+      _DateTimeRow(
+        label: 'End',
+        date: dateFmt.format(_end),
+        time: timeFmt.format(_end),
+        isActive: _calendarTarget == 'end',
+        onDateTap: () => _toggleCalendar('end'),
+        onTimeTap: _pickEndTime,
+      ),
+      if (_calendarTarget != null) ...[
+        const SizedBox(height: 8),
+        CalendarDatePicker(
+          initialDate: _calendarTarget == 'start' ? _start : _end,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+          onDateChanged: _onCalendarDaySelected,
+        ),
+      ],
+    ];
+  }
+
+  Widget _buildLocationField() {
+    return TextFormField(
+      controller: _location,
+      decoration: const InputDecoration(
+        labelText: 'Location',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.place_outlined),
+      ),
+      validator: v.maxLength(300),
+    );
+  }
+
+  Widget _buildDescriptionField() {
+    return TextFormField(
+      controller: _description,
+      decoration: const InputDecoration(
+        labelText: 'Description',
+        border: OutlineInputBorder(),
+        alignLabelWithHint: true,
+      ),
+      maxLines: 3,
+      textCapitalization: TextCapitalization.sentences,
+      validator: v.maxLength(2000),
+    );
+  }
+
+  List<Widget> _buildLinksSection(ThemeData theme) {
+    return [
+      const Divider(),
+      const SizedBox(height: 8),
+      Text('Links', style: theme.textTheme.labelLarge),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _whatsappLink,
+        decoration: const InputDecoration(
+          labelText: 'WhatsApp group link (optional)',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.chat_outlined),
+        ),
+        keyboardType: TextInputType.url,
+        validator: (v) {
+          if (v == null || v.trim().isEmpty) return null;
+          final normalized = _normalizeUrl(v.trim());
+          final uri = Uri.tryParse(normalized);
+          if (uri == null || !uri.hasAuthority) {
+            return 'Enter a valid URL';
+          }
+          final host = uri.host;
+          final isWhatsApp =
+              host.contains('whatsapp.com') ||
+              host == 'wa.me' ||
+              host == 'whats.app';
+          if (!isWhatsApp) {
+            return 'Must be a WhatsApp link';
+          }
+          return null;
+        },
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _partifulLink,
+        decoration: InputDecoration(
+          labelText: 'Partiful link (optional)',
+          border: const OutlineInputBorder(),
+          prefixIcon: const Icon(Icons.celebration_outlined),
+          helperText:
+              _rsvpEnabled
+                  ? 'Consider using app RSVPs instead of Partiful'
+                  : null,
+          helperStyle: TextStyle(color: theme.colorScheme.tertiary),
+        ),
+        keyboardType: TextInputType.url,
+        validator: (v) {
+          if (v == null || v.trim().isEmpty) return null;
+          final normalized = _normalizeUrl(v.trim());
+          final uri = Uri.tryParse(normalized);
+          if (uri == null || !uri.hasAuthority) {
+            return 'Enter a valid URL';
+          }
+          if (!uri.host.contains('partiful.com')) {
+            return 'Must be a Partiful link (partiful.com/...)';
+          }
+          return null;
+        },
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _otherLink,
+        decoration: const InputDecoration(
+          labelText: 'Other link (optional)',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.link),
+        ),
+        keyboardType: TextInputType.url,
+        validator: v.optionalUrl(httpsOnly: true),
+      ),
+    ];
+  }
+
+  Widget _buildRsvpToggle(ThemeData theme) {
+    return SwitchListTile(
+      value: _rsvpEnabled,
+      onChanged: (v) => setState(() => _rsvpEnabled = v),
+      title: const Text('Enable RSVPs'),
+      subtitle:
+          _rsvpEnabled && _partifulLink.text.trim().isNotEmpty
+              ? Text(
+                'You have a Partiful link set — consider using one or the other',
+                style: TextStyle(color: theme.colorScheme.tertiary),
+              )
+              : null,
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  List<Widget> _buildCoHostPicker(ThemeData theme) {
+    return [
+      const Divider(),
+      const SizedBox(height: 8),
+      Text('Co-hosts', style: theme.textTheme.labelLarge),
+      const SizedBox(height: 8),
+      _CoHostPicker(
+        selectedIds: _coHostIds,
+        selectedNames: _coHostNames,
+        onChanged: (ids) => setState(() => _coHostIds = ids),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateFmt = DateFormat('EEE, MMM d, y');
@@ -1229,160 +1401,21 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextFormField(
-                  controller: _title,
-                  decoration: const InputDecoration(
-                    labelText: 'Title *',
-                    border: OutlineInputBorder(),
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  validator: v.all([v.required(), v.maxLength(300)]),
-                ),
+                _buildTitleField(),
                 const SizedBox(height: 16),
-                // Date/time rows — Google Calendar style
-                _DateTimeRow(
-                  label: 'Start',
-                  date: dateFmt.format(_start),
-                  time: timeFmt.format(_start),
-                  isActive: _calendarTarget == 'start',
-                  onDateTap: () => _toggleCalendar('start'),
-                  onTimeTap: _pickStartTime,
-                ),
-                const SizedBox(height: 8),
-                _DateTimeRow(
-                  label: 'End',
-                  date: dateFmt.format(_end),
-                  time: timeFmt.format(_end),
-                  isActive: _calendarTarget == 'end',
-                  onDateTap: () => _toggleCalendar('end'),
-                  onTimeTap: _pickEndTime,
-                ),
-                if (_calendarTarget != null) ...[
-                  const SizedBox(height: 8),
-                  CalendarDatePicker(
-                    initialDate: _calendarTarget == 'start' ? _start : _end,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                    onDateChanged: _onCalendarDaySelected,
-                  ),
-                ],
+                ..._buildDateTimeSection(dateFmt, timeFmt),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _location,
-                  decoration: const InputDecoration(
-                    labelText: 'Location',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.place_outlined),
-                  ),
-                  validator: v.maxLength(300),
-                ),
+                _buildLocationField(),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _description,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
-                  ),
-                  maxLines: 3,
-                  textCapitalization: TextCapitalization.sentences,
-                  validator: v.maxLength(2000),
-                ),
+                _buildDescriptionField(),
+                const SizedBox(height: 16),
+                ..._buildLinksSection(theme),
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 8),
-                Text('Links', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _whatsappLink,
-                  decoration: const InputDecoration(
-                    labelText: 'WhatsApp group link (optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.chat_outlined),
-                  ),
-                  keyboardType: TextInputType.url,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return null;
-                    final normalized = _normalizeUrl(v.trim());
-                    final uri = Uri.tryParse(normalized);
-                    if (uri == null || !uri.hasAuthority) {
-                      return 'Enter a valid URL';
-                    }
-                    final host = uri.host;
-                    final isWhatsApp =
-                        host.contains('whatsapp.com') ||
-                        host == 'wa.me' ||
-                        host == 'whats.app';
-                    if (!isWhatsApp) {
-                      return 'Must be a WhatsApp link';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _partifulLink,
-                  decoration: InputDecoration(
-                    labelText: 'Partiful link (optional)',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.celebration_outlined),
-                    helperText:
-                        _rsvpEnabled
-                            ? 'Consider using app RSVPs instead of Partiful'
-                            : null,
-                    helperStyle: TextStyle(color: theme.colorScheme.tertiary),
-                  ),
-                  keyboardType: TextInputType.url,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return null;
-                    final normalized = _normalizeUrl(v.trim());
-                    final uri = Uri.tryParse(normalized);
-                    if (uri == null || !uri.hasAuthority) {
-                      return 'Enter a valid URL';
-                    }
-                    if (!uri.host.contains('partiful.com')) {
-                      return 'Must be a Partiful link (partiful.com/...)';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _otherLink,
-                  decoration: const InputDecoration(
-                    labelText: 'Other link (optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.link),
-                  ),
-                  keyboardType: TextInputType.url,
-                  validator: v.optionalUrl(httpsOnly: true),
-                ),
+                _buildRsvpToggle(theme),
                 const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: _rsvpEnabled,
-                  onChanged: (v) => setState(() => _rsvpEnabled = v),
-                  title: const Text('Enable RSVPs'),
-                  subtitle:
-                      _rsvpEnabled && _partifulLink.text.trim().isNotEmpty
-                          ? Text(
-                            'You have a Partiful link set — consider using one or the other',
-                            style: TextStyle(color: theme.colorScheme.tertiary),
-                          )
-                          : null,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 8),
-                Text('Co-hosts', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                _CoHostPicker(
-                  selectedIds: _coHostIds,
-                  selectedNames: _coHostNames,
-                  onChanged: (ids) => setState(() => _coHostIds = ids),
-                ),
+                ..._buildCoHostPicker(theme),
               ],
             ),
           ),
