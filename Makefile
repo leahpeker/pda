@@ -13,6 +13,7 @@ help:
 	@echo "  make check            Run Django system checks"
 	@echo "  make migrate          makemigrations + migrate"
 	@echo "  make createsuperuser  Create Django admin user"
+	@echo "  make seed             Seed database with sample data"
 	@echo "  make db-start         Start local PostgreSQL (Docker)"
 	@echo "  make db-stop          Stop local PostgreSQL (Docker)"
 	@echo ""
@@ -64,6 +65,9 @@ migrate:
 
 createsuperuser:
 	cd backend && uv run python manage.py createsuperuser
+
+seed:
+	cd backend && uv run python manage.py seed
 
 # Database
 db-start:
