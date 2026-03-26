@@ -116,6 +116,24 @@ class UserCreateOut(BaseModel):
     temporary_password: str
 
 
+class BulkUserCreateIn(BaseModel):
+    users: list[UserCreateIn]
+
+
+class BulkUserResult(BaseModel):
+    row: int
+    phone_number: str
+    success: bool
+    temporary_password: str | None = None
+    error: str | None = None
+
+
+class BulkUserCreateOut(BaseModel):
+    results: list[BulkUserResult]
+    created: int
+    failed: int
+
+
 class UserPatchIn(BaseModel):
     phone_number: str | None = None
     display_name: str | None = None
@@ -261,6 +279,84 @@ def create_user(request, payload: UserCreateIn):
             temporary_password=temp_password,
         ),
     )
+
+
+@router.post(
+    "/bulk-create-users/",
+    response={200: BulkUserCreateOut, 403: ErrorOut},
+    auth=JWTAuth(),
+)
+def bulk_create_users(request, payload: BulkUserCreateIn):
+    if not request.auth.has_permission(PermissionKey.MANAGE_USERS):
+        return Status(403, ErrorOut(detail="Permission denied."))
+
+    member_role = Role.objects.filter(name="member", is_default=True).first()
+    results: list[BulkUserResult] = []
+    created = 0
+    failed = 0
+
+    for i, user_in in enumerate(payload.users):
+        try:
+            validated_phone = _validate_phone(user_in.phone_number)
+        except ValueError as e:
+            results.append(
+                BulkUserResult(
+                    row=i + 1, phone_number=user_in.phone_number, success=False, error=str(e)
+                )
+            )
+            failed += 1
+            continue
+
+        if User.objects.filter(phone_number=validated_phone).exists():
+            results.append(
+                BulkUserResult(
+                    row=i + 1,
+                    phone_number=user_in.phone_number,
+                    success=False,
+                    error="Phone number already exists.",
+                )
+            )
+            failed += 1
+            continue
+
+        temp_password = _generate_temp_password()
+        user = User.objects.create_user(
+            phone_number=validated_phone,
+            password=temp_password,
+            display_name=user_in.display_name,
+            email=user_in.email,
+        )
+
+        if user_in.role_id:
+            try:
+                role = Role.objects.get(pk=user_in.role_id)
+                user.roles.add(role)
+            except Role.DoesNotExist:
+                user.delete()
+                results.append(
+                    BulkUserResult(
+                        row=i + 1,
+                        phone_number=user_in.phone_number,
+                        success=False,
+                        error="Role not found.",
+                    )
+                )
+                failed += 1
+                continue
+        elif member_role:
+            user.roles.add(member_role)
+
+        results.append(
+            BulkUserResult(
+                row=i + 1,
+                phone_number=validated_phone,
+                success=True,
+                temporary_password=temp_password,
+            )
+        )
+        created += 1
+
+    return Status(200, BulkUserCreateOut(results=results, created=created, failed=failed))
 
 
 class UserSearchOut(BaseModel):

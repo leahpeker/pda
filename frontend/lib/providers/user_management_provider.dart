@@ -35,6 +35,38 @@ class UserManagementNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
+  Future<Map<String, dynamic>> createUser({
+    required String phoneNumber,
+    String displayName = '',
+    String email = '',
+    String? roleId,
+  }) async {
+    final api = ref.read(apiClientProvider);
+    final response = await api.post(
+      '/api/auth/create-user/',
+      data: {
+        'phone_number': phoneNumber,
+        'display_name': displayName,
+        'email': email,
+        if (roleId != null) 'role_id': roleId,
+      },
+    );
+    ref.invalidate(usersProvider);
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> bulkCreateUsers(
+    List<Map<String, dynamic>> users,
+  ) async {
+    final api = ref.read(apiClientProvider);
+    final response = await api.post(
+      '/api/auth/bulk-create-users/',
+      data: {'users': users},
+    );
+    ref.invalidate(usersProvider);
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<void> deleteUser(String userId) async {
     final api = ref.read(apiClientProvider);
     await api.delete('/api/auth/users/$userId/');
