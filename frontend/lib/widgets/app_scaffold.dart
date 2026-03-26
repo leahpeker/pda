@@ -37,7 +37,6 @@ class AppScaffold extends ConsumerWidget {
 
     return [
       const _NavButton(label: 'Calendar', route: '/calendar'),
-      const _NavButton(label: 'Guidelines', route: '/guidelines'),
       const _NavButton(label: 'My events', route: '/events/mine'),
       if (user.hasPermission('manage_events'))
         const _NavButton(label: 'Manage events', route: '/events/manage'),
@@ -45,6 +44,7 @@ class AppScaffold extends ConsumerWidget {
         const _NavButton(label: 'Members', route: '/members'),
       if (user.hasPermission('approve_join_requests'))
         const _NavButton(label: 'Join requests', route: '/join-requests'),
+      const _NavButton(label: 'Guidelines', route: '/guidelines'),
       const _NavButton(label: 'Settings', route: '/settings'),
       TextButton(
         onPressed: () => ref.read(authProvider.notifier).logout(),
@@ -109,11 +109,6 @@ class _NavDrawer extends ConsumerWidget {
         icon: Icons.calendar_month,
         label: 'Calendar',
         route: '/calendar',
-      ),
-      const _DrawerItem(
-        icon: Icons.menu_book_outlined,
-        label: 'Guidelines',
-        route: '/guidelines',
       ),
       const _DrawerItem(
         icon: Icons.event_note,
@@ -183,6 +178,16 @@ class _NavDrawer extends ConsumerWidget {
             ),
             // Bottom actions
             const Divider(),
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: const Text('Guidelines'),
+              selected: currentPath.startsWith('/guidelines'),
+              selectedTileColor: theme.colorScheme.primaryContainer,
+              onTap: () {
+                Navigator.of(context).pop();
+                context.go('/guidelines');
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.settings_outlined),
               title: const Text('Settings'),
