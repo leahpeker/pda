@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/widgets/app_scaffold.dart';
@@ -14,22 +15,22 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String _phoneNumber = '';
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_phoneNumber.isEmpty) return;
     await ref
         .read(authProvider.notifier)
-        .login(_emailController.text.trim(), _passwordController.text);
+        .login(_phoneNumber, _passwordController.text);
     final state = ref.read(authProvider);
     if (state.hasError) return;
     if (mounted) {
@@ -67,17 +68,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 32),
-                    TextFormField(
-                      controller: _emailController,
-                      autofillHints: const [AutofillHints.email],
+                    IntlPhoneField(
+                      initialCountryCode: 'US',
                       decoration: const InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'Phone number',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Required';
-                        if (!v.contains('@')) return 'Enter a valid email';
+                      onChanged: (phone) {
+                        _phoneNumber = phone.completeNumber;
+                      },
+                      validator: (phone) {
+                        if (phone == null || phone.number.isEmpty) {
+                          return 'Required';
+                        }
                         return null;
                       },
                     ),

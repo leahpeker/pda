@@ -48,7 +48,9 @@ void main() {
         ),
       );
 
-      await container.read(authProvider.notifier).login('a@b.c', 'wrong');
+      await container
+          .read(authProvider.notifier)
+          .login('+12025551234', 'wrong');
 
       final state = container.read(authProvider);
       expect(state.hasError, isTrue);
@@ -67,7 +69,7 @@ void main() {
         ),
       );
 
-      await container.read(authProvider.notifier).login('a@b.c', 'pass');
+      await container.read(authProvider.notifier).login('+12025551234', 'pass');
 
       final state = container.read(authProvider);
       expect(state.hasError, isTrue);
@@ -90,7 +92,7 @@ void main() {
         ),
       );
 
-      await container.read(authProvider.notifier).login('a@b.c', 'pass');
+      await container.read(authProvider.notifier).login('+12025551234', 'pass');
 
       final state = container.read(authProvider);
       expect(state.hasError, isTrue);

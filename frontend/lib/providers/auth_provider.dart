@@ -28,14 +28,14 @@ class AuthNotifier extends AsyncNotifier<User?> {
     }
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String phoneNumber, String password) async {
     state = const AsyncLoading();
     final api = ref.watch(apiClientProvider);
     final storage = ref.watch(secureStorageProvider);
     try {
       final response = await api.post(
         '/api/auth/login/',
-        data: {'email': email, 'password': password},
+        data: {'phone_number': phoneNumber, 'password': password},
       );
       await storage.saveTokens(
         access: response.data['access'] as String,

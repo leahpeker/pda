@@ -147,14 +147,14 @@ class _MemberCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${user.firstName} ${user.lastName}'.trim().isNotEmpty
-                            ? '${user.firstName} ${user.lastName}'.trim()
+                        user.displayName.isNotEmpty
+                            ? user.displayName
                             : '(no name)',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        user.email,
+                        user.phoneNumber,
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -316,7 +316,7 @@ class _MemberCard extends ConsumerWidget {
       builder:
           (ctx) => AlertDialog(
             title: const Text('Delete member?'),
-            content: Text('Delete ${user.email}? This cannot be undone.'),
+            content: Text('Delete ${user.phoneNumber}? This cannot be undone.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
@@ -336,7 +336,7 @@ class _MemberCard extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('${user.email} deleted')));
+        ).showSnackBar(SnackBar(content: Text('${user.phoneNumber} deleted')));
       }
     } catch (e) {
       if (context.mounted) {
@@ -357,7 +357,7 @@ class _MemberCard extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Temporary password for ${user.email}:'),
+                Text('Temporary password for ${user.phoneNumber}:'),
                 const SizedBox(height: 12),
                 SelectableText(
                   tempPassword,
@@ -460,7 +460,7 @@ class _RoleEditorDialogState extends State<_RoleEditorDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Edit roles — ${widget.user.email}'),
+      title: Text('Edit roles — ${widget.user.phoneNumber}'),
       content: SizedBox(
         width: 400,
         child: SingleChildScrollView(

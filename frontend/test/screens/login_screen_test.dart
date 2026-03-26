@@ -27,31 +27,24 @@ void main() {
     await tester.pumpWidget(buildSubject());
     await tester.pump();
 
-    final textFields = find.byType(TextField);
-    expect(textFields, findsNWidgets(2));
-
-    // Email field should have email autofill hint
-    final emailField = tester.widget<TextField>(textFields.at(0));
-    expect(emailField.autofillHints, contains(AutofillHints.email));
-
     // Password field should have password autofill hint
-    final passwordField = tester.widget<TextField>(textFields.at(1));
+    final textFields = find.byType(TextField);
+    final passwordField = tester.widget<TextField>(textFields.last);
     expect(passwordField.autofillHints, contains(AutofillHints.password));
 
     // Fields should be wrapped in an AutofillGroup
     expect(find.byType(AutofillGroup), findsOneWidget);
   });
 
-  testWidgets('email field shows error for value without @', (tester) async {
+  testWidgets('phone field shows error when empty', (tester) async {
     await tester.pumpWidget(buildSubject());
     await tester.pump();
 
-    final emailField = find.byType(TextFormField).first;
-    await tester.enterText(emailField, 'notanemail');
+    // Tap login without entering phone number
     await tester.tap(find.byType(ElevatedButton));
     await tester.pump();
 
-    expect(find.text('Enter a valid email'), findsOneWidget);
+    expect(find.text('Required'), findsWidgets);
   });
 }
 
@@ -60,7 +53,7 @@ class _FakeAuthNotifier extends AuthNotifier {
   Future<User?> build() async => null;
 
   @override
-  Future<void> login(String email, String password) async {}
+  Future<void> login(String phoneNumber, String password) async {}
 
   @override
   Future<void> logout() async {}

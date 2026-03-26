@@ -21,9 +21,9 @@ abstract class User with _$User {
 
   const factory User({
     required String id,
-    required String email,
-    required String firstName,
-    required String lastName,
+    required String phoneNumber,
+    @Default('') String displayName,
+    @Default('') String email,
     @Default(false) bool isSuperuser,
     @Default([]) List<Role> roles,
   }) = _User;
