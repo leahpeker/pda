@@ -50,6 +50,10 @@ class JoinRequestOut(BaseModel):
     display_name: str
     phone_number: str
     email: str
+    pronouns: str
+    how_they_heard: str
+    why_join: str
+    submitted_at: datetime
     status: str
 
 
@@ -224,6 +228,10 @@ def submit_join_request(request, payload: JoinRequestIn):
             display_name=join_request.display_name,
             phone_number=join_request.phone_number,
             email=join_request.email,
+            pronouns=join_request.pronouns,
+            how_they_heard=join_request.how_they_heard,
+            why_join=join_request.why_join,
+            submitted_at=join_request.submitted_at,
             status=join_request.status,
         ),
     )
@@ -258,6 +266,10 @@ def list_join_requests(request):
                 display_name=jr.display_name,
                 phone_number=jr.phone_number,
                 email=jr.email,
+                pronouns=jr.pronouns,
+                how_they_heard=jr.how_they_heard,
+                why_join=jr.why_join,
+                submitted_at=jr.submitted_at,
                 status=jr.status,
             )
             for jr in join_requests
@@ -293,6 +305,10 @@ def update_join_request_status(request, id: UUID, payload: JoinRequestStatusIn):
             display_name=join_request.display_name,
             phone_number=join_request.phone_number,
             email=join_request.email,
+            pronouns=join_request.pronouns,
+            how_they_heard=join_request.how_they_heard,
+            why_join=join_request.why_join,
+            submitted_at=join_request.submitted_at,
             status=join_request.status,
         ),
     )
