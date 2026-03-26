@@ -455,9 +455,7 @@ class _LinkRow extends StatelessWidget {
     return InkWell(
       onTap: () async {
         final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, webOnlyWindowName: '_blank');
-        }
+        await launchUrl(uri, webOnlyWindowName: '_blank');
       },
       borderRadius: BorderRadius.circular(4),
       child: Row(
