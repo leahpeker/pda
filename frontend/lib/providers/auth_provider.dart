@@ -48,6 +48,26 @@ class AuthNotifier extends AsyncNotifier<User?> {
     }
   }
 
+  Future<void> updateProfile({String? displayName, String? email}) async {
+    final api = ref.watch(apiClientProvider);
+    final data = <String, dynamic>{};
+    if (displayName != null) data['display_name'] = displayName;
+    if (email != null) data['email'] = email;
+    final response = await api.patch('/api/auth/me/', data: data);
+    state = AsyncData(User.fromJson(response.data as Map<String, dynamic>));
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final api = ref.watch(apiClientProvider);
+    await api.post(
+      '/api/auth/change-password/',
+      data: {'current_password': currentPassword, 'new_password': newPassword},
+    );
+  }
+
   Future<void> logout() async {
     final storage = ref.watch(secureStorageProvider);
     await storage.clearTokens();

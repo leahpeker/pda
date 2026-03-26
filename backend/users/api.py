@@ -123,6 +123,16 @@ class UserPatchIn(BaseModel):
     is_active: bool | None = None
 
 
+class MePatchIn(BaseModel):
+    display_name: str | None = None
+    email: str | None = None
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class UserRolesIn(BaseModel):
     role_ids: list[str]
 
@@ -175,6 +185,29 @@ def refresh_token(request, payload: RefreshIn):
 def me(request):
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
     return Status(200, UserOut.from_user(user))
+
+
+@router.patch("/me/", response={200: UserOut, 400: ErrorOut}, auth=JWTAuth())
+def update_me(request, payload: MePatchIn):
+    user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
+    if payload.display_name is not None:
+        user.display_name = payload.display_name
+    if payload.email is not None:
+        user.email = payload.email
+    user.save()
+    return Status(200, UserOut.from_user(user))
+
+
+@router.post("/change-password/", response={200: ErrorOut, 400: ErrorOut}, auth=JWTAuth())
+def change_password(request, payload: ChangePasswordIn):
+    user = User.objects.get(pk=request.auth.pk)
+    if not user.check_password(payload.current_password):
+        return Status(400, ErrorOut(detail="Current password is incorrect."))
+    if len(payload.new_password) < 8:
+        return Status(400, ErrorOut(detail="New password must be at least 8 characters."))
+    user.set_password(payload.new_password)
+    user.save()
+    return Status(200, ErrorOut(detail="Password updated successfully."))
 
 
 # ---------------------------------------------------------------------------
