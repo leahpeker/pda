@@ -36,7 +36,7 @@ class AppScaffold extends ConsumerWidget {
     }
 
     return [
-      const _NavButton(label: 'Home', route: '/'),
+      const _NavButton(label: 'PDA', route: '/'),
       const _NavButton(label: 'Calendar', route: '/calendar'),
       const _NavButton(label: 'My events', route: '/events/mine'),
       if (user.hasPermission('manage_events'))
@@ -66,11 +66,21 @@ class _NavButton extends StatelessWidget {
     final currentPath = GoRouterState.of(context).uri.path;
     final isActive =
         route == '/' ? currentPath == '/' : currentPath.startsWith(route);
+    final isPda = route == '/';
 
     return TextButton(
       onPressed: () => context.go(route),
       style:
-          isActive
+          isPda
+              ? TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 1.5,
+                ),
+              )
+              : isActive
               ? TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.primary,
                 textStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -107,7 +117,7 @@ class _NavDrawer extends ConsumerWidget {
     }
 
     final mainItems = <_DrawerItem>[
-      const _DrawerItem(icon: Icons.home_outlined, label: 'Home', route: '/'),
+      const _DrawerItem(icon: Icons.home_outlined, label: 'PDA', route: '/'),
       const _DrawerItem(
         icon: Icons.calendar_month,
         label: 'Calendar',
