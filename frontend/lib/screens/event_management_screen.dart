@@ -221,12 +221,14 @@ class _EventManagementRow extends ConsumerWidget {
                     children: [
                       const Icon(Icons.schedule, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
-                      Text(
-                        '${dateFmt.format(event.startDatetime.toLocal())} — '
-                        '${DateFormat('h:mm a').format(event.endDatetime.toLocal())}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey,
+                      Flexible(
+                        child: Text(
+                          '${dateFmt.format(event.startDatetime.toLocal())} — '
+                          '${DateFormat('h:mm a').format(event.endDatetime.toLocal())}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ],
@@ -237,11 +239,13 @@ class _EventManagementRow extends ConsumerWidget {
                       children: [
                         const Icon(Icons.place, size: 14, color: Colors.grey),
                         const SizedBox(width: 4),
-                        Text(
-                          event.location,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey,
+                        Flexible(
+                          child: Text(
+                            event.location,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ],

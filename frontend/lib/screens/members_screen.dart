@@ -182,9 +182,11 @@ class _MemberCard extends ConsumerWidget {
             ],
             const SizedBox(height: 12),
             // Actions row
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                if (canManageRoles) ...[
+                if (canManageRoles)
                   OutlinedButton.icon(
                     icon: const Icon(Icons.shield_outlined, size: 16),
                     label: const Text('Edit roles'),
@@ -196,14 +198,11 @@ class _MemberCard extends ConsumerWidget {
                           isOwnAccount,
                         ),
                   ),
-                  const SizedBox(width: 8),
-                ],
                 OutlinedButton.icon(
                   icon: const Icon(Icons.lock_reset, size: 16),
                   label: const Text('Reset password'),
                   onPressed: () => _handleResetPassword(context, notifier),
                 ),
-                const SizedBox(width: 8),
                 OutlinedButton.icon(
                   icon: const Icon(
                     Icons.delete_outline,

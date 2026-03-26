@@ -349,11 +349,16 @@ class _MonthRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final placements = _computePlacements();
-    final maxRow =
+    // visibleRows: highest slot row that fits within maxEventRows, clamped.
+    final visibleMaxRow =
         placements.isEmpty
             ? 0
-            : placements.map((p) => p.row).reduce((a, b) => a > b ? a : b);
-    final visibleRows = maxRow.clamp(0, maxEventRows - 1);
+            : placements
+                .where((p) => p.row < maxEventRows)
+                .fold(-1, (m, p) => p.row > m ? p.row : m);
+    final visibleRows = visibleMaxRow.clamp(0, maxEventRows - 1);
+    // overflowByCol: per-column count of events that are hidden (row >= maxEventRows).
+    // Only count an event for columns it actually covers.
     final overflowByCol = <int, int>{};
     for (final p in placements) {
       if (p.row >= maxEventRows) {
