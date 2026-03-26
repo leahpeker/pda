@@ -109,6 +109,40 @@ class HomePage(models.Model):
         return obj
 
 
+class PageVisibility(models.TextChoices):
+    PUBLIC = "public", "Public"
+    MEMBERS_ONLY = "members_only", "Members only"
+
+
+class EditablePage(models.Model):
+    """Content pages editable by admins. One row per slug."""
+
+    slug = models.SlugField(max_length=100, unique=True)
+    content = models.TextField(default="")
+    visibility = models.CharField(
+        max_length=20,
+        choices=PageVisibility.choices,
+        default=PageVisibility.PUBLIC,
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["slug"]
+
+    def __str__(self) -> str:
+        return f"EditablePage({self.slug})"
+
+    @classmethod
+    def get_or_create_page(
+        cls, slug: str, default_visibility: str = PageVisibility.PUBLIC
+    ) -> "EditablePage":
+        obj, _ = cls.objects.get_or_create(
+            slug=slug,
+            defaults={"visibility": default_visibility},
+        )
+        return obj
+
+
 class RSVPStatus(models.TextChoices):
     ATTENDING = "attending", "Attending"
     MAYBE = "maybe", "Maybe"

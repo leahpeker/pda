@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from community.models import CommunityGuidelines, Event, JoinRequest
+from community.models import CommunityGuidelines, EditablePage, Event, JoinRequest
 
 
 @admin.register(CommunityGuidelines)
@@ -12,6 +12,14 @@ class CommunityGuidelinesAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(EditablePage)
+class EditablePageAdmin(admin.ModelAdmin):
+    list_display = ("slug", "visibility", "updated_at")
+    list_filter = ("visibility",)
+    search_fields = ("slug",)
+    readonly_fields = ("updated_at",)
 
 
 @admin.register(JoinRequest)

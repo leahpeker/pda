@@ -64,7 +64,10 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
 
   List<Widget> _wideNavItems(BuildContext context, User? user) {
     if (user == null) {
-      return [const _NavButton(label: 'Member login', route: '/login')];
+      return [
+        const _NavButton(label: 'Donate', route: '/donate'),
+        const _NavButton(label: 'Member login', route: '/login'),
+      ];
     }
 
     return [
@@ -76,6 +79,8 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         const _NavButton(label: 'Members', route: '/members'),
       if (user.hasPermission('approve_join_requests'))
         const _NavButton(label: 'Join requests', route: '/join-requests'),
+      const _NavButton(label: 'Donate', route: '/donate'),
+      const _NavButton(label: 'Volunteer', route: '/volunteer'),
       const _NavButton(label: 'Guidelines', route: '/guidelines'),
       const _NavButton(label: 'Settings', route: '/settings'),
       TextButton(
@@ -143,13 +148,27 @@ class _NavDrawer extends ConsumerWidget {
       return Drawer(
         semanticLabel: 'Navigation menu',
         child: SafeArea(
-          child: ListTile(
-            leading: const Icon(Icons.login_outlined),
-            title: const Text('Member login'),
-            onTap: () {
-              Navigator.of(context).pop();
-              context.go('/login');
-            },
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.volunteer_activism_outlined),
+                title: const Text('Donate'),
+                selected: currentPath.startsWith('/donate'),
+                selectedTileColor: theme.colorScheme.primaryContainer,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.go('/donate');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.login_outlined),
+                title: const Text('Member login'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.go('/login');
+                },
+              ),
+            ],
           ),
         ),
       );
@@ -185,6 +204,16 @@ class _NavDrawer extends ConsumerWidget {
           label: 'Join requests',
           route: '/join-requests',
         ),
+      const _DrawerItem(
+        icon: Icons.volunteer_activism_outlined,
+        label: 'Donate',
+        route: '/donate',
+      ),
+      const _DrawerItem(
+        icon: Icons.handshake_outlined,
+        label: 'Volunteer',
+        route: '/volunteer',
+      ),
     ];
 
     return Drawer(
@@ -255,7 +284,10 @@ class _NavDrawer extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.logout_outlined, color: theme.colorScheme.error),
+              leading: Icon(
+                Icons.logout_outlined,
+                color: theme.colorScheme.error,
+              ),
               title: Text(
                 'Logout',
                 style: TextStyle(color: theme.colorScheme.error),
