@@ -269,6 +269,7 @@ dependencies = [
     { name = "django-ninja" },
     { name = "django-ninja-jwt" },
     { name = "gunicorn" },
+    { name = "phonenumbers" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "python-dotenv" },
@@ -291,6 +292,7 @@ requires-dist = [
     { name = "django-ninja", specifier = ">=1.4,<2.0" },
     { name = "django-ninja-jwt", specifier = ">=5.3,<6.0" },
     { name = "gunicorn", specifier = ">=23.0,<24.0" },
+    { name = "phonenumbers", specifier = ">=8.13,<9.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4.0" },
     { name = "pydantic", specifier = ">=2.12,<3.0" },
     { name = "python-dotenv", specifier = ">=1.1,<2.0" },
@@ -303,6 +305,15 @@ dev = [
     { name = "pytest-django", specifier = ">=4.11" },
     { name = "ruff" },
     { name = "ty" },
+]
+
+[[package]]
+name = "phonenumbers"
+version = "8.13.55"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/23/b4c886487ca212ca87768433a43e2b3099c1c2fa5d9e21d2fbce187cc3c2/phonenumbers-8.13.55.tar.gz", hash = "sha256:57c989dda3eabab1b5a9e3d24438a39ebd032fa0172bf68bfd90ab70b3d5e08b", size = 2296624, upload-time = "2025-02-15T08:06:03.465Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/dc/a7f0a9d5ad8b98bc5406deb00207b268d6d2edd215c21642e8f2ecc6f0ce/phonenumbers-8.13.55-py2.py3-none-any.whl", hash = "sha256:25feaf46135f0fb1e61b69513dc97c477285ba98a69204bf5a8cf241a844a718", size = 2582306, upload-time = "2025-02-15T08:05:56.746Z" },
 ]
 
 [[package]]
