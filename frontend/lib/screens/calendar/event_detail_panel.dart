@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/utils/launcher.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/providers/auth_provider.dart';
 
@@ -453,14 +453,7 @@ class _LinkRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
     return InkWell(
-      onTap: () async {
-        final uri = Uri.parse(url);
-        await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-          webOnlyWindowName: '_blank',
-        );
-      },
+      onTap: () => openUrl(url),
       borderRadius: BorderRadius.circular(4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
