@@ -5,6 +5,7 @@ import 'package:pda/models/join_request.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/join_request_management_provider.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/widgets/temp_password_field.dart';
 
 const _filters = ['All', 'Pending', 'Approved', 'Rejected'];
 
@@ -25,14 +26,25 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
         .toList();
   }
 
-  Future<void> _updateStatus(String id, String status) async {
+  Future<void> _updateStatus(
+    String id,
+    String status,
+    String displayName,
+    String phoneNumber,
+  ) async {
     final api = ref.read(apiClientProvider);
     try {
-      await api.patch(
+      final response = await api.patch(
         '/api/community/join-requests/$id/',
         data: {'status': status},
       );
       ref.invalidate(joinRequestsProvider);
+      if (status == 'approved' && mounted) {
+        final tempPassword = response.data['temporary_password'] as String?;
+        if (tempPassword != null) {
+          await _showApprovalModal(displayName, phoneNumber, tempPassword);
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -40,6 +52,47 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
         ).showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
       }
     }
+  }
+
+  Future<void> _showApprovalModal(
+    String displayName,
+    String phoneNumber,
+    String tempPassword,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: Text('$displayName approved!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Share these login credentials with them:'),
+                const SizedBox(height: 16),
+                _LabeledRow(label: 'Phone', value: phoneNumber),
+                const SizedBox(height: 12),
+                const Text(
+                  'Temporary password',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                TempPasswordField(password: tempPassword),
+                const SizedBox(height: 8),
+                const Text(
+                  'They should change it on first login.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Done'),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -81,9 +134,19 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
                       (context, index) => _JoinRequestCard(
                         request: filtered[index],
                         onApprove:
-                            () => _updateStatus(filtered[index].id, 'approved'),
+                            () => _updateStatus(
+                              filtered[index].id,
+                              'approved',
+                              filtered[index].displayName,
+                              filtered[index].phoneNumber,
+                            ),
                         onReject:
-                            () => _updateStatus(filtered[index].id, 'rejected'),
+                            () => _updateStatus(
+                              filtered[index].id,
+                              'rejected',
+                              filtered[index].displayName,
+                              filtered[index].phoneNumber,
+                            ),
                       ),
                 );
               },
@@ -251,6 +314,29 @@ class _InfoRow extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(value, style: const TextStyle(fontSize: 14, height: 1.4)),
+      ],
+    );
+  }
+}
+
+class _LabeledRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _LabeledRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '$label: ',
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }

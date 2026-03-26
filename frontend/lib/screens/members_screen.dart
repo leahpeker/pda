@@ -8,6 +8,7 @@ import 'package:pda/providers/user_management_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/widgets/temp_password_field.dart';
 
 // All permission keys and their display labels
 const _kPermissionLabels = {
@@ -204,14 +205,7 @@ class _MembersTab extends ConsumerWidget {
                   '$displayName has been added. Share their temporary password:',
                 ),
                 const SizedBox(height: 12),
-                SelectableText(
-                  tempPassword,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                TempPasswordField(password: tempPassword),
                 const SizedBox(height: 8),
                 const Text(
                   'They should change it on first login.',
@@ -220,15 +214,6 @@ class _MembersTab extends ConsumerWidget {
               ],
             ),
             actions: [
-              TextButton(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: tempPassword));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied to clipboard')),
-                  );
-                },
-                child: const Text('Copy'),
-              ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('Done'),
@@ -276,11 +261,31 @@ class _MemberCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user.displayName.isNotEmpty
-                            ? user.displayName
-                            : '(no name)',
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              user.displayName.isNotEmpty
+                                  ? user.displayName
+                                  : '(no name)',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                          if (user.needsOnboarding) ...[
+                            const SizedBox(width: 6),
+                            Tooltip(
+                              message: 'Hasn\'t logged in yet',
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -498,14 +503,7 @@ class _MemberCard extends ConsumerWidget {
                   '${user.displayName.isNotEmpty ? user.displayName : user.phoneNumber}:',
                 ),
                 const SizedBox(height: 12),
-                SelectableText(
-                  tempPassword,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                TempPasswordField(password: tempPassword),
                 const SizedBox(height: 8),
                 const Text(
                   'Share with the member — they should change it on next login.',
@@ -514,15 +512,6 @@ class _MemberCard extends ConsumerWidget {
               ],
             ),
             actions: [
-              TextButton(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: tempPassword));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied to clipboard')),
-                  );
-                },
-                child: const Text('Copy'),
-              ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('Done'),

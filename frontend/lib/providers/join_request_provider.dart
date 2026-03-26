@@ -15,7 +15,7 @@ class JoinRequestNotifier extends AsyncNotifier<void> {
     required String whyJoin,
   }) async {
     state = const AsyncLoading();
-    final api = ref.watch(apiClientProvider);
+    final api = ref.read(apiClientProvider);
     try {
       await api.post(
         '/api/community/join-request/',

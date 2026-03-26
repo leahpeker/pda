@@ -61,6 +61,14 @@ class JoinRequestStatusIn(BaseModel):
     status: str
 
 
+class ApproveJoinRequestOut(BaseModel):
+    id: str
+    display_name: str
+    phone_number: str
+    status: str
+    temporary_password: str | None = None
+
+
 class RSVPGuestOut(BaseModel):
     user_id: str
     name: str
@@ -297,10 +305,14 @@ def list_join_requests(request):
 
 @router.patch(
     "/join-requests/{id}/",
-    response={200: JoinRequestOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
+    response={200: ApproveJoinRequestOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
     auth=JWTAuth(),
 )
 def update_join_request_status(request, id: UUID, payload: JoinRequestStatusIn):
+    from users.api import _generate_temp_password, _validate_phone
+    from users.models import User
+    from users.roles import Role
+
     if not request.auth.has_permission(PermissionKey.APPROVE_JOIN_REQUESTS):
         return Status(403, ErrorOut(detail="Permission denied."))
 
@@ -313,21 +325,39 @@ def update_join_request_status(request, id: UUID, payload: JoinRequestStatusIn):
     except JoinRequest.DoesNotExist:
         return Status(404, ErrorOut(detail="Join request not found."))
 
+    if join_request.status == JoinRequestStatus.APPROVED:
+        return Status(400, ErrorOut(detail="This request has already been approved."))
+
     join_request.status = payload.status
     join_request.save()
 
+    temp_password = None
+    if payload.status == JoinRequestStatus.APPROVED:
+        if not User.objects.filter(phone_number=join_request.phone_number).exists():
+            try:
+                validated_phone = _validate_phone(join_request.phone_number)
+            except ValueError:
+                validated_phone = join_request.phone_number
+            temp_password = _generate_temp_password()
+            user = User.objects.create_user(
+                phone_number=validated_phone,
+                password=temp_password,
+                display_name=join_request.display_name,
+                email=join_request.email,
+                needs_onboarding=True,
+            )
+            member_role = Role.objects.filter(name="member", is_default=True).first()
+            if member_role:
+                user.roles.add(member_role)
+
     return Status(
         200,
-        JoinRequestOut(
+        ApproveJoinRequestOut(
             id=str(join_request.id),
             display_name=join_request.display_name,
             phone_number=join_request.phone_number,
-            email=join_request.email,
-            pronouns=join_request.pronouns,
-            how_they_heard=join_request.how_they_heard,
-            why_join=join_request.why_join,
-            submitted_at=join_request.submitted_at,
             status=join_request.status,
+            temporary_password=temp_password,
         ),
     )
 
