@@ -90,7 +90,7 @@ frontend-run:
 	cd frontend && flutter run -d web-server --web-port 3000 --web-hostname 0.0.0.0
 
 frontend-run-html:
-	cd frontend && flutter run -d web-server --web-port 3001 --web-hostname 0.0.0.0 --web-renderer html
+	cd frontend && flutter run -d web-server --web-port 3001 --web-hostname 0.0.0.0
 
 frontend-build:
 	cd frontend && flutter build web --dart-define=API_URL=$(API_URL)

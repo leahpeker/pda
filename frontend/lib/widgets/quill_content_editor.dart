@@ -36,6 +36,8 @@ class QuillContentEditor extends StatefulWidget {
 
 class _QuillContentEditorState extends State<QuillContentEditor> {
   late QuillController _controller;
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   StreamSubscription<DocChange>? _sub;
 
   @override
@@ -48,12 +50,32 @@ class _QuillContentEditorState extends State<QuillContentEditor> {
   @override
   void didUpdateWidget(QuillContentEditor old) {
     super.didUpdateWidget(old);
+
+    // Sync readOnly when editing mode changes.
+    if (widget.editing != old.editing) {
+      _controller.readOnly = !widget.editing;
+    }
+
     // When cancelled externally (jsonContent reset while not editing), reload.
     if (!widget.editing && widget.jsonContent != old.jsonContent) {
       _sub?.cancel();
       _controller.dispose();
       _controller = _buildController(widget.jsonContent);
       _subscribeChanges();
+      return;
+    }
+
+    // Re-subscribe when entering edit mode (onChanged becomes available).
+    if (widget.onChanged != null && old.onChanged == null) {
+      _sub?.cancel();
+      _subscribeChanges();
+    }
+
+    // Request focus when transitioning into edit mode.
+    if (widget.editing && !old.editing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusNode.requestFocus();
+      });
     }
   }
 
@@ -65,15 +87,21 @@ class _QuillContentEditorState extends State<QuillContentEditor> {
   }
 
   QuillController _buildController(String json) {
-    if (json.trim().isEmpty) return QuillController.basic();
-    try {
-      return QuillController(
-        document: Document.fromJson(jsonDecode(json) as List),
-        selection: const TextSelection.collapsed(offset: 0),
-      );
-    } catch (_) {
-      return QuillController.basic();
+    QuillController controller;
+    if (json.trim().isEmpty) {
+      controller = QuillController.basic();
+    } else {
+      try {
+        controller = QuillController(
+          document: Document.fromJson(jsonDecode(json) as List),
+          selection: const TextSelection.collapsed(offset: 0),
+        );
+      } catch (_) {
+        controller = QuillController.basic();
+      }
     }
+    controller.readOnly = !widget.editing;
+    return controller;
   }
 
   String _serialize() => jsonEncode(_controller.document.toDelta().toJson());
@@ -82,13 +110,14 @@ class _QuillContentEditorState extends State<QuillContentEditor> {
   void dispose() {
     _sub?.cancel();
     _controller.dispose();
+    _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (!widget.editing) {
-      _controller.readOnly = true;
       return Padding(
         padding: const EdgeInsets.all(24),
         child: QuillEditor.basic(
@@ -98,15 +127,13 @@ class _QuillContentEditorState extends State<QuillContentEditor> {
       );
     }
 
-    _controller.readOnly = false;
     final editor = Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-      child: QuillEditor.basic(
+      child: QuillEditor(
         controller: _controller,
-        config: QuillEditorConfig(
-          placeholder: widget.hintText,
-          expands: widget.expands,
-        ),
+        focusNode: _focusNode,
+        scrollController: _scrollController,
+        config: QuillEditorConfig(placeholder: widget.hintText),
       ),
     );
 

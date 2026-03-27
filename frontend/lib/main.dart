@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,18 +8,8 @@ import 'package:pda/services/app_logger.dart';
 import 'package:pda/services/error_reporter.dart';
 import 'package:pda/services/secure_storage.dart';
 
-/// Initializes the Flutter binding and enables the semantics tree.
-///
-/// The semantics tree creates a shadow DOM with ARIA-annotated elements
-/// on CanvasKit web, making the app accessible to screen readers and
-/// browser automation tools regardless of whether a screen reader is detected.
-SemanticsHandle ensureAppInitialized() {
-  WidgetsFlutterBinding.ensureInitialized();
-  return SemanticsBinding.instance.ensureSemantics();
-}
-
 void main() {
-  ensureAppInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   setupLogging();
   final reporter = ErrorReporter(SecureStorageService());
   setupErrorHandlers(

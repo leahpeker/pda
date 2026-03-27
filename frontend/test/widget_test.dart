@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -31,11 +30,6 @@ void main() {
     );
     await tester.pump();
     expect(find.byType(MaterialApp), findsOneWidget);
-  });
-
-  test('semantics are enabled at startup', () {
-    ensureAppInitialized();
-    expect(SemanticsBinding.instance.semanticsEnabled, isTrue);
   });
 }
 
