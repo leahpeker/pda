@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/services/api_error.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/widgets/loading_button.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -129,15 +131,11 @@ class SettingsScreen extends ConsumerWidget {
     try {
       await ref.read(authProvider.notifier).updateProfile(displayName: result);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Name updated')));
+        showSnackBar(context, 'Name updated');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(ApiError.from(e).message)));
+        showErrorSnackBar(context, ApiError.from(e).message);
       }
     }
   }
@@ -162,15 +160,11 @@ class SettingsScreen extends ConsumerWidget {
     try {
       await ref.read(authProvider.notifier).updateProfile(email: result);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Email updated')));
+        showSnackBar(context, 'Email updated');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(ApiError.from(e).message)));
+        showErrorSnackBar(context, ApiError.from(e).message);
       }
     }
   }
@@ -324,9 +318,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
           );
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Password updated')));
+        showSnackBar(context, 'Password updated');
       }
     } catch (e) {
       setState(() {
@@ -403,17 +395,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
-          onPressed: _loading ? null : _submit,
-          child:
-              _loading
-                  ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : const Text('Update'),
-        ),
+        LoadingButton(label: 'Update', onPressed: _submit, loading: _loading),
       ],
     );
   }

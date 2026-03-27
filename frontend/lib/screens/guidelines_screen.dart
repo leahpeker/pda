@@ -1,11 +1,13 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/guidelines_provider.dart';
+import 'package:pda/services/api_error.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
 import 'package:pda/widgets/quill_content_editor.dart';
+import 'package:pda/widgets/save_cancel_button_row.dart';
 
 class GuidelinesScreen extends ConsumerWidget {
   const GuidelinesScreen({super.key});
@@ -74,13 +76,9 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
     try {
       await ref.read(guidelinesNotifierProvider.notifier).saveContent(_json);
       if (mounted) setState(() => _editing = false);
-    } on DioException catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      final detail =
-          (e.response?.data as Map?)?['detail'] ?? 'Failed to save guidelines.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(detail.toString())));
+      showErrorSnackBar(context, ApiError.from(e).message);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -141,24 +139,12 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
               onPressed: () => setState(() => _editing = true),
               child: const Text('Edit'),
             ),
-          if (_editing) ...[
-            TextButton(
-              onPressed: _saving ? null : _cancelEdit,
-              child: const Text('Cancel'),
+          if (_editing)
+            SaveCancelButtonRow(
+              saving: _saving,
+              onSave: _save,
+              onCancel: _cancelEdit,
             ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child:
-                  _saving
-                      ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Text('Save'),
-            ),
-          ],
         ],
       ),
     );
