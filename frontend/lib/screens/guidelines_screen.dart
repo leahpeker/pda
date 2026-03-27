@@ -1,12 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/guidelines_provider.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
-import 'package:pda/widgets/markdown_editor.dart';
+import 'package:pda/widgets/quill_content_editor.dart';
 
 class GuidelinesScreen extends ConsumerWidget {
   const GuidelinesScreen({super.key});
@@ -48,18 +47,15 @@ class _GuidelinesBody extends ConsumerStatefulWidget {
 class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
     with AutosaveMixin {
   bool _editing = false;
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
+  late String _json;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.content);
-    _focusNode = FocusNode();
+    _json = widget.content;
     if (widget.canEdit) {
-      initAutosave(
-        controller: _controller,
+      initAutosaveCallback(
         onSave:
             (text) =>
                 ref.read(guidelinesNotifierProvider.notifier).saveContent(text),
@@ -70,17 +66,13 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
   @override
   void dispose() {
     disposeAutosave();
-    _controller.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await ref
-          .read(guidelinesNotifierProvider.notifier)
-          .saveContent(_controller.text);
+      await ref.read(guidelinesNotifierProvider.notifier).saveContent(_json);
       if (mounted) setState(() => _editing = false);
     } on DioException catch (e) {
       if (!mounted) return;
@@ -95,10 +87,13 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
   }
 
   void _cancelEdit() {
-    _controller.text =
+    final saved =
         ref.read(guidelinesNotifierProvider).valueOrNull?.content ??
         widget.content;
-    setState(() => _editing = false);
+    setState(() {
+      _json = saved;
+      _editing = false;
+    });
   }
 
   @override
@@ -107,17 +102,21 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildHeader(context),
-        if (_editing)
-          Expanded(
-            child: MarkdownEditor(
-              controller: _controller,
-              focusNode: _focusNode,
-              hintText: 'Write community guidelines in Markdown…',
-              expands: true,
-            ),
-          )
-        else
-          Expanded(child: _buildViewer(context)),
+        Expanded(
+          child: QuillContentEditor(
+            jsonContent: _json,
+            editing: _editing,
+            expands: true,
+            hintText: 'Write community guidelines…',
+            onChanged:
+                widget.canEdit
+                    ? (v) {
+                      _json = v;
+                      triggerAutosave(v);
+                    }
+                    : null,
+          ),
+        ),
       ],
     );
   }
@@ -163,22 +162,5 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
         ],
       ),
     );
-  }
-
-  Widget _buildViewer(BuildContext context) {
-    final content =
-        ref.watch(guidelinesNotifierProvider).valueOrNull?.content ??
-        widget.content;
-    if (content.trim().isEmpty) {
-      return Center(
-        child: Text(
-          'No guidelines have been posted yet.',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
-    return Markdown(data: content, padding: const EdgeInsets.all(24));
   }
 }

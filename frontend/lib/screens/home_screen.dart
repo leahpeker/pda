@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/providers/auth_provider.dart';
@@ -8,30 +7,7 @@ import 'package:pda/providers/home_provider.dart';
 import 'package:pda/utils/launcher.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
-import 'package:pda/widgets/markdown_editor.dart';
-
-const _defaultContent = '''
-# Protein Deficients Anonymous
-
-A collective liberation community.
-
-## Who we are
-
-Protein Deficients Anonymous (PDA) is a vegan community grounded in collective liberation. We believe that the liberation of animals, humans, and the earth are deeply interconnected. We organize, share resources, and build solidarity across movements.
-
-## Our values
-
-- 🌱 **Collective liberation** — Animal liberation and human liberation are inseparable.
-- 🤝 **Mutual aid** — We support each other materially, not just ideologically.
-- 🌍 **Intersectionality** — We center those most impacted by systems of oppression.
-- ✊ **Direct action** — We take action in the world, not just in conversation.
-''';
-
-const _defaultJoinContent = '''
-## Want to join us?
-
-PDA is a vetted community. We review join requests to ensure alignment with our values and capacity to welcome new members.
-''';
+import 'package:pda/widgets/quill_content_editor.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -48,20 +24,16 @@ class HomeScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error:
             (_, __) => _HomeBody(
-              content: _defaultContent,
-              joinContent: _defaultJoinContent,
+              content: '',
+              joinContent: '',
               donateUrl: '',
               canEdit: canEdit,
               isLoggedIn: isLoggedIn,
             ),
         data:
             (home) => _HomeBody(
-              content:
-                  home.content.trim().isEmpty ? _defaultContent : home.content,
-              joinContent:
-                  home.joinContent.trim().isEmpty
-                      ? _defaultJoinContent
-                      : home.joinContent,
+              content: home.content,
+              joinContent: home.joinContent,
               donateUrl: home.donateUrl,
               canEdit: canEdit,
               isLoggedIn: isLoggedIn,
@@ -97,7 +69,6 @@ class _HomeBody extends StatelessWidget {
             children: [
               _EditableSection(
                 content: content,
-                defaultContent: _defaultContent,
                 canEdit: canEdit,
                 onSave:
                     (text) => ProviderScope.containerOf(
@@ -112,7 +83,6 @@ class _HomeBody extends StatelessWidget {
                 const Divider(height: 32),
                 _EditableSection(
                   content: joinContent,
-                  defaultContent: _defaultJoinContent,
                   canEdit: canEdit,
                   onSave:
                       (text) => ProviderScope.containerOf(context)
@@ -275,14 +245,12 @@ class _DonateCtaState extends ConsumerState<_DonateCta> {
 
 class _EditableSection extends ConsumerStatefulWidget {
   final String content;
-  final String defaultContent;
   final bool canEdit;
   final Future<void> Function(String) onSave;
   final Widget? footer;
 
   const _EditableSection({
     required this.content,
-    required this.defaultContent,
     required this.canEdit,
     required this.onSave,
     this.footer,
@@ -295,32 +263,28 @@ class _EditableSection extends ConsumerStatefulWidget {
 class _EditableSectionState extends ConsumerState<_EditableSection>
     with AutosaveMixin {
   bool _editing = false;
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
+  late String _json;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.content);
-    _focusNode = FocusNode();
+    _json = widget.content;
     if (widget.canEdit) {
-      initAutosave(controller: _controller, onSave: widget.onSave);
+      initAutosaveCallback(onSave: widget.onSave);
     }
   }
 
   @override
   void dispose() {
     disposeAutosave();
-    _controller.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await widget.onSave(_controller.text);
+      await widget.onSave(_json);
       if (mounted) setState(() => _editing = false);
     } on DioException catch (e) {
       if (!mounted) return;
@@ -334,8 +298,10 @@ class _EditableSectionState extends ConsumerState<_EditableSection>
   }
 
   void _cancel() {
-    _controller.text = widget.content;
-    setState(() => _editing = false);
+    setState(() {
+      _json = widget.content;
+      _editing = false;
+    });
   }
 
   @override
@@ -379,22 +345,19 @@ class _EditableSectionState extends ConsumerState<_EditableSection>
               ],
             ),
           ),
-        if (_editing) ...[
-          MarkdownEditor(
-            controller: _controller,
-            focusNode: _focusNode,
-            hintText: 'Write content in Markdown…',
-            minLines: 5,
-          ),
-        ] else ...[
-          Markdown(
-            data: widget.content,
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-          ),
-          if (widget.footer != null) widget.footer!,
-        ],
+        QuillContentEditor(
+          jsonContent: _json,
+          editing: _editing,
+          hintText: 'Write content…',
+          onChanged:
+              widget.canEdit
+                  ? (v) {
+                    _json = v;
+                    triggerAutosave(v);
+                  }
+                  : null,
+        ),
+        if (!_editing && widget.footer != null) widget.footer!,
       ],
     );
   }

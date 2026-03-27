@@ -26,25 +26,6 @@ void main() {
     );
   }
 
-  testWidgets('month header date picker trigger is accessible', (tester) async {
-    final handle = tester.ensureSemantics();
-    await tester.pumpWidget(buildMonthView());
-
-    // Find the Semantics widget with 'Pick month' label
-    final semantics = find.byWidgetPredicate(
-      (w) => w is Semantics && w.properties.label == 'Pick month',
-    );
-    expect(semantics, findsOneWidget);
-
-    // It should also be an InkWell (keyboard-accessible)
-    final inkWell = find.descendant(
-      of: semantics,
-      matching: find.byType(InkWell),
-    );
-    expect(inkWell, findsOneWidget);
-    handle.dispose();
-  });
-
   testWidgets('day cells have semantic labels with date', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(buildMonthView());

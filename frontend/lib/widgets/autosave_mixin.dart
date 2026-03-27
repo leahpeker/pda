@@ -18,6 +18,7 @@ mixin AutosaveMixin<T extends StatefulWidget> on State<T> {
 
   late Future<void> Function(String) _saveFn;
   late TextEditingController _autosaveController;
+  bool _ownsController = false;
 
   void initAutosave({
     required TextEditingController controller,
@@ -26,10 +27,32 @@ mixin AutosaveMixin<T extends StatefulWidget> on State<T> {
   }) {
     _autosaveController = controller;
     _saveFn = onSave;
-    _autosaveController.addListener(() => _onChanged(delay));
+    _autosaveController.addListener(() => _scheduleAutosave(delay));
   }
 
-  void _onChanged(Duration delay) {
+  /// Variant for editors that don't use [TextEditingController] (e.g. Quill).
+  /// Call [triggerAutosave] with the latest content string from your [onChanged]
+  /// callback to debounce and save.
+  void initAutosaveCallback({
+    required Future<void> Function(String) onSave,
+    Duration delay = const Duration(seconds: 2),
+  }) {
+    _saveFn = onSave;
+    // Internal controller to hold the latest content string.
+    _autosaveController = TextEditingController();
+    _ownsController = true;
+  }
+
+  /// Call this from your editor's onChanged callback with the latest content.
+  void triggerAutosave(
+    String content, {
+    Duration delay = const Duration(seconds: 2),
+  }) {
+    _autosaveController.text = content;
+    _scheduleAutosave(delay);
+  }
+
+  void _scheduleAutosave(Duration delay) {
     _debounce?.cancel();
     _debounce = Timer(delay, _autosave);
   }
@@ -53,6 +76,7 @@ mixin AutosaveMixin<T extends StatefulWidget> on State<T> {
 
   void disposeAutosave() {
     _debounce?.cancel();
+    if (_ownsController) _autosaveController.dispose();
   }
 }
 

@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/editable_page_provider.dart';
 import 'autosave_mixin.dart';
-import 'markdown_editor.dart';
+import 'quill_content_editor.dart';
 
 class EditableContentBlock extends ConsumerStatefulWidget {
   const EditableContentBlock({super.key, required this.slug});
@@ -19,24 +18,16 @@ class EditableContentBlock extends ConsumerStatefulWidget {
 
 class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
     with AutosaveMixin {
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
+  late String _json;
+  bool _jsonInitialized = false;
   bool _editing = false;
   bool _saving = false;
   bool _autosaveInitialized = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-    _focusNode = FocusNode();
-  }
-
   void _maybeInitAutosave(bool canEdit) {
     if (_autosaveInitialized || !canEdit) return;
     _autosaveInitialized = true;
-    initAutosave(
-      controller: _controller,
+    initAutosaveCallback(
       onSave:
           (text) => ref
               .read(editablePageProvider(widget.slug).notifier)
@@ -47,8 +38,6 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
   @override
   void dispose() {
     disposeAutosave();
-    _controller.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
@@ -57,7 +46,7 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
     try {
       await ref
           .read(editablePageProvider(widget.slug).notifier)
-          .saveContent(_controller.text);
+          .saveContent(_json);
       if (mounted) setState(() => _editing = false);
     } on DioException catch (e) {
       if (!mounted) return;
@@ -71,11 +60,11 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
     }
   }
 
-  void _cancelEdit() {
-    final currentContent =
-        ref.read(editablePageProvider(widget.slug)).valueOrNull?.content ?? '';
-    _controller.text = currentContent;
-    setState(() => _editing = false);
+  void _cancelEdit(String savedContent) {
+    setState(() {
+      _json = savedContent;
+      _editing = false;
+    });
   }
 
   Future<void> _changeVisibility(String visibility) async {
@@ -114,57 +103,45 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
           ),
         );
       },
-      data:
-          (page) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (canEdit)
-                _AdminToolbar(
-                  page: page,
-                  onVisibilityChange: _changeVisibility,
-                  editing: _editing,
-                  saving: _saving,
-                  autosaveStatus: autosaveStatus,
-                  onEdit: () {
-                    _controller.text = page.content;
-                    setState(() => _editing = true);
-                  },
-                  onSave: _save,
-                  onCancel: _cancelEdit,
-                ),
-              if (_editing)
-                Expanded(
-                  child: MarkdownEditor(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    hintText: 'Enter page content…',
-                    expands: true,
-                  ),
-                )
-              else
-                Expanded(child: _buildViewer(context, page)),
-            ],
-          ),
+      data: (page) {
+        // Initialize _json once from the loaded page content.
+        if (!_jsonInitialized) {
+          _json = page.content;
+          _jsonInitialized = true;
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (canEdit)
+              _AdminToolbar(
+                page: page,
+                onVisibilityChange: _changeVisibility,
+                editing: _editing,
+                saving: _saving,
+                autosaveStatus: autosaveStatus,
+                onEdit: () => setState(() => _editing = true),
+                onSave: _save,
+                onCancel: () => _cancelEdit(page.content),
+              ),
+            Expanded(
+              child: QuillContentEditor(
+                jsonContent: _json,
+                editing: _editing,
+                expands: true,
+                hintText: 'Enter page content…',
+                onChanged:
+                    canEdit
+                        ? (v) {
+                          _json = v;
+                          triggerAutosave(v);
+                        }
+                        : null,
+              ),
+            ),
+          ],
+        );
+      },
     );
-  }
-
-  Widget _buildViewer(BuildContext context, EditablePage page) {
-    final content =
-        ref.watch(editablePageProvider(widget.slug)).valueOrNull?.content ??
-        page.content;
-    if (content.trim().isEmpty) {
-      final user = ref.read(authProvider).valueOrNull;
-      final canEdit = user?.hasPermission('manage_guidelines') ?? false;
-      return Center(
-        child: Text(
-          canEdit ? 'No content yet. Click Edit to add some.' : 'Coming soon.',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
-    return Markdown(data: content, padding: const EdgeInsets.all(24));
   }
 }
 

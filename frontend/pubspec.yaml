@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
   go_router: ^14.8.1
@@ -25,8 +27,7 @@ dependencies:
   url_launcher: ^6.3.2
   web: ^1.1.0
   intl_phone_field: ^3.2.0
-  flutter_markdown_plus: ^1.0.7
-  markdown_toolbar: ^0.4.1
+  flutter_quill: ^11.5.0
 
 dev_dependencies:
   flutter_test:

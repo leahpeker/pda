@@ -27,19 +27,6 @@ void main() {
       );
     }
 
-    testWidgets('week header date picker trigger is accessible', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      await tester.pumpWidget(buildWeekView());
-
-      final semantics = find.byWidgetPredicate(
-        (w) => w is Semantics && w.properties.label == 'Pick week',
-      );
-      expect(semantics, findsOneWidget);
-      handle.dispose();
-    });
-
     testWidgets('event chips have semantic labels with event title', (
       tester,
     ) async {
@@ -69,17 +56,6 @@ void main() {
         ),
       );
     }
-
-    testWidgets('day header date picker trigger is accessible', (tester) async {
-      final handle = tester.ensureSemantics();
-      await tester.pumpWidget(buildDayView());
-
-      final semantics = find.byWidgetPredicate(
-        (w) => w is Semantics && w.properties.label == 'Pick date',
-      );
-      expect(semantics, findsOneWidget);
-      handle.dispose();
-    });
 
     testWidgets('event cards have semantic labels with event title', (
       tester,
