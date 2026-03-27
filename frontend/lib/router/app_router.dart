@@ -38,13 +38,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final loc = state.matchedLocation;
       final isProtected =
+          loc == '/calendar' ||
           loc == '/guidelines' ||
           loc == '/members' ||
           loc == '/join-requests' ||
           loc == '/events/manage' ||
           loc == '/events/mine' ||
           loc == '/settings' ||
-          loc == '/volunteer';
+          loc == '/volunteer' ||
+          loc.startsWith('/events/');
 
       if (isProtected && !isAuthenticated) {
         return '/login?redirect=${state.matchedLocation}';
