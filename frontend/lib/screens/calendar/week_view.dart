@@ -37,6 +37,15 @@ class _WeekViewState extends State<WeekView> {
     _weekStart = _mondayOf(widget.selectedDate);
   }
 
+  @override
+  void didUpdateWidget(WeekView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newWeekStart = _mondayOf(widget.selectedDate);
+    if (newWeekStart != _weekStart) {
+      setState(() => _weekStart = newWeekStart);
+    }
+  }
+
   DateTime _mondayOf(DateTime date) {
     final d = DateTime(date.year, date.month, date.day);
     return d.subtract(Duration(days: d.weekday - 1));
@@ -48,19 +57,6 @@ class _WeekViewState extends State<WeekView> {
 
   void _goToNextWeek() {
     setState(() => _weekStart = _weekStart.add(const Duration(days: 7)));
-  }
-
-  Future<void> _openDatePicker() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _weekStart,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      initialEntryMode: DatePickerEntryMode.calendarOnly,
-    );
-    if (picked == null) return;
-    setState(() => _weekStart = _mondayOf(picked));
-    widget.onDateChanged(picked);
   }
 
   List<DateTime> get _weekDays =>
@@ -103,25 +99,10 @@ class _WeekViewState extends State<WeekView> {
                 tooltip: 'Previous week',
               ),
               Expanded(
-                child: Semantics(
-                  button: true,
-                  label: 'Pick week',
-                  excludeSemantics: true,
-                  child: InkWell(
-                    onTap: _openDatePicker,
-                    borderRadius: BorderRadius.circular(4),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      child: Text(
-                        _weekRangeLabel(),
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleMedium,
-                      ),
-                    ),
-                  ),
+                child: Text(
+                  _weekRangeLabel(),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
                 ),
               ),
               IconButton(

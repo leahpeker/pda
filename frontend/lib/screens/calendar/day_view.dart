@@ -55,19 +55,6 @@ class _DayViewState extends State<DayView> {
     widget.onDateChanged(newDay);
   }
 
-  Future<void> _openDatePicker() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDay,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked == null) return;
-    final newDay = DateTime(picked.year, picked.month, picked.day);
-    setState(() => _selectedDay = newDay);
-    widget.onDateChanged(newDay);
-  }
-
   List<Event> _eventsForSelectedDay() {
     final dayStart = DateTime(
       _selectedDay.year,
@@ -95,7 +82,6 @@ class _DayViewState extends State<DayView> {
           selectedDay: _selectedDay,
           onPrev: _goToPrevDay,
           onNext: _goToNextDay,
-          onTap: _openDatePicker,
         ),
         const Divider(height: 1),
         Expanded(child: _buildBody(context, events)),
@@ -122,13 +108,11 @@ class _DayHeader extends StatelessWidget {
   final DateTime selectedDay;
   final VoidCallback onPrev;
   final VoidCallback onNext;
-  final VoidCallback onTap;
 
   const _DayHeader({
     required this.selectedDay,
     required this.onPrev,
     required this.onNext,
-    required this.onTap,
   });
 
   @override
@@ -144,20 +128,11 @@ class _DayHeader extends StatelessWidget {
             tooltip: 'Previous day',
             onPressed: onPrev,
           ),
-          Semantics(
-            button: true,
-            label: 'Pick date',
-            excludeSemantics: true,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
+          Expanded(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
           IconButton(

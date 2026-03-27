@@ -49,6 +49,16 @@ class _MonthViewState extends State<MonthView> {
     );
   }
 
+  @override
+  void didUpdateWidget(MonthView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final d = widget.selectedDate;
+    final newMonth = DateTime(d.year, d.month);
+    if (newMonth != _focusedMonth) {
+      setState(() => _focusedMonth = newMonth);
+    }
+  }
+
   void _goToPreviousMonth() {
     setState(() {
       _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
@@ -107,27 +117,12 @@ class _MonthViewState extends State<MonthView> {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: _buildGrid(context, gridDays),
           ),
         ),
       ],
     );
-  }
-
-  Future<void> _openDatePicker(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _focusedMonth,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      initialEntryMode: DatePickerEntryMode.calendarOnly,
-    );
-    if (picked == null) return;
-    setState(() {
-      _focusedMonth = DateTime(picked.year, picked.month);
-    });
-    widget.onDateChanged(picked);
   }
 
   Widget _buildMonthHeader(BuildContext context, String label) {
@@ -141,22 +136,7 @@ class _MonthViewState extends State<MonthView> {
             onPressed: _goToPreviousMonth,
             tooltip: 'Previous month',
           ),
-          Semantics(
-            button: true,
-            label: 'Pick month',
-            excludeSemantics: true,
-            child: InkWell(
-              onTap: () => _openDatePicker(context),
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-            ),
-          ),
+          Text(label, style: Theme.of(context).textTheme.titleMedium),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: _goToNextMonth,
@@ -238,25 +218,131 @@ class _MonthRow extends StatelessWidget {
     required this.maxEventRows,
   });
 
+  bool _dayContains(DateTime day, Event e) {
+    final dayStart = DateTime(day.year, day.month, day.day);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+    final start = e.startDatetime.toLocal();
+    final end = e.endDatetime.toLocal();
+    return start.isBefore(dayEnd) && end.isAfter(dayStart);
+  }
+
+  /// Assign each event that appears in this row to a slot row (0, 1, 2…).
+  /// Uses _dayContains as the single source of truth for which days an event
+  /// covers, so multi-day events that end mid-week don't block slots on days
+  /// after they finish.
+  List<_SpanPlacement> _computePlacements() {
+    // Collect events that touch any day in this row, deduplicated by id.
+    final seen = <String>{};
+    final rowEvents = <Event>[];
+    for (final day in days) {
+      for (final e in allEvents) {
+        if (!seen.contains(e.id) && _dayContains(day, e)) {
+          seen.add(e.id);
+          rowEvents.add(e);
+        }
+      }
+    }
+    // Sort: longer spans first (so multi-day events claim low rows), then by start.
+    rowEvents.sort((a, b) {
+      final aSpan = a.endDatetime.difference(a.startDatetime);
+      final bSpan = b.endDatetime.difference(b.startDatetime);
+      final cmp = bSpan.compareTo(aSpan); // descending span length
+      if (cmp != 0) return cmp;
+      return a.startDatetime.compareTo(b.startDatetime);
+    });
+
+    final placements = <_SpanPlacement>[];
+    // occupied[col] = set of row indices already taken in that column.
+    // Only mark a column occupied when _dayContains is true for that day.
+    final occupied = List.generate(7, (_) => <int>{});
+
+    for (final e in rowEvents) {
+      final eStart = e.startDatetime.toLocal();
+      final eEnd = e.endDatetime.toLocal();
+
+      // Compute visual startCol/endCol via date math (clamped to week boundaries).
+      int startCol = 0;
+      for (var c = 0; c < 7; c++) {
+        final ds = DateTime(days[c].year, days[c].month, days[c].day);
+        final es = DateTime(eStart.year, eStart.month, eStart.day);
+        if (ds.isAtSameMomentAs(es) || ds.isAfter(es)) {
+          startCol = c;
+          break;
+        }
+      }
+      int endCol = 6;
+      for (var c = 6; c >= 0; c--) {
+        final ds = DateTime(days[c].year, days[c].month, days[c].day);
+        final lastDay =
+            eEnd.hour == 0 && eEnd.minute == 0
+                ? DateTime(eEnd.year, eEnd.month, eEnd.day - 1)
+                : DateTime(eEnd.year, eEnd.month, eEnd.day);
+        if (ds.isAtSameMomentAs(lastDay) || ds.isBefore(lastDay)) {
+          endCol = c;
+          break;
+        }
+      }
+
+      // Only block slots for columns where the event actually appears on that day.
+      // This prevents multi-day events that ended before a given column from
+      // blocking slots on days after they finish.
+      final activeCols = [
+        for (var c = startCol; c <= endCol; c++)
+          if (_dayContains(days[c], e)) c,
+      ];
+      if (activeCols.isEmpty) continue;
+
+      // Find the lowest slot row free across all active columns.
+      int slotRow = 0;
+      while (true) {
+        if (activeCols.every((c) => !occupied[c].contains(slotRow))) break;
+        slotRow++;
+      }
+
+      for (final c in activeCols) {
+        occupied[c].add(slotRow);
+      }
+
+      placements.add(
+        _SpanPlacement(
+          event: e,
+          startCol: startCol,
+          endCol: endCol,
+          row: slotRow,
+        ),
+      );
+    }
+
+    return placements;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final placements =
-        MonthPlacementCalculator(days: days, allEvents: allEvents).calculate();
-    // visibleRows: highest slot row that fits within maxEventRows, clamped.
-    final visibleMaxRow =
-        placements.isEmpty
-            ? 0
-            : placements
-                .where((p) => p.row < maxEventRows)
-                .fold(-1, (m, p) => p.row > m ? p.row : m);
-    final visibleRows = visibleMaxRow.clamp(0, maxEventRows - 1);
+    final placements = _computePlacements();
+    // visibleRowsByCol: per-column highest slot row < maxEventRows.
+    // Prevents "+N more" from being misaligned on columns with no visible chips
+    // (e.g. when only an overflow event spans that column).
+    final visibleRowsByCol = <int, int>{};
+    for (final p in placements) {
+      if (p.row < maxEventRows) {
+        for (var c = p.startCol; c <= p.endCol; c++) {
+          if (_dayContains(days[c], p.event)) {
+            final current = visibleRowsByCol[c] ?? -1;
+            if (p.row > current) visibleRowsByCol[c] = p.row;
+          }
+        }
+      }
+    }
     // overflowByCol: per-column count of events that are hidden (row >= maxEventRows).
-    // Only count an event for columns it actually covers.
+    // Only count an event for a column if it actually appears on that specific day
+    // (a multi-day event that ended before this day shouldn't inflate its overflow count).
     final overflowByCol = <int, int>{};
     for (final p in placements) {
       if (p.row >= maxEventRows) {
         for (var c = p.startCol; c <= p.endCol; c++) {
-          overflowByCol[c] = (overflowByCol[c] ?? 0) + 1;
+          if (_dayContains(days[c], p.event)) {
+            overflowByCol[c] = (overflowByCol[c] ?? 0) + 1;
+          }
         }
       }
     }
@@ -304,7 +390,8 @@ class _MonthRow extends StatelessWidget {
                             if (overflow > 0) ...[
                               SizedBox(
                                 height:
-                                    visibleRows * (chipHeight + chipSpacing),
+                                    ((visibleRowsByCol[col] ?? -1) + 1) *
+                                    (chipHeight + chipSpacing),
                               ),
                               Text(
                                 '+$overflow more',

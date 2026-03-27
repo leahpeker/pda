@@ -36,6 +36,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     setState(() => _view = view);
   }
 
+  void _goToToday() {
+    final now = DateTime.now();
+    setState(() => _selectedDate = DateTime(now.year, now.month, now.day));
+  }
+
   Future<void> _openCreateEvent() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -66,7 +71,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         children: [
           Column(
             children: [
-              _ViewSwitcher(selected: _view, onSelected: _onViewChanged),
+              _CalendarToolbar(
+                selected: _view,
+                onSelected: _onViewChanged,
+                onToday: _goToToday,
+              ),
               Expanded(
                 child: eventsAsync.when(
                   loading:
@@ -79,7 +88,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ),
             ],
           ),
-          if (user != null)
+          if (user != null &&
+              (user.hasPermission('create_events') ||
+                  user.hasPermission('manage_events')))
             Positioned(
               bottom: 24,
               right: 24,
@@ -130,24 +141,36 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 }
 
-class _ViewSwitcher extends StatelessWidget {
+class _CalendarToolbar extends StatelessWidget {
   final _CalendarView selected;
   final ValueChanged<_CalendarView> onSelected;
+  final VoidCallback onToday;
 
-  const _ViewSwitcher({required this.selected, required this.onSelected});
+  const _CalendarToolbar({
+    required this.selected,
+    required this.onSelected,
+    required this.onToday,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SegmentedButton<_CalendarView>(
-        segments: const [
-          ButtonSegment(value: _CalendarView.month, label: Text('Month')),
-          ButtonSegment(value: _CalendarView.week, label: Text('Week')),
-          ButtonSegment(value: _CalendarView.day, label: Text('Day')),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SegmentedButton<_CalendarView>(
+            segments: const [
+              ButtonSegment(value: _CalendarView.month, label: Text('Month')),
+              ButtonSegment(value: _CalendarView.week, label: Text('Week')),
+              ButtonSegment(value: _CalendarView.day, label: Text('Day')),
+            ],
+            selected: {selected},
+            onSelectionChanged: (s) => onSelected(s.first),
+          ),
+          const SizedBox(width: 12),
+          OutlinedButton(onPressed: onToday, child: const Text('Today')),
         ],
-        selected: {selected},
-        onSelectionChanged: (s) => onSelected(s.first),
       ),
     );
   }

@@ -568,6 +568,12 @@ def check_phone(request, payload: CheckPhoneIn):
 
 @router.post("/events/", response={201: EventOut, 403: ErrorOut}, auth=JWTAuth())
 def create_event(request, payload: EventIn):
+    can_create = request.auth.has_permission(
+        PermissionKey.CREATE_EVENTS
+    ) or request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
+    if not can_create:
+        return Status(403, ErrorOut(detail="Permission denied."))
+
     from users.models import User as UserModel
 
     event = Event.objects.create(
