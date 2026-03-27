@@ -110,6 +110,7 @@ class _OnboardingModalState extends ConsumerState<OnboardingModal> {
                       icon: Icon(
                         _obscureNew ? Icons.visibility_off : Icons.visibility,
                       ),
+                      tooltip: _obscureNew ? 'Show password' : 'Hide password',
                       onPressed:
                           () => setState(() => _obscureNew = !_obscureNew),
                     ),
@@ -133,6 +134,8 @@ class _OnboardingModalState extends ConsumerState<OnboardingModal> {
                             ? Icons.visibility_off
                             : Icons.visibility,
                       ),
+                      tooltip:
+                          _obscureConfirm ? 'Show password' : 'Hide password',
                       onPressed:
                           () => setState(
                             () => _obscureConfirm = !_obscureConfirm,

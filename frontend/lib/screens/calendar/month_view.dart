@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
-import 'package:pda/screens/calendar/month_placement_calculator.dart';
+import 'package:pda/screens/calendar/placement_types.dart';
 
 class MonthView extends StatefulWidget {
   final List<Event> events;
@@ -230,7 +230,7 @@ class _MonthRow extends StatelessWidget {
   /// Uses _dayContains as the single source of truth for which days an event
   /// covers, so multi-day events that end mid-week don't block slots on days
   /// after they finish.
-  List<_SpanPlacement> _computePlacements() {
+  List<SpanPlacement> _computePlacements() {
     // Collect events that touch any day in this row, deduplicated by id.
     final seen = <String>{};
     final rowEvents = <Event>[];
@@ -251,7 +251,7 @@ class _MonthRow extends StatelessWidget {
       return a.startDatetime.compareTo(b.startDatetime);
     });
 
-    final placements = <_SpanPlacement>[];
+    final placements = <SpanPlacement>[];
     // occupied[col] = set of row indices already taken in that column.
     // Only mark a column occupied when _dayContains is true for that day.
     final occupied = List.generate(7, (_) => <int>{});
@@ -304,7 +304,7 @@ class _MonthRow extends StatelessWidget {
       }
 
       placements.add(
-        _SpanPlacement(
+        SpanPlacement(
           event: e,
           startCol: startCol,
           endCol: endCol,

@@ -14,6 +14,8 @@ void main() {
     final allowlist = <String>{
       // Backdrop dismiss overlay — not a user-facing interactive element
       'lib/screens/calendar/event_detail_panel.dart',
+      // Phone tooltip overlay dismiss — not a user-facing interactive element
+      'lib/screens/calendar/rsvp_section.dart',
     };
 
     final libDir = Directory('lib');

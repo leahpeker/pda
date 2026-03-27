@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/editable_page_provider.dart';
+import '../services/api_error.dart';
+import '../utils/snackbar.dart';
 import 'autosave_mixin.dart';
 import 'quill_content_editor.dart';
+import 'save_cancel_button_row.dart';
 
 class EditableContentBlock extends ConsumerStatefulWidget {
   const EditableContentBlock({super.key, required this.slug});
@@ -48,13 +51,9 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
           .read(editablePageProvider(widget.slug).notifier)
           .saveContent(_json);
       if (mounted) setState(() => _editing = false);
-    } on DioException catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      final detail =
-          (e.response?.data as Map?)?['detail'] as String? ?? 'Save failed.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(detail)));
+      showErrorSnackBar(context, ApiError.from(e).message);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -72,14 +71,9 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
       await ref
           .read(editablePageProvider(widget.slug).notifier)
           .saveVisibility(visibility);
-    } on DioException catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      final detail =
-          (e.response?.data as Map?)?['detail'] as String? ??
-          'Failed to update visibility.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(detail)));
+      showErrorSnackBar(context, ApiError.from(e).message);
     }
   }
 
@@ -198,24 +192,12 @@ class _AdminToolbar extends StatelessWidget {
           ],
           if (!editing)
             FilledButton.tonal(onPressed: onEdit, child: const Text('Edit'))
-          else ...[
-            TextButton(
-              onPressed: saving ? null : onCancel,
-              child: const Text('Cancel'),
+          else
+            SaveCancelButtonRow(
+              saving: saving,
+              onSave: onSave,
+              onCancel: onCancel,
             ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: saving ? null : onSave,
-              child:
-                  saving
-                      ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Text('Save'),
-            ),
-          ],
         ],
       ),
     );

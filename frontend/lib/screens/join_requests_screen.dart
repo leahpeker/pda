@@ -4,8 +4,9 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:pda/models/join_request.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/join_request_management_provider.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
-import 'package:pda/widgets/temp_password_field.dart';
+import 'package:pda/widgets/approval_credentials_dialog.dart';
 
 const _filters = ['All', 'Pending', 'Approved', 'Rejected'];
 
@@ -47,9 +48,7 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
+        showErrorSnackBar(context, 'Failed to update status: $e');
       }
     }
   }
@@ -62,35 +61,11 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
     await showDialog<void>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text('$displayName approved!'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Share these login credentials with them:'),
-                const SizedBox(height: 16),
-                _LabeledRow(label: 'Phone', value: phoneNumber),
-                const SizedBox(height: 12),
-                const Text(
-                  'Temporary password',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                TempPasswordField(password: tempPassword),
-                const SizedBox(height: 8),
-                const Text(
-                  'They should change it on first login.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Done'),
-              ),
-            ],
+          (_) => ApprovalCredentialsDialog(
+            title: '$displayName approved!',
+            body: 'Share these login credentials with them:',
+            tempPassword: tempPassword,
+            phoneNumber: phoneNumber,
           ),
     );
   }
@@ -195,16 +170,17 @@ class _JoinRequestCard extends StatelessWidget {
     required this.onReject,
   });
 
-  Color _statusColor(String status) {
-    if (status == 'approved') return Colors.green;
-    if (status == 'rejected') return Colors.red;
-    return Colors.orange;
+  Color _statusColor(BuildContext context, String status) {
+    final cs = Theme.of(context).colorScheme;
+    if (status == 'approved') return cs.primary;
+    if (status == 'rejected') return cs.error;
+    return cs.tertiary;
   }
 
   @override
   Widget build(BuildContext context) {
     final dateFmt = DateFormat('MMM d, yyyy');
-    final statusColor = _statusColor(request.status);
+    final statusColor = _statusColor(context, request.status);
 
     return Card(
       elevation: 2,
@@ -319,29 +295,6 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _LabeledRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _LabeledRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          '$label: ',
-          style: const TextStyle(fontSize: 13, color: Colors.grey),
-        ),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
-      ],
-    );
-  }
-}
-
 class _ActionButtons extends StatelessWidget {
   final VoidCallback onApprove;
   final VoidCallback onReject;
@@ -356,17 +309,13 @@ class _ActionButtons extends StatelessWidget {
         OutlinedButton(
           onPressed: onReject,
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red,
-            side: const BorderSide(color: Colors.red),
+            foregroundColor: Theme.of(context).colorScheme.error,
+            side: BorderSide(color: Theme.of(context).colorScheme.error),
           ),
           child: const Text('Reject'),
         ),
         const SizedBox(width: 8),
-        FilledButton(
-          onPressed: onApprove,
-          style: FilledButton.styleFrom(backgroundColor: Colors.green),
-          child: const Text('Approve'),
-        ),
+        FilledButton(onPressed: onApprove, child: const Text('Approve')),
       ],
     );
   }

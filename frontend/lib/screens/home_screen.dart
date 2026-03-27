@@ -1,13 +1,15 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/home_provider.dart';
+import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/launcher.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
 import 'package:pda/widgets/quill_content_editor.dart';
+import 'package:pda/widgets/save_cancel_button_row.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -92,9 +94,9 @@ class _HomeBody extends StatelessWidget {
                       !isLoggedIn
                           ? Padding(
                             padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
-                            child: ElevatedButton(
+                            child: FilledButton(
                               onPressed: () => context.go('/join'),
-                              style: ElevatedButton.styleFrom(
+                              style: FilledButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 32,
                                   vertical: 16,
@@ -151,12 +153,9 @@ class _DonateCtaState extends ConsumerState<_DonateCta> {
           .read(homePageNotifierProvider.notifier)
           .saveDonateUrl(_controller.text.trim());
       if (mounted) setState(() => _editing = false);
-    } on DioException catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      final detail = (e.response?.data as Map?)?['detail'] ?? 'Failed to save.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(detail.toString())));
+      showErrorSnackBar(context, ApiError.from(e).message);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -187,24 +186,12 @@ class _DonateCtaState extends ConsumerState<_DonateCta> {
                     onPressed: () => setState(() => _editing = true),
                     child: const Text('Edit'),
                   ),
-                if (_editing) ...[
-                  TextButton(
-                    onPressed: _saving ? null : _cancel,
-                    child: const Text('Cancel'),
+                if (_editing)
+                  SaveCancelButtonRow(
+                    saving: _saving,
+                    onSave: _save,
+                    onCancel: _cancel,
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _saving ? null : _save,
-                    child:
-                        _saving
-                            ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                            : const Text('Save'),
-                  ),
-                ],
               ],
             ),
             if (_editing) ...[
@@ -286,12 +273,9 @@ class _EditableSectionState extends ConsumerState<_EditableSection>
     try {
       await widget.onSave(_json);
       if (mounted) setState(() => _editing = false);
-    } on DioException catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      final detail = (e.response?.data as Map?)?['detail'] ?? 'Failed to save.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(detail.toString())));
+      showErrorSnackBar(context, ApiError.from(e).message);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -324,24 +308,12 @@ class _EditableSectionState extends ConsumerState<_EditableSection>
                     onPressed: () => setState(() => _editing = true),
                     child: const Text('Edit'),
                   ),
-                if (_editing) ...[
-                  TextButton(
-                    onPressed: _saving ? null : _cancel,
-                    child: const Text('Cancel'),
+                if (_editing)
+                  SaveCancelButtonRow(
+                    saving: _saving,
+                    onSave: _save,
+                    onCancel: _cancel,
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _saving ? null : _save,
-                    child:
-                        _saving
-                            ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                            : const Text('Save'),
-                  ),
-                ],
               ],
             ),
           ),
