@@ -15,6 +15,7 @@ import 'package:pda/screens/event_detail_screen.dart';
 import 'package:pda/screens/donate_screen.dart';
 import 'package:pda/screens/settings_screen.dart';
 import 'package:pda/screens/volunteer_screen.dart';
+import 'package:pda/screens/whatsapp_config_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Use ref.listen (not ref.watch) so auth state changes trigger redirect
@@ -45,7 +46,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/events/manage' ||
           loc == '/events/mine' ||
           loc == '/settings' ||
-          loc == '/volunteer';
+          loc == '/volunteer' ||
+          loc == '/admin/whatsapp';
 
       if (isProtected && !isAuthenticated) {
         return '/login?redirect=${state.matchedLocation}';
@@ -60,6 +62,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return '/calendar';
         }
         if (loc == '/events/manage' && !user.hasPermission('manage_events')) {
+          return '/calendar';
+        }
+        if (loc == '/admin/whatsapp' &&
+            !user.hasPermission('manage_whatsapp')) {
           return '/calendar';
         }
       }
@@ -127,6 +133,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/volunteer',
         name: 'volunteer',
         builder: (_, __) => const VolunteerScreen(),
+      ),
+      GoRoute(
+        path: '/admin/whatsapp',
+        name: 'whatsapp-config',
+        builder: (_, __) => const WhatsAppConfigScreen(),
       ),
       GoRoute(
         path: '/events/:id',

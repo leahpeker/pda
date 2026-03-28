@@ -33,6 +33,10 @@ abstract class User with _$User {
 
   bool hasPermission(String permission) {
     if (isSuperuser) return true;
-    return roles.any((r) => r.permissions.contains(permission));
+    return roles.any(
+      (r) =>
+          (r.name == 'admin' && r.isDefault) ||
+          r.permissions.contains(permission),
+    );
   }
 }

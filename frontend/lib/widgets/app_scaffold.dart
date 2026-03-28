@@ -79,6 +79,8 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         const _NavButton(label: 'Members', route: '/members'),
       if (user.hasPermission('approve_join_requests'))
         const _NavButton(label: 'Join requests', route: '/join-requests'),
+      if (user.hasPermission('manage_whatsapp'))
+        const _NavButton(label: 'WhatsApp', route: '/admin/whatsapp'),
       const _NavButton(label: 'Donate', route: '/donate'),
       const _NavButton(label: 'Volunteer', route: '/volunteer'),
       const _NavButton(label: 'Guidelines', route: '/guidelines'),
@@ -180,6 +182,12 @@ class _NavDrawer extends ConsumerWidget {
                   icon: Icons.person_search_outlined,
                   label: 'Join requests',
                   route: '/join-requests',
+                ),
+              if (user!.hasPermission('manage_whatsapp'))
+                const _DrawerItem(
+                  icon: Icons.chat_outlined,
+                  label: 'WhatsApp',
+                  route: '/admin/whatsapp',
                 ),
             ];
 
