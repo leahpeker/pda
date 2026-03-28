@@ -45,8 +45,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/events/manage' ||
           loc == '/events/mine' ||
           loc == '/settings' ||
-          loc == '/volunteer' ||
-          loc.startsWith('/events/');
+          loc == '/volunteer';
 
       if (isProtected && !isAuthenticated) {
         return '/login?redirect=${state.matchedLocation}';

@@ -118,19 +118,14 @@ class EventDetailContent extends ConsumerWidget {
               ),
             ),
             IconButton(
-              tooltip: 'Copy link',
-              icon: const Icon(Icons.link_outlined),
+              tooltip: 'Share event',
+              icon: const Icon(Icons.ios_share_outlined),
               onPressed: () {
-                final base = Uri.base;
                 final link =
-                    Uri(
-                      scheme: base.scheme,
-                      host: base.host,
-                      port: base.hasPort ? base.port : null,
-                      path: '/events/${liveEvent.id}',
-                    ).toString();
-                Clipboard.setData(ClipboardData(text: link));
-                showSnackBar(context, 'Link copied to clipboard');
+                    Uri.base
+                        .replace(path: '/events/${liveEvent.id}', query: '')
+                        .toString();
+                shareUrl(link, subject: liveEvent.title);
               },
             ),
             if (!fullPage)
@@ -224,20 +219,17 @@ class _LinkRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String url;
-  final String? subject;
 
-  const _LinkRow({
-    required this.icon,
-    required this.label,
-    required this.url,
-    this.subject,
-  });
+  const _LinkRow({required this.icon, required this.label, required this.url});
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
     return InkWell(
-      onTap: () => shareUrl(url, subject: subject),
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: url));
+        showSnackBar(context, 'Link copied to clipboard');
+      },
       borderRadius: BorderRadius.circular(4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +386,6 @@ class _MemberSection extends ConsumerWidget {
               icon: Icons.chat_bubble_outline,
               label: 'WhatsApp group',
               url: event.whatsappLink,
-              subject: event.title,
             ),
             const SizedBox(height: 8),
           ],
@@ -403,7 +394,6 @@ class _MemberSection extends ConsumerWidget {
               icon: Icons.celebration,
               label: 'Partiful',
               url: event.partifulLink,
-              subject: event.title,
             ),
             const SizedBox(height: 8),
           ],
@@ -412,7 +402,6 @@ class _MemberSection extends ConsumerWidget {
               icon: Icons.link_outlined,
               label: event.otherLink,
               url: event.otherLink,
-              subject: event.title,
             ),
             const SizedBox(height: 8),
           ],
