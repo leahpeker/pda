@@ -26,7 +26,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late final TextEditingController _partifulLink;
   late final TextEditingController _otherLink;
   late DateTime _start;
-  late DateTime _end;
+  late DateTime? _end;
   late bool _rsvpEnabled;
   late Set<String> _coHostIds;
   late Map<String, String> _coHostNames;
@@ -47,7 +47,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _partifulLink = TextEditingController(text: e.partifulLink);
       _otherLink = TextEditingController(text: e.otherLink);
       _start = e.startDatetime.toLocal();
-      _end = e.endDatetime.toLocal();
+      _end = e.endDatetime?.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
       _coHostIds = Set<String>.from(e.coHostIds);
       _coHostNames = {
@@ -63,7 +63,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _otherLink = TextEditingController();
       final now = DateTime.now();
       _start = DateTime(now.year, now.month, now.day, now.hour + 1);
-      _end = _start.add(const Duration(hours: 1));
+      _end = null;
       _rsvpEnabled = false;
       _coHostIds = {};
       _coHostNames = {};
@@ -96,13 +96,14 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           _start.hour,
           _start.minute,
         );
-        if (_end.isBefore(_start)) {
+        if (_end != null && _end!.isBefore(_start)) {
           _end = _start.add(const Duration(hours: 1));
         }
       } else {
-        _end = DateTime(day.year, day.month, day.day, _end.hour, _end.minute);
-        if (_end.isBefore(_start)) {
-          _start = _end.subtract(const Duration(hours: 1));
+        final base = _end ?? _start;
+        _end = DateTime(day.year, day.month, day.day, base.hour, base.minute);
+        if (_end!.isBefore(_start)) {
+          _start = _end!.subtract(const Duration(hours: 1));
         }
       }
       _calendarTarget = null;
@@ -124,7 +125,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
         picked.hour,
         picked.minute,
       );
-      if (_end.isBefore(_start)) {
+      if (_end != null && _end!.isBefore(_start)) {
         _end = _start.add(const Duration(hours: 1));
       }
     });
@@ -132,16 +133,18 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
 
   Future<void> _pickEndTime() async {
     setState(() => _calendarTarget = null);
+    final base = _end ?? _start;
     final picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_end),
+      initialTime: TimeOfDay.fromDateTime(base),
     );
     if (picked == null) return;
+    final dateBase = _end ?? _start;
     setState(() {
       _end = DateTime(
-        _end.year,
-        _end.month,
-        _end.day,
+        dateBase.year,
+        dateBase.month,
+        dateBase.day,
         picked.hour,
         picked.minute,
       );
@@ -165,10 +168,40 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       'partiful_link': _normalizeUrl(_partifulLink.text),
       'other_link': _normalizeUrl(_otherLink.text),
       'start_datetime': _start.toUtc().toIso8601String(),
-      'end_datetime': _end.toUtc().toIso8601String(),
+      'end_datetime': _end?.toUtc().toIso8601String(),
       'rsvp_enabled': _rsvpEnabled,
       'co_host_ids': _coHostIds.toList(),
     });
+  }
+
+  Widget _buildNoFeesNote(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 16,
+            color: theme.colorScheme.onSecondaryContainer,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'All events must be free or at direct cost only (e.g. cost of food). '
+              'No fees or markups are permitted on this calendar.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTitleField() {
@@ -183,6 +216,76 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     );
   }
 
+  void _addEndTime() {
+    setState(() {
+      _end = _start.add(const Duration(hours: 1));
+      _calendarTarget = null;
+    });
+  }
+
+  void _clearEndTime() {
+    setState(() {
+      _end = null;
+      _calendarTarget = null;
+    });
+  }
+
+  List<Widget> _buildEndTimeSection(DateFormat dateFmt, DateFormat timeFmt) {
+    if (_end == null) {
+      return [
+        Semantics(
+          button: true,
+          label: 'Add end time',
+          child: InkWell(
+            onTap: _addEndTime,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.add,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Add end time',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+    return [
+      Row(
+        children: [
+          Expanded(
+            child: _DateTimeRow(
+              label: 'End',
+              date: dateFmt.format(_end!),
+              time: timeFmt.format(_end!),
+              isActive: _calendarTarget == 'end',
+              onDateTap: () => _toggleCalendar('end'),
+              onTimeTap: _pickEndTime,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 16),
+            tooltip: 'Remove end time',
+            onPressed: _clearEndTime,
+          ),
+        ],
+      ),
+    ];
+  }
+
   List<Widget> _buildDateTimeSection(DateFormat dateFmt, DateFormat timeFmt) {
     return [
       _DateTimeRow(
@@ -194,18 +297,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
         onTimeTap: _pickStartTime,
       ),
       const SizedBox(height: 8),
-      _DateTimeRow(
-        label: 'End',
-        date: dateFmt.format(_end),
-        time: timeFmt.format(_end),
-        isActive: _calendarTarget == 'end',
-        onDateTap: () => _toggleCalendar('end'),
-        onTimeTap: _pickEndTime,
-      ),
+      ..._buildEndTimeSection(dateFmt, timeFmt),
       if (_calendarTarget != null) ...[
         const SizedBox(height: 8),
         CalendarDatePicker(
-          initialDate: _calendarTarget == 'start' ? _start : _end,
+          initialDate: _calendarTarget == 'start' ? _start : (_end ?? _start),
           firstDate: DateTime(2000),
           lastDate: DateTime(2100),
           onDateChanged: _onCalendarDaySelected,
@@ -366,6 +462,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildTitleField(),
+                const SizedBox(height: 12),
+                _buildNoFeesNote(theme),
                 const SizedBox(height: 16),
                 ..._buildDateTimeSection(dateFmt, timeFmt),
                 const SizedBox(height: 16),
