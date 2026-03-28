@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,11 +15,6 @@ import 'package:pda/screens/event_detail_screen.dart';
 import 'package:pda/screens/donate_screen.dart';
 import 'package:pda/screens/settings_screen.dart';
 import 'package:pda/screens/volunteer_screen.dart';
-
-// Use NoTransitionPage on web so the browser's native back/forward swipe
-// gesture doesn't conflict with a Flutter slide animation.
-Page<void> _page(Widget child) =>
-    kIsWeb ? NoTransitionPage(child: child) : MaterialPage(child: child);
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Use ref.listen (not ref.watch) so auth state changes trigger redirect
@@ -73,78 +67,73 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        name: 'home',
-        pageBuilder: (_, __) => _page(const HomeScreen()),
-      ),
+      GoRoute(path: '/', name: 'home', builder: (_, __) => const HomeScreen()),
       GoRoute(
         path: '/join',
         name: 'join',
-        pageBuilder: (_, __) => _page(const JoinScreen()),
+        builder: (_, __) => const JoinScreen(),
       ),
       GoRoute(
         path: '/join/success',
         name: 'join-success',
-        pageBuilder: (_, __) => _page(const JoinSuccessScreen()),
+        builder: (_, __) => const JoinSuccessScreen(),
       ),
       GoRoute(
         path: '/login',
         name: 'login',
-        pageBuilder: (_, __) => _page(const LoginScreen()),
+        builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
         path: '/calendar',
         name: 'calendar',
-        pageBuilder: (_, __) => _page(const CalendarScreen()),
+        builder: (_, __) => const CalendarScreen(),
       ),
       GoRoute(
         path: '/members',
         name: 'members',
-        pageBuilder: (_, __) => _page(const MembersScreen()),
+        builder: (_, __) => const MembersScreen(),
       ),
       GoRoute(
         path: '/join-requests',
         name: 'join-requests',
-        pageBuilder: (_, __) => _page(const JoinRequestsScreen()),
+        builder: (_, __) => const JoinRequestsScreen(),
       ),
       GoRoute(
         path: '/events/mine',
         name: 'my-events',
-        pageBuilder:
-            (_, __) => _page(const EventManagementScreen(myEventsOnly: true)),
+        builder: (_, __) => const EventManagementScreen(myEventsOnly: true),
       ),
       GoRoute(
         path: '/events/manage',
         name: 'manage-events',
-        pageBuilder: (_, __) => _page(const EventManagementScreen()),
+        builder: (_, __) => const EventManagementScreen(),
       ),
       GoRoute(
         path: '/guidelines',
         name: 'guidelines',
-        pageBuilder: (_, __) => _page(const GuidelinesScreen()),
+        builder: (_, __) => const GuidelinesScreen(),
       ),
       GoRoute(
         path: '/settings',
         name: 'settings',
-        pageBuilder: (_, __) => _page(const SettingsScreen()),
+        builder: (_, __) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/donate',
         name: 'donate',
-        pageBuilder: (_, __) => _page(const DonateScreen()),
+        builder: (_, __) => const DonateScreen(),
       ),
       GoRoute(
         path: '/volunteer',
         name: 'volunteer',
-        pageBuilder: (_, __) => _page(const VolunteerScreen()),
+        builder: (_, __) => const VolunteerScreen(),
       ),
       GoRoute(
         path: '/events/:id',
         name: 'event-detail',
-        pageBuilder:
+        builder:
             (_, state) =>
-                _page(EventDetailScreen(eventId: state.pathParameters['id']!)),
+                EventDetailScreen(eventId: state.pathParameters['id']!),
       ),
     ],
   );
