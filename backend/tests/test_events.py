@@ -239,6 +239,55 @@ class TestEventManagement:
         assert data["title"] == "Community Meetup"
         assert data["location"] == "The Vegan Cafe"
 
+    def test_create_event_without_end_datetime(self, api_client, manage_events_headers):
+        response = api_client.post(
+            "/api/community/events/",
+            {
+                "title": "Open-ended Event",
+                "start_datetime": "2026-05-01T18:00:00Z",
+            },
+            content_type="application/json",
+            **manage_events_headers,
+        )
+        assert response.status_code == 201
+        assert response.json()["end_datetime"] is None
+
+    def test_create_event_end_before_start_returns_400(self, api_client, manage_events_headers):
+        response = api_client.post(
+            "/api/community/events/",
+            {
+                "title": "Bad Event",
+                "start_datetime": "2026-05-01T20:00:00Z",
+                "end_datetime": "2026-05-01T18:00:00Z",
+            },
+            content_type="application/json",
+            **manage_events_headers,
+        )
+        assert response.status_code == 400
+        assert "end_datetime" in response.json()["detail"]
+
+    def test_update_event_clear_end_datetime(self, api_client, manage_events_headers, sample_event):
+        response = api_client.patch(
+            f"/api/community/events/{sample_event.id}/",
+            {"end_datetime": None},
+            content_type="application/json",
+            **manage_events_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["end_datetime"] is None
+
+    def test_update_event_end_before_start_returns_400(
+        self, api_client, manage_events_headers, sample_event
+    ):
+        response = api_client.patch(
+            f"/api/community/events/{sample_event.id}/",
+            {"end_datetime": "2026-04-01T17:00:00Z"},
+            content_type="application/json",
+            **manage_events_headers,
+        )
+        assert response.status_code == 400
+        assert "end_datetime" in response.json()["detail"]
+
     def test_event_patch_fields_match_model(self):
         """All EventPatchIn fields (except co_host_ids) must exist on Event model."""
         from community.api import EventPatchIn

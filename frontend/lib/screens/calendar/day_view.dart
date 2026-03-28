@@ -65,7 +65,8 @@ class _DayViewState extends State<DayView> {
     final results =
         widget.events.where((e) {
           final start = e.startDatetime.toLocal();
-          final end = e.endDatetime.toLocal();
+          final end =
+              e.endDatetime?.toLocal() ?? start.add(const Duration(minutes: 1));
           return start.isBefore(dayEnd) && end.isAfter(dayStart);
         }).toList();
     results.sort((a, b) => a.startDatetime.compareTo(b.startDatetime));
@@ -172,6 +173,22 @@ class _EmptyDayState extends StatelessWidget {
   }
 }
 
+String _buildTimeRange(Event event, DateFormat timeFmt, DateFormat dateFmt) {
+  final start = event.startDatetime.toLocal();
+  if (event.endDatetime == null) {
+    return timeFmt.format(start);
+  }
+  final end = event.endDatetime!.toLocal();
+  final isSameDay =
+      start.year == end.year &&
+      start.month == end.month &&
+      start.day == end.day;
+  if (isSameDay) {
+    return '${timeFmt.format(start)} \u2013 ${timeFmt.format(end)}';
+  }
+  return '${dateFmt.format(start)} ${timeFmt.format(start)} \u2013 ${dateFmt.format(end)} ${timeFmt.format(end)}';
+}
+
 class _DayEventCard extends StatelessWidget {
   final Event event;
 
@@ -185,16 +202,7 @@ class _DayEventCard extends StatelessWidget {
     final fgColor = colors.$2;
     final timeFmt = DateFormat('h:mm a');
     final dateFmt = DateFormat('MMM d');
-    final start = event.startDatetime.toLocal();
-    final end = event.endDatetime.toLocal();
-    final isSameDay =
-        start.year == end.year &&
-        start.month == end.month &&
-        start.day == end.day;
-    final timeRange =
-        isSameDay
-            ? '${timeFmt.format(start)} \u2013 ${timeFmt.format(end)}'
-            : '${dateFmt.format(start)} ${timeFmt.format(start)} \u2013 ${dateFmt.format(end)} ${timeFmt.format(end)}';
+    final timeRange = _buildTimeRange(event, timeFmt, dateFmt);
 
     return Semantics(
       button: true,

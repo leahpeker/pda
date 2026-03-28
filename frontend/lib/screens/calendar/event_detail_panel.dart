@@ -64,6 +64,43 @@ void _showSidePanel(BuildContext context, Event event) {
   );
 }
 
+List<Widget> _buildDateTimeRows(
+  DateFormat dateFmt,
+  DateFormat timeFmt,
+  DateTime start,
+  DateTime? end,
+) {
+  if (end == null) {
+    return [
+      _DetailRow(icon: Icons.today_outlined, text: dateFmt.format(start)),
+      const SizedBox(height: 8),
+      _DetailRow(icon: Icons.schedule_outlined, text: timeFmt.format(start)),
+    ];
+  }
+  final sameDay =
+      start.year == end.year &&
+      start.month == end.month &&
+      start.day == end.day;
+  if (sameDay) {
+    return [
+      _DetailRow(icon: Icons.today_outlined, text: dateFmt.format(start)),
+      const SizedBox(height: 8),
+      _DetailRow(
+        icon: Icons.schedule_outlined,
+        text: '${timeFmt.format(start)} \u2013 ${timeFmt.format(end)}',
+      ),
+    ];
+  }
+  return [
+    _DetailRow(
+      icon: Icons.calendar_today,
+      text:
+          '${dateFmt.format(start)}, ${timeFmt.format(start)} \u2013 '
+          '${dateFmt.format(end)}, ${timeFmt.format(end)}',
+    ),
+  ];
+}
+
 class EventDetailContent extends ConsumerWidget {
   final Event event;
   final ScrollController? scrollController;
@@ -89,11 +126,7 @@ class EventDetailContent extends ConsumerWidget {
     final dateFmt = DateFormat('EEEE, MMMM d, y');
     final timeFmt = DateFormat('h:mm a');
     final start = liveEvent.startDatetime.toLocal();
-    final end = liveEvent.endDatetime.toLocal();
-    final isSameDay =
-        start.year == end.year &&
-        start.month == end.month &&
-        start.day == end.day;
+    final end = liveEvent.endDatetime?.toLocal();
 
     final hostNames = <String>[];
     if (liveEvent.createdByName != null) {
@@ -101,85 +134,74 @@ class EventDetailContent extends ConsumerWidget {
     }
     hostNames.addAll(liveEvent.coHostNames);
 
-    return ListView(
-      controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  liveEvent.title,
-                  style: Theme.of(context).textTheme.headlineSmall,
+    return SelectionArea(
+      child: ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    liveEvent.title,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                 ),
               ),
-            ),
-            IconButton(
-              tooltip: 'Share event',
-              icon: const Icon(Icons.ios_share_outlined),
-              onPressed: () {
-                final link =
-                    Uri.base
-                        .replace(path: '/events/${liveEvent.id}', query: '')
-                        .toString();
-                shareUrl(link, subject: liveEvent.title);
-              },
-            ),
-            if (!fullPage)
               IconButton(
-                tooltip: 'Open full page',
-                icon: const Icon(Icons.open_in_new_outlined),
+                tooltip: 'Share event',
+                icon: const Icon(Icons.ios_share_outlined),
                 onPressed: () {
-                  Navigator.of(context).pop();
-                  context.push('/events/${liveEvent.id}');
+                  final link =
+                      Uri.base
+                          .replace(path: '/events/${liveEvent.id}', query: '')
+                          .toString();
+                  shareUrl(link, subject: liveEvent.title);
                 },
               ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (isSameDay) ...[
-          _DetailRow(icon: Icons.today_outlined, text: dateFmt.format(start)),
-          const SizedBox(height: 8),
-          _DetailRow(
-            icon: Icons.schedule_outlined,
-            text: '${timeFmt.format(start)} – ${timeFmt.format(end)}',
+              if (!fullPage)
+                IconButton(
+                  tooltip: 'Open full page',
+                  icon: const Icon(Icons.open_in_new_outlined),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push('/events/${liveEvent.id}');
+                  },
+                ),
+            ],
           ),
-        ] else ...[
-          _DetailRow(
-            icon: Icons.calendar_today,
-            text:
-                '${dateFmt.format(start)}, ${timeFmt.format(start)} – ${dateFmt.format(end)}, ${timeFmt.format(end)}',
-          ),
-        ],
-        if (liveEvent.location.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _DetailRow(
-            icon: Icons.location_on_outlined,
-            text: liveEvent.location,
-          ),
-        ],
-        if (hostNames.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _DetailRow(
-            icon: Icons.person_pin_outlined,
-            text: hostNames.join(', '),
-          ),
-        ],
-        if (liveEvent.description.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text(
-            liveEvent.description,
-            style: const TextStyle(fontSize: 15, height: 1.6),
-          ),
+          ..._buildDateTimeRows(dateFmt, timeFmt, start, end),
+          if (liveEvent.location.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _DetailRow(
+              icon: Icons.location_on_outlined,
+              text: liveEvent.location,
+            ),
+          ],
+          if (hostNames.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _DetailRow(
+              icon: Icons.person_pin_outlined,
+              text: hostNames.join(', '),
+            ),
+          ],
+          if (liveEvent.description.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              liveEvent.description,
+              style: const TextStyle(fontSize: 15, height: 1.6),
+            ),
+          ],
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 8),
+          _MemberSection(event: liveEvent),
         ],
-        const SizedBox(height: 24),
-        const Divider(),
-        const SizedBox(height: 8),
-        _MemberSection(event: liveEvent),
-      ],
+      ),
     );
   }
 }

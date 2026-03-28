@@ -26,6 +26,6 @@ bool dayContains(DateTime day, Event e) {
   final dayStart = DateTime(day.year, day.month, day.day);
   final dayEnd = dayStart.add(const Duration(days: 1));
   final start = e.startDatetime.toLocal();
-  final end = e.endDatetime.toLocal();
+  final end = e.endDatetime?.toLocal() ?? start.add(const Duration(minutes: 1));
   return start.isBefore(dayEnd) && end.isAfter(dayStart);
 }

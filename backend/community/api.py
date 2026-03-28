@@ -106,7 +106,7 @@ class EventOut(BaseModel):
     title: str
     description: str
     start_datetime: datetime
-    end_datetime: datetime
+    end_datetime: datetime | None = None
     location: str
     whatsapp_link: str = ""
     partiful_link: str = ""
@@ -154,7 +154,7 @@ class EventIn(BaseModel):
     title: str
     description: str = ""
     start_datetime: datetime
-    end_datetime: datetime
+    end_datetime: datetime | None = None
     location: str = ""
     whatsapp_link: str = ""
     partiful_link: str = ""
@@ -566,13 +566,16 @@ def check_phone(request, payload: CheckPhoneIn):
     return Status(200, CheckPhoneOut(exists=exists))
 
 
-@router.post("/events/", response={201: EventOut, 403: ErrorOut}, auth=JWTAuth())
+@router.post("/events/", response={201: EventOut, 400: ErrorOut, 403: ErrorOut}, auth=JWTAuth())
 def create_event(request, payload: EventIn):
     can_create = request.auth.has_permission(
         PermissionKey.CREATE_EVENTS
     ) or request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
     if not can_create:
         return Status(403, ErrorOut(detail="Permission denied."))
+
+    if payload.end_datetime is not None and payload.end_datetime <= payload.start_datetime:
+        return Status(400, ErrorOut(detail="end_datetime must be after start_datetime."))
 
     from users.models import User as UserModel
 
@@ -595,7 +598,9 @@ def create_event(request, payload: EventIn):
 
 
 @router.patch(
-    "/events/{event_id}/", response={200: EventOut, 403: ErrorOut, 404: ErrorOut}, auth=JWTAuth()
+    "/events/{event_id}/",
+    response={200: EventOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
+    auth=JWTAuth(),
 )
 def update_event(request, event_id: UUID, payload: EventPatchIn):
     try:
@@ -609,6 +614,10 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         return Status(403, ErrorOut(detail="Permission denied."))
 
     updates = payload.model_dump(exclude_unset=True)
+    effective_start = updates.get("start_datetime", event.start_datetime)
+    effective_end = updates.get("end_datetime", event.end_datetime)
+    if effective_end is not None and effective_end <= effective_start:
+        return Status(400, ErrorOut(detail="end_datetime must be after start_datetime."))
     co_host_ids = updates.pop("co_host_ids", None)
     for field, value in updates.items():
         setattr(event, field, value)

@@ -78,7 +78,6 @@ class _HomeBody extends StatelessWidget {
                     ).read(homePageNotifierProvider.notifier).saveContent(text),
               ),
               if (donateUrl.isNotEmpty || canEdit) ...[
-                const Divider(height: 32),
                 _DonateCta(donateUrl: donateUrl, canEdit: canEdit),
               ],
               if (!isLoggedIn || canEdit) ...[
@@ -210,18 +209,20 @@ class _DonateCtaState extends ConsumerState<_DonateCta> {
               const SizedBox(height: 12),
           ],
           if (widget.donateUrl.isNotEmpty)
-            Semantics(
-              button: true,
-              label: 'Donate',
-              child: FilledButton(
-                onPressed: () => openUrl(widget.donateUrl),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
+            Center(
+              child: Semantics(
+                button: true,
+                label: 'Donate',
+                child: FilledButton(
+                  onPressed: () => openUrl(widget.donateUrl),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                   ),
+                  child: const Text('Donate', style: TextStyle(fontSize: 16)),
                 ),
-                child: const Text('Donate', style: TextStyle(fontSize: 16)),
               ),
             ),
         ],

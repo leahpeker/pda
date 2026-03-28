@@ -53,6 +53,21 @@ void main() {
       expect(placements[0].endCol, 2);
     });
 
+    test('places event with null endDatetime on its start day only', () {
+      final event = Event(
+        id: '1',
+        title: 'Event 1',
+        description: '',
+        startDatetime: DateTime(2026, 3, 25, 10),
+        location: '',
+      );
+      final calc = MonthPlacementCalculator(days: days, allEvents: [event]);
+      final placements = calc.calculate();
+      expect(placements, hasLength(1));
+      expect(placements[0].startCol, 2);
+      expect(placements[0].endCol, 2);
+    });
+
     test('assigns different slot rows to overlapping events', () {
       final event1 = _makeEvent(
         '1',
@@ -84,6 +99,30 @@ void main() {
         DateTime(2026, 3, 25, 12),
       );
       expect(dayContains(day, event), isTrue);
+    });
+
+    test('returns true for event with null endDatetime on its start day', () {
+      final day = DateTime(2026, 3, 25);
+      final event = Event(
+        id: '1',
+        title: 'Event 1',
+        description: '',
+        startDatetime: DateTime(2026, 3, 25, 10),
+        location: '',
+      );
+      expect(dayContains(day, event), isTrue);
+    });
+
+    test('returns false for event with null endDatetime on different day', () {
+      final day = DateTime(2026, 3, 26);
+      final event = Event(
+        id: '1',
+        title: 'Event 1',
+        description: '',
+        startDatetime: DateTime(2026, 3, 25, 10),
+        location: '',
+      );
+      expect(dayContains(day, event), isFalse);
     });
 
     test('returns false when event is on different day', () {

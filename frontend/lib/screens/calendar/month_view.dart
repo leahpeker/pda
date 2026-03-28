@@ -222,7 +222,8 @@ class _MonthRow extends StatelessWidget {
     final dayStart = DateTime(day.year, day.month, day.day);
     final dayEnd = dayStart.add(const Duration(days: 1));
     final start = e.startDatetime.toLocal();
-    final end = e.endDatetime.toLocal();
+    final end =
+        e.endDatetime?.toLocal() ?? start.add(const Duration(minutes: 1));
     return start.isBefore(dayEnd) && end.isAfter(dayStart);
   }
 
@@ -240,8 +241,8 @@ class _MonthRow extends StatelessWidget {
       }
     }
     rowEvents.sort((a, b) {
-      final aSpan = a.endDatetime.difference(a.startDatetime);
-      final bSpan = b.endDatetime.difference(b.startDatetime);
+      final aSpan = a.endDatetime?.difference(a.startDatetime) ?? Duration.zero;
+      final bSpan = b.endDatetime?.difference(b.startDatetime) ?? Duration.zero;
       final cmp = bSpan.compareTo(aSpan);
       if (cmp != 0) return cmp;
       return a.startDatetime.compareTo(b.startDatetime);
@@ -284,7 +285,7 @@ class _MonthRow extends StatelessWidget {
 
     for (final e in rowEvents) {
       final startCol = _startColFor(e.startDatetime.toLocal());
-      final endCol = _endColFor(e.endDatetime.toLocal());
+      final endCol = _endColFor((e.endDatetime ?? e.startDatetime).toLocal());
 
       // Only block slots for columns where the event actually appears on that day.
       final activeCols = [
@@ -412,7 +413,7 @@ class _MonthRow extends StatelessWidget {
         );
     final continuesToNext =
         p.endCol == 6 &&
-        p.event.endDatetime.toLocal().isAfter(
+        (p.event.endDatetime ?? p.event.startDatetime).toLocal().isAfter(
           DateTime(days[6].year, days[6].month, days[6].day + 1),
         );
     final borderRadius = BorderRadius.horizontal(

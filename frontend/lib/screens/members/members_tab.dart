@@ -160,117 +160,131 @@ class MemberCard extends ConsumerWidget {
 
     return Card(
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              user.displayName.isNotEmpty
-                                  ? user.displayName
-                                  : '(no name)',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ),
-                          if (user.needsOnboarding) ...[
-                            const SizedBox(width: 6),
-                            Tooltip(
-                              message: 'Hasn\'t logged in yet',
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.tertiary,
-                                  shape: BoxShape.circle,
-                                ),
+      child: SelectionArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                user.displayName.isNotEmpty
+                                    ? user.displayName
+                                    : '(no name)',
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
+                            if (user.needsOnboarding) ...[
+                              const SizedBox(width: 6),
+                              Tooltip(
+                                message: 'Hasn\'t logged in yet',
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        user.email.isNotEmpty ? user.email : user.phoneNumber,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (user.isSuperuser)
-                  Chip(
-                    label: const Text('Superuser'),
-                    backgroundColor:
-                        Theme.of(context).colorScheme.errorContainer,
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                      fontSize: 11,
+                        const SizedBox(height: 2),
+                        Text(
+                          user.phoneNumber,
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        if (user.email.isNotEmpty)
+                          Text(
+                            user.email,
+                            style: TextStyle(
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
+                  if (user.isSuperuser)
+                    Chip(
+                      label: const Text('Superuser'),
+                      backgroundColor:
+                          Theme.of(context).colorScheme.errorContainer,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                        fontSize: 11,
+                      ),
+                    ),
+                ],
+              ),
+              if (user.roles.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: user.roles.map((r) => RoleBadge(role: r)).toList(),
+                ),
               ],
-            ),
-            if (user.roles.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: user.roles.map((r) => RoleBadge(role: r)).toList(),
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (canManageRoles)
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.verified_user_outlined, size: 16),
+                      label: const Text('Edit roles'),
+                      onPressed:
+                          () => _showRoleEditor(
+                            context,
+                            ref,
+                            notifier,
+                            isOwnAccount,
+                          ),
+                    ),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.key_outlined, size: 16),
+                    label: const Text('Reset password'),
+                    onPressed: () => _handleResetPassword(context, notifier),
+                  ),
+                  OutlinedButton.icon(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    label: Text(
+                      'Delete',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    onPressed: () => _handleDelete(context, notifier),
+                  ),
+                ],
               ),
             ],
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (canManageRoles)
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.verified_user_outlined, size: 16),
-                    label: const Text('Edit roles'),
-                    onPressed:
-                        () => _showRoleEditor(
-                          context,
-                          ref,
-                          notifier,
-                          isOwnAccount,
-                        ),
-                  ),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.key_outlined, size: 16),
-                  label: const Text('Reset password'),
-                  onPressed: () => _handleResetPassword(context, notifier),
-                ),
-                OutlinedButton.icon(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  label: Text(
-                    'Delete',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                  onPressed: () => _handleDelete(context, notifier),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

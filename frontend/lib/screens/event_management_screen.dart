@@ -231,8 +231,10 @@ class _EventManagementRow extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            '${dateFmt.format(event.startDatetime.toLocal())} — '
-                            '${DateFormat('h:mm a').format(event.endDatetime.toLocal())}',
+                            event.endDatetime == null
+                                ? dateFmt.format(event.startDatetime.toLocal())
+                                : '${dateFmt.format(event.startDatetime.toLocal())} — '
+                                    '${DateFormat('h:mm a').format(event.endDatetime!.toLocal())}',
                             style: const TextStyle(
                               fontSize: 13,
                               color: Colors.grey,

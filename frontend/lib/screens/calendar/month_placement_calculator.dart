@@ -25,7 +25,7 @@ class MonthPlacementCalculator {
 
     for (final e in rowEvents) {
       final eStart = e.startDatetime.toLocal();
-      final eEnd = e.endDatetime.toLocal();
+      final eEnd = (e.endDatetime ?? e.startDatetime).toLocal();
 
       final startCol = _findStartCol(eStart);
       final endCol = _findEndCol(eEnd);

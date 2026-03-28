@@ -40,7 +40,7 @@ class Event(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
     start_datetime = models.DateTimeField()
-    end_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField(null=True, blank=True)
     location = models.CharField(max_length=300, blank=True)
     whatsapp_link = models.URLField(blank=True)
     partiful_link = models.URLField(blank=True)

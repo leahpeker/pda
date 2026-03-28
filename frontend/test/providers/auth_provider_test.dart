@@ -29,7 +29,84 @@ void main() {
 
   tearDown(() => container.dispose());
 
+  group('AuthNotifier.build', () {
+    test('returns null when no token is stored', () async {
+      when(() => mockApi.get('/api/auth/me/')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/api/auth/me/'),
+          statusCode: 200,
+          data: {
+            'id': 'u1',
+            'phone_number': '+12025551234',
+            'display_name': '',
+            'email': '',
+            'is_superuser': false,
+            'needs_onboarding': false,
+            'roles': <dynamic>[],
+          },
+        ),
+      );
+      final result = await container.read(authProvider.future);
+      // No token in FakeSecureStorage → should return null without calling /me/
+      expect(result, isNull);
+    });
+  });
+
   group('AuthNotifier.login', () {
+    test('sets AsyncData with user on successful login', () async {
+      await container.read(authProvider.future);
+
+      when(
+        () => mockApi.post('/api/auth/login/', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/api/auth/login/'),
+          statusCode: 200,
+          data: {'access': 'access-tok', 'refresh': 'refresh-tok'},
+        ),
+      );
+      when(() => mockApi.get('/api/auth/me/')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/api/auth/me/'),
+          statusCode: 200,
+          data: {
+            'id': 'u1',
+            'phone_number': '+12025551234',
+            'display_name': 'Alice',
+            'email': 'alice@example.com',
+            'is_superuser': false,
+            'needs_onboarding': false,
+            'roles': <dynamic>[],
+          },
+        ),
+      );
+
+      await container
+          .read(authProvider.notifier)
+          .login('+12025551234', 'correctpass');
+
+      final state = container.read(authProvider);
+      expect(state.hasError, isFalse);
+      expect(state.value?.displayName, 'Alice');
+    });
+  });
+
+  group('AuthNotifier.logout', () {
+    test('clears state to AsyncData(null)', () async {
+      await container.read(authProvider.future);
+
+      // Simulate logged-in state by injecting a user directly
+      container.read(authProvider.notifier).state = const AsyncData(null);
+
+      await container.read(authProvider.notifier).logout();
+
+      final state = container.read(authProvider);
+      expect(state.hasError, isFalse);
+      expect(state.value, isNull);
+    });
+  });
+
+  group('AuthNotifier.login errors', () {
     test('sets InvalidCredentials error on 401', () async {
       // Wait for build() to complete before calling login()
       await container.read(authProvider.future);

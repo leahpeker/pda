@@ -23,7 +23,7 @@ abstract class Event with _$Event {
     required String title,
     required String description,
     required DateTime startDatetime,
-    required DateTime endDatetime,
+    DateTime? endDatetime,
     required String location,
     @Default('') String whatsappLink,
     @Default('') String partifulLink,

@@ -10,7 +10,9 @@ class ApiClient {
   final SecureStorageService _storage;
 
   ApiClient(this._storage) {
-    _dio = Dio(BaseOptions(baseUrl: apiBaseUrl));
+    _dio = Dio(
+      BaseOptions(baseUrl: apiBaseUrl, contentType: Headers.jsonContentType),
+    );
 
     // Logging interceptor — logs request/response/error without sensitive data.
     _dio.interceptors.add(

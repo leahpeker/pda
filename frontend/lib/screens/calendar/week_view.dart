@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
+import 'package:pda/screens/calendar/placement_types.dart';
 import 'package:pda/screens/calendar/week_placement_calculator.dart';
 
 class WeekView extends StatefulWidget {
@@ -81,7 +82,7 @@ class _WeekViewState extends State<WeekView> {
       final de = ds.add(const Duration(days: 1));
       return widget.events.any((e) {
         final s = e.startDatetime.toLocal();
-        final en = e.endDatetime.toLocal();
+        final en = (e.endDatetime ?? e.startDatetime).toLocal();
         return s.isBefore(de) && en.isAfter(ds);
       });
     });
@@ -295,114 +296,19 @@ class _WeekGrid extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 6),
                     child: Stack(
                       children:
-                          placements.where((p) => p.row < maxEventRows).map((
-                            p,
-                          ) {
-                            final left = p.startCol * colWidth;
-                            final width =
-                                (p.endCol - p.startCol + 1) * colWidth;
-                            final top = p.row * (chipHeight + chipSpacing);
-                            final colors = eventColors(p.event.id);
-
-                            final continuesFromPrev =
-                                p.startCol == 0 &&
-                                p.event.startDatetime.toLocal().isBefore(
-                                  DateTime(
-                                    days[0].year,
-                                    days[0].month,
-                                    days[0].day,
-                                  ),
-                                );
-                            final continuesToNext =
-                                p.endCol == 6 &&
-                                p.event.endDatetime.toLocal().isAfter(
-                                  DateTime(
-                                    days[6].year,
-                                    days[6].month,
-                                    days[6].day + 1,
-                                  ),
-                                );
-
-                            final isMultiDay =
-                                p.startCol != p.endCol ||
-                                continuesFromPrev ||
-                                continuesToNext;
-
-                            final eStart = p.event.startDatetime.toLocal();
-                            final eEnd = p.event.endDatetime.toLocal();
-                            final subLabel =
-                                isMultiDay
-                                    ? '${DateFormat('MMM d').format(eStart)} – ${DateFormat('MMM d').format(eEnd)}'
-                                    : DateFormat('h:mm a').format(eStart);
-
-                            return Positioned(
-                              left: left,
-                              top: top,
-                              width: width,
-                              height: chipHeight,
-                              child: Semantics(
-                                button: true,
-                                label: p.event.title,
-                                excludeSemantics: true,
-                                child: InkWell(
-                                  onTap: () => onEventTapped(p.event),
-                                  splashColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
-                                  child: Container(
-                                    margin: EdgeInsets.only(
-                                      left: continuesFromPrev ? 0 : 2,
-                                      right: continuesToNext ? 0 : 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: colors.$1,
-                                      borderRadius: BorderRadius.horizontal(
-                                        left:
-                                            continuesFromPrev
-                                                ? Radius.zero
-                                                : const Radius.circular(4),
-                                        right:
-                                            continuesToNext
-                                                ? Radius.zero
-                                                : const Radius.circular(4),
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 5,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            p.event.title,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: colors.$2,
-                                            ),
-                                          ),
-                                        ),
-                                        if (isMultiDay)
-                                          const SizedBox(width: 4),
-                                        Text(
-                                          subLabel,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: colors.$2.withValues(
-                                              alpha: 0.8,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                          placements
+                              .where((p) => p.row < maxEventRows)
+                              .map(
+                                (p) => _buildEventChip(
+                                  p,
+                                  colWidth,
+                                  days,
+                                  chipHeight,
+                                  chipSpacing,
+                                  onEventTapped,
                                 ),
-                              ),
-                            );
-                          }).toList(),
+                              )
+                              .toList(),
                     ),
                   ),
                 ],
@@ -413,4 +319,94 @@ class _WeekGrid extends StatelessWidget {
       },
     );
   }
+}
+
+Widget _buildEventChip(
+  SpanPlacement p,
+  double colWidth,
+  List<DateTime> days,
+  double chipHeight,
+  double chipSpacing,
+  ValueChanged<Event> onEventTapped,
+) {
+  final left = p.startCol * colWidth;
+  final width = (p.endCol - p.startCol + 1) * colWidth;
+  final top = p.row * (chipHeight + chipSpacing);
+  final colors = eventColors(p.event.id);
+
+  final continuesFromPrev =
+      p.startCol == 0 &&
+      p.event.startDatetime.toLocal().isBefore(
+        DateTime(days[0].year, days[0].month, days[0].day),
+      );
+  final eEnd = (p.event.endDatetime ?? p.event.startDatetime).toLocal();
+  final continuesToNext =
+      p.endCol == 6 &&
+      eEnd.isAfter(DateTime(days[6].year, days[6].month, days[6].day + 1));
+
+  final isMultiDay =
+      p.startCol != p.endCol || continuesFromPrev || continuesToNext;
+
+  final eStart = p.event.startDatetime.toLocal();
+  final subLabel =
+      isMultiDay
+          ? '${DateFormat('MMM d').format(eStart)} \u2013 ${DateFormat('MMM d').format(eEnd)}'
+          : DateFormat('h:mm a').format(eStart);
+
+  return Positioned(
+    left: left,
+    top: top,
+    width: width,
+    height: chipHeight,
+    child: Semantics(
+      button: true,
+      label: p.event.title,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: () => onEventTapped(p.event),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Container(
+          margin: EdgeInsets.only(
+            left: continuesFromPrev ? 0 : 2,
+            right: continuesToNext ? 0 : 2,
+          ),
+          decoration: BoxDecoration(
+            color: colors.$1,
+            borderRadius: BorderRadius.horizontal(
+              left: continuesFromPrev ? Radius.zero : const Radius.circular(4),
+              right: continuesToNext ? Radius.zero : const Radius.circular(4),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  p.event.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: colors.$2,
+                  ),
+                ),
+              ),
+              if (isMultiDay) const SizedBox(width: 4),
+              Text(
+                subLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: colors.$2.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

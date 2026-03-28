@@ -25,6 +25,8 @@ class EditablePage {
 class EditablePageNotifier extends FamilyAsyncNotifier<EditablePage, String> {
   @override
   Future<EditablePage> build(String arg) async {
+    // Watch auth so the page refetches once the token is available.
+    ref.watch(authProvider);
     final api = ref.read(apiClientProvider);
     final response = await api.get('/api/community/pages/$arg/');
     return EditablePage.fromJson(response.data as Map<String, dynamic>);
