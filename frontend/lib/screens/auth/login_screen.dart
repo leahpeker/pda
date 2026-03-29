@@ -36,9 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (mounted) {
       final redirect =
           GoRouterState.of(context).uri.queryParameters['redirect'];
-      if (redirect != null) context.go(redirect);
-      // No manual navigation otherwise — router redirect handles post-login
-      // routing (e.g. to /onboarding or /calendar).
+      context.go(redirect ?? '/calendar');
     }
   }
 

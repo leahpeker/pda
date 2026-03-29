@@ -48,7 +48,7 @@ Widget _buildSubject({Event? event, AuthNotifier? authNotifier}) {
 }
 
 void main() {
-  testWidgets('shows event title and location', (tester) async {
+  testWidgets('shows event title', (tester) async {
     tester.view.physicalSize = _kTestSize;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -58,6 +58,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Movie Night'), findsOneWidget);
+  });
+
+  testWidgets('shows location for authenticated member', (tester) async {
+    tester.view.physicalSize = _kTestSize;
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _buildSubject(authNotifier: _MemberAuthNotifier(userId: 'u-other')),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('The usual spot'), findsOneWidget);
   });
 

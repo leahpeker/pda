@@ -27,15 +27,13 @@ Widget _buildApp(AuthNotifier authNotifier) {
 
 void main() {
   testWidgets(
-    'unauthenticated user visiting /calendar is redirected to /login',
+    'unauthenticated user can access /calendar',
     (tester) async {
       final notifier = _GuestAuthNotifier();
 
-      // Build the app then manually push /calendar after it settles.
       await tester.pumpWidget(_buildApp(notifier));
       await tester.pumpAndSettle();
 
-      // Use GoRouter directly via the ProviderScope.
       final container = ProviderScope.containerOf(
         tester.element(find.byType(Consumer)),
       );
@@ -43,8 +41,7 @@ void main() {
       goRouter.go('/calendar');
       await tester.pumpAndSettle();
 
-      // Should be on /login now.
-      expect(goRouter.routerDelegate.currentConfiguration.uri.path, '/login');
+      expect(goRouter.routerDelegate.currentConfiguration.uri.path, '/calendar');
     },
   );
 

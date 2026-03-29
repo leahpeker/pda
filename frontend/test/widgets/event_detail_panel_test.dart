@@ -57,7 +57,26 @@ void main() {
     expect(find.text('Movie Night'), findsOneWidget);
   });
 
-  testWidgets('renders event location', (tester) async {
+  testWidgets('renders event location for authenticated member', (
+    tester,
+  ) async {
+    tester.view.physicalSize = _kTestSize;
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _buildSubject(
+        _baseEvent,
+        authNotifier: _MemberAuthNotifier(userId: 'u-member'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('The usual spot'), findsOneWidget);
+  });
+
+  testWidgets('location hidden for guest', (tester) async {
     tester.view.physicalSize = _kTestSize;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -66,7 +85,7 @@ void main() {
     await tester.pumpWidget(_buildSubject(_baseEvent));
     await tester.pumpAndSettle();
 
-    expect(find.text('The usual spot'), findsOneWidget);
+    expect(find.text('The usual spot'), findsNothing);
   });
 
   testWidgets('renders description', (tester) async {
