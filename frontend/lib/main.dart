@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:mcp_toolkit/mcp_toolkit.dart';
 import 'package:pda/router/app_router.dart';
 import 'package:pda/services/app_logger.dart';
 import 'package:pda/services/error_reporter.dart';
@@ -10,6 +11,9 @@ import 'package:pda/services/secure_storage.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  MCPToolkitBinding.instance
+    ..initialize()
+    ..initializeFlutterToolkit();
   setupLogging();
   final reporter = ErrorReporter(SecureStorageService());
   setupErrorHandlers(
