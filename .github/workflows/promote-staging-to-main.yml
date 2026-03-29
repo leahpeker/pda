@@ -3,6 +3,10 @@ name: Promote staging → main
 on:
   workflow_dispatch: # manual trigger from GitHub UI
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   promote:
     runs-on: ubuntu-latest
