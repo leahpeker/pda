@@ -45,8 +45,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       // Router redirect will navigate to /guidelines once needsOnboarding becomes false.
     } on DioException catch (e) {
       if (!mounted) return;
-      final detail =
-          (e.response?.data as Map?)?['detail'] ?? 'Failed to save.';
+      final detail = (e.response?.data as Map?)?['detail'] ?? 'Failed to save.';
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(detail.toString())));

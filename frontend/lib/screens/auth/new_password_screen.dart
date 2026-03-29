@@ -36,8 +36,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
       // Router redirect will navigate to /calendar once needsOnboarding becomes false.
     } on DioException catch (e) {
       if (!mounted) return;
-      final detail =
-          (e.response?.data as Map?)?['detail'] ?? 'Failed to save.';
+      final detail = (e.response?.data as Map?)?['detail'] ?? 'Failed to save.';
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(detail.toString())));
