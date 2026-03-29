@@ -3,43 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/providers/auth_provider.dart';
-import 'package:pda/widgets/onboarding_modal.dart';
 
-class AppScaffold extends ConsumerStatefulWidget {
+class AppScaffold extends ConsumerWidget {
   final Widget child;
 
   const AppScaffold({super.key, required this.child});
 
   @override
-  ConsumerState<AppScaffold> createState() => _AppScaffoldState();
-}
-
-class _AppScaffoldState extends ConsumerState<AppScaffold> {
-  bool _onboardingShown = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).valueOrNull;
     final isWide = MediaQuery.sizeOf(context).width >= 720;
     final canPop = Navigator.of(context).canPop();
-
-    if (user != null && user.needsOnboarding && !_onboardingShown) {
-      _onboardingShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        showDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => const OnboardingModal(),
-        ).then((_) {
-          if (!mounted) return;
-          final currentUser = ref.read(authProvider).valueOrNull;
-          if (currentUser != null && currentUser.needsOnboarding) {
-            setState(() => _onboardingShown = false);
-          }
-        });
-      });
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -55,49 +29,53 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                   child: _NavButton(label: 'PDA', route: '/'),
                 )
                 : null,
-        actions: isWide ? _wideNavItems(context, user) : null,
+        actions: isWide ? _buildWideNavItems(context, ref, user) : null,
       ),
       drawer: isWide ? null : _NavDrawer(user: user),
-      body: widget.child,
+      body: child,
     );
   }
+}
 
-  List<Widget> _wideNavItems(BuildContext context, User? user) {
-    if (user == null) {
-      return [
-        const _NavButton(label: 'Donate', route: '/donate'),
-        const _NavButton(label: 'Member login', route: '/login'),
-      ];
-    }
-
+List<Widget> _buildWideNavItems(
+  BuildContext context,
+  WidgetRef ref,
+  User? user,
+) {
+  if (user == null) {
     return [
-      const _NavButton(label: 'Calendar', route: '/calendar'),
-      const _NavButton(label: 'My events', route: '/events/mine'),
-      if (user.hasPermission('manage_events'))
-        const _NavButton(label: 'Manage events', route: '/events/manage'),
-      if (user.hasPermission('manage_users'))
-        const _NavButton(label: 'Members', route: '/members'),
-      if (user.hasPermission('approve_join_requests'))
-        const _NavButton(label: 'Join requests', route: '/join-requests'),
-      if (user.hasPermission('manage_whatsapp'))
-        const _NavButton(label: 'WhatsApp', route: '/admin/whatsapp'),
       const _NavButton(label: 'Donate', route: '/donate'),
-      const _NavButton(label: 'Volunteer', route: '/volunteer'),
-      const _NavButton(label: 'Guidelines', route: '/guidelines'),
-      const _NavButton(label: 'Settings', route: '/settings'),
-      TextButton(
-        onPressed: () async {
-          await ref.read(authProvider.notifier).logout();
-          if (context.mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Logged out')));
-          }
-        },
-        child: const Text('Logout'),
-      ),
+      const _NavButton(label: 'Member login', route: '/login'),
     ];
   }
+
+  return [
+    const _NavButton(label: 'Calendar', route: '/calendar'),
+    const _NavButton(label: 'My events', route: '/events/mine'),
+    if (user.hasPermission('manage_events'))
+      const _NavButton(label: 'Manage events', route: '/events/manage'),
+    if (user.hasPermission('manage_users'))
+      const _NavButton(label: 'Members', route: '/members'),
+    if (user.hasPermission('approve_join_requests'))
+      const _NavButton(label: 'Join requests', route: '/join-requests'),
+    if (user.hasPermission('manage_whatsapp'))
+      const _NavButton(label: 'WhatsApp', route: '/admin/whatsapp'),
+    const _NavButton(label: 'Donate', route: '/donate'),
+    const _NavButton(label: 'Volunteer', route: '/volunteer'),
+    const _NavButton(label: 'Guidelines', route: '/guidelines'),
+    const _NavButton(label: 'Settings', route: '/settings'),
+    TextButton(
+      onPressed: () async {
+        await ref.read(authProvider.notifier).logout();
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Logged out')));
+        }
+      },
+      child: const Text('Logout'),
+    ),
+  ];
 }
 
 class _NavButton extends StatelessWidget {

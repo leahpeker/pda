@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/screens/auth/login_screen.dart';
+import 'package:pda/screens/auth/onboarding_screen.dart';
 import 'package:pda/screens/calendar_screen.dart';
 import 'package:pda/screens/event_management_screen.dart';
 import 'package:pda/screens/home_screen.dart';
@@ -38,8 +39,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoading) return null;
 
       final loc = state.matchedLocation;
+
+      // First-time users must complete onboarding before accessing anything else.
+      if (user != null && user.needsOnboarding && loc != '/onboarding') {
+        return '/onboarding';
+      }
+      if (user != null && !user.needsOnboarding && loc == '/onboarding') {
+        return '/calendar';
+      }
+
       final isProtected =
-          loc == '/calendar' ||
           loc == '/guidelines' ||
           loc == '/members' ||
           loc == '/join-requests' ||
@@ -88,6 +97,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (_, __) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/calendar',

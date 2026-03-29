@@ -175,13 +175,6 @@ class EventDetailContent extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           ..._buildDateTimeRows(dateFmt, timeFmt, start, end),
-          if (liveEvent.location.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _DetailRow(
-              icon: Icons.location_on_outlined,
-              text: liveEvent.location,
-            ),
-          ],
           if (hostNames.isNotEmpty) ...[
             const SizedBox(height: 8),
             _DetailRow(
@@ -199,7 +192,7 @@ class EventDetailContent extends ConsumerWidget {
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 8),
-          _MemberSection(event: liveEvent),
+          _MemberSection(event: liveEvent, location: liveEvent.location),
         ],
       ),
     );
@@ -390,11 +383,12 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
   }
 }
 
-/// Shows member-only content (links, RSVP, admin actions) or a login/join
-/// prompt for unauthenticated visitors.
+/// Shows member-only content (location, links, RSVP, admin actions) or a
+/// login/join prompt for unauthenticated visitors.
 class _MemberSection extends ConsumerWidget {
   final Event event;
-  const _MemberSection({required this.event});
+  final String location;
+  const _MemberSection({required this.event, required this.location});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -403,6 +397,10 @@ class _MemberSection extends ConsumerWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (location.isNotEmpty) ...[
+            _DetailRow(icon: Icons.location_on_outlined, text: location),
+            const SizedBox(height: 8),
+          ],
           if (event.whatsappLink.isNotEmpty) ...[
             _LinkRow(
               icon: Icons.chat_bubble_outline,

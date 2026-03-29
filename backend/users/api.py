@@ -289,8 +289,8 @@ def update_me(request, payload: MePatchIn):
 
 
 class OnboardingIn(BaseModel):
-    display_name: str
     new_password: str
+    display_name: str | None = None
     email: str = ""
 
 
@@ -299,7 +299,8 @@ def complete_onboarding(request, payload: OnboardingIn):
     if len(payload.new_password) < 8:
         return Status(400, ErrorOut(detail="New password must be at least 8 characters."))
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
-    user.display_name = payload.display_name.strip()
+    if payload.display_name is not None:
+        user.display_name = payload.display_name.strip()
     if payload.email:
         user.email = payload.email
     user.set_password(payload.new_password)
@@ -534,6 +535,7 @@ def reset_password(request, user_id: str):
         return Status(404, ErrorOut(detail="User not found."))
     temp_password = _generate_temp_password()
     user.set_password(temp_password)
+    user.needs_onboarding = True
     user.save()
     return Status(
         200,

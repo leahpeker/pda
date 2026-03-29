@@ -30,23 +30,24 @@ class SecureStorageService {
     }
   }
 
-  Future<String?> getAccessToken() async {
-    try {
-      return await _storage.read(key: _accessKey);
-    } catch (e) {
-      _log.warning('Failed to read access token, clearing storage', e);
-      await _clearAll();
-      return null;
-    }
-  }
+  Future<String?> getAccessToken() => _readWithRetry(_accessKey);
 
-  Future<String?> getRefreshToken() async {
+  Future<String?> getRefreshToken() => _readWithRetry(_refreshKey);
+
+  /// Retries once on failure to handle transient WebCrypto OperationErrors
+  /// that occur on Flutter web when the encryption key isn't immediately ready.
+  Future<String?> _readWithRetry(String key) async {
     try {
-      return await _storage.read(key: _refreshKey);
+      return await _storage.read(key: key);
     } catch (e) {
-      _log.warning('Failed to read refresh token, clearing storage', e);
-      await _clearAll();
-      return null;
+      _log.warning('Failed to read $key, retrying once', e);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      try {
+        return await _storage.read(key: key);
+      } catch (e2) {
+        _log.warning('Failed to read $key after retry', e2);
+        return null;
+      }
     }
   }
 

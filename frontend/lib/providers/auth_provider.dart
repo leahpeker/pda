@@ -87,15 +87,15 @@ class AuthNotifier extends AsyncNotifier<User?> {
   }
 
   Future<void> completeOnboarding({
-    required String displayName,
+    String? displayName,
     String? email,
     required String newPassword,
   }) async {
     final api = ref.read(apiClientProvider);
-    final data = <String, dynamic>{
-      'display_name': displayName,
-      'new_password': newPassword,
-    };
+    final data = <String, dynamic>{'new_password': newPassword};
+    if (displayName != null && displayName.isNotEmpty) {
+      data['display_name'] = displayName;
+    }
     if (email != null && email.isNotEmpty) data['email'] = email;
     final response = await api.post(
       '/api/auth/complete-onboarding/',

@@ -31,12 +31,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     await ref
         .read(authProvider.notifier)
         .login(_phoneNumber, _passwordController.text);
-    final state = ref.read(authProvider);
-    if (state.hasError) return;
+    final authState = ref.read(authProvider);
+    if (authState.hasError) return;
     if (mounted) {
       final redirect =
           GoRouterState.of(context).uri.queryParameters['redirect'];
-      context.go(redirect ?? '/calendar');
+      if (redirect != null) context.go(redirect);
+      // No manual navigation otherwise — router redirect handles post-login
+      // routing (e.g. to /onboarding or /calendar).
     }
   }
 
