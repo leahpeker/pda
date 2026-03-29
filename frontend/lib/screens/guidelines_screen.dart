@@ -120,21 +120,15 @@ class _GuidelinesBodyState extends ConsumerState<_GuidelinesBody>
   }
 
   Widget _buildHeader(BuildContext context) {
+    if (!widget.canEdit) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              'Community Guidelines',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ),
+          const Spacer(),
           if (_editing) AutosaveIndicator(status: autosaveStatus),
           if (_editing) const SizedBox(width: 12),
-          if (widget.canEdit && !_editing)
+          if (!_editing)
             FilledButton.tonal(
               onPressed: () => setState(() => _editing = true),
               child: const Text('Edit'),
