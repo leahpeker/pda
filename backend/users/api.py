@@ -40,9 +40,13 @@ def _is_last_admin(user: User) -> bool:
 
 
 def _validate_phone(raw: str) -> str:
-    """Parse, validate, and return E.164. Raises ValueError on invalid."""
+    """Parse, validate, and return E.164. Raises ValueError on invalid.
+
+    Defaults to US region so bare 10-digit numbers are accepted.
+    Numbers with an explicit country code (e.g. +44...) are unaffected.
+    """
     try:
-        parsed = phonenumbers.parse(raw, None)
+        parsed = phonenumbers.parse(raw, "US")
     except phonenumbers.phonenumberutil.NumberParseException as e:
         raise ValueError(str(e)) from e
     if not phonenumbers.is_valid_number(parsed):
