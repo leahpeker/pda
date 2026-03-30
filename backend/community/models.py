@@ -209,6 +209,100 @@ class WhatsAppConfig(models.Model):
         return obj
 
 
+class SurveyVisibility(models.TextChoices):
+    PUBLIC = "public", "Public"
+    MEMBERS_ONLY = "members_only", "Members only"
+
+
+class SurveyQuestionType(models.TextChoices):
+    TEXT = "text", "Text"
+    TEXTAREA = "textarea", "Text area"
+    SELECT = "select", "Single select"
+    MULTISELECT = "multiselect", "Multi select"
+    DROPDOWN = "dropdown", "Dropdown"
+    NUMBER = "number", "Number"
+    YES_NO = "yes_no", "Yes / No"
+    RATING = "rating", "Rating"
+
+
+class Survey(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    slug = models.SlugField(max_length=100, unique=True)
+    visibility = models.CharField(
+        max_length=20,
+        choices=SurveyVisibility.choices,
+        default=SurveyVisibility.PUBLIC,
+    )
+    is_active = models.BooleanField(default=True)
+    linked_event = models.ForeignKey(
+        "community.Event",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="surveys",
+    )
+    created_by = models.ForeignKey(
+        "users.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_surveys",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    if TYPE_CHECKING:
+        questions: "Manager[SurveyQuestion]"
+        responses: "Manager[SurveyResponse]"
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
+
+class SurveyQuestion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    survey = models.ForeignKey(Survey, on_delete=models.CASCADE, related_name="questions")
+    label = models.CharField(max_length=500)
+    field_type = models.CharField(
+        max_length=20,
+        choices=SurveyQuestionType.choices,
+        default=SurveyQuestionType.TEXT,
+    )
+    options = models.JSONField(default=list, blank=True)
+    required = models.BooleanField(default=False)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order"]
+
+    def __str__(self):
+        return f"{self.survey.title}: {self.label}"
+
+
+class SurveyResponse(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    survey = models.ForeignKey(Survey, on_delete=models.CASCADE, related_name="responses")
+    user = models.ForeignKey(
+        "users.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="survey_responses",
+    )
+    answers = models.JSONField(default=dict, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"Response to {self.survey.title} ({self.submitted_at:%Y-%m-%d})"
+
+
 class RSVPStatus(models.TextChoices):
     ATTENDING = "attending", "Attending"
     MAYBE = "maybe", "Maybe"

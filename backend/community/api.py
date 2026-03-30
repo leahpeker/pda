@@ -163,6 +163,7 @@ class EventOut(BaseModel):
     co_host_names: list[str] = []
     guests: list[RSVPGuestOut] = []
     my_rsvp: str | None = None
+    survey_slugs: list[str] = []
 
 
 class RSVPIn(BaseModel):
@@ -730,6 +731,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         co_host_names=[u.display_name or u.phone_number for u in co_hosts],
         guests=_members_only(_build_guest_list(rsvps, phones_visible), [], is_authed),
         my_rsvp=_find_my_rsvp(rsvps, auth_user),
+        survey_slugs=list(event.surveys.filter(is_active=True).values_list("slug", flat=True)),
     )
 
 
@@ -755,14 +757,10 @@ def list_events(request):
                 partiful_link=_members_only(e.partiful_link, "", is_authed),
                 created_by_id=str(e.created_by_id) if e.created_by_id else None,
                 created_by_name=(
-                    e.created_by.display_name or e.created_by.phone_number
-                    if e.created_by
-                    else None
+                    e.created_by.display_name or e.created_by.phone_number if e.created_by else None
                 ),
                 co_host_ids=[str(c.id) for c in e.co_hosts.all()],
-                co_host_names=[
-                    c.display_name or c.phone_number for c in e.co_hosts.all()
-                ],
+                co_host_names=[c.display_name or c.phone_number for c in e.co_hosts.all()],
             )
             for e in events
         ],

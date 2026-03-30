@@ -8,6 +8,7 @@ import 'package:pda/utils/time_format.dart';
 import 'package:pda/utils/file_download.dart';
 import 'package:pda/utils/ics_generator.dart';
 import 'package:pda/utils/launcher.dart';
+import 'package:pda/utils/app_icons.dart';
 import 'package:pda/utils/share.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/providers/event_provider.dart';
@@ -155,7 +156,7 @@ class EventDetailContent extends ConsumerWidget {
               const SizedBox(width: 4),
               _ActionChip(
                 tooltip: 'share event',
-                icon: Icons.share_rounded,
+                icon: AppIcons.share,
                 onPressed: () {
                   final link =
                       Uri.base
@@ -168,7 +169,7 @@ class EventDetailContent extends ConsumerWidget {
                 const SizedBox(width: 4),
                 _ActionChip(
                   tooltip: 'open full page',
-                  icon: Icons.open_in_new_rounded,
+                  icon: AppIcons.openExternal,
                   onPressed: () {
                     Navigator.of(context).pop();
                     context.push('/events/${liveEvent.id}');
@@ -313,7 +314,7 @@ class _CalendarMenuChip extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(9),
             child: Icon(
-              Icons.calendar_today_rounded,
+              AppIcons.calendar,
               size: 17,
               color: cs.onSurfaceVariant,
             ),
@@ -520,6 +521,38 @@ class _MemberSection extends ConsumerWidget {
               url: event.otherLink,
             ),
             const SizedBox(height: 8),
+          ],
+          if (event.surveySlugs.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...event.surveySlugs.map(
+              (slug) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: InkWell(
+                  onTap: () => context.go('/surveys/$slug'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.rate_review_rounded,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'give feedback',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
           if (event.rsvpEnabled) ...[
             const SizedBox(height: 8),

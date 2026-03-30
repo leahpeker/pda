@@ -12,3 +12,4 @@ class PermissionKey(models.TextChoices):
     EDIT_FAQ = "edit_faq", "Edit FAQ"
     EDIT_HOMEPAGE = "edit_homepage", "Edit homepage"
     EDIT_JOIN_QUESTIONS = "edit_join_questions", "Edit join form questions"
+    MANAGE_SURVEYS = "manage_surveys", "Manage surveys"

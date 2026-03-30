@@ -51,6 +51,13 @@ class AdminScreen extends ConsumerWidget {
                     subtitle: 'Configure join request form questions',
                     onTap: () => context.go('/admin/join-form'),
                   ),
+                if (user?.hasPermission('manage_surveys') ?? false)
+                  _AdminCard(
+                    icon: Icons.poll_outlined,
+                    title: 'Surveys',
+                    subtitle: 'Create and manage feedback surveys',
+                    onTap: () => context.go('/admin/surveys'),
+                  ),
                 if (user?.hasPermission('manage_whatsapp') ?? false)
                   _AdminCard(
                     icon: Icons.chat_outlined,

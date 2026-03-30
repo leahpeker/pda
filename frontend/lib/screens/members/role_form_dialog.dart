@@ -13,6 +13,7 @@ const kPermissionLabels = {
   'edit_faq': 'Edit FAQ',
   'edit_homepage': 'Edit homepage',
   'edit_join_questions': 'Edit join form questions',
+  'manage_surveys': 'Manage surveys',
 };
 
 // Dialog to create or edit a role (name + permission checkboxes)
