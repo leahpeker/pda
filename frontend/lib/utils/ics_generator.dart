@@ -11,11 +11,12 @@ String generateEventIcs(Event event) {
   buf.writeln('DTSTAMP:${_formatUtc(DateTime.now().toUtc())}');
   buf.writeln(_foldLine('SUMMARY:${_escape(event.title)}'));
   buf.writeln('DTSTART:${_formatUtc(event.startDatetime.toUtc())}');
-  if (event.endDatetime != null) {
-    buf.writeln('DTEND:${_formatUtc(event.endDatetime!.toUtc())}');
-  }
-  if (event.description.isNotEmpty) {
-    buf.writeln(_foldLine('DESCRIPTION:${_escape(event.description)}'));
+  final end =
+      event.endDatetime ?? event.startDatetime.add(const Duration(hours: 2));
+  buf.writeln('DTEND:${_formatUtc(end.toUtc())}');
+  final desc = _buildDescription(event);
+  if (desc.isNotEmpty) {
+    buf.writeln(_foldLine('DESCRIPTION:${_escape(desc)}'));
   }
   if (event.location.isNotEmpty) {
     buf.writeln(_foldLine('LOCATION:${_escape(event.location)}'));
@@ -23,6 +24,42 @@ String generateEventIcs(Event event) {
   buf.writeln('END:VEVENT');
   buf.writeln('END:VCALENDAR');
   return buf.toString();
+}
+
+/// Builds a description combining the event body with any links.
+String _buildDescription(Event event) {
+  final parts = <String>[];
+  if (event.description.isNotEmpty) parts.add(event.description);
+  if (event.whatsappLink.isNotEmpty) {
+    parts.add('WhatsApp: ${event.whatsappLink}');
+  }
+  if (event.partifulLink.isNotEmpty) {
+    parts.add('Partiful: ${event.partifulLink}');
+  }
+  if (event.otherLink.isNotEmpty) {
+    parts.add('Link: ${event.otherLink}');
+  }
+  return parts.join('\n');
+}
+
+/// Builds a Google Calendar event creation URL.
+String googleCalendarUrl(Event event) {
+  final start = event.startDatetime.toUtc();
+  final end = event.endDatetime?.toUtc() ?? start.add(const Duration(hours: 2));
+  final dates = '${_formatUtc(start)}/${_formatUtc(end)}';
+  final details = _buildDescription(event);
+  final params = <String, String>{
+    'action': 'TEMPLATE',
+    'text': event.title,
+    'dates': dates,
+    if (details.isNotEmpty) 'details': details,
+    if (event.location.isNotEmpty) 'location': event.location,
+  };
+  return Uri.https(
+    'calendar.google.com',
+    '/calendar/render',
+    params,
+  ).toString();
 }
 
 String _formatUtc(DateTime dt) {

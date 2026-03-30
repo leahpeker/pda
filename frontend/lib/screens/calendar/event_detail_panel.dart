@@ -7,6 +7,7 @@ import 'package:pda/models/event.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/utils/file_download.dart';
 import 'package:pda/utils/ics_generator.dart';
+import 'package:pda/utils/launcher.dart';
 import 'package:pda/utils/share.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/providers/event_provider.dart';
@@ -150,18 +151,11 @@ class EventDetailContent extends ConsumerWidget {
                   ),
                 ),
               ),
-              _ActionChip(
-                tooltip: 'add to calendar',
-                icon: Icons.event_outlined,
-                onPressed: () {
-                  final ics = generateEventIcs(liveEvent);
-                  downloadFile(ics, '${liveEvent.title}.ics', 'text/calendar');
-                },
-              ),
+              _CalendarMenuChip(event: liveEvent),
               const SizedBox(width: 4),
               _ActionChip(
                 tooltip: 'share event',
-                icon: Icons.ios_share_outlined,
+                icon: Icons.share_rounded,
                 onPressed: () {
                   final link =
                       Uri.base
@@ -174,7 +168,7 @@ class EventDetailContent extends ConsumerWidget {
                 const SizedBox(width: 4),
                 _ActionChip(
                   tooltip: 'open full page',
-                  icon: Icons.open_in_new_outlined,
+                  icon: Icons.open_in_new_rounded,
                   onPressed: () {
                     Navigator.of(context).pop();
                     context.push('/events/${liveEvent.id}');
@@ -257,14 +251,72 @@ class _ActionChip extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Icon(icon, size: 18, color: cs.onSurfaceVariant),
+            padding: const EdgeInsets.all(9),
+            child: Icon(icon, size: 17, color: cs.onSurfaceVariant),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _CalendarOption { google, apple, download }
+
+class _CalendarMenuChip extends StatelessWidget {
+  final Event event;
+
+  const _CalendarMenuChip({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: 'add to calendar',
+      child: Material(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
+        child: PopupMenuButton<_CalendarOption>(
+          onSelected: (option) {
+            switch (option) {
+              case _CalendarOption.google:
+                openUrl(googleCalendarUrl(event));
+              case _CalendarOption.apple:
+                final ics = generateEventIcs(event);
+                downloadFile(ics, '${event.title}.ics', 'text/calendar');
+              case _CalendarOption.download:
+                final ics = generateEventIcs(event);
+                downloadFile(ics, '${event.title}.ics', 'text/calendar');
+            }
+          },
+          itemBuilder:
+              (_) => const [
+                PopupMenuItem(
+                  value: _CalendarOption.google,
+                  child: Text('google calendar'),
+                ),
+                PopupMenuItem(
+                  value: _CalendarOption.apple,
+                  child: Text('apple calendar'),
+                ),
+                PopupMenuItem(
+                  value: _CalendarOption.download,
+                  child: Text('download .ics'),
+                ),
+              ],
+          padding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(9),
+            child: Icon(
+              Icons.calendar_today_rounded,
+              size: 17,
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ),
       ),

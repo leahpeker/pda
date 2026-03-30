@@ -975,33 +975,44 @@ def calendar_feed(request, token: str = ""):
     )
 
     for event in events:
-        vevent = icalendar.Event()
-        vevent.add("uid", f"{event.id}@pda")
-        vevent.add("dtstamp", timezone.now())
-        vevent.add("dtstart", event.start_datetime)
-        vevent.add(
-            "dtend",
-            event.end_datetime or event.start_datetime + timedelta(hours=2),
-        )
-        vevent.add("summary", event.title)
-        desc_parts = []
-        if event.description:
-            desc_parts.append(event.description)
-        if event.whatsapp_link:
-            desc_parts.append(f"WhatsApp: {event.whatsapp_link}")
-        if event.partiful_link:
-            desc_parts.append(f"Partiful: {event.partiful_link}")
-        if event.other_link:
-            desc_parts.append(f"Link: {event.other_link}")
-        if desc_parts:
-            vevent.add("description", "\n".join(desc_parts))
-        if event.location:
-            vevent.add("location", event.location)
-        cal.add_component(vevent)
+        cal.add_component(_build_vevent(event))
 
     response = HttpResponse(cal.to_ical(), content_type="text/calendar")
     response["Content-Disposition"] = 'inline; filename="pda-calendar.ics"'
     return response
+
+
+def _build_vevent(event):
+    import icalendar
+
+    vevent = icalendar.Event()
+    vevent.add("uid", f"{event.id}@pda")
+    vevent.add("dtstamp", timezone.now())
+    vevent.add("dtstart", event.start_datetime)
+    vevent.add(
+        "dtend",
+        event.end_datetime or event.start_datetime + timedelta(hours=2),
+    )
+    vevent.add("summary", event.title)
+    desc = _event_ics_description(event)
+    if desc:
+        vevent.add("description", desc)
+    if event.location:
+        vevent.add("location", event.location)
+    return vevent
+
+
+def _event_ics_description(event):
+    parts = []
+    if event.description:
+        parts.append(event.description)
+    if event.whatsapp_link:
+        parts.append(f"WhatsApp: {event.whatsapp_link}")
+    if event.partiful_link:
+        parts.append(f"Partiful: {event.partiful_link}")
+    if event.other_link:
+        parts.append(f"Link: {event.other_link}")
+    return "\n".join(parts)
 
 
 # ---------------------------------------------------------------------------

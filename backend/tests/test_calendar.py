@@ -64,6 +64,50 @@ class TestCalendarFeed:
         assert "Test Potluck" in content
         assert "The park" in content
 
+    def test_feed_defaults_end_to_start_plus_2h(self, api_client, auth_headers, test_user):
+        import datetime as dt
+
+        from community.models import Event
+
+        resp = api_client.post("/api/community/calendar/token/", **auth_headers)
+        token = resp.json()["token"]
+
+        start = dt.datetime(2026, 7, 1, 18, 0, tzinfo=dt.UTC)
+        Event.objects.create(
+            title="No End Time",
+            start_datetime=start,
+            created_by=test_user,
+        )
+
+        resp = api_client.get(f"/api/community/calendar/feed/?token={token}")
+        content = resp.content.decode()
+        assert "DTEND" in content
+        # start + 2h = 20:00 UTC
+        assert "20260701T200000" in content
+
+    def test_feed_includes_links_in_description(self, api_client, auth_headers, test_user):
+        from community.models import Event
+        from django.utils import timezone
+
+        resp = api_client.post("/api/community/calendar/token/", **auth_headers)
+        token = resp.json()["token"]
+
+        Event.objects.create(
+            title="Linked Event",
+            description="Join us!",
+            start_datetime=timezone.now(),
+            whatsapp_link="https://chat.whatsapp.com/abc",
+            partiful_link="https://partiful.com/e/xyz",
+            created_by=test_user,
+        )
+
+        resp = api_client.get(f"/api/community/calendar/feed/?token={token}")
+        # Unfold ICS line continuations before checking
+        content = resp.content.decode().replace("\r\n ", "")
+        assert "Join us!" in content
+        assert "WhatsApp: https://chat.whatsapp.com/abc" in content
+        assert "Partiful: https://partiful.com/e/xyz" in content
+
     def test_feed_invalid_token_403(self, api_client):
         resp = api_client.get("/api/community/calendar/feed/?token=bogus-token")
         assert resp.status_code == 403

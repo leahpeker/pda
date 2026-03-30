@@ -452,6 +452,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
 
     return AlertDialog(
       title: Text(_isEdit ? 'edit event' : 'new event \u{1F331}'),
+      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      clipBehavior: Clip.none,
       content: SizedBox(
         width: dialogWidth,
         child: Form(
