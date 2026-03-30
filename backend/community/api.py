@@ -1,6 +1,7 @@
 import logging
 import re
 import secrets
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -24,6 +25,7 @@ from community.models import (
     EditablePage,
     Event,
     EventRSVP,
+    EventType,
     HomePage,
     JoinFormQuestion,
     JoinRequest,
@@ -138,10 +140,11 @@ class EventListOut(BaseModel):
     start_datetime: datetime
     end_datetime: datetime | None = None
     location: str
+    event_type: str = "community"
     whatsapp_link: str = ""
     partiful_link: str = ""
+    other_link: str = ""
     created_by_id: str | None = None
-    created_by_name: str | None = None
     co_host_ids: list[str] = []
     co_host_names: list[str] = []
 
@@ -163,6 +166,7 @@ class EventOut(BaseModel):
     co_host_names: list[str] = []
     guests: list[RSVPGuestOut] = []
     my_rsvp: str | None = None
+    event_type: str = "community"
     survey_slugs: list[str] = []
 
 
@@ -206,6 +210,7 @@ class EventIn(BaseModel):
     partiful_link: str = ""
     other_link: str = ""
     rsvp_enabled: bool = False
+    event_type: str = "community"
     co_host_ids: list[str] = []
 
 
@@ -219,6 +224,7 @@ class EventPatchIn(BaseModel):
     partiful_link: str | None = None
     other_link: str | None = None
     rsvp_enabled: bool | None = None
+    event_type: str | None = None
     co_host_ids: list[str] | None = None
 
 
@@ -693,7 +699,7 @@ def _find_my_rsvp(rsvps, user) -> str | None:
     return None
 
 
-def _authenticated_user(requesting_user) -> object | None:
+def _authenticated_user(requesting_user) -> "UserModel | None":
     """Return the user if authenticated, None if anonymous."""
     if requesting_user is None or isinstance(requesting_user, AnonymousUser):
         return None
@@ -731,6 +737,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         co_host_names=[u.display_name or u.phone_number for u in co_hosts],
         guests=_members_only(_build_guest_list(rsvps, phones_visible), [], is_authed),
         my_rsvp=_find_my_rsvp(rsvps, auth_user),
+        event_type=event.event_type,
         survey_slugs=list(event.surveys.filter(is_active=True).values_list("slug", flat=True)),
     )
 
@@ -741,8 +748,8 @@ class CheckPhoneOut(BaseModel):
 
 @router.get("/events/", response={200: list[EventListOut]}, auth=_optional_jwt)
 def list_events(request):
-    is_authed = not isinstance(request.auth, AnonymousUser)
-    events = Event.objects.select_related("created_by").prefetch_related("co_hosts").all()
+    events = Event.objects.prefetch_related("co_hosts").all()
+    is_authed = _authenticated_user(request.auth) is not None
     return Status(
         200,
         [
@@ -753,12 +760,11 @@ def list_events(request):
                 start_datetime=e.start_datetime,
                 end_datetime=e.end_datetime,
                 location=e.location,
+                event_type=e.event_type,
                 whatsapp_link=_members_only(e.whatsapp_link, "", is_authed),
                 partiful_link=_members_only(e.partiful_link, "", is_authed),
+                other_link=_members_only(e.other_link, "", is_authed),
                 created_by_id=str(e.created_by_id) if e.created_by_id else None,
-                created_by_name=(
-                    e.created_by.display_name or e.created_by.phone_number if e.created_by else None
-                ),
                 co_host_ids=[str(c.id) for c in e.co_hosts.all()],
                 co_host_names=[c.display_name or c.phone_number for c in e.co_hosts.all()],
             )
@@ -796,8 +802,11 @@ def check_phone(request, payload: CheckPhoneIn):
 
 @router.post("/events/", response={201: EventOut, 400: ErrorOut, 403: ErrorOut}, auth=JWTAuth())
 def create_event(request, payload: EventIn):
-    # Any authenticated member can create events.
-    # manage_events is still required for editing/deleting others' events.
+    # Any authenticated member can create community events.
+    # Official events require manage_events permission.
+    if payload.event_type == EventType.OFFICIAL:
+        if not request.auth.has_permission(PermissionKey.MANAGE_EVENTS):
+            return Status(403, ErrorOut(detail="Permission denied."))
 
     if payload.end_datetime is not None and payload.end_datetime <= payload.start_datetime:
         return Status(400, ErrorOut(detail="end_datetime must be after start_datetime."))
@@ -812,6 +821,7 @@ def create_event(request, payload: EventIn):
         partiful_link=payload.partiful_link,
         other_link=payload.other_link,
         rsvp_enabled=payload.rsvp_enabled,
+        event_type=payload.event_type,
         created_by=request.auth,
     )
     if payload.co_host_ids:
@@ -837,6 +847,8 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         return Status(403, ErrorOut(detail="Permission denied."))
 
     updates = payload.model_dump(exclude_unset=True)
+    if updates.get("event_type") == EventType.OFFICIAL and not is_manager:
+        return Status(403, ErrorOut(detail="Permission denied."))
     effective_start = updates.get("start_datetime", event.start_datetime)
     effective_end = updates.get("end_datetime", event.end_datetime)
     if effective_end is not None and effective_end <= effective_start:
@@ -1270,7 +1282,7 @@ def _validate_rating_answer(answer: str, q: SurveyQuestion) -> str | None:
     return None
 
 
-_SURVEY_VALIDATORS: dict[str, object] = {
+_SURVEY_VALIDATORS: dict[str, Callable[[str, SurveyQuestion], str | None]] = {
     "select": _validate_choice_answer,
     "dropdown": _validate_choice_answer,
     "multiselect": _validate_multiselect_answer,
@@ -1388,6 +1400,19 @@ def get_survey_admin(request, survey_id: UUID):
     return Status(200, _survey_out(survey, include_questions=True))
 
 
+def _apply_linked_event_update(updates: dict) -> tuple[dict, str | None]:
+    """Resolve linked_event_id → linked_event object in update dict. Returns (updates, error_detail)."""
+    eid = updates.pop("linked_event_id")
+    if not eid:
+        updates["linked_event"] = None
+        return updates, None
+    try:
+        updates["linked_event"] = Event.objects.get(id=eid)
+    except Event.DoesNotExist:
+        return updates, "Event not found."
+    return updates, None
+
+
 @router.patch(
     "/surveys/{survey_id}/",
     response={200: SurveyOut, 403: ErrorOut, 404: ErrorOut, 400: ErrorOut},
@@ -1402,14 +1427,9 @@ def update_survey(request, survey_id: UUID, payload: SurveyPatchIn):
         return Status(404, ErrorOut(detail="Survey not found."))
     updates = payload.model_dump(exclude_unset=True)
     if "linked_event_id" in updates:
-        eid = updates.pop("linked_event_id")
-        if eid:
-            try:
-                updates["linked_event"] = Event.objects.get(id=eid)
-            except Event.DoesNotExist:
-                return Status(400, ErrorOut(detail="Event not found."))
-        else:
-            updates["linked_event"] = None
+        updates, err = _apply_linked_event_update(updates)
+        if err:
+            return Status(400, ErrorOut(detail=err))
     if "slug" in updates and updates["slug"] != survey.slug:
         if Survey.objects.filter(slug=updates["slug"]).exists():
             return Status(400, ErrorOut(detail="A survey with that slug already exists."))
@@ -1551,7 +1571,7 @@ def list_survey_responses(request, survey_id: UUID):
 
 
 @router.get(
-    "/surveys/{slug}/",
+    "/surveys/view/{slug}/",
     response={200: SurveyOut, 404: ErrorOut},
     auth=_optional_jwt,
 )
@@ -1567,7 +1587,7 @@ def get_survey_public(request, slug: str):
 
 
 @router.post(
-    "/surveys/{slug}/respond/",
+    "/surveys/view/{slug}/respond/",
     response={201: SurveyResponseOut, 400: ErrorOut, 404: ErrorOut},
     auth=_optional_jwt,
 )

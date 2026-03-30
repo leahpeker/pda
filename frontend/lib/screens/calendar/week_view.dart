@@ -433,6 +433,11 @@ class _WideWeekGrid extends StatelessWidget {
             child: Text.rich(
               TextSpan(
                 children: [
+                  if (p.event.eventType == 'official')
+                    TextSpan(
+                      text: '✦ ',
+                      style: TextStyle(fontSize: 10, color: colors.$2),
+                    ),
                   TextSpan(
                     text: p.event.title,
                     style: TextStyle(
@@ -715,12 +720,13 @@ class _NarrowEventChip extends StatelessWidget {
   const _NarrowEventChip({required this.event, required this.onTap});
 
   String _buildLabel() {
+    final prefix = event.eventType == 'official' ? '✦ ' : '';
     final dateFmt = DateFormat('MMM d');
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime?.toLocal();
 
     if (end == null) {
-      return '${event.title} \u00b7 ${formatTime(start)}';
+      return '$prefix${event.title} \u00b7 ${formatTime(start)}';
     }
 
     final sameDay =
@@ -729,10 +735,10 @@ class _NarrowEventChip extends StatelessWidget {
         start.day == end.day;
 
     if (sameDay) {
-      return '${event.title} \u00b7 ${formatTime(start)} \u2013 ${formatTime(end)}';
+      return '$prefix${event.title} \u00b7 ${formatTime(start)} \u2013 ${formatTime(end)}';
     }
 
-    return '${event.title} \u00b7 ${dateFmt.format(start).toLowerCase()} \u2013 ${dateFmt.format(end).toLowerCase()}';
+    return '$prefix${event.title} \u00b7 ${dateFmt.format(start).toLowerCase()} \u2013 ${dateFmt.format(end).toLowerCase()}';
   }
 
   @override

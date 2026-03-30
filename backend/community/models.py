@@ -7,6 +7,11 @@ if TYPE_CHECKING:
     from django.db.models import Manager
 
 
+class EventType(models.TextChoices):
+    OFFICIAL = "official", "Official"
+    COMMUNITY = "community", "Community"
+
+
 class JoinRequestStatus(models.TextChoices):
     PENDING = "pending", "Pending"
     APPROVED = "approved", "Approved"
@@ -67,10 +72,16 @@ class Event(models.Model):
     partiful_link = models.URLField(blank=True)
     other_link = models.URLField(blank=True)
     rsvp_enabled = models.BooleanField(default=False)
+    event_type = models.CharField(
+        max_length=20,
+        choices=EventType.choices,
+        default=EventType.COMMUNITY,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     if TYPE_CHECKING:
         created_by_id: uuid.UUID | None
         rsvps: "Manager[EventRSVP]"
+        surveys: "Manager[Survey]"
     created_by = models.ForeignKey(
         "users.User",
         null=True,
@@ -253,6 +264,8 @@ class Survey(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     if TYPE_CHECKING:
+        linked_event_id: uuid.UUID | None
+        created_by_id: uuid.UUID | None
         questions: "Manager[SurveyQuestion]"
         responses: "Manager[SurveyResponse]"
 
@@ -284,6 +297,8 @@ class SurveyQuestion(models.Model):
 
 
 class SurveyResponse(models.Model):
+    if TYPE_CHECKING:
+        user_id: uuid.UUID | None
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     survey = models.ForeignKey(Survey, on_delete=models.CASCADE, related_name="responses")
     user = models.ForeignKey(

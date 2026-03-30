@@ -29,6 +29,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late DateTime _start;
   late DateTime? _end;
   late bool _rsvpEnabled;
+  late String _eventType;
   late Set<String> _coHostIds;
   late Map<String, String> _coHostNames;
   // which field the inline calendar is editing: 'start', 'end', or null (hidden)
@@ -50,6 +51,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _start = e.startDatetime.toLocal();
       _end = e.endDatetime?.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
+      _eventType = e.eventType;
       _coHostIds = Set<String>.from(e.coHostIds);
       _coHostNames = {
         for (var i = 0; i < e.coHostIds.length; i++)
@@ -66,6 +68,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _start = DateTime(now.year, now.month, now.day, now.hour + 1);
       _end = null;
       _rsvpEnabled = false;
+      _eventType = 'community';
       _coHostIds = {};
       _coHostNames = {};
     }
@@ -171,6 +174,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       'start_datetime': _start.toUtc().toIso8601String(),
       'end_datetime': _end?.toUtc().toIso8601String(),
       'rsvp_enabled': _rsvpEnabled,
+      'event_type': _eventType,
       'co_host_ids': _coHostIds.toList(),
     });
   }
@@ -483,6 +487,25 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 const Divider(),
                 const SizedBox(height: 8),
                 _buildRsvpToggle(theme),
+                if (ref
+                        .watch(authProvider)
+                        .valueOrNull
+                        ?.hasPermission('manage_events') ??
+                    false) ...[
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    title: const Text('official PDA event'),
+                    subtitle: const Text(
+                      'mark as an official PDA-organized event',
+                    ),
+                    value: _eventType == 'official',
+                    contentPadding: EdgeInsets.zero,
+                    onChanged:
+                        (val) => setState(
+                          () => _eventType = val ? 'official' : 'community',
+                        ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 ..._buildCoHostPicker(theme),
                 const SizedBox(height: 8),
