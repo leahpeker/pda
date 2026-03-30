@@ -77,6 +77,15 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                     border: OutlineInputBorder(),
                   ),
                   validator: v.optionalEmail(),
+                  onFieldSubmitted: (_) {
+                    if (!_formKey.currentState!.validate()) return;
+                    Navigator.of(context).pop({
+                      'phone_number': _phoneNumber,
+                      'display_name': _displayNameCtrl.text.trim(),
+                      'email': _emailCtrl.text.trim(),
+                      if (_selectedRoleId != null) 'role_id': _selectedRoleId,
+                    });
+                  },
                 ),
                 if (widget.allRoles.isNotEmpty) ...[
                   const SizedBox(height: 12),

@@ -362,10 +362,12 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
                 controller: _labelCtrl,
                 decoration: const InputDecoration(labelText: 'Question label'),
                 autofocus: true,
+                textInputAction: TextInputAction.done,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Required';
                   return null;
                 },
+                onFieldSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
