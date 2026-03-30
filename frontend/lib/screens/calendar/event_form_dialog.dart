@@ -452,7 +452,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
 
     return AlertDialog(
       title: Text(_isEdit ? 'edit event' : 'new event \u{1F331}'),
-      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
       clipBehavior: Clip.none,
       content: ConstrainedBox(
         constraints: BoxConstraints(
@@ -467,6 +467,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 4),
                 _buildTitleField(),
                 const SizedBox(height: 12),
                 _buildNoFeesNote(theme),
@@ -484,6 +485,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 _buildRsvpToggle(theme),
                 const SizedBox(height: 16),
                 ..._buildCoHostPicker(theme),
+                const SizedBox(height: 8),
               ],
             ),
           ),
