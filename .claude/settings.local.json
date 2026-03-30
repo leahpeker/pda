@@ -7,7 +7,9 @@
       "WebFetch(domain:www.walturn.com)",
       "WebFetch(domain:fluttergems.dev)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:flutter-quill.gitbook.io)"
+      "WebFetch(domain:flutter-quill.gitbook.io)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:tally.so)"
     ]
   },
   "enabledMcpjsonServers": [

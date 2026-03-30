@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/utils/time_format.dart';
 import 'package:pda/utils/file_download.dart';
 import 'package:pda/utils/ics_generator.dart';
+import 'package:pda/utils/launcher.dart';
+import 'package:pda/utils/app_icons.dart';
 import 'package:pda/utils/share.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/providers/event_provider.dart';
@@ -67,16 +70,15 @@ void _showSidePanel(BuildContext context, Event event) {
 }
 
 List<Widget> _buildDateTimeRows(
-  DateFormat dateFmt,
-  DateFormat timeFmt,
+  String Function(DateTime) dateFmt,
   DateTime start,
   DateTime? end,
 ) {
   if (end == null) {
     return [
-      _DetailRow(icon: Icons.today_outlined, text: dateFmt.format(start)),
+      _DetailRow(icon: Icons.today_outlined, text: dateFmt(start)),
       const SizedBox(height: 8),
-      _DetailRow(icon: Icons.schedule_outlined, text: timeFmt.format(start)),
+      _DetailRow(icon: Icons.schedule_outlined, text: formatTime(start)),
     ];
   }
   final sameDay =
@@ -85,11 +87,11 @@ List<Widget> _buildDateTimeRows(
       start.day == end.day;
   if (sameDay) {
     return [
-      _DetailRow(icon: Icons.today_outlined, text: dateFmt.format(start)),
+      _DetailRow(icon: Icons.today_outlined, text: dateFmt(start)),
       const SizedBox(height: 8),
       _DetailRow(
         icon: Icons.schedule_outlined,
-        text: '${timeFmt.format(start)} \u2013 ${timeFmt.format(end)}',
+        text: '${formatTime(start)} \u2013 ${formatTime(end)}',
       ),
     ];
   }
@@ -97,8 +99,8 @@ List<Widget> _buildDateTimeRows(
     _DetailRow(
       icon: Icons.calendar_today,
       text:
-          '${dateFmt.format(start)}, ${timeFmt.format(start)} \u2013 '
-          '${dateFmt.format(end)}, ${timeFmt.format(end)}',
+          '${dateFmt(start)}, ${formatTime(start)} \u2013 '
+          '${dateFmt(end)}, ${formatTime(end)}',
     ),
   ];
 }
@@ -122,10 +124,10 @@ class EventDetailContent extends ConsumerWidget {
     final detailAsync = ref.watch(eventDetailProvider(event.id));
     final liveEvent = detailAsync.valueOrNull ?? event;
 
-    final dateFmt = DateFormat('EEEE, MMMM d, y');
-    final timeFmt = DateFormat('h:mm a');
     final start = liveEvent.startDatetime.toLocal();
     final end = liveEvent.endDatetime?.toLocal();
+    String formatDate(DateTime d) =>
+        DateFormat('EEEE, MMMM d, y').format(d).toLowerCase();
 
     final hostNames = <String>[];
     if (liveEvent.createdByName != null) {
@@ -150,18 +152,11 @@ class EventDetailContent extends ConsumerWidget {
                   ),
                 ),
               ),
-              _ActionChip(
-                tooltip: 'add to calendar',
-                icon: Icons.event_outlined,
-                onPressed: () {
-                  final ics = generateEventIcs(liveEvent);
-                  downloadFile(ics, '${liveEvent.title}.ics', 'text/calendar');
-                },
-              ),
+              _CalendarMenuChip(event: liveEvent),
               const SizedBox(width: 4),
               _ActionChip(
                 tooltip: 'share event',
-                icon: Icons.ios_share_outlined,
+                icon: AppIcons.share,
                 onPressed: () {
                   final link =
                       Uri.base
@@ -174,7 +169,7 @@ class EventDetailContent extends ConsumerWidget {
                 const SizedBox(width: 4),
                 _ActionChip(
                   tooltip: 'open full page',
-                  icon: Icons.open_in_new_outlined,
+                  icon: AppIcons.openExternal,
                   onPressed: () {
                     Navigator.of(context).pop();
                     context.push('/events/${liveEvent.id}');
@@ -184,7 +179,7 @@ class EventDetailContent extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ..._buildDateTimeRows(dateFmt, timeFmt, start, end),
+          ..._buildDateTimeRows(formatDate, start, end),
           if (hostNames.isNotEmpty) ...[
             const SizedBox(height: 8),
             _DetailRow(
@@ -257,14 +252,72 @@ class _ActionChip extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Icon(icon, size: 18, color: cs.onSurfaceVariant),
+            padding: const EdgeInsets.all(9),
+            child: Icon(icon, size: 17, color: cs.onSurfaceVariant),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _CalendarOption { google, apple, download }
+
+class _CalendarMenuChip extends StatelessWidget {
+  final Event event;
+
+  const _CalendarMenuChip({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: 'add to calendar',
+      child: Material(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
+        child: PopupMenuButton<_CalendarOption>(
+          onSelected: (option) {
+            switch (option) {
+              case _CalendarOption.google:
+                openUrl(googleCalendarUrl(event));
+              case _CalendarOption.apple:
+                final ics = generateEventIcs(event);
+                downloadFile(ics, '${event.title}.ics', 'text/calendar');
+              case _CalendarOption.download:
+                final ics = generateEventIcs(event);
+                downloadFile(ics, '${event.title}.ics', 'text/calendar');
+            }
+          },
+          itemBuilder:
+              (_) => const [
+                PopupMenuItem(
+                  value: _CalendarOption.google,
+                  child: Text('google calendar'),
+                ),
+                PopupMenuItem(
+                  value: _CalendarOption.apple,
+                  child: Text('apple calendar'),
+                ),
+                PopupMenuItem(
+                  value: _CalendarOption.download,
+                  child: Text('download .ics'),
+                ),
+              ],
+          padding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(9),
+            child: Icon(
+              AppIcons.calendar,
+              size: 17,
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ),
       ),
@@ -468,6 +521,38 @@ class _MemberSection extends ConsumerWidget {
               url: event.otherLink,
             ),
             const SizedBox(height: 8),
+          ],
+          if (event.surveySlugs.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...event.surveySlugs.map(
+              (slug) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: InkWell(
+                  onTap: () => context.go('/surveys/$slug'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.rate_review_rounded,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'give feedback',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
           if (event.rsvpEnabled) ...[
             const SizedBox(height: 8),

@@ -13,6 +13,7 @@ const kPermissionLabels = {
   'edit_faq': 'Edit FAQ',
   'edit_homepage': 'Edit homepage',
   'edit_join_questions': 'Edit join form questions',
+  'manage_surveys': 'Manage surveys',
 };
 
 // Dialog to create or edit a role (name + permission checkboxes)
@@ -61,11 +62,19 @@ class _RoleFormDialogState extends State<RoleFormDialog> {
                 if (!_isEdit)
                   TextFormField(
                     controller: _name,
+                    textInputAction: TextInputAction.done,
                     decoration: const InputDecoration(
                       labelText: 'Role name *',
                       border: OutlineInputBorder(),
                     ),
                     validator: v.roleName(),
+                    onFieldSubmitted: (_) {
+                      if (!_formKey.currentState!.validate()) return;
+                      Navigator.of(context).pop({
+                        'name': _name.text.trim(),
+                        'permissions': _selectedPermissions.toList(),
+                      });
+                    },
                   ),
                 if (!_isEdit) const SizedBox(height: 16),
                 Text(

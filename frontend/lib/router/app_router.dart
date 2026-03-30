@@ -20,6 +20,10 @@ import 'package:pda/screens/settings_screen.dart';
 import 'package:pda/screens/volunteer_screen.dart';
 import 'package:pda/screens/admin_screen.dart';
 import 'package:pda/screens/join_form_config_screen.dart';
+import 'package:pda/screens/survey_admin_screen.dart';
+import 'package:pda/screens/survey_builder_screen.dart';
+import 'package:pda/screens/survey_responses_screen.dart';
+import 'package:pda/screens/survey_screen.dart';
 import 'package:pda/screens/whatsapp_config_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -67,7 +71,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/volunteer' ||
           loc == '/admin' ||
           loc == '/admin/join-form' ||
-          loc == '/admin/whatsapp';
+          loc == '/admin/whatsapp' ||
+          loc.startsWith('/admin/surveys');
 
       if (isProtected && !isAuthenticated) {
         return '/login?redirect=${state.matchedLocation}';
@@ -97,6 +102,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
         if (loc == '/admin/join-form' &&
             !user.hasPermission('edit_join_questions')) {
+          return '/calendar';
+        }
+        if (loc.startsWith('/admin/surveys') &&
+            !user.hasPermission('manage_surveys')) {
           return '/calendar';
         }
       }
@@ -187,9 +196,34 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const JoinFormConfigScreen(),
       ),
       GoRoute(
+        path: '/admin/surveys',
+        name: 'survey-admin',
+        builder: (_, __) => const SurveyAdminScreen(),
+      ),
+      GoRoute(
+        path: '/admin/surveys/:id',
+        name: 'survey-builder',
+        builder:
+            (_, state) =>
+                SurveyBuilderScreen(surveyId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/admin/surveys/:id/responses',
+        name: 'survey-responses',
+        builder:
+            (_, state) =>
+                SurveyResponsesScreen(surveyId: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/admin/whatsapp',
         name: 'whatsapp-config',
         builder: (_, __) => const WhatsAppConfigScreen(),
+      ),
+      GoRoute(
+        path: '/surveys/:slug',
+        name: 'survey',
+        builder:
+            (_, state) => SurveyScreen(slug: state.pathParameters['slug']!),
       ),
       GoRoute(
         path: '/events/:id',

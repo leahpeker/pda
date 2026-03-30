@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:pda/models/event.dart';
+import 'package:pda/utils/time_format.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/utils/snackbar.dart';
 
 class EventManagementScreen extends ConsumerWidget {
@@ -136,8 +138,9 @@ class _EventManagementBody extends ConsumerWidget {
 
 class _HostsLine extends StatelessWidget {
   final Event event;
+  final Color? color;
 
-  const _HostsLine({required this.event});
+  const _HostsLine({required this.event, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -147,14 +150,16 @@ class _HostsLine extends StatelessWidget {
 
     if (names.isEmpty) return const SizedBox.shrink();
 
+    final c = color ?? Colors.grey;
+
     return Row(
       children: [
-        const Icon(Icons.person_pin_outlined, size: 14, color: Colors.grey),
+        Icon(Icons.person_pin_outlined, size: 14, color: c),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
             names.join(', '),
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
+            style: TextStyle(fontSize: 13, color: c),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -223,11 +228,15 @@ class _EventManagementRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFmt = DateFormat('EEE, MMM d · h:mm a');
+    final dateFmt = DateFormat('EEE, MMM d');
+
+    final (bg, fg) = eventColors(event.id);
 
     return Card(
-      elevation: 2,
+      elevation: 0,
       clipBehavior: Clip.antiAlias,
+      color: bg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => context.push('/events/${event.id}'),
         child: Padding(
@@ -239,28 +248,59 @@ class _EventManagementRow extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      event.title,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            event.title,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(color: fg),
+                          ),
+                        ),
+                        if (event.eventType == 'official') ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'official',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.schedule_outlined,
                           size: 14,
-                          color: Colors.grey,
+                          color: fg.withAlpha(153),
                         ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             event.endDatetime == null
-                                ? dateFmt.format(event.startDatetime.toLocal())
-                                : '${dateFmt.format(event.startDatetime.toLocal())} — '
-                                    '${DateFormat('h:mm a').format(event.endDatetime!.toLocal())}',
-                            style: const TextStyle(
+                                ? '${dateFmt.format(event.startDatetime.toLocal()).toLowerCase()} · ${formatTime(event.startDatetime.toLocal())}'
+                                : '${dateFmt.format(event.startDatetime.toLocal()).toLowerCase()} · ${formatTime(event.startDatetime.toLocal())} — '
+                                    '${formatTime(event.endDatetime!.toLocal())}',
+                            style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey,
+                              color: fg.withAlpha(153),
                             ),
                           ),
                         ),
@@ -270,18 +310,18 @@ class _EventManagementRow extends ConsumerWidget {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.location_on_outlined,
                             size: 14,
-                            color: Colors.grey,
+                            color: fg.withAlpha(153),
                           ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               event.location,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.grey,
+                                color: fg.withAlpha(153),
                               ),
                             ),
                           ),
@@ -289,14 +329,14 @@ class _EventManagementRow extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: 4),
-                    _HostsLine(event: event),
+                    _HostsLine(event: event, color: fg.withAlpha(153)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               IconButton(
                 tooltip: 'Edit',
-                icon: const Icon(Icons.edit_outlined),
+                icon: Icon(Icons.edit_outlined, color: fg.withAlpha(178)),
                 onPressed: () => _showEditDialog(context, ref),
               ),
               IconButton(

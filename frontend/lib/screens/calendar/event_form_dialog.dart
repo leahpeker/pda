@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/utils/time_format.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/utils/validators.dart' as v;
 
@@ -28,6 +29,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late DateTime _start;
   late DateTime? _end;
   late bool _rsvpEnabled;
+  late String _eventType;
   late Set<String> _coHostIds;
   late Map<String, String> _coHostNames;
   // which field the inline calendar is editing: 'start', 'end', or null (hidden)
@@ -49,6 +51,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _start = e.startDatetime.toLocal();
       _end = e.endDatetime?.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
+      _eventType = e.eventType;
       _coHostIds = Set<String>.from(e.coHostIds);
       _coHostNames = {
         for (var i = 0; i < e.coHostIds.length; i++)
@@ -65,6 +68,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _start = DateTime(now.year, now.month, now.day, now.hour + 1);
       _end = null;
       _rsvpEnabled = false;
+      _eventType = 'community';
       _coHostIds = {};
       _coHostNames = {};
     }
@@ -170,6 +174,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       'start_datetime': _start.toUtc().toIso8601String(),
       'end_datetime': _end?.toUtc().toIso8601String(),
       'rsvp_enabled': _rsvpEnabled,
+      'event_type': _eventType,
       'co_host_ids': _coHostIds.toList(),
     });
   }
@@ -230,7 +235,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     });
   }
 
-  List<Widget> _buildEndTimeSection(DateFormat dateFmt, DateFormat timeFmt) {
+  List<Widget> _buildEndTimeSection(String Function(DateTime) dateFmt) {
     if (_end == null) {
       return [
         Semantics(
@@ -269,8 +274,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           Expanded(
             child: _DateTimeRow(
               label: 'end',
-              date: dateFmt.format(_end!),
-              time: timeFmt.format(_end!),
+              date: dateFmt(_end!),
+              time: formatTime(_end!),
               isActive: _calendarTarget == 'end',
               onDateTap: () => _toggleCalendar('end'),
               onTimeTap: _pickEndTime,
@@ -286,18 +291,18 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     ];
   }
 
-  List<Widget> _buildDateTimeSection(DateFormat dateFmt, DateFormat timeFmt) {
+  List<Widget> _buildDateTimeSection(String Function(DateTime) dateFmt) {
     return [
       _DateTimeRow(
         label: 'start',
-        date: dateFmt.format(_start),
-        time: timeFmt.format(_start),
+        date: dateFmt(_start),
+        time: formatTime(_start),
         isActive: _calendarTarget == 'start',
         onDateTap: () => _toggleCalendar('start'),
         onTimeTap: _pickStartTime,
       ),
       const SizedBox(height: 8),
-      ..._buildEndTimeSection(dateFmt, timeFmt),
+      ..._buildEndTimeSection(dateFmt),
       if (_calendarTarget != null) ...[
         const SizedBox(height: 8),
         CalendarDatePicker(
@@ -442,8 +447,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFmt = DateFormat('EEE, MMM d, y');
-    final timeFmt = DateFormat('h:mm a');
+    String dateFmt(DateTime d) =>
+        DateFormat('EEE, MMM d, y').format(d).toLowerCase();
     final theme = Theme.of(context);
 
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -451,8 +456,13 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
 
     return AlertDialog(
       title: Text(_isEdit ? 'edit event' : 'new event \u{1F331}'),
-      content: SizedBox(
-        width: dialogWidth,
+      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+      clipBehavior: Clip.none,
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+        ),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -461,11 +471,12 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 4),
                 _buildTitleField(),
                 const SizedBox(height: 12),
                 _buildNoFeesNote(theme),
                 const SizedBox(height: 16),
-                ..._buildDateTimeSection(dateFmt, timeFmt),
+                ..._buildDateTimeSection(dateFmt),
                 const SizedBox(height: 16),
                 _buildLocationField(),
                 const SizedBox(height: 12),
@@ -476,8 +487,28 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 const Divider(),
                 const SizedBox(height: 8),
                 _buildRsvpToggle(theme),
+                if (ref
+                        .watch(authProvider)
+                        .valueOrNull
+                        ?.hasPermission('manage_events') ??
+                    false) ...[
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    title: const Text('official PDA event'),
+                    subtitle: const Text(
+                      'mark as an official PDA-organized event',
+                    ),
+                    value: _eventType == 'official',
+                    contentPadding: EdgeInsets.zero,
+                    onChanged:
+                        (val) => setState(
+                          () => _eventType = val ? 'official' : 'community',
+                        ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 ..._buildCoHostPicker(theme),
+                const SizedBox(height: 8),
               ],
             ),
           ),
@@ -595,7 +626,12 @@ class _DateTimeRow extends StatelessWidget {
 class _CoHostResult {
   final String id;
   final String displayName;
-  const _CoHostResult({required this.id, required this.displayName});
+  final String phone;
+  const _CoHostResult({
+    required this.id,
+    required this.displayName,
+    required this.phone,
+  });
 }
 
 class _CoHostPicker extends ConsumerStatefulWidget {
@@ -653,6 +689,7 @@ class _CoHostPickerState extends ConsumerState<_CoHostPicker> {
                   (item) => _CoHostResult(
                     id: item['id'] as String,
                     displayName: item['display_name'] as String,
+                    phone: item['phone_number'] as String,
                   ),
                 )
                 .toList();
@@ -714,7 +751,7 @@ class _CoHostPickerState extends ConsumerState<_CoHostPicker> {
         TextField(
           controller: _controller,
           decoration: InputDecoration(
-            hintText: 'Search by name…',
+            hintText: 'search by name or phone…',
             border: const OutlineInputBorder(),
             isDense: true,
             suffixIcon:
@@ -748,6 +785,13 @@ class _CoHostPickerState extends ConsumerState<_CoHostPicker> {
                       title: Text(
                         r.displayName,
                         style: const TextStyle(fontSize: 13),
+                      ),
+                      subtitle: Text(
+                        r.phone,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       trailing:
                           isSelected

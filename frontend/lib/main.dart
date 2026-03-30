@@ -33,10 +33,19 @@ class PdaApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Protein Deficients Anonymous',
+      title: 'protein deficients anonymous',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(scrolledUnderElevation: 0),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: const Color(0xFF2E7D32),
+          contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+        ),
       ),
       routerConfig: router,
       localizationsDelegates: const [

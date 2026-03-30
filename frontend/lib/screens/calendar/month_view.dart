@@ -27,13 +27,13 @@ class _MonthViewState extends State<MonthView> {
   late DateTime _focusedMonth;
 
   static const List<String> _dayHeaders = [
-    'Sun',
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
+    'sun',
+    'mon',
+    'tue',
+    'wed',
+    'thu',
+    'fri',
+    'sat',
   ];
 
   static const int _maxEventRows = 3;
@@ -106,7 +106,8 @@ class _MonthViewState extends State<MonthView> {
   @override
   Widget build(BuildContext context) {
     final gridDays = _buildGridDays();
-    final headerLabel = DateFormat('MMMM yyyy').format(_focusedMonth);
+    final headerLabel =
+        DateFormat('MMMM yyyy').format(_focusedMonth).toLowerCase();
 
     return Column(
       children: [
@@ -185,24 +186,34 @@ class _MonthViewState extends State<MonthView> {
 
   Widget _buildGrid(BuildContext context, List<DateTime> days) {
     final rowCount = (days.length / 7).ceil();
-    return Column(
-      children: List.generate(rowCount, (rowIndex) {
-        final rowDays = days.sublist(rowIndex * 7, (rowIndex + 1) * 7);
-        return Expanded(
-          child: _MonthRow(
-            days: rowDays,
-            allEvents: widget.events,
-            isToday: _isToday,
-            isCurrentMonth: _isCurrentMonth,
-            onDayTapped: widget.onDayTapped,
-            onEventTapped: (e) => showEventDetail(context, e),
-            dayLabelHeight: _dayLabelHeight,
-            chipHeight: _chipHeight,
-            chipSpacing: _chipSpacing,
-            maxEventRows: _maxEventRows,
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final rowHeight = constraints.maxHeight / rowCount;
+        // Available space for chips = row height - day label - padding - "+N more" text
+        final availableForChips = rowHeight - _dayLabelHeight - 4 - 16;
+        final fittableRows = (availableForChips / (_chipHeight + _chipSpacing))
+            .floor()
+            .clamp(1, _maxEventRows);
+        return Column(
+          children: List.generate(rowCount, (rowIndex) {
+            final rowDays = days.sublist(rowIndex * 7, (rowIndex + 1) * 7);
+            return Expanded(
+              child: _MonthRow(
+                days: rowDays,
+                allEvents: widget.events,
+                isToday: _isToday,
+                isCurrentMonth: _isCurrentMonth,
+                onDayTapped: widget.onDayTapped,
+                onEventTapped: (e) => showEventDetail(context, e),
+                dayLabelHeight: _dayLabelHeight,
+                chipHeight: _chipHeight,
+                chipSpacing: _chipSpacing,
+                maxEventRows: fittableRows,
+              ),
+            );
+          }),
         );
-      }),
+      },
     );
   }
 }
@@ -470,7 +481,7 @@ class _MonthRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6),
             alignment: Alignment.centerLeft,
             child: Text(
-              p.event.title,
+              '${p.event.eventType == 'official' ? '✦ ' : ''}${p.event.title}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

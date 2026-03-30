@@ -317,8 +317,14 @@ class _EditFieldDialogState extends State<_EditFieldDialog> {
           controller: _controller,
           keyboardType: widget.keyboardType,
           autofocus: true,
+          textInputAction: TextInputAction.done,
           decoration: InputDecoration(labelText: widget.label),
           validator: widget.validator,
+          onFieldSubmitted: (_) {
+            if (_formKey.currentState!.validate()) {
+              Navigator.of(context).pop(_controller.text.trim());
+            }
+          },
         ),
       ),
       actions: [
@@ -353,6 +359,8 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   final _currentCtrl = TextEditingController();
   final _newCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _newFocus = FocusNode();
+  final _confirmFocus = FocusNode();
   bool _loading = false;
   String? _error;
 
@@ -361,6 +369,8 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
     _currentCtrl.dispose();
     _newCtrl.dispose();
     _confirmCtrl.dispose();
+    _newFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
   }
 
@@ -409,16 +419,20 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
               controller: _currentCtrl,
               obscureText: true,
               autofocus: true,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(labelText: 'Current password'),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Required';
                 return null;
               },
+              onFieldSubmitted: (_) => _newFocus.requestFocus(),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _newCtrl,
+              focusNode: _newFocus,
               obscureText: true,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(labelText: 'New password'),
               validator: v.all([
                 v.required(),
@@ -435,11 +449,14 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                         ? 'New password must differ from current'
                         : null,
               ]),
+              onFieldSubmitted: (_) => _confirmFocus.requestFocus(),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _confirmCtrl,
+              focusNode: _confirmFocus,
               obscureText: true,
+              textInputAction: TextInputAction.done,
               decoration: const InputDecoration(
                 labelText: 'Confirm new password',
               ),
@@ -447,6 +464,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                 if (v != _newCtrl.text) return 'Passwords do not match';
                 return null;
               },
+              onFieldSubmitted: (_) => _loading ? null : _submit(),
             ),
           ],
         ),
