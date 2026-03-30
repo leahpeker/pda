@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/providers/user_management_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
+import 'package:pda/widgets/temp_password_field.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/loading_button.dart';
 import 'package:pda/widgets/phone_form_field.dart';
@@ -263,28 +263,7 @@ class _BulkAddDialogState extends State<BulkAddDialog> {
             const SizedBox(height: 12),
             const Text('Temporary password (share with new members):'),
             const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: SelectableText(
-                    tempPassword,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 18),
-                  tooltip: 'Copy',
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: tempPassword));
-                    showSnackBar(context, 'Copied to clipboard');
-                  },
-                ),
-              ],
-            ),
+            TempPasswordField(password: tempPassword),
           ],
           if (failed > 0) ...[
             const SizedBox(height: 12),
