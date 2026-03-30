@@ -91,9 +91,34 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 if IS_PRODUCTION:
     WHITENOISE_ROOT = STATIC_ROOT / "flutter"
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# Backblaze B2 object storage (S3-compatible) for user-uploaded media.
+# When B2_KEY_ID is set, media files go to B2 instead of local disk.
+if os.environ.get("B2_KEY_ID"):
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": os.environ["B2_KEY_ID"],
+                "secret_key": os.environ["B2_APPLICATION_KEY"],
+                "bucket_name": os.environ["B2_BUCKET_NAME"],
+                "endpoint_url": os.environ["B2_ENDPOINT_URL"],
+                "region_name": os.environ.get("B2_REGION", "us-west-004"),
+                "default_acl": "public-read",
+                "querystring_auth": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    MEDIA_URL = f"{os.environ['B2_ENDPOINT_URL']}/{os.environ['B2_BUCKET_NAME']}/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
