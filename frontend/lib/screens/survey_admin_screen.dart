@@ -17,8 +17,9 @@ class SurveyAdminScreen extends ConsumerWidget {
       child: surveysAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error:
-            (e, _) =>
-                Center(child: Text('couldn\'t load surveys — try refreshing')),
+            (e, _) => const Center(
+              child: Text('couldn\'t load surveys — try refreshing'),
+            ),
         data: (surveys) => _SurveyAdminBody(surveys: surveys),
       ),
     );
@@ -204,7 +205,7 @@ class _SurveyCard extends StatelessWidget {
         title: Text(survey.title),
         subtitle: Text(
           '/${survey.slug} · ${survey.responseCount} responses · ${survey.visibility}',
-          style: TextStyle(fontSize: 12),
+          style: const TextStyle(fontSize: 12),
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
@@ -304,7 +305,7 @@ class _CreateSurveyDialogState extends State<_CreateSurveyDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _visibility,
+                initialValue: _visibility,
                 decoration: const InputDecoration(
                   labelText: 'visibility',
                   border: OutlineInputBorder(),

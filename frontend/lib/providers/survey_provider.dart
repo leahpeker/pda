@@ -8,6 +8,6 @@ final surveyBySlugProvider = FutureProvider.family<Survey, String>((
   slug,
 ) async {
   final api = ref.watch(apiClientProvider);
-  final response = await api.get('/api/community/surveys/$slug/');
+  final response = await api.get('/api/community/surveys/view/$slug/');
   return Survey.fromJson(response.data as Map<String, dynamic>);
 });

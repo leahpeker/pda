@@ -51,7 +51,7 @@ class _SurveyFormState extends ConsumerState<_SurveyForm> {
     try {
       final api = ref.read(apiClientProvider);
       await api.post(
-        '/api/community/surveys/${widget.survey.slug}/respond/',
+        '/api/community/surveys/view/${widget.survey.slug}/respond/',
         data: {'answers': _answers},
       );
       setState(() => _submitted = true);
@@ -250,14 +250,21 @@ class _RadioField extends FormField<String> {
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
                Text(label),
-               ...options.map(
-                 (option) => RadioListTile<String>(
-                   title: Text(option),
-                   value: option,
-                   groupValue: state.value,
-                   onChanged: (v) => state.didChange(v),
-                   dense: true,
-                   contentPadding: EdgeInsets.zero,
+               RadioGroup<String>(
+                 groupValue: state.value,
+                 onChanged: (v) => state.didChange(v),
+                 child: Column(
+                   children:
+                       options
+                           .map(
+                             (option) => RadioListTile<String>(
+                               title: Text(option),
+                               value: option,
+                               dense: true,
+                               contentPadding: EdgeInsets.zero,
+                             ),
+                           )
+                           .toList(),
                  ),
                ),
                if (state.hasError)

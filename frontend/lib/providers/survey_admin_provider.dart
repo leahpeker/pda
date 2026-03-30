@@ -79,7 +79,7 @@ class SurveyQuestionsNotifier extends FamilyAsyncNotifier<Survey, String> {
   }) async {
     final api = ref.read(apiClientProvider);
     await api.post(
-      '/api/community/surveys/${arg}/questions/',
+      '/api/community/surveys/$arg/questions/',
       data: {
         'label': label,
         'field_type': fieldType,
@@ -99,7 +99,7 @@ class SurveyQuestionsNotifier extends FamilyAsyncNotifier<Survey, String> {
   }) async {
     final api = ref.read(apiClientProvider);
     await api.patch(
-      '/api/community/surveys/${arg}/questions/$questionId/',
+      '/api/community/surveys/$arg/questions/$questionId/',
       data: {
         'label': label,
         'field_type': fieldType,
@@ -112,14 +112,14 @@ class SurveyQuestionsNotifier extends FamilyAsyncNotifier<Survey, String> {
 
   Future<void> deleteQuestion(String questionId) async {
     final api = ref.read(apiClientProvider);
-    await api.delete('/api/community/surveys/${arg}/questions/$questionId/');
+    await api.delete('/api/community/surveys/$arg/questions/$questionId/');
     ref.invalidateSelf();
   }
 
   Future<void> reorder(List<String> questionIds) async {
     final api = ref.read(apiClientProvider);
     await api.put(
-      '/api/community/surveys/${arg}/questions/order/',
+      '/api/community/surveys/$arg/questions/order/',
       data: {'question_ids': questionIds},
     );
     ref.invalidateSelf();

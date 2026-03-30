@@ -103,10 +103,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 16, top: 8),
-            child: FloatingActionButton.extended(
+            padding: const EdgeInsets.only(bottom: 8, top: 4),
+            child: FilledButton.icon(
               onPressed: _openCreateEvent,
-              icon: const Icon(Icons.add_circle_outline),
+              icon: const Icon(Icons.add, size: 18),
               label: const Text('add event'),
             ),
           ),

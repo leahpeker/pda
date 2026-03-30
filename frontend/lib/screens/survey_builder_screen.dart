@@ -47,8 +47,9 @@ class SurveyBuilderScreen extends ConsumerWidget {
       child: surveyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error:
-            (e, _) =>
-                Center(child: Text('couldn\'t load survey — try refreshing')),
+            (e, _) => const Center(
+              child: Text('couldn\'t load survey — try refreshing'),
+            ),
         data: (survey) => _BuilderBody(survey: survey),
       ),
     );
