@@ -404,21 +404,20 @@ class _MonthRow extends StatelessWidget {
                   isCurrentMonth: isCurrentMonth(day),
                   height: dayLabelHeight,
                 ),
-                if (overflow > 0) ...[
-                  SizedBox(
-                    height:
-                        ((visibleRowsByCol[col] ?? -1) + 1) *
-                        (chipHeight + chipSpacing),
-                  ),
-                  Text(
-                    '+$overflow more',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
+                if (overflow > 0)
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Text(
+                        '+$overflow more',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
-                ],
               ],
             ),
           ),
