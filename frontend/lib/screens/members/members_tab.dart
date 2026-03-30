@@ -8,6 +8,7 @@ import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/approval_credentials_dialog.dart';
 import 'add_member_dialog.dart';
 import 'role_form_dialog.dart';
+import 'package:pda/config/constants.dart';
 
 class MembersTab extends ConsumerWidget {
   final bool canManageRoles;
@@ -303,7 +304,7 @@ class MemberCard extends ConsumerWidget {
 
     final currentUser = ref.read(authProvider).valueOrNull;
     final adminRole = allRoles.firstWhere(
-      (r) => r.name == 'admin' && r.isDefault,
+      (r) => r.name == RoleName.admin && r.isDefault,
       orElse: () => allRoles.first,
     );
     final isLastAdmin =

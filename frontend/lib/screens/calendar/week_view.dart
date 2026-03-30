@@ -6,6 +6,7 @@ import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 import 'package:pda/screens/calendar/placement_types.dart';
 import 'package:pda/screens/calendar/week_placement_calculator.dart';
+import 'package:pda/config/constants.dart';
 
 class WeekView extends StatefulWidget {
   final List<Event> events;
@@ -433,7 +434,7 @@ class _WideWeekGrid extends StatelessWidget {
             child: Text.rich(
               TextSpan(
                 children: [
-                  if (p.event.eventType == 'official')
+                  if (p.event.eventType == EventType.official)
                     TextSpan(
                       text: '✦ ',
                       style: TextStyle(fontSize: 10, color: colors.$2),
@@ -720,7 +721,7 @@ class _NarrowEventChip extends StatelessWidget {
   const _NarrowEventChip({required this.event, required this.onTap});
 
   String _buildLabel() {
-    final prefix = event.eventType == 'official' ? '✦ ' : '';
+    final prefix = event.eventType == EventType.official ? '✦ ' : '';
     final dateFmt = DateFormat('MMM d');
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime?.toLocal();

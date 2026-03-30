@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:pda/config/constants.dart';
 
 part 'user.freezed.dart';
 part 'user.g.dart';
@@ -35,15 +36,15 @@ abstract class User with _$User {
     if (isSuperuser) return true;
     return roles.any(
       (r) =>
-          (r.name == 'admin' && r.isDefault) ||
+          (r.name == RoleName.admin && r.isDefault) ||
           r.permissions.contains(permission),
     );
   }
 
   bool get hasAnyAdminPermission =>
-      hasPermission('manage_events') ||
-      hasPermission('manage_users') ||
-      hasPermission('approve_join_requests') ||
-      hasPermission('manage_whatsapp') ||
-      hasPermission('edit_join_questions');
+      hasPermission(Permission.manageEvents) ||
+      hasPermission(Permission.manageUsers) ||
+      hasPermission(Permission.approveJoinRequests) ||
+      hasPermission(Permission.manageWhatsapp) ||
+      hasPermission(Permission.editJoinQuestions);
 }

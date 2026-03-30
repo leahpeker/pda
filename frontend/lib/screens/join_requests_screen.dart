@@ -7,6 +7,7 @@ import 'package:pda/providers/join_request_management_provider.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/approval_credentials_dialog.dart';
+import 'package:pda/config/constants.dart';
 
 const _filters = ['All', 'Pending', 'Approved', 'Rejected'];
 
@@ -40,7 +41,7 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
         data: {'status': status},
       );
       ref.invalidate(joinRequestsProvider);
-      if (status == 'approved' && mounted) {
+      if (status == JoinRequestStatus.approved && mounted) {
         final tempPassword = response.data['temporary_password'] as String?;
         if (tempPassword != null) {
           await _showApprovalModal(displayName, phoneNumber, tempPassword);
@@ -114,14 +115,14 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
                         onApprove:
                             () => _updateStatus(
                               filtered[index].id,
-                              'approved',
+                              JoinRequestStatus.approved,
                               filtered[index].displayName,
                               filtered[index].phoneNumber,
                             ),
                         onReject:
                             () => _updateStatus(
                               filtered[index].id,
-                              'rejected',
+                              JoinRequestStatus.rejected,
                               filtered[index].displayName,
                               filtered[index].phoneNumber,
                             ),
@@ -175,8 +176,8 @@ class _JoinRequestCard extends StatelessWidget {
 
   Color _statusColor(BuildContext context, String status) {
     final cs = Theme.of(context).colorScheme;
-    if (status == 'approved') return cs.primary;
-    if (status == 'rejected') return cs.error;
+    if (status == JoinRequestStatus.approved) return cs.primary;
+    if (status == JoinRequestStatus.rejected) return cs.error;
     return cs.tertiary;
   }
 
@@ -222,7 +223,7 @@ class _JoinRequestCard extends StatelessWidget {
                   'Submitted ${dateFmt.format(request.submittedAt.toLocal())}',
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                if (request.status == 'pending')
+                if (request.status == JoinRequestStatus.pending)
                   _ActionButtons(onApprove: onApprove, onReject: onReject),
               ],
             ),

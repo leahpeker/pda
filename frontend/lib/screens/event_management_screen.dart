@@ -11,6 +11,7 @@ import 'package:pda/services/api_error.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/utils/snackbar.dart';
+import 'package:pda/config/constants.dart';
 
 class EventManagementScreen extends ConsumerWidget {
   final bool myEventsOnly;
@@ -258,7 +259,7 @@ class _EventManagementRow extends ConsumerWidget {
                             ).textTheme.titleMedium?.copyWith(color: fg),
                           ),
                         ),
-                        if (event.eventType == 'official') ...[
+                        if (event.eventType == EventType.official) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(

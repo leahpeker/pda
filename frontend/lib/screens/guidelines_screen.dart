@@ -8,6 +8,7 @@ import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
 import 'package:pda/widgets/quill_content_editor.dart';
 import 'package:pda/widgets/save_cancel_button_row.dart';
+import 'package:pda/config/constants.dart';
 
 class GuidelinesScreen extends ConsumerWidget {
   const GuidelinesScreen({super.key});
@@ -15,7 +16,7 @@ class GuidelinesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).valueOrNull;
-    final canEdit = user?.hasPermission('manage_guidelines') ?? false;
+    final canEdit = user?.hasPermission(Permission.manageGuidelines) ?? false;
     final guidelinesAsync = ref.watch(guidelinesNotifierProvider);
 
     return AppScaffold(

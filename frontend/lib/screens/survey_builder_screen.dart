@@ -7,29 +7,34 @@ import 'package:pda/utils/app_icons.dart';
 import 'package:pda/utils/share.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/config/constants.dart';
 
 const _fieldTypeLabels = {
-  'text': 'text',
-  'textarea': 'text area',
-  'select': 'single select',
-  'multiselect': 'multi select',
-  'dropdown': 'dropdown',
-  'number': 'number',
-  'yes_no': 'yes / no',
-  'rating': 'rating (1–5)',
+  FieldType.text: 'text',
+  FieldType.textarea: 'text area',
+  FieldType.select: 'single select',
+  FieldType.multiselect: 'multi select',
+  FieldType.dropdown: 'dropdown',
+  FieldType.number: 'number',
+  FieldType.yesNo: 'yes / no',
+  FieldType.rating: 'rating (1–5)',
 };
 
-const _fieldTypesWithOptions = {'select', 'multiselect', 'dropdown'};
+const _fieldTypesWithOptions = {
+  FieldType.select,
+  FieldType.multiselect,
+  FieldType.dropdown,
+};
 
 IconData _fieldTypeIcon(String type) {
   return switch (type) {
-    'textarea' => Icons.notes_outlined,
-    'select' => Icons.radio_button_checked_outlined,
-    'multiselect' => Icons.checklist_outlined,
-    'dropdown' => Icons.arrow_drop_down_circle_outlined,
-    'number' => Icons.pin_outlined,
-    'yes_no' => Icons.toggle_on_outlined,
-    'rating' => Icons.star_outline_rounded,
+    FieldType.textarea => Icons.notes_outlined,
+    FieldType.select => Icons.radio_button_checked_outlined,
+    FieldType.multiselect => Icons.checklist_outlined,
+    FieldType.dropdown => Icons.arrow_drop_down_circle_outlined,
+    FieldType.number => Icons.pin_outlined,
+    FieldType.yesNo => Icons.toggle_on_outlined,
+    FieldType.rating => Icons.star_outline_rounded,
     _ => Icons.short_text_outlined,
   };
 }
@@ -398,7 +403,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
   void initState() {
     super.initState();
     _labelCtrl = TextEditingController(text: widget.question?.label ?? '');
-    _fieldType = widget.question?.fieldType ?? 'text';
+    _fieldType = widget.question?.fieldType ?? FieldType.text;
     _required = widget.question?.required ?? false;
     final existingOptions = widget.question?.options ?? [];
     _optionCtrls =
@@ -408,7 +413,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
       5,
       (i) => TextEditingController(
         text:
-            (_fieldType == 'rating' && i < existingOptions.length)
+            (_fieldType == FieldType.rating && i < existingOptions.length)
                 ? existingOptions[i]
                 : '',
       ),
@@ -443,7 +448,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     List<String> options;
-    if (_fieldType == 'rating') {
+    if (_fieldType == FieldType.rating) {
       options = _ratingLabelCtrls.map((c) => c.text.trim()).toList();
     } else if (_showOptions) {
       options =
@@ -509,7 +514,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
                           )
                           .toList(),
                   onChanged:
-                      (val) => setState(() => _fieldType = val ?? 'text'),
+                      (val) => setState(() => _fieldType = val ?? FieldType.text),
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
@@ -556,7 +561,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
                     label: const Text('add option'),
                   ),
                 ],
-                if (_fieldType == 'rating') ...[
+                if (_fieldType == FieldType.rating) ...[
                   const SizedBox(height: 12),
                   const Align(
                     alignment: Alignment.centerLeft,

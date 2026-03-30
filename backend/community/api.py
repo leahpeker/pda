@@ -28,12 +28,14 @@ from community.models import (
     EventType,
     HomePage,
     JoinFormQuestion,
+    JoinFormQuestionType,
     JoinRequest,
     JoinRequestStatus,
     PageVisibility,
     RSVPStatus,
     Survey,
     SurveyQuestion,
+    SurveyQuestionType,
     SurveyResponse,
     SurveyVisibility,
     WhatsAppConfig,
@@ -105,7 +107,7 @@ class JoinFormQuestionOut(BaseModel):
 
 class JoinFormQuestionIn(BaseModel):
     label: str
-    field_type: str = "text"
+    field_type: str = JoinFormQuestionType.TEXT
     options: list[str] = []
     required: bool = False
 
@@ -140,7 +142,7 @@ class EventListOut(BaseModel):
     start_datetime: datetime
     end_datetime: datetime | None = None
     location: str
-    event_type: str = "community"
+    event_type: str = EventType.COMMUNITY
     whatsapp_link: str = ""
     partiful_link: str = ""
     other_link: str = ""
@@ -166,7 +168,7 @@ class EventOut(BaseModel):
     co_host_names: list[str] = []
     guests: list[RSVPGuestOut] = []
     my_rsvp: str | None = None
-    event_type: str = "community"
+    event_type: str = EventType.COMMUNITY
     survey_slugs: list[str] = []
 
 
@@ -210,7 +212,7 @@ class EventIn(BaseModel):
     partiful_link: str = ""
     other_link: str = ""
     rsvp_enabled: bool = False
-    event_type: str = "community"
+    event_type: str = EventType.COMMUNITY
     co_host_ids: list[str] = []
 
 
@@ -523,7 +525,11 @@ def _validate_answers(
         answer = answers.get(q_id, "").strip()
         if q.required and not answer:
             return f'"{q.label}" is required.'
-        if q.field_type == "select" and answer and answer not in (q.options or []):
+        if (
+            q.field_type == JoinFormQuestionType.SELECT
+            and answer
+            and answer not in (q.options or [])
+        ):
             return f'Invalid option for "{q.label}".'
     return None
 
@@ -1178,7 +1184,7 @@ class SurveyIn(BaseModel):
     title: str
     description: str = ""
     slug: str
-    visibility: str = "public"
+    visibility: str = SurveyVisibility.PUBLIC
     is_active: bool = True
     linked_event_id: str | None = None
 
@@ -1194,7 +1200,7 @@ class SurveyPatchIn(BaseModel):
 
 class SurveyQuestionIn(BaseModel):
     label: str
-    field_type: str = "text"
+    field_type: str = SurveyQuestionType.TEXT
     options: list[str] = []
     required: bool = False
 
@@ -1283,12 +1289,12 @@ def _validate_rating_answer(answer: str, q: SurveyQuestion) -> str | None:
 
 
 _SURVEY_VALIDATORS: dict[str, Callable[[str, SurveyQuestion], str | None]] = {
-    "select": _validate_choice_answer,
-    "dropdown": _validate_choice_answer,
-    "multiselect": _validate_multiselect_answer,
-    "number": _validate_number_answer,
-    "yes_no": _validate_yes_no_answer,
-    "rating": _validate_rating_answer,
+    SurveyQuestionType.SELECT: _validate_choice_answer,
+    SurveyQuestionType.DROPDOWN: _validate_choice_answer,
+    SurveyQuestionType.MULTISELECT: _validate_multiselect_answer,
+    SurveyQuestionType.NUMBER: _validate_number_answer,
+    SurveyQuestionType.YES_NO: _validate_yes_no_answer,
+    SurveyQuestionType.RATING: _validate_rating_answer,
 }
 
 

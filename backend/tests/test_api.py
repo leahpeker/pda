@@ -1,4 +1,5 @@
 import pytest
+from community.models import JoinRequestStatus
 from users.api import _create_user_with_role, _validate_admin_role_change
 from users.permissions import PermissionKey
 from users.roles import Role
@@ -372,7 +373,7 @@ class TestRoleManagementAPI:
     def test_create_role_success(self, api_client, manage_users_headers):
         response = api_client.post(
             "/api/auth/roles/",
-            {"name": "vettor", "permissions": ["approve_join_requests"]},
+            {"name": "vettor", "permissions": [PermissionKey.APPROVE_JOIN_REQUESTS]},
             content_type="application/json",
             **manage_users_headers,
         )
@@ -401,12 +402,12 @@ class TestRoleManagementAPI:
         role = Role.objects.create(name="custom", permissions=[])
         response = api_client.patch(
             f"/api/auth/roles/{role.id}/",
-            {"permissions": ["manage_events"]},
+            {"permissions": [PermissionKey.MANAGE_EVENTS]},
             content_type="application/json",
             **manage_users_headers,
         )
         assert response.status_code == 200
-        assert "manage_events" in response.json()["permissions"]
+        assert PermissionKey.MANAGE_EVENTS in response.json()["permissions"]
 
     def test_patch_protected_role_name_blocked(self, api_client, manage_users_headers):
         admin_role = Role.objects.get(name="admin")
@@ -653,7 +654,7 @@ class TestJoinRequestManagement:
         assert isinstance(data, list)
         assert len(data) == 1
         assert data[0]["display_name"] == "Sprout Seedling"
-        assert data[0]["status"] == "pending"
+        assert data[0]["status"] == JoinRequestStatus.PENDING
 
     def test_list_join_requests_admin_can_access(
         self, api_client, admin_headers, sample_join_request
@@ -664,13 +665,13 @@ class TestJoinRequestManagement:
     def test_approve_join_request_success(self, api_client, vettor_headers, sample_join_request):
         response = api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
-            {"status": "approved"},
+            {"status": JoinRequestStatus.APPROVED},
             content_type="application/json",
             **vettor_headers,
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "approved"
+        assert data["status"] == JoinRequestStatus.APPROVED
         assert data["id"] == str(sample_join_request.id)
 
     def test_approve_join_request_creates_user(
@@ -680,7 +681,7 @@ class TestJoinRequestManagement:
 
         response = api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
-            {"status": "approved"},
+            {"status": JoinRequestStatus.APPROVED},
             content_type="application/json",
             **vettor_headers,
         )
@@ -696,31 +697,31 @@ class TestJoinRequestManagement:
     def test_reject_join_request_success(self, api_client, vettor_headers, sample_join_request):
         response = api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
-            {"status": "rejected"},
+            {"status": JoinRequestStatus.REJECTED},
             content_type="application/json",
             **vettor_headers,
         )
         assert response.status_code == 200
-        assert response.json()["status"] == "rejected"
+        assert response.json()["status"] == JoinRequestStatus.REJECTED
 
     def test_update_join_request_status_persists(
         self, api_client, vettor_headers, sample_join_request
     ):
         api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
-            {"status": "approved"},
+            {"status": JoinRequestStatus.APPROVED},
             content_type="application/json",
             **vettor_headers,
         )
         sample_join_request.refresh_from_db()
-        assert sample_join_request.status == "approved"
+        assert sample_join_request.status == JoinRequestStatus.APPROVED
 
     def test_update_join_request_invalid_status(
         self, api_client, vettor_headers, sample_join_request
     ):
         response = api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
-            {"status": "pending"},
+            {"status": JoinRequestStatus.PENDING},
             content_type="application/json",
             **vettor_headers,
         )
@@ -731,7 +732,7 @@ class TestJoinRequestManagement:
     ):
         response = api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
-            {"status": "approved"},
+            {"status": JoinRequestStatus.APPROVED},
             content_type="application/json",
             **auth_headers,
         )
@@ -740,7 +741,7 @@ class TestJoinRequestManagement:
     def test_update_join_request_unauthenticated(self, api_client, sample_join_request):
         response = api_client.patch(
             f"/api/community/join-requests/{sample_join_request.id}/",
-            {"status": "approved"},
+            {"status": JoinRequestStatus.APPROVED},
             content_type="application/json",
         )
         assert response.status_code == 401
@@ -750,7 +751,7 @@ class TestJoinRequestManagement:
 
         response = api_client.patch(
             f"/api/community/join-requests/{uuid.uuid4()}/",
-            {"status": "approved"},
+            {"status": JoinRequestStatus.APPROVED},
             content_type="application/json",
             **vettor_headers,
         )
@@ -771,4 +772,4 @@ class TestJoinRequestManagement:
             content_type="application/json",
         )
         assert response.status_code == 201
-        assert response.json()["status"] == "pending"
+        assert response.json()["status"] == JoinRequestStatus.PENDING

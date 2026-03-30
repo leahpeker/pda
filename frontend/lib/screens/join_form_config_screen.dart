@@ -4,6 +4,7 @@ import 'package:pda/models/join_form_question.dart';
 import 'package:pda/providers/join_form_admin_provider.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/config/constants.dart';
 
 class JoinFormConfigScreen extends ConsumerWidget {
   const JoinFormConfigScreen({super.key});
@@ -220,7 +221,7 @@ class _QuestionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(
-          question.fieldType == 'select'
+          question.fieldType == FieldType.select
               ? Icons.list_outlined
               : Icons.short_text_outlined,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -300,7 +301,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
   void initState() {
     super.initState();
     _labelCtrl = TextEditingController(text: widget.question?.label ?? '');
-    _fieldType = widget.question?.fieldType ?? 'text';
+    _fieldType = widget.question?.fieldType ?? FieldType.text;
     _required = widget.question?.required ?? false;
     _optionCtrls =
         (widget.question?.options ?? [])
@@ -331,7 +332,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     final options =
-        _fieldType == 'select'
+        _fieldType == FieldType.select
             ? _optionCtrls
                 .map((c) => c.text.trim())
                 .where((o) => o.isNotEmpty)
@@ -374,10 +375,14 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
                 initialValue: _fieldType,
                 decoration: const InputDecoration(labelText: 'Field type'),
                 items: const [
-                  DropdownMenuItem(value: 'text', child: Text('Text')),
-                  DropdownMenuItem(value: 'select', child: Text('Dropdown')),
+                  DropdownMenuItem(value: FieldType.text, child: Text('Text')),
+                  DropdownMenuItem(
+                    value: FieldType.select,
+                    child: Text('Dropdown'),
+                  ),
                 ],
-                onChanged: (val) => setState(() => _fieldType = val ?? 'text'),
+                onChanged: (val) =>
+                    setState(() => _fieldType = val ?? FieldType.text),
               ),
               const SizedBox(height: 12),
               SwitchListTile(
@@ -386,7 +391,7 @@ class _QuestionFormDialogState extends State<_QuestionFormDialog> {
                 contentPadding: EdgeInsets.zero,
                 onChanged: (val) => setState(() => _required = val),
               ),
-              if (_fieldType == 'select') ...[
+              if (_fieldType == FieldType.select) ...[
                 const SizedBox(height: 12),
                 const Align(
                   alignment: Alignment.centerLeft,

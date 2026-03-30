@@ -4,6 +4,7 @@ import 'package:pda/models/event.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
+import 'package:pda/config/constants.dart';
 
 class DayView extends StatefulWidget {
   final List<Event> events;
@@ -243,7 +244,7 @@ class _DayEventCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (event.eventType == 'official') ...[
+                  if (event.eventType == EventType.official) ...[
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(

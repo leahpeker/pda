@@ -5,6 +5,7 @@ import 'package:pda/models/event.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/utils/validators.dart' as v;
+import 'package:pda/config/constants.dart';
 
 /// Shared form dialog for creating and editing events.
 /// Pass [event] to pre-fill fields for editing; omit for create mode.
@@ -68,7 +69,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _start = DateTime(now.year, now.month, now.day, now.hour + 1);
       _end = null;
       _rsvpEnabled = false;
-      _eventType = 'community';
+      _eventType = EventType.community;
       _coHostIds = {};
       _coHostNames = {};
     }
@@ -490,7 +491,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 if (ref
                         .watch(authProvider)
                         .valueOrNull
-                        ?.hasPermission('manage_events') ??
+                        ?.hasPermission(Permission.manageEvents) ??
                     false) ...[
                   const SizedBox(height: 8),
                   SwitchListTile(
@@ -498,11 +499,12 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                     subtitle: const Text(
                       'mark as an official PDA-organized event',
                     ),
-                    value: _eventType == 'official',
+                    value: _eventType == EventType.official,
                     contentPadding: EdgeInsets.zero,
                     onChanged:
                         (val) => setState(
-                          () => _eventType = val ? 'official' : 'community',
+                          () => _eventType =
+                              val ? EventType.official : EventType.community,
                         ),
                   ),
                 ],

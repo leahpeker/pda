@@ -10,6 +10,7 @@ import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/autosave_mixin.dart';
 import 'package:pda/widgets/quill_content_editor.dart';
 import 'package:pda/widgets/save_cancel_button_row.dart';
+import 'package:pda/config/constants.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -17,7 +18,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).valueOrNull;
-    final canEdit = user?.hasPermission('edit_homepage') ?? false;
+    final canEdit = user?.hasPermission(Permission.editHomepage) ?? false;
     final isLoggedIn = user != null;
     final homeAsync = ref.watch(homePageNotifierProvider);
 
