@@ -12,7 +12,7 @@ RUN flutter build web --release --dart-define=API_URL=
 # Stage 2: Python/Django runtime
 FROM python:3.13-slim AS runtime
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.2 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ COPY --from=flutter-build /app/frontend/build/web/index.html ./backend/templates
 
 RUN DJANGO_SETTINGS_MODULE=config.settings \
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))") \
-    uv run python backend/manage.py collectstatic --noinput
+    uv run --no-dev python backend/manage.py collectstatic --noinput
 
 EXPOSE ${PORT:-8000}
 
