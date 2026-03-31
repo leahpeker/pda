@@ -77,6 +77,7 @@ class _WeekViewState extends State<WeekView> {
     final isWide = MediaQuery.sizeOf(context).width >= 600;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onHorizontalDragEnd: (details) {
         if ((details.primaryVelocity ?? 0) > 0) {
           _goToPreviousWeek();

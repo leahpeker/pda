@@ -80,6 +80,7 @@ class _DayViewState extends State<DayView> {
     final events = _eventsForSelectedDay();
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onHorizontalDragEnd: (details) {
         if ((details.primaryVelocity ?? 0) > 0) {
           _goToPrevDay();

@@ -111,6 +111,7 @@ class _MonthViewState extends State<MonthView> {
         DateFormat('MMMM yyyy').format(_focusedMonth).toLowerCase();
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onHorizontalDragEnd: (details) {
         if ((details.primaryVelocity ?? 0) > 0) {
           _goToPreviousMonth();
