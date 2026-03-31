@@ -197,9 +197,31 @@ class EventDetailContent extends ConsumerWidget {
           ..._buildDateTimeRows(formatDate, start, end),
           if (hostNames.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _DetailRow(
-              icon: Icons.person_pin_outlined,
-              text: hostNames.join(', '),
+            Row(
+              children: [
+                Icon(
+                  Icons.person_pin_outlined,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      for (var i = 0; i < hostNames.length; i++)
+                        _HostChip(
+                          name: hostNames[i],
+                          photoUrl:
+                              i < liveEvent.coHostPhotoUrls.length
+                                  ? liveEvent.coHostPhotoUrls[i]
+                                  : '',
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
           if (liveEvent.description.isNotEmpty) ...[
@@ -245,6 +267,43 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _HostChip extends StatelessWidget {
+  final String name;
+  final String photoUrl;
+
+  const _HostChip({required this.name, required this.photoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final hasPhoto = photoUrl.isNotEmpty;
+    final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasPhoto)
+          CircleAvatar(radius: 12, backgroundImage: NetworkImage(photoUrl))
+        else
+          CircleAvatar(
+            radius: 12,
+            backgroundColor: cs.primaryContainer,
+            child: Text(
+              initials,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: cs.onPrimaryContainer,
+              ),
+            ),
+          ),
+        const SizedBox(width: 6),
+        Text(name, style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
       ],
     );
   }

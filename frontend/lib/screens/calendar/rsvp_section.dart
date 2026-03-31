@@ -238,6 +238,36 @@ class _GuestGroup extends StatelessWidget {
   }
 }
 
+class _GuestAvatar extends StatelessWidget {
+  final EventGuest guest;
+  const _GuestAvatar({required this.guest});
+
+  static const double radius = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    if (guest.photoUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundImage: NetworkImage(guest.photoUrl),
+      );
+    }
+    final initials = guest.name.isNotEmpty ? guest.name[0].toUpperCase() : '?';
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontSize: radius * 0.9,
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+      ),
+    );
+  }
+}
+
 class _GuestChip extends StatefulWidget {
   final EventGuest guest;
 
@@ -319,7 +349,14 @@ class _GuestChipState extends State<_GuestChip> {
     final isWide = MediaQuery.sizeOf(context).width >= 720;
 
     if (phone == null) {
-      return Text(widget.guest.name, style: const TextStyle(fontSize: 13));
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _GuestAvatar(guest: widget.guest),
+          const SizedBox(width: 6),
+          Text(widget.guest.name, style: const TextStyle(fontSize: 13)),
+        ],
+      );
     }
 
     if (isWide) {
@@ -329,13 +366,20 @@ class _GuestChipState extends State<_GuestChip> {
           onEnter: (_) => _showOverlay(phone),
           onExit: (_) => _removeOverlay(),
           cursor: SystemMouseCursors.basic,
-          child: Text(
-            widget.guest.name,
-            style: const TextStyle(
-              fontSize: 13,
-              decoration: TextDecoration.underline,
-              decorationStyle: TextDecorationStyle.dotted,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _GuestAvatar(guest: widget.guest),
+              const SizedBox(width: 6),
+              Text(
+                widget.guest.name,
+                style: const TextStyle(
+                  fontSize: 13,
+                  decoration: TextDecoration.underline,
+                  decorationStyle: TextDecorationStyle.dotted,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -354,13 +398,20 @@ class _GuestChipState extends State<_GuestChip> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              widget.guest.name,
-              style: const TextStyle(
-                fontSize: 13,
-                decoration: TextDecoration.underline,
-                decorationStyle: TextDecorationStyle.dotted,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _GuestAvatar(guest: widget.guest),
+                const SizedBox(width: 6),
+                Text(
+                  widget.guest.name,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    decoration: TextDecoration.underline,
+                    decorationStyle: TextDecorationStyle.dotted,
+                  ),
+                ),
+              ],
             ),
             if (_expanded)
               Padding(
