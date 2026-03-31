@@ -84,7 +84,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Add member'), findsOneWidget);
+    expect(find.text('add member'), findsOneWidget);
   });
 
   testWidgets('Add member button hidden for user without manage_users', (

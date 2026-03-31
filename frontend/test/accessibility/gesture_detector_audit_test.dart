@@ -18,6 +18,12 @@ void main() {
       'lib/screens/calendar/rsvp_section.dart',
       // Feedback overlay backdrop dismiss — not a user-facing interactive element
       'lib/widgets/feedback_button.dart',
+      // Swipe-to-navigate gesture overlay — supplementary drag gesture, not a tap target
+      'lib/screens/calendar/month_view.dart',
+      // Swipe-to-navigate gesture overlay — supplementary drag gesture, not a tap target
+      'lib/screens/calendar/day_view.dart',
+      // Swipe-to-navigate gesture overlay — supplementary drag gesture, not a tap target
+      'lib/screens/calendar/week_view.dart',
     };
 
     final libDir = Directory('lib');

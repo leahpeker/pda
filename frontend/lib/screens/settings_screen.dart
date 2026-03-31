@@ -17,6 +17,12 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).valueOrNull;
+    final displayName = user?.displayName ?? '';
+    final phone = user?.phoneNumber ?? '';
+    final email = user?.email ?? '';
+    final photoUrl = user?.profilePhotoUrl ?? '';
+    final showPhone = user?.showPhone ?? true;
+    final showEmail = user?.showEmail ?? true;
 
     return AppScaffold(
       maxWidth: 600,
@@ -24,8 +30,8 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         children: [
           _ProfileAvatar(
-            initials: _initials(user?.displayName, user?.email),
-            photoUrl: user?.profilePhotoUrl ?? '',
+            initials: _initials(displayName, email),
+            photoUrl: photoUrl,
           ),
           const SizedBox(height: 32),
           const _SectionHeader(label: 'profile'),
@@ -33,22 +39,19 @@ class SettingsScreen extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.face_outlined,
             label: 'name',
-            value:
-                (user?.displayName ?? '').trim().isEmpty
-                    ? 'not set'
-                    : user!.displayName,
-            onTap: () => _showEditNameDialog(context, ref, user?.displayName),
+            value: displayName.trim().isEmpty ? 'not set' : displayName,
+            onTap: () => _showEditNameDialog(context, ref, displayName),
           ),
           _SettingsTile(
             icon: Icons.phone_iphone_outlined,
             label: 'phone',
-            value: user?.phoneNumber ?? '',
+            value: phone,
           ),
           _SettingsTile(
             icon: Icons.alternate_email_outlined,
             label: 'email',
-            value: (user?.email ?? '').trim().isEmpty ? 'not set' : user!.email,
-            onTap: () => _showEditEmailDialog(context, ref, user?.email),
+            value: email.trim().isEmpty ? 'not set' : email,
+            onTap: () => _showEditEmailDialog(context, ref, email),
           ),
           const SizedBox(height: 24),
           const _SectionHeader(label: 'security'),
@@ -76,22 +79,20 @@ class SettingsScreen extends ConsumerWidget {
           _PrivacyToggle(
             icon: Icons.phone_outlined,
             label: 'show phone number on profile',
-            value: user?.showPhone ?? true,
-            onChanged: (val) async {
-              await ref
-                  .read(authProvider.notifier)
-                  .updateProfile(showPhone: val);
-            },
+            value: showPhone,
+            onChanged:
+                (val) => ref
+                    .read(authProvider.notifier)
+                    .updateProfile(showPhone: val),
           ),
           _PrivacyToggle(
             icon: Icons.email_outlined,
             label: 'show email on profile',
-            value: user?.showEmail ?? true,
-            onChanged: (val) async {
-              await ref
-                  .read(authProvider.notifier)
-                  .updateProfile(showEmail: val);
-            },
+            value: showEmail,
+            onChanged:
+                (val) => ref
+                    .read(authProvider.notifier)
+                    .updateProfile(showEmail: val),
           ),
           const SizedBox(height: 24),
           const _SectionHeader(label: 'calendar'),
@@ -108,14 +109,14 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _initials(String? displayName, String? email) {
-    if (displayName != null && displayName.isNotEmpty) {
+  String _initials(String displayName, String email) {
+    if (displayName.isNotEmpty) {
       final parts = displayName.trim().split(RegExp(r'\s+'));
       final f = parts.first[0].toUpperCase();
       final l = parts.length > 1 ? parts.last[0].toUpperCase() : '';
       return '$f$l';
     }
-    if (email != null && email.isNotEmpty) return email[0].toUpperCase();
+    if (email.isNotEmpty) return email[0].toUpperCase();
     return '?';
   }
 
