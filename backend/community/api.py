@@ -1013,7 +1013,8 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
 
     is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
     is_creator = event.created_by_id == request.auth.pk
-    if not is_manager and not is_creator:
+    is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
+    if not is_manager and not is_creator and not is_cohost:
         return Status(403, ErrorOut(detail="Permission denied."))
 
     updates = payload.model_dump(exclude_unset=True)
@@ -1047,7 +1048,8 @@ def delete_event(request, event_id: UUID):
 
     is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
     is_creator = event.created_by_id == request.auth.pk
-    if not is_manager and not is_creator:
+    is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
+    if not is_manager and not is_creator and not is_cohost:
         return Status(403, ErrorOut(detail="Permission denied."))
 
     if event.photo:
@@ -1083,7 +1085,8 @@ def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...))
         return Status(404, ErrorOut(detail="Event not found."))
     is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
     is_creator = event.created_by_id == request.auth.pk
-    if not is_manager and not is_creator:
+    is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
+    if not is_manager and not is_creator and not is_cohost:
         return Status(403, ErrorOut(detail="Permission denied."))
     if event.photo:
         event.photo.delete(save=False)
@@ -1105,7 +1108,8 @@ def delete_event_photo(request, event_id: UUID):
         return Status(404, ErrorOut(detail="Event not found."))
     is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
     is_creator = event.created_by_id == request.auth.pk
-    if not is_manager and not is_creator:
+    is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
+    if not is_manager and not is_creator and not is_cohost:
         return Status(403, ErrorOut(detail="Permission denied."))
     if event.photo:
         event.photo.delete(save=False)
