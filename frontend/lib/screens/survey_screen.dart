@@ -5,6 +5,7 @@ import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/survey_provider.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/config/constants.dart';
 
 class SurveyScreen extends ConsumerWidget {
   final String slug;
@@ -168,7 +169,7 @@ class _QuestionField extends StatelessWidget {
     final label = '${question.label}${question.required ? ' *' : ''}';
 
     return switch (question.fieldType) {
-      'textarea' => TextFormField(
+      FieldType.textarea => TextFormField(
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -177,25 +178,25 @@ class _QuestionField extends StatelessWidget {
         validator: _validate,
         onSaved: onSaved,
       ),
-      'select' => _RadioField(
+      FieldType.select => _RadioField(
         label: label,
         options: question.options,
         validator: _validate,
         onSaved: onSaved,
       ),
-      'multiselect' => _CheckboxField(
+      FieldType.multiselect => _CheckboxField(
         label: label,
         options: question.options,
         validator: _validate,
         onSaved: onSaved,
       ),
-      'dropdown' => _DropdownField(
+      FieldType.dropdown => _DropdownField(
         label: label,
         options: question.options,
         validator: _validate,
         onSaved: onSaved,
       ),
-      'number' => TextFormField(
+      FieldType.number => TextFormField(
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -211,13 +212,13 @@ class _QuestionField extends StatelessWidget {
         },
         onSaved: onSaved,
       ),
-      'yes_no' => _RadioField(
+      FieldType.yesNo => _RadioField(
         label: label,
         options: const ['yes', 'no'],
         validator: _validate,
         onSaved: onSaved,
       ),
-      'rating' => _RatingField(
+      FieldType.rating => _RatingField(
         label: label,
         ratingLabels: question.options,
         validator: _validate,

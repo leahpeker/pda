@@ -17,6 +17,7 @@ import 'package:pda/widgets/loading_button.dart';
 import 'package:pda/widgets/phone_form_field.dart';
 import 'event_form_dialog.dart';
 import 'rsvp_section.dart';
+import 'package:pda/config/constants.dart';
 
 export 'event_form_dialog.dart' show EventFormDialog;
 
@@ -449,7 +450,7 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
     if (user == null) return const SizedBox.shrink();
 
     final isCreator = widget.event.createdById == user.id;
-    final isManager = user.hasPermission('manage_events');
+    final isManager = user.hasPermission(Permission.manageEvents);
     if (!isCreator && !isManager) return const SizedBox.shrink();
 
     return Row(

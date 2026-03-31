@@ -4,7 +4,8 @@ import string
 
 import phonenumbers
 from django.db import models
-from ninja import Router
+from ninja import File, Router
+from ninja.files import UploadedFile
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
@@ -149,6 +150,7 @@ class UserOut(BaseModel):
     email: str = ""
     is_superuser: bool = False
     needs_onboarding: bool = False
+    profile_photo_url: str = ""
     roles: list[RoleOut]
 
     @classmethod
@@ -160,6 +162,7 @@ class UserOut(BaseModel):
             email=user.email or "",
             is_superuser=user.is_superuser,
             needs_onboarding=user.needs_onboarding,
+            profile_photo_url=user.profile_photo.url if user.profile_photo else "",
             roles=[
                 RoleOut(
                     id=str(r.id), name=r.name, is_default=r.is_default, permissions=r.permissions
@@ -289,6 +292,33 @@ def update_me(request, payload: MePatchIn):
     if payload.needs_onboarding is not None:
         user.needs_onboarding = payload.needs_onboarding
     user.save()
+    return Status(200, UserOut.from_user(user))
+
+
+_MAX_PHOTO_SIZE = 5 * 1024 * 1024  # 5 MB
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+
+@router.post("/me/photo/", response={200: UserOut, 400: ErrorOut}, auth=JWTAuth())
+def upload_photo(request, photo: UploadedFile = File(...)):
+    if photo.content_type not in _ALLOWED_IMAGE_TYPES:
+        return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
+    if photo.size and photo.size > _MAX_PHOTO_SIZE:
+        return Status(400, ErrorOut(detail="Photo must be under 5 MB."))
+    user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
+    if user.profile_photo:
+        user.profile_photo.delete(save=False)
+    user.profile_photo.save(f"{user.pk}.{photo.name.rsplit('.', 1)[-1]}", photo, save=True)
+    return Status(200, UserOut.from_user(user))
+
+
+@router.delete("/me/photo/", response={200: UserOut}, auth=JWTAuth())
+def delete_photo(request):
+    user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
+    if user.profile_photo:
+        user.profile_photo.delete(save=False)
+        user.profile_photo = ""
+        user.save(update_fields=["profile_photo"])
     return Status(200, UserOut.from_user(user))
 
 

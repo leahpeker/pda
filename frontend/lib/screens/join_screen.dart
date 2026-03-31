@@ -8,6 +8,7 @@ import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/phone_form_field.dart';
+import 'package:pda/config/constants.dart';
 
 class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key});
@@ -46,7 +47,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
     final answers = <String, String>{};
     for (final q in questions) {
-      if (q.fieldType == 'select') {
+      if (q.fieldType == FieldType.select) {
         final val = _selectValues[q.id];
         if (val != null && val.isNotEmpty) answers[q.id] = val;
       } else {
@@ -197,7 +198,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   Widget _buildQuestionField(JoinFormQuestion q, int order) {
     final label = '${q.label}${q.required ? ' *' : ''}';
 
-    if (q.fieldType == 'select') {
+    if (q.fieldType == FieldType.select) {
       return FocusTraversalOrder(
         order: NumericFocusOrder(order.toDouble()),
         child: DropdownButtonFormField<String>(

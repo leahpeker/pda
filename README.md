@@ -31,12 +31,22 @@ make dev  # runs Django :8000 + Flutter :3000
 
 See [CLAUDE.md](./CLAUDE.md) for full command reference.
 
+## Environments
+
+| Environment | URL | Branch | Deploys |
+|-------------|-----|--------|---------|
+| **Production** | [pda.up.railway.app](https://pda.up.railway.app) | `main` | On merge to `main` |
+| **Staging** | [staging-pda.up.railway.app](https://staging-pda.up.railway.app) | `staging` | On push to `staging` |
+
+Staging is the preview environment for testing changes before they hit production. All new features and fixes should be verified on staging first.
+
 ## Contributing
 
 All changes go through `staging` before `main`.
 
 1. Branch off `staging`: `git checkout staging && git pull && git checkout -b your-feature`
 2. Open a pull request targeting `staging` (not `main`)
-3. Get at least one approval before merging
+3. Verify on [staging-pda.up.railway.app](https://staging-pda.up.railway.app) after merge
+4. When ready for production, merge `staging` → `main`
 
 Direct pushes to `staging` and `main` are not allowed for contributors.

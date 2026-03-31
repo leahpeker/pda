@@ -5,6 +5,7 @@ import 'package:pda/models/survey.dart';
 import 'package:pda/providers/survey_admin_provider.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/config/constants.dart';
 
 class SurveyAdminScreen extends ConsumerWidget {
   const SurveyAdminScreen({super.key});
@@ -249,7 +250,7 @@ class _CreateSurveyDialogState extends State<_CreateSurveyDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _slugController = TextEditingController();
-  String _visibility = 'public';
+  String _visibility = PageVisibility.public_;
 
   @override
   void initState() {
@@ -311,13 +312,19 @@ class _CreateSurveyDialogState extends State<_CreateSurveyDialog> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'public', child: Text('public')),
                   DropdownMenuItem(
-                    value: 'members_only',
+                    value: PageVisibility.public_,
+                    child: Text('public'),
+                  ),
+                  DropdownMenuItem(
+                    value: PageVisibility.membersOnly,
                     child: Text('members only'),
                   ),
                 ],
-                onChanged: (v) => setState(() => _visibility = v ?? 'public'),
+                onChanged:
+                    (v) => setState(
+                      () => _visibility = v ?? PageVisibility.public_,
+                    ),
               ),
             ],
           ),

@@ -4,6 +4,7 @@ import 'package:pda/models/event.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/utils/snackbar.dart';
+import 'package:pda/config/constants.dart';
 
 class RSVPSection extends ConsumerStatefulWidget {
   final Event event;
@@ -57,9 +58,10 @@ class _RSVPSectionState extends ConsumerState<RSVPSection> {
     final myRsvp = liveEvent.myRsvp;
     final guests = liveEvent.guests;
 
-    final attending = guests.where((g) => g.status == 'attending').toList();
-    final maybe = guests.where((g) => g.status == 'maybe').toList();
-    final cantGo = guests.where((g) => g.status == 'cant_go').toList();
+    final attending =
+        guests.where((g) => g.status == RsvpStatus.attending).toList();
+    final maybe = guests.where((g) => g.status == RsvpStatus.maybe).toList();
+    final cantGo = guests.where((g) => g.status == RsvpStatus.cantGo).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,33 +80,36 @@ class _RSVPSectionState extends ConsumerState<RSVPSection> {
                 label: "i'm going",
                 icon: Icons.sentiment_very_satisfied_outlined,
                 activeColor: theme.colorScheme.primary,
-                isActive: myRsvp == 'attending',
+                isActive: myRsvp == RsvpStatus.attending,
                 onTap:
                     () =>
-                        myRsvp == 'attending'
+                        myRsvp == RsvpStatus.attending
                             ? _removeRsvp()
-                            : _setRsvp('attending'),
+                            : _setRsvp(RsvpStatus.attending),
               ),
               const SizedBox(width: 8),
               RsvpButton(
                 label: 'maybe',
                 icon: Icons.sentiment_neutral_outlined,
                 activeColor: theme.colorScheme.tertiary,
-                isActive: myRsvp == 'maybe',
+                isActive: myRsvp == RsvpStatus.maybe,
                 onTap:
-                    () => myRsvp == 'maybe' ? _removeRsvp() : _setRsvp('maybe'),
+                    () =>
+                        myRsvp == RsvpStatus.maybe
+                            ? _removeRsvp()
+                            : _setRsvp(RsvpStatus.maybe),
               ),
               const SizedBox(width: 8),
               RsvpButton(
                 label: "can't make it",
                 icon: Icons.sentiment_dissatisfied_outlined,
                 activeColor: theme.colorScheme.error,
-                isActive: myRsvp == 'cant_go',
+                isActive: myRsvp == RsvpStatus.cantGo,
                 onTap:
                     () =>
-                        myRsvp == 'cant_go'
+                        myRsvp == RsvpStatus.cantGo
                             ? _removeRsvp()
-                            : _setRsvp('cant_go'),
+                            : _setRsvp(RsvpStatus.cantGo),
               ),
             ],
           ),

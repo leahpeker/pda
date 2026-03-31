@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/config/constants.dart';
 import 'members/members_tab.dart';
 import 'members/roles_tab.dart';
 
@@ -31,8 +32,10 @@ class _MembersScreenState extends ConsumerState<MembersScreen>
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(authProvider).valueOrNull;
-    final canManageRoles = currentUser?.hasPermission('manage_roles') ?? false;
-    final canManageUsers = currentUser?.hasPermission('manage_users') ?? false;
+    final canManageRoles =
+        currentUser?.hasPermission(Permission.manageRoles) ?? false;
+    final canManageUsers =
+        currentUser?.hasPermission(Permission.manageUsers) ?? false;
 
     return AppScaffold(
       child: Column(

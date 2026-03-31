@@ -25,6 +25,7 @@ import 'package:pda/screens/survey_builder_screen.dart';
 import 'package:pda/screens/survey_responses_screen.dart';
 import 'package:pda/screens/survey_screen.dart';
 import 'package:pda/screens/whatsapp_config_screen.dart';
+import 'package:pda/config/constants.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Use ref.listen (not ref.watch) so auth state changes trigger redirect
@@ -83,29 +84,30 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (isAuthenticated) {
-        if (loc == '/members' && !user.hasPermission('manage_users')) {
+        if (loc == '/members' && !user.hasPermission(Permission.manageUsers)) {
           return '/calendar';
         }
         if (loc == '/join-requests' &&
-            !user.hasPermission('approve_join_requests')) {
+            !user.hasPermission(Permission.approveJoinRequests)) {
           return '/calendar';
         }
-        if (loc == '/events/manage' && !user.hasPermission('manage_events')) {
+        if (loc == '/events/manage' &&
+            !user.hasPermission(Permission.manageEvents)) {
           return '/calendar';
         }
         if (loc == '/admin' && !user.hasAnyAdminPermission) {
           return '/calendar';
         }
         if (loc == '/admin/whatsapp' &&
-            !user.hasPermission('manage_whatsapp')) {
+            !user.hasPermission(Permission.manageWhatsapp)) {
           return '/calendar';
         }
         if (loc == '/admin/join-form' &&
-            !user.hasPermission('edit_join_questions')) {
+            !user.hasPermission(Permission.editJoinQuestions)) {
           return '/calendar';
         }
         if (loc.startsWith('/admin/surveys') &&
-            !user.hasPermission('manage_surveys')) {
+            !user.hasPermission(Permission.manageSurveys)) {
           return '/calendar';
         }
       }

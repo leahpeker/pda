@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/utils/validators.dart' as v;
+import 'package:pda/config/constants.dart';
 
 const kPermissionLabels = {
-  'create_user': 'Create user',
-  'manage_users': 'Manage users',
-  'manage_roles': 'Manage roles',
-  'approve_join_requests': 'Approve join requests',
-  'manage_events': 'Manage events',
-  'manage_guidelines': 'Manage community guidelines',
-  'manage_whatsapp': 'Manage WhatsApp',
-  'edit_faq': 'Edit FAQ',
-  'edit_homepage': 'Edit homepage',
-  'edit_join_questions': 'Edit join form questions',
-  'manage_surveys': 'Manage surveys',
+  Permission.createUser: 'Create user',
+  Permission.manageUsers: 'Manage users',
+  Permission.manageRoles: 'Manage roles',
+  Permission.approveJoinRequests: 'Approve join requests',
+  Permission.manageEvents: 'Manage events',
+  Permission.manageGuidelines: 'Manage community guidelines',
+  Permission.manageWhatsapp: 'Manage WhatsApp',
+  Permission.editFaq: 'Edit FAQ',
+  Permission.editHomepage: 'Edit homepage',
+  Permission.editJoinQuestions: 'Edit join form questions',
+  Permission.manageSurveys: 'Manage surveys',
+  Permission.tagOfficialEvent: 'Tag official event',
 };
 
 // Dialog to create or edit a role (name + permission checkboxes)

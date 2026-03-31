@@ -8,8 +8,11 @@ import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/approval_credentials_dialog.dart';
 import 'add_member_dialog.dart';
 import 'role_form_dialog.dart';
+import 'package:pda/config/constants.dart';
 
-class MembersTab extends ConsumerWidget {
+enum _SortField { name, phone, role }
+
+class MembersTab extends ConsumerStatefulWidget {
   final bool canManageRoles;
   final bool canManageUsers;
 
@@ -20,18 +23,103 @@ class MembersTab extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MembersTab> createState() => _MembersTabState();
+}
+
+class _MembersTabState extends ConsumerState<MembersTab> {
+  final _searchController = TextEditingController();
+  String _query = '';
+  _SortField _sort = _SortField.name;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<User> _filterAndSort(List<User> users) {
+    var filtered = users;
+    if (_query.isNotEmpty) {
+      final q = _query.toLowerCase();
+      filtered =
+          users
+              .where(
+                (u) =>
+                    u.displayName.toLowerCase().contains(q) ||
+                    u.phoneNumber.contains(q) ||
+                    u.email.toLowerCase().contains(q),
+              )
+              .toList();
+    }
+    filtered.sort((a, b) {
+      return switch (_sort) {
+        _SortField.name => a.displayName.toLowerCase().compareTo(
+          b.displayName.toLowerCase(),
+        ),
+        _SortField.phone => a.phoneNumber.compareTo(b.phoneNumber),
+        _SortField.role => (b.roles.length).compareTo(a.roles.length),
+      };
+    });
+    return filtered;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final usersAsync = ref.watch(usersProvider);
     final rolesAsync = ref.watch(rolesProvider);
 
     return Column(
       children: [
-        if (canManageUsers)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'search members...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    suffixIcon:
+                        _query.isNotEmpty
+                            ? IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _query = '');
+                              },
+                            )
+                            : null,
+                  ),
+                  onChanged: (v) => setState(() => _query = v),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SegmentedButton<_SortField>(
+                segments: const [
+                  ButtonSegment(value: _SortField.name, label: Text('name')),
+                  ButtonSegment(value: _SortField.phone, label: Text('phone')),
+                  ButtonSegment(value: _SortField.role, label: Text('role')),
+                ],
+                selected: {_sort},
+                onSelectionChanged: (s) => setState(() => _sort = s.first),
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  textStyle: WidgetStatePropertyAll(
+                    Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+              ),
+              if (widget.canManageUsers) ...[
+                const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () => _showBulkAddDialog(context, ref),
                   icon: const Icon(Icons.group_add_outlined, size: 18),
@@ -44,23 +132,34 @@ class MembersTab extends ConsumerWidget {
                   label: const Text('Add member'),
                 ),
               ],
-            ),
+            ],
           ),
+        ),
         Expanded(
           child: usersAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Failed to load members: $e')),
             data: (users) {
-              if (users.isEmpty) {
-                return const Center(
+              final filtered = _filterAndSort(users);
+              if (filtered.isEmpty) {
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.groups_outlined, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
+                      const Icon(
+                        Icons.groups_outlined,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        'no members found',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                        _query.isNotEmpty
+                            ? 'no matches for "$_query"'
+                            : 'no members found',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -69,13 +168,13 @@ class MembersTab extends ConsumerWidget {
               final allRoles = rolesAsync.valueOrNull ?? [];
               return ListView.separated(
                 padding: const EdgeInsets.all(24),
-                itemCount: users.length,
+                itemCount: filtered.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder:
                     (context, index) => MemberCard(
-                      user: users[index],
+                      user: filtered[index],
                       allRoles: allRoles,
-                      canManageRoles: canManageRoles,
+                      canManageRoles: widget.canManageRoles,
                     ),
               );
             },
@@ -303,7 +402,7 @@ class MemberCard extends ConsumerWidget {
 
     final currentUser = ref.read(authProvider).valueOrNull;
     final adminRole = allRoles.firstWhere(
-      (r) => r.name == 'admin' && r.isDefault,
+      (r) => r.name == RoleName.admin && r.isDefault,
       orElse: () => allRoles.first,
     );
     final isLastAdmin =

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../config/constants.dart';
 import '../providers/editable_page_provider.dart';
 import '../services/api_error.dart';
 import '../utils/snackbar.dart';
@@ -80,7 +81,7 @@ class _EditableContentBlockState extends ConsumerState<EditableContentBlock>
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).valueOrNull;
-    final canEdit = user?.hasPermission('manage_guidelines') ?? false;
+    final canEdit = user?.hasPermission(Permission.manageGuidelines) ?? false;
     _maybeInitAutosave(canEdit);
     final pageAsync = ref.watch(editablePageProvider(widget.slug));
 
@@ -175,9 +176,12 @@ class _AdminToolbar extends StatelessWidget {
             value: page.visibility,
             isDense: true,
             items: const [
-              DropdownMenuItem(value: 'public', child: Text('Public')),
               DropdownMenuItem(
-                value: 'members_only',
+                value: PageVisibility.public_,
+                child: Text('Public'),
+              ),
+              DropdownMenuItem(
+                value: PageVisibility.membersOnly,
                 child: Text('Members only'),
               ),
             ],

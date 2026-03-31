@@ -4,6 +4,7 @@ import 'package:pda/models/event.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 import 'package:pda/screens/calendar/placement_types.dart';
+import 'package:pda/config/constants.dart';
 
 class MonthView extends StatefulWidget {
   final List<Event> events;
@@ -481,7 +482,7 @@ class _MonthRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6),
             alignment: Alignment.centerLeft,
             child: Text(
-              '${p.event.eventType == 'official' ? '✦ ' : ''}${p.event.title}',
+              '${p.event.eventType == EventType.official ? '✦ ' : ''}${p.event.title}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

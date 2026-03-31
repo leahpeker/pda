@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/models/join_form_question.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/join_form_provider.dart';
+import 'package:pda/config/constants.dart';
 
 class JoinFormAdminNotifier extends AsyncNotifier<List<JoinFormQuestion>> {
   @override
@@ -16,7 +17,7 @@ class JoinFormAdminNotifier extends AsyncNotifier<List<JoinFormQuestion>> {
 
   Future<void> addQuestion({
     required String label,
-    String fieldType = 'text',
+    String fieldType = FieldType.text,
     List<String> options = const [],
     bool required = false,
   }) async {
@@ -37,7 +38,7 @@ class JoinFormAdminNotifier extends AsyncNotifier<List<JoinFormQuestion>> {
   Future<void> updateQuestion({
     required String id,
     required String label,
-    String fieldType = 'text',
+    String fieldType = FieldType.text,
     List<String> options = const [],
     bool required = false,
   }) async {

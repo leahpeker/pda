@@ -1,3 +1,5 @@
+import 'package:pda/config/constants.dart';
+
 class SurveyQuestion {
   final String id;
   final String label;
@@ -49,7 +51,7 @@ class Survey {
     required this.title,
     this.description = '',
     required this.slug,
-    this.visibility = 'public',
+    this.visibility = PageVisibility.public_,
     this.isActive = true,
     this.linkedEventId,
     this.createdById,
@@ -64,7 +66,7 @@ class Survey {
       title: json['title'] as String,
       description: json['description'] as String? ?? '',
       slug: json['slug'] as String,
-      visibility: json['visibility'] as String? ?? 'public',
+      visibility: json['visibility'] as String? ?? PageVisibility.public_,
       isActive: json['is_active'] as bool? ?? true,
       linkedEventId: json['linked_event_id'] as String?,
       createdById: json['created_by_id'] as String?,

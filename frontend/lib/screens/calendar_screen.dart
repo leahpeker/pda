@@ -84,13 +84,28 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     // so authenticated users see member-only fields (location, links, RSVP).
     ref.listen(authProvider, (_, __) => ref.invalidate(eventsProvider));
 
+    final isNarrow = MediaQuery.sizeOf(context).width < 720;
+
     return AppScaffold(
+      actions:
+          isNarrow
+              ? [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: OutlinedButton(
+                    onPressed: _goToToday,
+                    child: const Text('today'),
+                  ),
+                ),
+              ]
+              : null,
       child: Column(
         children: [
           _CalendarToolbar(
             selected: _view,
             onSelected: _onViewChanged,
             onToday: _goToToday,
+            compact: isNarrow,
           ),
           Expanded(
             child: eventsAsync.when(
@@ -155,11 +170,13 @@ class _CalendarToolbar extends StatelessWidget {
   final _CalendarView selected;
   final ValueChanged<_CalendarView> onSelected;
   final VoidCallback onToday;
+  final bool compact;
 
   const _CalendarToolbar({
     required this.selected,
     required this.onSelected,
     required this.onToday,
+    this.compact = false,
   });
 
   @override
@@ -178,8 +195,10 @@ class _CalendarToolbar extends StatelessWidget {
             selected: {selected},
             onSelectionChanged: (s) => onSelected(s.first),
           ),
-          const SizedBox(height: 6),
-          OutlinedButton(onPressed: onToday, child: const Text('today')),
+          if (!compact) ...[
+            const SizedBox(height: 6),
+            OutlinedButton(onPressed: onToday, child: const Text('today')),
+          ],
         ],
       ),
     );

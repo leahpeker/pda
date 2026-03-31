@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/config/constants.dart';
 
 class AdminScreen extends ConsumerWidget {
   const AdminScreen({super.key});
@@ -23,42 +24,43 @@ class AdminScreen extends ConsumerWidget {
               spacing: 16,
               runSpacing: 16,
               children: [
-                if (user?.hasPermission('manage_events') ?? false)
+                if (user?.hasPermission(Permission.manageEvents) ?? false)
                   _AdminCard(
                     icon: Icons.event_available_outlined,
                     title: 'Manage events',
                     subtitle: 'Create, edit, and manage events',
                     onTap: () => context.go('/events/manage'),
                   ),
-                if (user?.hasPermission('manage_users') ?? false)
+                if (user?.hasPermission(Permission.manageUsers) ?? false)
                   _AdminCard(
                     icon: Icons.groups_outlined,
                     title: 'Members',
                     subtitle: 'View and manage member accounts',
                     onTap: () => context.go('/members'),
                   ),
-                if (user?.hasPermission('approve_join_requests') ?? false)
+                if (user?.hasPermission(Permission.approveJoinRequests) ??
+                    false)
                   _AdminCard(
                     icon: Icons.person_search_outlined,
                     title: 'Join requests',
                     subtitle: 'Review pending membership requests',
                     onTap: () => context.go('/join-requests'),
                   ),
-                if (user?.hasPermission('edit_join_questions') ?? false)
+                if (user?.hasPermission(Permission.editJoinQuestions) ?? false)
                   _AdminCard(
                     icon: Icons.dynamic_form_outlined,
                     title: 'Join form',
                     subtitle: 'Configure join request form questions',
                     onTap: () => context.go('/admin/join-form'),
                   ),
-                if (user?.hasPermission('manage_surveys') ?? false)
+                if (user?.hasPermission(Permission.manageSurveys) ?? false)
                   _AdminCard(
                     icon: Icons.poll_outlined,
                     title: 'Surveys',
                     subtitle: 'Create and manage feedback surveys',
                     onTap: () => context.go('/admin/surveys'),
                   ),
-                if (user?.hasPermission('manage_whatsapp') ?? false)
+                if (user?.hasPermission(Permission.manageWhatsapp) ?? false)
                   _AdminCard(
                     icon: Icons.chat_outlined,
                     title: 'WhatsApp bot',

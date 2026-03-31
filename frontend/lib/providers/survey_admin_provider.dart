@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/models/survey.dart';
 import 'package:pda/providers/auth_provider.dart';
+import 'package:pda/config/constants.dart';
 
 class SurveyAdminNotifier extends AsyncNotifier<List<Survey>> {
   @override
@@ -17,7 +18,7 @@ class SurveyAdminNotifier extends AsyncNotifier<List<Survey>> {
     required String title,
     required String slug,
     String description = '',
-    String visibility = 'public',
+    String visibility = PageVisibility.public_,
     String? linkedEventId,
   }) async {
     final api = ref.read(apiClientProvider);
@@ -73,7 +74,7 @@ class SurveyQuestionsNotifier extends FamilyAsyncNotifier<Survey, String> {
 
   Future<void> addQuestion({
     required String label,
-    String fieldType = 'text',
+    String fieldType = FieldType.text,
     List<String> options = const [],
     bool required = false,
   }) async {
@@ -93,7 +94,7 @@ class SurveyQuestionsNotifier extends FamilyAsyncNotifier<Survey, String> {
   Future<void> updateQuestion({
     required String questionId,
     required String label,
-    String fieldType = 'text',
+    String fieldType = FieldType.text,
     List<String> options = const [],
     bool required = false,
   }) async {

@@ -6,8 +6,9 @@ import 'package:pda/providers/auth_provider.dart';
 
 class AppScaffold extends ConsumerWidget {
   final Widget child;
+  final List<Widget>? actions;
 
-  const AppScaffold({super.key, required this.child});
+  const AppScaffold({super.key, required this.child, this.actions});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,7 +30,7 @@ class AppScaffold extends ConsumerWidget {
                   child: _NavButton(label: 'PDA', route: '/'),
                 )
                 : null,
-        actions: isWide ? _buildWideNavItems(context, ref, user) : null,
+        actions: isWide ? _buildWideNavItems(context, ref, user) : actions,
       ),
       drawer: isWide ? null : _NavDrawer(user: user),
       body: child,
