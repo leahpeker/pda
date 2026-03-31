@@ -100,10 +100,12 @@ class _EventListViewState extends State<EventListView> {
             onChanged: (v) => setState(() => _query = v),
           ),
         ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               SegmentedButton<String?>(
                 segments: const [
@@ -122,7 +124,6 @@ class _EventListViewState extends State<EventListView> {
                     (s) => setState(() => _typeFilter = s.first),
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
               ),
-              const SizedBox(width: 8),
               SegmentedButton<bool>(
                 segments: const [
                   ButtonSegment(value: true, label: Text('upcoming')),
@@ -133,7 +134,6 @@ class _EventListViewState extends State<EventListView> {
                     (s) => setState(() => _showUpcoming = s.first),
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
               ),
-              const SizedBox(width: 4),
               IconButton(
                 icon: Icon(
                   _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,

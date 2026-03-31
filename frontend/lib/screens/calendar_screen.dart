@@ -201,6 +201,7 @@ class _CalendarToolbar extends StatelessWidget {
             ],
             selected: {selected},
             onSelectionChanged: (s) => onSelected(s.first),
+            showSelectedIcon: false,
           ),
           if (!compact) ...[
             const SizedBox(height: 6),
