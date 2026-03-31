@@ -315,7 +315,9 @@ def upload_photo(request, photo: UploadedFile = File(...)):
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
     if user.profile_photo:
         user.profile_photo.delete(save=False)
-    user.profile_photo.save(f"{user.pk}.{photo.name.rsplit('.', 1)[-1]}", photo, save=True)
+    name = photo.name or ""
+    ext = name.rsplit(".", 1)[-1] if "." in name else "jpg"
+    user.profile_photo.save(f"{user.pk}.{ext}", photo, save=True)
     return Status(200, UserOut.from_user(user))
 
 

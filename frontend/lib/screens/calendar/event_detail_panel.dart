@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/utils/time_format.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:pda/utils/file_download.dart';
 import 'package:pda/utils/ics_generator.dart';
 import 'package:pda/utils/launcher.dart';
@@ -76,11 +75,12 @@ List<Widget> _buildDateTimeRows(
   DateTime start,
   DateTime? end,
 ) {
+  final style = const TextStyle(fontSize: 15, height: 1.4);
   if (end == null) {
     return [
-      _DetailRow(icon: Icons.today_outlined, text: dateFmt(start)),
-      const SizedBox(height: 8),
-      _DetailRow(icon: Icons.schedule_outlined, text: formatTime(start)),
+      Text(dateFmt(start), style: style),
+      const SizedBox(height: 4),
+      Text(formatTime(start), style: style),
     ];
   }
   final sameDay =
@@ -89,20 +89,16 @@ List<Widget> _buildDateTimeRows(
       start.day == end.day;
   if (sameDay) {
     return [
-      _DetailRow(icon: Icons.today_outlined, text: dateFmt(start)),
-      const SizedBox(height: 8),
-      _DetailRow(
-        icon: Icons.schedule_outlined,
-        text: '${formatTime(start)} \u2013 ${formatTime(end)}',
-      ),
+      Text(dateFmt(start), style: style),
+      const SizedBox(height: 4),
+      Text('${formatTime(start)} \u2013 ${formatTime(end)}', style: style),
     ];
   }
   return [
-    _DetailRow(
-      icon: Icons.calendar_today,
-      text:
-          '${dateFmt(start)}, ${formatTime(start)} \u2013 '
-          '${dateFmt(end)}, ${formatTime(end)}',
+    Text(
+      '${dateFmt(start)}, ${formatTime(start)} \u2013 '
+      '${dateFmt(end)}, ${formatTime(end)}',
+      style: style,
     ),
   ];
 }
@@ -131,42 +127,37 @@ class EventDetailContent extends ConsumerWidget {
     String formatDate(DateTime d) =>
         DateFormat('EEEE, MMMM d, y').format(d).toLowerCase();
 
-    final hostNames = <String>[];
-    if (liveEvent.createdByName != null) {
-      hostNames.add(liveEvent.createdByName!);
-    }
-    hostNames.addAll(liveEvent.coHostNames);
-
     return SelectionArea(
       child: ListView(
         controller: scrollController,
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         children: [
-          if (liveEvent.photoUrl.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  liveEvent.photoUrl,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+          _EventPhoto(event: liveEvent),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    liveEvent.title,
-                    style: Theme.of(context).textTheme.headlineSmall,
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      liveEvent.title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
               _CalendarMenuChip(event: liveEvent),
               const SizedBox(width: 4),
               _ActionChip(
@@ -194,49 +185,97 @@ class EventDetailContent extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ..._buildDateTimeRows(formatDate, start, end),
-          if (hostNames.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  Icons.person_pin_outlined,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      for (var i = 0; i < hostNames.length; i++)
-                        _HostChip(
-                          name: hostNames[i],
-                          photoUrl:
-                              i < liveEvent.coHostPhotoUrls.length
-                                  ? liveEvent.coHostPhotoUrls[i]
-                                  : '',
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+          _SectionCard(
+            label: 'when',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _buildDateTimeRows(formatDate, start, end),
             ),
-          ],
+          ),
           if (liveEvent.description.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(
-              liveEvent.description,
-              style: const TextStyle(fontSize: 15, height: 1.6),
+            const SizedBox(height: 12),
+            _SectionCard(
+              label: 'about',
+              child: Text(
+                liveEvent.description,
+                style: const TextStyle(fontSize: 15, height: 1.6),
+              ),
             ),
           ],
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           _MemberSection(event: liveEvent, location: liveEvent.location),
         ],
       ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const _SectionCard({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _HostChip extends StatelessWidget {
+  final ({String name, String photoUrl}) host;
+
+  const _HostChip({required this.host});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final hasPhoto = host.photoUrl.isNotEmpty;
+    final initials = host.name.isNotEmpty ? host.name[0].toUpperCase() : '?';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasPhoto)
+          CircleAvatar(radius: 14, backgroundImage: NetworkImage(host.photoUrl))
+        else
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: cs.primaryContainer,
+            child: Text(
+              initials,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: cs.onPrimaryContainer,
+              ),
+            ),
+          ),
+        const SizedBox(width: 8),
+        Text(host.name, style: TextStyle(fontSize: 15, color: cs.onSurface)),
+      ],
     );
   }
 }
@@ -272,39 +311,26 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-class _HostChip extends StatelessWidget {
-  final String name;
-  final String photoUrl;
+class _EventPhoto extends StatelessWidget {
+  final Event event;
 
-  const _HostChip({required this.name, required this.photoUrl});
+  const _EventPhoto({required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final hasPhoto = photoUrl.isNotEmpty;
-    final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    if (event.photoUrl.isEmpty) return const SizedBox.shrink();
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (hasPhoto)
-          CircleAvatar(radius: 12, backgroundImage: NetworkImage(photoUrl))
-        else
-          CircleAvatar(
-            radius: 12,
-            backgroundColor: cs.primaryContainer,
-            child: Text(
-              initials,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: cs.onPrimaryContainer,
-              ),
-            ),
-          ),
-        const SizedBox(width: 6),
-        Text(name, style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          event.photoUrl,
+          height: 200,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 }
@@ -357,6 +383,7 @@ class _CalendarMenuChip extends StatelessWidget {
         color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
         child: PopupMenuButton<_CalendarOption>(
+          tooltip: 'add to calendar',
           onSelected: (option) {
             switch (option) {
               case _CalendarOption.google:
@@ -449,41 +476,6 @@ class _AdminActions extends ConsumerStatefulWidget {
 class _AdminActionsState extends ConsumerState<_AdminActions> {
   bool _loading = false;
 
-  Future<void> _pickPhoto() async {
-    final image = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1200,
-      maxHeight: 800,
-      imageQuality: 85,
-    );
-    if (image == null) return;
-    setState(() => _loading = true);
-    try {
-      await uploadEventPhoto(ref, widget.event.id, image);
-      if (mounted) showSnackBar(context, 'photo updated ✓');
-    } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'couldn\'t upload photo — try again');
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _removePhoto() async {
-    setState(() => _loading = true);
-    try {
-      await deleteEventPhoto(ref, widget.event.id);
-      if (mounted) showSnackBar(context, 'photo removed');
-    } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'couldn\'t remove photo — try again');
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
   Future<void> _delete() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -561,33 +553,15 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
     final isManager = user.hasPermission(Permission.manageEvents);
     if (!isCreator && !isManager) return const SizedBox.shrink();
 
-    final hasPhoto = widget.event.photoUrl.isNotEmpty;
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        OutlinedButton.icon(
-          onPressed: _pickPhoto,
-          icon: Icon(
-            hasPhoto
-                ? Icons.photo_outlined
-                : Icons.add_photo_alternate_outlined,
-            size: 16,
-          ),
-          label: Text(hasPhoto ? 'change photo' : 'add photo'),
-        ),
-        if (hasPhoto)
-          OutlinedButton.icon(
-            onPressed: _removePhoto,
-            icon: const Icon(Icons.hide_image_outlined, size: 16),
-            label: const Text('remove photo'),
-          ),
         OutlinedButton.icon(
           onPressed: _edit,
           icon: const Icon(Icons.edit_outlined, size: 16),
           label: const Text('edit'),
         ),
+        const SizedBox(width: 12),
         OutlinedButton.icon(
           onPressed: _delete,
           icon: Icon(
@@ -619,76 +593,100 @@ class _MemberSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).valueOrNull;
     if (user != null) {
+      // Build host list: creator first (no photo), then co-hosts (with photos)
+      final hosts = <({String name, String photoUrl})>[];
+      if (event.createdByName != null) {
+        hosts.add((name: event.createdByName!, photoUrl: ''));
+      }
+      for (var i = 0; i < event.coHostNames.length; i++) {
+        hosts.add((
+          name: event.coHostNames[i],
+          photoUrl:
+              i < event.coHostPhotoUrls.length ? event.coHostPhotoUrls[i] : '',
+        ));
+      }
+
+      final detailRows = <Widget>[
+        if (location.isNotEmpty)
+          _DetailRow(icon: Icons.location_on_outlined, text: location),
+        if (event.whatsappLink.isNotEmpty)
+          _LinkRow(
+            icon: Icons.chat_bubble_outline,
+            label: 'WhatsApp group',
+            url: event.whatsappLink,
+          ),
+        if (event.partifulLink.isNotEmpty)
+          _LinkRow(
+            icon: Icons.celebration,
+            label: 'Partiful',
+            url: event.partifulLink,
+          ),
+        if (event.otherLink.isNotEmpty)
+          _LinkRow(
+            icon: Icons.link_outlined,
+            label: event.otherLink,
+            url: event.otherLink,
+          ),
+        ...event.surveySlugs.map(
+          (slug) => InkWell(
+            onTap: () => context.go('/surveys/$slug'),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.rate_review_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'give feedback',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ];
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (location.isNotEmpty) ...[
-            _DetailRow(icon: Icons.location_on_outlined, text: location),
-            const SizedBox(height: 8),
-          ],
-          if (event.whatsappLink.isNotEmpty) ...[
-            _LinkRow(
-              icon: Icons.chat_bubble_outline,
-              label: 'WhatsApp group',
-              url: event.whatsappLink,
+          if (hosts.isNotEmpty)
+            _SectionCard(
+              label: hosts.length > 1 ? 'co-hosts' : 'host',
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [for (final host in hosts) _HostChip(host: host)],
+              ),
             ),
-            const SizedBox(height: 8),
-          ],
-          if (event.partifulLink.isNotEmpty) ...[
-            _LinkRow(
-              icon: Icons.celebration,
-              label: 'Partiful',
-              url: event.partifulLink,
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (event.otherLink.isNotEmpty) ...[
-            _LinkRow(
-              icon: Icons.link_outlined,
-              label: event.otherLink,
-              url: event.otherLink,
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (event.surveySlugs.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ...event.surveySlugs.map(
-              (slug) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: InkWell(
-                  onTap: () => context.go('/surveys/$slug'),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.rate_review_rounded,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'give feedback',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+          if (detailRows.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _SectionCard(
+              label: 'details',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < detailRows.length; i++) ...[
+                    detailRows[i],
+                    if (i < detailRows.length - 1) const SizedBox(height: 8),
+                  ],
+                ],
               ),
             ),
           ],
           if (event.rsvpEnabled) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             RSVPSection(event: event),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 8),
           ],
+          const SizedBox(height: 12),
           _AdminActions(event: event),
         ],
       );

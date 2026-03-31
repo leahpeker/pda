@@ -932,7 +932,8 @@ def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...))
         return Status(403, ErrorOut(detail="Permission denied."))
     if event.photo:
         event.photo.delete(save=False)
-    ext = photo.name.rsplit(".", 1)[-1] if "." in photo.name else "jpg"
+    name = photo.name or ""
+    ext = name.rsplit(".", 1)[-1] if "." in name else "jpg"
     event.photo.save(f"{event_id}.{ext}", photo, save=True)
     return Status(200, _event_out(event, request.auth))
 

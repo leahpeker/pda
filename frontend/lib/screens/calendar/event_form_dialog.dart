@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/utils/time_format.dart';
+import 'package:pda/providers/event_provider.dart';
 import 'package:pda/providers/auth_provider.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/config/constants.dart';
 
@@ -35,6 +38,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late Map<String, String> _coHostNames;
   // which field the inline calendar is editing: 'start', 'end', or null (hidden)
   String? _calendarTarget;
+  bool _photoLoading = false;
 
   bool get _isEdit => widget.event != null;
 
@@ -207,6 +211,150 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _pickPhoto() async {
+    final event = widget.event;
+    if (event == null) return;
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (image == null) return;
+    setState(() => _photoLoading = true);
+    try {
+      await uploadEventPhoto(ref, event.id, image);
+      if (mounted) showSnackBar(context, 'photo updated ✓');
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'couldn\'t upload photo — try again');
+      }
+    } finally {
+      if (mounted) setState(() => _photoLoading = false);
+    }
+  }
+
+  Future<void> _removePhoto() async {
+    final event = widget.event;
+    if (event == null) return;
+    setState(() => _photoLoading = true);
+    try {
+      await deleteEventPhoto(ref, event.id);
+      if (mounted) showSnackBar(context, 'photo removed');
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'couldn\'t remove photo — try again');
+      }
+    } finally {
+      if (mounted) setState(() => _photoLoading = false);
+    }
+  }
+
+  Widget _buildPhotoSection() {
+    final event = widget.event;
+    if (event == null) return const SizedBox.shrink();
+
+    final detailAsync = ref.watch(eventDetailProvider(event.id));
+    final hasPhoto =
+        (detailAsync.valueOrNull?.photoUrl ?? event.photoUrl).isNotEmpty;
+    final photoUrl = detailAsync.valueOrNull?.photoUrl ?? event.photoUrl;
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child:
+                  hasPhoto
+                      ? Image.network(
+                        photoUrl,
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                      : InkWell(
+                        onTap: _pickPhoto,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 130,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest.withValues(
+                              alpha: 0.3,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: cs.outline.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_photo_alternate_outlined,
+                                size: 32,
+                                color: cs.onSurfaceVariant.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'add a cover photo',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: cs.onSurfaceVariant.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+            ),
+            if (_photoLoading)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                ),
+              ),
+            if (hasPhoto && !_photoLoading)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _PhotoButton(
+                      tooltip: 'change photo',
+                      icon: Icons.photo_outlined,
+                      onPressed: _pickPhoto,
+                    ),
+                    const SizedBox(width: 4),
+                    _PhotoButton(
+                      tooltip: 'remove photo',
+                      icon: Icons.close,
+                      onPressed: _removePhoto,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -472,7 +620,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 4),
+                _buildPhotoSection(),
                 _buildTitleField(),
                 const SizedBox(height: 12),
                 _buildNoFeesNote(theme),
@@ -819,6 +967,37 @@ class _CoHostPickerState extends ConsumerState<_CoHostPicker> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _PhotoButton extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _PhotoButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.black38,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Icon(icon, size: 16, color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 }

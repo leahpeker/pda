@@ -20,6 +20,7 @@ class GuidelinesScreen extends ConsumerWidget {
     final guidelinesAsync = ref.watch(guidelinesNotifierProvider);
 
     return AppScaffold(
+      maxWidth: 800,
       child: guidelinesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error:

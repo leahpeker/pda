@@ -19,6 +19,7 @@ class SettingsScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).valueOrNull;
 
     return AppScaffold(
+      maxWidth: 600,
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [

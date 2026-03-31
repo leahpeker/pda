@@ -477,7 +477,14 @@ class _NarrowWeekGrid extends StatelessWidget {
   final ValueChanged<Event> onEventTapped;
   final ValueChanged<DateTime>? onDayTapped;
 
-  static const int _maxVisibleEvents = 2;
+  static int _maxVisibleForHeight(double height) {
+    if (height.isInfinite) return 3;
+    // 7 equal rows; each chip is 22px + 2px vertical padding = 24px.
+    // Reserve ~20px for the "+N more" overflow label when present.
+    final rowHeight = height / 7;
+    final availableForChips = rowHeight - 20;
+    return (availableForChips / 24).floor().clamp(1, 10);
+  }
 
   const _NarrowWeekGrid({
     required this.days,
@@ -499,34 +506,39 @@ class _NarrowWeekGrid extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.dividerColor.withValues(alpha: 0.4),
-              width: 0.5,
-            ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxVisible = _maxVisibleForHeight(constraints.maxHeight);
+          return ClipRRect(
             borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: List.generate(7, (i) {
-              final day = days[i];
-              final dayEvents = _eventsForDay(day);
-              return Expanded(
-                child: _NarrowDayRow(
-                  day: day,
-                  events: dayEvents,
-                  isToday: isToday(day),
-                  isLast: i == 6,
-                  maxVisible: _maxVisibleEvents,
-                  onDayTapped: onDayTapped,
-                  onEventTapped: onEventTapped,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.4),
+                  width: 0.5,
                 ),
-              );
-            }),
-          ),
-        ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: List.generate(7, (i) {
+                  final day = days[i];
+                  final dayEvents = _eventsForDay(day);
+                  return Expanded(
+                    child: _NarrowDayRow(
+                      day: day,
+                      events: dayEvents,
+                      isToday: isToday(day),
+                      isLast: i == 6,
+                      maxVisible: maxVisible,
+                      onDayTapped: onDayTapped,
+                      onEventTapped: onEventTapped,
+                    ),
+                  );
+                }),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
