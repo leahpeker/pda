@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'temp_password_field.dart';
 
 /// Displays approval credentials (optional phone, temp password) after a user
@@ -39,17 +41,33 @@ class ApprovalCredentialsDialog extends StatelessWidget {
             const SizedBox(height: 4),
           ],
           TempPasswordField(password: tempPassword),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () {
+              final origin = Uri.base.origin;
+              final loginUrl = '$origin/login';
+              final message =
+                  'hey! you\'ve been added to PDA 🌱\n\n'
+                  'log in here: $loginUrl\n'
+                  'temp password: $tempPassword\n\n'
+                  'you\'ll be asked to set a new password on first login';
+              Clipboard.setData(ClipboardData(text: message));
+              showSnackBar(context, 'welcome message copied ✓');
+            },
+            icon: const Icon(Icons.content_copy_outlined, size: 16),
+            label: const Text('copy welcome message'),
+          ),
           const SizedBox(height: 8),
-          const Text(
-            'They should change it on first login.',
-            style: TextStyle(color: Colors.grey, fontSize: 13),
+          Text(
+            'includes login link + temp password',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Done'),
+          child: const Text('done'),
         ),
       ],
     );

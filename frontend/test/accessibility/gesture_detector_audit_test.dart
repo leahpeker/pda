@@ -16,6 +16,12 @@ void main() {
       'lib/screens/calendar/event_detail_panel.dart',
       // Phone tooltip overlay dismiss — not a user-facing interactive element
       'lib/screens/calendar/rsvp_section.dart',
+      // Feedback overlay backdrop dismiss — not a user-facing interactive element
+      'lib/widgets/feedback_button.dart',
+      // Horizontal swipe navigation — gesture-only, not a tappable element
+      'lib/screens/calendar/month_view.dart',
+      'lib/screens/calendar/day_view.dart',
+      'lib/screens/calendar/week_view.dart',
     };
 
     final libDir = Directory('lib');
@@ -30,11 +36,10 @@ void main() {
         continue;
       }
 
-      final relativePath =
-          file.path.startsWith('lib/')
-              ? file.path
-              : file.path.split('lib/').last;
-      final normalizedPath = 'lib/$relativePath'.replaceAll('//', '/');
+      // Normalize to a path starting with 'lib/' regardless of working dir.
+      final libIndex = file.path.indexOf('lib/');
+      final normalizedPath =
+          libIndex >= 0 ? file.path.substring(libIndex) : file.path;
 
       if (allowlist.any((allowed) => normalizedPath.contains(allowed))) {
         continue;

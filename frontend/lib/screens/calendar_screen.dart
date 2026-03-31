@@ -5,13 +5,14 @@ import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/screens/calendar/day_view.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
+import 'package:pda/screens/calendar/list_view.dart';
 import 'package:pda/screens/calendar/month_view.dart';
 import 'package:pda/screens/calendar/week_view.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/phone_form_field.dart';
 
-enum _CalendarView { month, week, day }
+enum _CalendarView { month, week, day, list }
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -93,13 +94,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return AppScaffold(
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: OutlinedButton(
-            onPressed: _goToToday,
-            child: const Text('today'),
+        if (_view != _CalendarView.list)
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: OutlinedButton(
+              onPressed: _goToToday,
+              child: const Text('today'),
+            ),
           ),
-        ),
       ],
       child: Column(
         children: [
@@ -164,6 +166,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           selectedDate: _selectedDate,
           onDateChanged: _onDateChanged,
         );
+      case _CalendarView.list:
+        return EventListView(events: events);
     }
   }
 }
@@ -193,9 +197,11 @@ class _CalendarToolbar extends StatelessWidget {
               ButtonSegment(value: _CalendarView.month, label: Text('month')),
               ButtonSegment(value: _CalendarView.week, label: Text('week')),
               ButtonSegment(value: _CalendarView.day, label: Text('day')),
+              ButtonSegment(value: _CalendarView.list, label: Text('list')),
             ],
             selected: {selected},
             onSelectionChanged: (s) => onSelected(s.first),
+            showSelectedIcon: false,
           ),
           if (!compact) ...[
             const SizedBox(height: 6),

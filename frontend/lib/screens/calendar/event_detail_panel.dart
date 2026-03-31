@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +9,7 @@ import 'package:pda/utils/ics_generator.dart';
 import 'package:pda/utils/launcher.dart';
 import 'package:pda/utils/app_icons.dart';
 import 'package:pda/utils/share.dart';
+import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/providers/auth_provider.dart';
@@ -21,36 +21,15 @@ import 'package:pda/config/constants.dart';
 
 export 'event_form_dialog.dart' show EventFormDialog, EventFormResult;
 
-/// Shows the event detail panel as a bottom sheet (narrow) or side panel (wide).
+/// Shows the event detail panel as a side panel (wide) or navigates to the
+/// full event page (narrow).
 void showEventDetail(BuildContext context, Event event) {
   final width = MediaQuery.sizeOf(context).width;
   if (width >= 720) {
     _showSidePanel(context, event);
   } else {
-    _showBottomSheet(context, event);
+    context.push('/events/${event.id}');
   }
-}
-
-void _showBottomSheet(BuildContext context, Event event) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder:
-        (_) => DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder:
-              (ctx, controller) => EventDetailContent(
-                event: event,
-                scrollController: controller,
-              ),
-        ),
-  );
 }
 
 void _showSidePanel(BuildContext context, Event event) {
@@ -445,10 +424,7 @@ class _LinkRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
     return InkWell(
-      onTap: () {
-        Clipboard.setData(ClipboardData(text: url));
-        showSnackBar(context, 'Link copied to clipboard');
-      },
+      onTap: () => openUrl(url),
       borderRadius: BorderRadius.circular(4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,7 +522,7 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
       ref.invalidate(eventDetailProvider(widget.event.id));
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to update event: $e');
+        showErrorSnackBar(context, ApiError.from(e).message);
       }
     } finally {
       if (mounted) setState(() => _loading = false);
