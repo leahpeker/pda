@@ -31,6 +31,8 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
   final _descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final List<FeedbackAttachment> _attachments = [];
+  bool _isBug = false;
+  bool _isFeatureRequest = false;
   String _userAgent = '';
   String _appVersion = '';
 
@@ -122,6 +124,10 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
           FeedbackSubmission(
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
+            feedbackTypes: [
+              if (_isBug) 'bug',
+              if (_isFeatureRequest) 'feature request',
+            ],
             currentRoute: widget.currentRoute,
             userAgent: _userAgent,
             userDisplayName: user?.displayName ?? '',
@@ -163,7 +169,34 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
                     'report a bug or share feedback',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 4,
+                    runSpacing: 0,
+                    children: [
+                      const Text('this is a:'),
+                      Checkbox(
+                        value: _isBug,
+                        onChanged:
+                            isLoading
+                                ? null
+                                : (v) => setState(() => _isBug = v ?? false),
+                      ),
+                      const Text('bug'),
+                      Checkbox(
+                        value: _isFeatureRequest,
+                        onChanged:
+                            isLoading
+                                ? null
+                                : (v) => setState(
+                                  () => _isFeatureRequest = v ?? false,
+                                ),
+                      ),
+                      const Text('feature request'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(

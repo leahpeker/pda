@@ -23,6 +23,7 @@ class FeedbackAttachment {
 class FeedbackSubmission {
   final String title;
   final String description;
+  final List<String> feedbackTypes;
   final String currentRoute;
   final String userAgent;
   final String userDisplayName;
@@ -33,6 +34,7 @@ class FeedbackSubmission {
   const FeedbackSubmission({
     required this.title,
     this.description = '',
+    this.feedbackTypes = const [],
     this.currentRoute = '',
     this.userAgent = '',
     this.userDisplayName = '',
@@ -55,6 +57,7 @@ class FeedbackNotifier extends AsyncNotifier<void> {
         data: {
           'title': submission.title,
           'description': submission.description,
+          'feedback_types': submission.feedbackTypes,
           'metadata': {
             'route': submission.currentRoute,
             'user_agent': submission.userAgent,

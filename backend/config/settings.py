@@ -137,7 +137,7 @@ if IS_PRODUCTION:
     _cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     CORS_ALLOWED_ORIGINS = _cors_env.split(",") if _cors_env else []
 else:
-    CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+    CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://0.0.0.0:3000"]
 
 # Email
 VETTING_EMAIL = os.environ.get("VETTING_EMAIL", "")

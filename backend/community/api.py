@@ -212,6 +212,7 @@ class FeedbackMetadataIn(BaseModel):
 class FeedbackIn(BaseModel):
     title: str = Field(max_length=200)
     description: str = Field(default="", max_length=10000)
+    feedback_types: list[str] = Field(default_factory=list)  # "bug", "feature request"
     metadata: FeedbackMetadataIn | None = None
     attachments: list[FeedbackAttachmentIn] = Field(default_factory=list)
 
@@ -666,7 +667,46 @@ def _build_feedback_metadata(meta: FeedbackMetadataIn) -> str:
     return "\n".join(lines) if len(lines) > 2 else ""
 
 
-def _build_issue_body(payload: FeedbackIn, auth_user) -> str:
+def _github_request(url: str, token: str, data: dict) -> dict:
+    req = Request(
+        url,
+        data=json_module.dumps(data).encode(),
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urlopen(req) as response:
+        return json_module.loads(response.read())
+
+
+def _upload_attachment(attachment, token: str, repo: str) -> str:
+    """Upload one file to GitHub's issue asset endpoint and return its markdown snippet."""
+    import base64 as _base64
+
+    raw = _base64.b64decode(attachment.data)
+    req = Request(
+        f"https://uploads.github.com/repos/{repo}/issues/assets",
+        data=raw,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": attachment.content_type,
+        },
+        method="POST",
+    )
+    with urlopen(req) as response:
+        result = json_module.loads(response.read())
+        return result[
+            "markdown"
+        ]  # e.g. "![filename](https://github.com/user-attachments/assets/...)"
+
+
+def _build_issue_body(
+    payload: FeedbackIn, auth_user, attachment_markdown: list[str] | None = None
+) -> str:
     parts: list[str] = []
 
     if payload.description:
@@ -680,15 +720,23 @@ def _build_issue_body(payload: FeedbackIn, auth_user) -> str:
     if not isinstance(auth_user, AnonymousUser):
         parts.append(f"\n_Submitted by {auth_user.display_name or auth_user.phone_number}_")
 
-    for attachment in payload.attachments:
-        parts.append(
-            f"\n<details>\n<summary>{attachment.filename} "
-            f"({attachment.content_type})</summary>\n\n"
-            f"```\n{attachment.data}\n```\n"
-            f"</details>"
-        )
+    if attachment_markdown:
+        parts.append("\n## Attachments\n\n" + "\n\n".join(attachment_markdown))
+    elif payload.attachments:
+        filenames = ", ".join(a.filename for a in payload.attachments)
+        parts.append(f"\n## Attachments\n\n{filenames} _(upload failed — attach manually)_")
 
     return "\n\n".join(parts)
+
+
+def _issue_labels(feedback_types: list[str]) -> list[str]:
+    labels = ["feedback"]
+    for t in feedback_types:
+        if t == "bug":
+            labels.append("bug")
+        elif t == "feature request":
+            labels.append("enhancement")
+    return labels
 
 
 @router.post(
@@ -699,37 +747,45 @@ def _build_issue_body(payload: FeedbackIn, auth_user) -> str:
 def submit_feedback(request, payload: FeedbackIn):
     token = settings.GITHUB_TOKEN
     repo = settings.GITHUB_REPO
+    logger.info(
+        "Feedback submission received: title=%r, token_set=%s, repo=%r",
+        payload.title,
+        bool(token),
+        repo,
+    )
     if not token or not repo:
+        logger.warning("Feedback submission rejected: GITHUB_TOKEN or GITHUB_REPO not configured")
         return Status(503, ErrorOut(detail="Feedback submission is not configured."))
 
-    issue_body = _build_issue_body(payload, request.auth)
+    attachment_markdown: list[str] = []
+    for attachment in payload.attachments:
+        try:
+            attachment_markdown.append(_upload_attachment(attachment, token, repo))
+        except Exception:
+            logger.exception("Failed to upload attachment %r", attachment.filename)
 
-    issue_data = json_module.dumps(
-        {
-            "title": payload.title,
-            "body": issue_body,
-            "labels": ["feedback"],
-        }
-    ).encode()
+    issue_body = _build_issue_body(payload, request.auth, attachment_markdown or None)
 
-    github_request = Request(
-        f"https://api.github.com/repos/{repo}/issues",
-        data=issue_data,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-
+    logger.info("Submitting feedback issue to GitHub repo: %s", repo)
     try:
-        with urlopen(github_request) as response:
-            result = json_module.loads(response.read())
-            logger.info("Feedback issue created: %s", result.get("html_url"))
-            return Status(201, FeedbackOut(html_url=result["html_url"]))
-    except Exception:
-        logger.exception("Failed to create GitHub issue")
+        result = _github_request(
+            f"https://api.github.com/repos/{repo}/issues",
+            token,
+            {
+                "title": payload.title,
+                "body": issue_body,
+                "labels": _issue_labels(payload.feedback_types),
+            },
+        )
+        logger.info("Feedback issue created: %s", result.get("html_url"))
+        return Status(201, FeedbackOut(html_url=result["html_url"]))
+    except Exception as exc:
+        response_body = getattr(exc, "read", lambda: None)()
+        logger.exception(
+            "Failed to create GitHub issue (status=%s, body=%s)",
+            getattr(exc, "code", "unknown"),
+            response_body.decode() if response_body else "n/a",
+        )
         return Status(503, ErrorOut(detail="Failed to create feedback issue."))
 
 

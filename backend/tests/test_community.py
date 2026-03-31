@@ -456,17 +456,26 @@ class TestErrorReport:
 # ---------------------------------------------------------------------------
 
 
-def _mock_urlopen(monkeypatch, html_url="https://github.com/leahpeker/pda/issues/1"):
-    """Patch community.api.urlopen to return a fake GitHub API response."""
+def _mock_urlopen(monkeypatch, issue_url="https://github.com/leahpeker/pda/issues/1"):
+    """Patch community.api.urlopen to return fake GitHub API responses.
+
+    Handles asset uploads (uploads.github.com) and issue creation (api.github.com).
+    Captures all requests for assertion.
+    """
     import io
     import json
 
-    captured = {}
+    captured: dict = {"calls": []}
 
     def fake_urlopen(request):
-        captured["request"] = request
-        response_data = json.dumps({"html_url": html_url}).encode()
-        buf = io.BytesIO(response_data)
+        captured["calls"].append(request)
+        if "uploads.github.com" in request.full_url:
+            data = json.dumps(
+                {"markdown": "![screenshot.png](https://github.com/user-attachments/assets/abc123)"}
+            ).encode()
+        else:
+            data = json.dumps({"html_url": issue_url}).encode()
+        buf = io.BytesIO(data)
         buf.status = 201
         return buf
 
@@ -500,9 +509,9 @@ class TestFeedback:
         assert response.status_code == 201
         assert "html_url" in response.json()
 
-        request_obj = captured["request"]
-        assert "api.github.com/repos/leahpeker/pda/issues" in request_obj.full_url
-        assert request_obj.get_header("Authorization") == "Bearer ghp_test123"
+        issue_request = captured["calls"][-1]
+        assert "api.github.com/repos/leahpeker/pda/issues" in issue_request.full_url
+        assert issue_request.get_header("Authorization") == "Bearer ghp_test123"
 
     def test_feedback_works_without_auth(self, api_client, settings, monkeypatch):
         settings.GITHUB_TOKEN = "ghp_test123"
@@ -549,7 +558,7 @@ class TestFeedback:
                     {
                         "filename": "screenshot.png",
                         "content_type": "image/png",
-                        "data": "iVBORw0KGgoAAAANS",
+                        "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
                     }
                 ],
             },
@@ -560,10 +569,16 @@ class TestFeedback:
 
         import json
 
-        request_obj = captured["request"]
-        body = json.loads(request_obj.data)
-        assert "screenshot.png" in body["body"]
-        assert "iVBORw0KGgoAAAANS" in body["body"]
+        # First call should be asset upload to uploads.github.com
+        asset_request = captured["calls"][0]
+        assert "uploads.github.com" in asset_request.full_url
+        assert asset_request.get_header("Content-type") == "image/png"
+
+        # Issue body should contain the rendered markdown image, not raw base64
+        issue_request = captured["calls"][-1]
+        issue_body = json.loads(issue_request.data)
+        assert "user-attachments/assets" in issue_body["body"]
+        assert "iVBORw0KGgoAAAANS" not in issue_body["body"]
 
     def test_feedback_requires_title(self, api_client, settings):
         settings.GITHUB_TOKEN = "ghp_test123"
