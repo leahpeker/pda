@@ -434,6 +434,11 @@ class _WideWeekGrid extends StatelessWidget {
             child: Text.rich(
               TextSpan(
                 children: [
+                  if (p.event.visibility == PageVisibility.membersOnly)
+                    TextSpan(
+                      text: '🔒 ',
+                      style: TextStyle(fontSize: 9, color: colors.$2),
+                    ),
                   if (p.event.eventType == EventType.official)
                     TextSpan(
                       text: '✦ ',
@@ -733,7 +738,10 @@ class _NarrowEventChip extends StatelessWidget {
   const _NarrowEventChip({required this.event, required this.onTap});
 
   String _buildLabel() {
-    final prefix = event.eventType == EventType.official ? '✦ ' : '';
+    final lockPrefix =
+        event.visibility == PageVisibility.membersOnly ? '🔒 ' : '';
+    final prefix =
+        '$lockPrefix${event.eventType == EventType.official ? '✦ ' : ''}';
     final dateFmt = DateFormat('MMM d');
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime?.toLocal();

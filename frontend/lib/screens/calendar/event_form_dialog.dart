@@ -34,6 +34,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late DateTime? _end;
   late bool _rsvpEnabled;
   late String _eventType;
+  late String _visibility;
   late Set<String> _coHostIds;
   late Map<String, String> _coHostNames;
   // which field the inline calendar is editing: 'start', 'end', or null (hidden)
@@ -57,6 +58,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _end = e.endDatetime?.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
       _eventType = e.eventType;
+      _visibility = e.visibility;
       _coHostIds = Set<String>.from(e.coHostIds);
       _coHostNames = {
         for (var i = 0; i < e.coHostIds.length; i++)
@@ -74,6 +76,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _end = null;
       _rsvpEnabled = false;
       _eventType = EventType.community;
+      _visibility = PageVisibility.public_;
       _coHostIds = {};
       _coHostNames = {};
     }
@@ -180,6 +183,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       'end_datetime': _end?.toUtc().toIso8601String(),
       'rsvp_enabled': _rsvpEnabled,
       'event_type': _eventType,
+      'visibility': _visibility,
       'co_host_ids': _coHostIds.toList(),
     });
   }
@@ -636,6 +640,21 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 const Divider(),
                 const SizedBox(height: 8),
                 _buildRsvpToggle(theme),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  title: const Text('members only'),
+                  subtitle: const Text('only visible to logged-in members'),
+                  value: _visibility == PageVisibility.membersOnly,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged:
+                      (val) => setState(
+                        () =>
+                            _visibility =
+                                val
+                                    ? PageVisibility.membersOnly
+                                    : PageVisibility.public_,
+                      ),
+                ),
                 if (ref
                         .watch(authProvider)
                         .valueOrNull

@@ -39,6 +39,7 @@ abstract class Event with _$Event {
     @Default([]) List<EventGuest> guests,
     String? myRsvp,
     @Default(EventType.community) String eventType,
+    @Default(PageVisibility.public_) String visibility,
     @Default('') String photoUrl,
     @Default([]) List<String> surveySlugs,
   }) = _Event;

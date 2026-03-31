@@ -145,6 +145,7 @@ class EventListOut(BaseModel):
     end_datetime: datetime | None = None
     location: str
     event_type: str = EventType.COMMUNITY
+    visibility: str = PageVisibility.PUBLIC
     photo_url: str = ""
     whatsapp_link: str = ""
     partiful_link: str = ""
@@ -173,6 +174,7 @@ class EventOut(BaseModel):
     guests: list[RSVPGuestOut] = []
     my_rsvp: str | None = None
     event_type: str = EventType.COMMUNITY
+    visibility: str = PageVisibility.PUBLIC
     photo_url: str = ""
     survey_slugs: list[str] = []
 
@@ -218,6 +220,7 @@ class EventIn(BaseModel):
     other_link: str = ""
     rsvp_enabled: bool = False
     event_type: str = EventType.COMMUNITY
+    visibility: str = PageVisibility.PUBLIC
     co_host_ids: list[str] = []
 
 
@@ -232,6 +235,7 @@ class EventPatchIn(BaseModel):
     other_link: str | None = None
     rsvp_enabled: bool | None = None
     event_type: str | None = None
+    visibility: str | None = None
     co_host_ids: list[str] | None = None
 
 
@@ -751,6 +755,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         guests=_members_only(_build_guest_list(rsvps, phones_visible), [], is_authed),
         my_rsvp=_find_my_rsvp(rsvps, auth_user),
         event_type=event.event_type,
+        visibility=event.visibility,
         photo_url=event.photo.url if event.photo else "",
         survey_slugs=list(event.surveys.filter(is_active=True).values_list("slug", flat=True)),
     )
@@ -764,6 +769,8 @@ class CheckPhoneOut(BaseModel):
 def list_events(request):
     events = Event.objects.prefetch_related("co_hosts").all()
     is_authed = _authenticated_user(request.auth) is not None
+    if not is_authed:
+        events = events.filter(visibility=PageVisibility.PUBLIC)
     return Status(
         200,
         [
@@ -775,6 +782,7 @@ def list_events(request):
                 end_datetime=e.end_datetime,
                 location=e.location,
                 event_type=e.event_type,
+                visibility=e.visibility,
                 photo_url=e.photo.url if e.photo else "",
                 whatsapp_link=_members_only(e.whatsapp_link, "", is_authed),
                 partiful_link=_members_only(e.partiful_link, "", is_authed),
@@ -797,6 +805,11 @@ def get_event(request, event_id: UUID):
             .get(id=event_id)
         )
     except Event.DoesNotExist:
+        return Status(404, ErrorOut(detail="Event not found."))
+    if (
+        event.visibility == PageVisibility.MEMBERS_ONLY
+        and _authenticated_user(request.auth) is None
+    ):
         return Status(404, ErrorOut(detail="Event not found."))
     return Status(200, _event_out(event, request.auth))
 
@@ -837,6 +850,7 @@ def create_event(request, payload: EventIn):
         other_link=payload.other_link,
         rsvp_enabled=payload.rsvp_enabled,
         event_type=payload.event_type,
+        visibility=payload.visibility,
         created_by=request.auth,
     )
     if payload.co_host_ids:
