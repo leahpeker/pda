@@ -76,51 +76,6 @@ void main() {
       expect(captured['metadata']['app_version'], '1.0.0+1');
     });
 
-    test('includes attachments in payload', () async {
-      await container.read(feedbackProvider.future);
-
-      when(
-        () =>
-            mockApi.post('/api/community/feedback/', data: any(named: 'data')),
-      ).thenAnswer(
-        (_) async => Response(
-          requestOptions: RequestOptions(path: '/api/community/feedback/'),
-          statusCode: 201,
-          data: {'html_url': 'https://github.com/leahpeker/pda/issues/2'},
-        ),
-      );
-
-      await container
-          .read(feedbackProvider.notifier)
-          .submit(
-            const FeedbackSubmission(
-              title: 'Bug with screenshot',
-              description: 'See attached',
-              attachments: [
-                FeedbackAttachment(
-                  filename: 'screenshot.png',
-                  contentType: 'image/png',
-                  base64Data: 'iVBORw0KGgoAAAANS',
-                ),
-              ],
-            ),
-          );
-
-      final captured =
-          verify(
-                () => mockApi.post(
-                  '/api/community/feedback/',
-                  data: captureAny(named: 'data'),
-                ),
-              ).captured.single
-              as Map<String, dynamic>;
-
-      final attachments = captured['attachments'] as List<Map<String, dynamic>>;
-      expect(attachments, hasLength(1));
-      expect(attachments[0]['filename'], 'screenshot.png');
-      expect(attachments[0]['data'], 'iVBORw0KGgoAAAANS');
-    });
-
     test('sets error state on API failure', () async {
       await container.read(feedbackProvider.future);
 

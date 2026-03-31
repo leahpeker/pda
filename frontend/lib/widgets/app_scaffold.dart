@@ -37,7 +37,7 @@ class AppScaffold extends ConsumerWidget {
         actions: actions,
       ),
       body:
-          enableFeedback
+          enableFeedback && user != null
               ? Stack(
                 children: [
                   body,

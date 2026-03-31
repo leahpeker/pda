@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/config/api_config.dart';
@@ -30,7 +27,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final List<FeedbackAttachment> _attachments = [];
   bool _isBug = false;
   bool _isFeatureRequest = false;
   String _userAgent = '';
@@ -49,53 +45,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'txt'],
-      withData: true,
-    );
-    if (result == null) return;
-
-    for (final file in result.files) {
-      if (_attachments.length >= 5) break;
-      if (file.bytes == null) continue;
-      if (file.bytes!.lengthInBytes > 5 * 1024 * 1024) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("'${file.name}' is too large — max 5MB per file"),
-            ),
-          );
-        }
-        continue;
-      }
-
-      setState(() {
-        _attachments.add(
-          FeedbackAttachment(
-            filename: file.name,
-            contentType: _contentType(file.extension ?? ''),
-            base64Data: base64Encode(file.bytes!),
-          ),
-        );
-      });
-    }
-  }
-
-  String _contentType(String ext) {
-    return switch (ext.toLowerCase()) {
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'gif' => 'image/gif',
-      'webp' => 'image/webp',
-      'pdf' => 'application/pdf',
-      'txt' => 'text/plain',
-      _ => 'application/octet-stream',
-    };
   }
 
   Future<void> _submit() async {
@@ -118,7 +67,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
             userDisplayName: user?.displayName ?? '',
             userPhone: user?.phoneNumber ?? '',
             appVersion: _appVersion,
-            attachments: _attachments,
           ),
         );
 
@@ -210,12 +158,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
                     route: widget.currentRoute,
                     appVersion: _appVersion,
                   ),
-                  const SizedBox(height: 12),
-                  _AttachmentsSection(
-                    attachments: _attachments,
-                    onPick: _pickFiles,
-                    onRemove: (i) => setState(() => _attachments.removeAt(i)),
-                  ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -277,51 +219,6 @@ class _MetadataSection extends StatelessWidget {
                 ),
               )
               .toList(),
-    );
-  }
-}
-
-class _AttachmentsSection extends StatelessWidget {
-  final List<FeedbackAttachment> attachments;
-  final VoidCallback onPick;
-  final void Function(int) onRemove;
-
-  const _AttachmentsSection({
-    required this.attachments,
-    required this.onPick,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (attachments.isNotEmpty) ...[
-          for (var i = 0; i < attachments.length; i++)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.attach_file, size: 18),
-              title: Text(
-                attachments[i].filename,
-                style: const TextStyle(fontSize: 13),
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.close, size: 18),
-                tooltip: 'Remove ${attachments[i].filename}',
-                onPressed: () => onRemove(i),
-              ),
-            ),
-          const SizedBox(height: 4),
-        ],
-        if (attachments.length < 5)
-          TextButton.icon(
-            onPressed: onPick,
-            icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
-            label: const Text('add screenshots or files'),
-          ),
-      ],
     );
   }
 }

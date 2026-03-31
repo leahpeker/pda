@@ -2,24 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/services/api_error.dart';
 
-class FeedbackAttachment {
-  final String filename;
-  final String contentType;
-  final String base64Data;
-
-  const FeedbackAttachment({
-    required this.filename,
-    required this.contentType,
-    required this.base64Data,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'filename': filename,
-    'content_type': contentType,
-    'data': base64Data,
-  };
-}
-
 class FeedbackSubmission {
   final String title;
   final String description;
@@ -29,7 +11,6 @@ class FeedbackSubmission {
   final String userDisplayName;
   final String userPhone;
   final String appVersion;
-  final List<FeedbackAttachment> attachments;
 
   const FeedbackSubmission({
     required this.title,
@@ -40,7 +21,6 @@ class FeedbackSubmission {
     this.userDisplayName = '',
     this.userPhone = '',
     this.appVersion = '',
-    this.attachments = const [],
   });
 }
 
@@ -65,7 +45,6 @@ class FeedbackNotifier extends AsyncNotifier<void> {
             'user_phone': submission.userPhone,
             'app_version': submission.appVersion,
           },
-          'attachments': submission.attachments.map((a) => a.toJson()).toList(),
         },
       );
       state = const AsyncData(null);
