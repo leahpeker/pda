@@ -183,6 +183,9 @@ LOGGING = {
     },
 }
 
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "")
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 if IS_PRODUCTION and os.environ.get("EMAIL_HOST"):
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

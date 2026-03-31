@@ -452,6 +452,132 @@ class TestErrorReport:
 
 
 # ---------------------------------------------------------------------------
+# TestFeedback
+# ---------------------------------------------------------------------------
+
+
+def _mock_urlopen(monkeypatch, html_url="https://github.com/leahpeker/pda/issues/1"):
+    """Patch community.api.urlopen to return a fake GitHub API response."""
+    import io
+    import json
+
+    captured = {}
+
+    def fake_urlopen(request):
+        captured["request"] = request
+        response_data = json.dumps({"html_url": html_url}).encode()
+        buf = io.BytesIO(response_data)
+        buf.status = 201
+        return buf
+
+    monkeypatch.setattr("community.api.urlopen", fake_urlopen)
+    return captured
+
+
+@pytest.mark.django_db
+class TestFeedback:
+    def test_feedback_success_creates_github_issue(
+        self, api_client, auth_headers, settings, monkeypatch
+    ):
+        settings.GITHUB_TOKEN = "ghp_test123"
+        settings.GITHUB_REPO = "leahpeker/pda"
+        captured = _mock_urlopen(monkeypatch)
+
+        response = api_client.post(
+            "/api/community/feedback/",
+            {
+                "title": "Bug: calendar not loading",
+                "description": "The calendar page shows a spinner forever",
+                "metadata": {
+                    "route": "/calendar",
+                    "user_agent": "Mozilla/5.0",
+                    "app_version": "1.0.0+1",
+                },
+            },
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 201
+        assert "html_url" in response.json()
+
+        request_obj = captured["request"]
+        assert "api.github.com/repos/leahpeker/pda/issues" in request_obj.full_url
+        assert request_obj.get_header("Authorization") == "Bearer ghp_test123"
+
+    def test_feedback_works_without_auth(self, api_client, settings, monkeypatch):
+        settings.GITHUB_TOKEN = "ghp_test123"
+        settings.GITHUB_REPO = "leahpeker/pda"
+        _mock_urlopen(monkeypatch)
+
+        response = api_client.post(
+            "/api/community/feedback/",
+            {
+                "title": "Bug from anonymous user",
+                "description": "Something is wrong",
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 201
+
+    def test_feedback_returns_503_when_token_not_configured(self, api_client, settings):
+        settings.GITHUB_TOKEN = ""
+        settings.GITHUB_REPO = ""
+
+        response = api_client.post(
+            "/api/community/feedback/",
+            {
+                "title": "Bug report",
+                "description": "Details here",
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 503
+
+    def test_feedback_includes_attachments_in_issue_body(
+        self, api_client, auth_headers, settings, monkeypatch
+    ):
+        settings.GITHUB_TOKEN = "ghp_test123"
+        settings.GITHUB_REPO = "leahpeker/pda"
+        captured = _mock_urlopen(monkeypatch)
+
+        response = api_client.post(
+            "/api/community/feedback/",
+            {
+                "title": "Bug with screenshot",
+                "description": "See attached",
+                "attachments": [
+                    {
+                        "filename": "screenshot.png",
+                        "content_type": "image/png",
+                        "data": "iVBORw0KGgoAAAANS",
+                    }
+                ],
+            },
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 201
+
+        import json
+
+        request_obj = captured["request"]
+        body = json.loads(request_obj.data)
+        assert "screenshot.png" in body["body"]
+        assert "iVBORw0KGgoAAAANS" in body["body"]
+
+    def test_feedback_requires_title(self, api_client, settings):
+        settings.GITHUB_TOKEN = "ghp_test123"
+        settings.GITHUB_REPO = "leahpeker/pda"
+
+        response = api_client.post(
+            "/api/community/feedback/",
+            {"description": "Missing title"},
+            content_type="application/json",
+        )
+        assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
 # TestFAQ
 # ---------------------------------------------------------------------------
 
