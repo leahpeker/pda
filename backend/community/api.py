@@ -134,6 +134,7 @@ class RSVPGuestOut(BaseModel):
     name: str
     status: str
     phone: str | None = None
+    photo_url: str = ""
 
 
 class EventListOut(BaseModel):
@@ -168,6 +169,7 @@ class EventOut(BaseModel):
     created_by_name: str | None = None
     co_host_ids: list[str] = []
     co_host_names: list[str] = []
+    co_host_photo_urls: list[str] = []
     guests: list[RSVPGuestOut] = []
     my_rsvp: str | None = None
     event_type: str = EventType.COMMUNITY
@@ -254,7 +256,7 @@ def get_guidelines(request):
 
 @router.patch("/guidelines/", response={200: GuidelinesOut, 403: ErrorOut}, auth=JWTAuth())
 def update_guidelines(request, payload: GuidelinesPatchIn):
-    if not request.auth.has_permission(PermissionKey.MANAGE_GUIDELINES):
+    if not request.auth.has_permission(PermissionKey.EDIT_GUIDELINES):
         return Status(403, ErrorOut(detail="Permission denied."))
     g = CommunityGuidelines.get()
     g.content = payload.content
@@ -350,7 +352,7 @@ def get_page(request, slug: str):
 
 @router.patch("/pages/{slug}/", response={200: EditablePageOut, 403: ErrorOut}, auth=JWTAuth())
 def update_page(request, slug: str, payload: EditablePagePatchIn):
-    if not request.auth.has_permission(PermissionKey.MANAGE_GUIDELINES):
+    if not request.auth.has_permission(PermissionKey.EDIT_GUIDELINES):
         return Status(403, ErrorOut(detail="Permission denied."))
 
     default_vis = PageVisibility.MEMBERS_ONLY if slug == "volunteer" else PageVisibility.PUBLIC
@@ -693,6 +695,7 @@ def _build_guest_list(rsvps, can_see_phones: bool) -> list[RSVPGuestOut]:
             name=r.user.display_name or r.user.phone_number,
             status=r.status,
             phone=r.user.phone_number if can_see_phones else None,
+            photo_url=r.user.profile_photo.url if r.user.profile_photo else "",
         )
         for r in rsvps
     ]
@@ -744,6 +747,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         created_by_name=creator_name,
         co_host_ids=[str(u.id) for u in co_hosts],
         co_host_names=[u.display_name or u.phone_number for u in co_hosts],
+        co_host_photo_urls=[u.profile_photo.url if u.profile_photo else "" for u in co_hosts],
         guests=_members_only(_build_guest_list(rsvps, phones_visible), [], is_authed),
         my_rsvp=_find_my_rsvp(rsvps, auth_user),
         event_type=event.event_type,
