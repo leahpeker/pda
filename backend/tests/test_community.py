@@ -572,7 +572,7 @@ class TestFeedback:
         # First call should be asset upload to uploads.github.com
         asset_request = captured["calls"][0]
         assert "uploads.github.com" in asset_request.full_url
-        assert asset_request.get_header("Content-type") == "image/png"
+        assert asset_request.get_header("Content-type").startswith("multipart/form-data")
 
         # Issue body should contain the rendered markdown image, not raw base64
         issue_request = captured["calls"][-1]

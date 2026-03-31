@@ -685,11 +685,24 @@ def _github_request(url: str, token: str, data: dict) -> dict:
 def _upload_attachment(attachment, token: str, repo: str) -> str:
     """Upload one file to GitHub's issue asset endpoint and return its markdown snippet."""
     import base64 as _base64
+    import uuid
     from urllib.error import HTTPError
     from urllib.parse import quote
 
     raw = _base64.b64decode(attachment.data)
     safe_name = attachment.filename.encode("ascii", errors="replace").decode("ascii")
+    boundary = uuid.uuid4().hex
+    multipart_body = (
+        (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="asset"; filename="{safe_name}"\r\n'
+            f"Content-Type: {attachment.content_type}\r\n"
+            "\r\n"
+        ).encode()
+        + raw
+        + f"\r\n--{boundary}--\r\n".encode()
+    )
+
     url = f"https://uploads.github.com/repos/{repo}/issues/assets?name={quote(safe_name)}"
     logger.debug(
         "Uploading attachment: url=%s content_type=%s size=%d",
@@ -699,11 +712,11 @@ def _upload_attachment(attachment, token: str, repo: str) -> str:
     )
     req = Request(
         url,
-        data=raw,
+        data=multipart_body,
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
-            "Content-Type": attachment.content_type,
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
         },
         method="POST",
     )
@@ -712,8 +725,8 @@ def _upload_attachment(attachment, token: str, repo: str) -> str:
             result = json_module.loads(response.read())
             return result["markdown"]
     except HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        logger.error("Asset upload failed: status=%d body=%s url=%s", exc.code, body, url)
+        err_body = exc.read().decode("utf-8", errors="replace")
+        logger.error("Asset upload failed: status=%d body=%s url=%s", exc.code, err_body, url)
         raise
 
 
