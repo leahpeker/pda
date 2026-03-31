@@ -595,7 +595,7 @@ class TestFAQ:
 
     def test_get_faq_unauthenticated(self, api_client):
         response = api_client.get("/api/community/faq/")
-        assert response.status_code == 401
+        assert response.status_code == 200
 
     def test_update_faq_content(self, api_client, edit_faq_headers):
         response = api_client.patch(

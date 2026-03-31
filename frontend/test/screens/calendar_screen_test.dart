@@ -36,7 +36,7 @@ Widget _buildSubject({
 }
 
 void main() {
-  testWidgets('renders month/week/day view toggle', (tester) async {
+  testWidgets('renders month/week/day/list view toggle', (tester) async {
     tester.view.physicalSize = _kTestSize;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -48,6 +48,7 @@ void main() {
     expect(find.text('month'), findsOneWidget);
     expect(find.text('week'), findsOneWidget);
     expect(find.text('day'), findsOneWidget);
+    expect(find.text('list'), findsOneWidget);
   });
 
   testWidgets('renders Today button', (tester) async {
