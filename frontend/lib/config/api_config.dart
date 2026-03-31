@@ -3,4 +3,4 @@ const String apiBaseUrl = String.fromEnvironment(
   defaultValue: 'http://localhost:8000',
 );
 
-const bool enableFeedback = true;
+const bool enableFeedback = bool.fromEnvironment('ENABLE_FEEDBACK');
