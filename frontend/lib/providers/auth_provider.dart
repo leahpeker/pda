@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logging/logging.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/services/api_client.dart';
@@ -101,6 +103,22 @@ class AuthNotifier extends AsyncNotifier<User?> {
       '/api/auth/complete-onboarding/',
       data: data,
     );
+    state = AsyncData(User.fromJson(response.data as Map<String, dynamic>));
+  }
+
+  Future<void> uploadProfilePhoto(XFile file) async {
+    final api = ref.read(apiClientProvider);
+    final bytes = await file.readAsBytes();
+    final formData = FormData.fromMap({
+      'photo': MultipartFile.fromBytes(bytes, filename: file.name),
+    });
+    final response = await api.post('/api/auth/me/photo/', data: formData);
+    state = AsyncData(User.fromJson(response.data as Map<String, dynamic>));
+  }
+
+  Future<void> deleteProfilePhoto() async {
+    final api = ref.read(apiClientProvider);
+    final response = await api.delete('/api/auth/me/photo/');
     state = AsyncData(User.fromJson(response.data as Map<String, dynamic>));
   }
 

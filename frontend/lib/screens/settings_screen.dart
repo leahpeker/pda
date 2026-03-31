@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/calendar_provider.dart'
     show calendarTokenProvider;
@@ -21,7 +22,10 @@ class SettingsScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          _ProfileAvatar(initials: _initials(user?.displayName, user?.email)),
+          _ProfileAvatar(
+            initials: _initials(user?.displayName, user?.email),
+            photoUrl: user?.profilePhotoUrl ?? '',
+          ),
           const SizedBox(height: 32),
           const _SectionHeader(label: 'profile'),
           const SizedBox(height: 12),
@@ -180,46 +184,97 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _ProfileAvatar extends StatelessWidget {
+class _ProfileAvatar extends ConsumerStatefulWidget {
   final String initials;
+  final String photoUrl;
 
-  const _ProfileAvatar({required this.initials});
+  const _ProfileAvatar({required this.initials, required this.photoUrl});
+
+  @override
+  ConsumerState<_ProfileAvatar> createState() => _ProfileAvatarState();
+}
+
+class _ProfileAvatarState extends ConsumerState<_ProfileAvatar> {
+  bool _uploading = false;
+
+  Future<void> _pickAndUpload() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 80,
+    );
+    if (image == null) return;
+
+    setState(() => _uploading = true);
+    try {
+      await ref.read(authProvider.notifier).uploadProfilePhoto(image);
+      if (mounted) showSnackBar(context, 'photo updated ✓');
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'couldn\'t upload photo — try again');
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final hasPhoto = widget.photoUrl.isNotEmpty;
+
     return Center(
-      child: Stack(
-        children: [
-          CircleAvatar(
-            radius: 48,
-            backgroundColor: cs.primaryContainer,
-            child: Text(
-              initials,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: cs.onPrimaryContainer,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Tooltip(
-              message: 'coming soon',
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: cs.surface,
-                child: Icon(
-                  Icons.add_a_photo_outlined,
-                  size: 16,
-                  color: cs.onSurfaceVariant,
+      child: Semantics(
+        button: true,
+        label: 'change profile photo',
+        child: InkWell(
+          onTap: _uploading ? null : _pickAndUpload,
+          customBorder: const CircleBorder(),
+          child: Stack(
+            children: [
+              if (hasPhoto)
+                CircleAvatar(
+                  radius: 48,
+                  backgroundImage: NetworkImage(widget.photoUrl),
+                )
+              else
+                CircleAvatar(
+                  radius: 48,
+                  backgroundColor: cs.primaryContainer,
+                  child: Text(
+                    widget.initials,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: cs.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: cs.surface,
+                  child:
+                      _uploading
+                          ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 16,
+                            color: cs.onSurfaceVariant,
+                          ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

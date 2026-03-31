@@ -1,4 +1,6 @@
 from community.api import router as community_router
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path, re_path
 from django.views.generic import TemplateView
 from ninja import NinjaAPI
@@ -16,3 +18,7 @@ urlpatterns = [
         TemplateView.as_view(template_name="flutter/index.html"),
     ),
 ]
+
+# Serve media files in local dev (production uses B2).
+if settings.DEBUG:
+    urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + urlpatterns
