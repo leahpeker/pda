@@ -102,24 +102,30 @@ if IS_PRODUCTION:
 # Backblaze B2 object storage (S3-compatible) for user-uploaded media.
 # When B2_KEY_ID is set, media files go to B2 instead of local disk.
 if os.environ.get("B2_KEY_ID"):
+    _b2_bucket = os.environ["B2_BUCKET_NAME"]
+    _b2_region = os.environ.get("B2_REGION", "us-west-004")
+    # Use the native B2 download URL (f<region>.backblazeb2.com/file/<bucket>/)
+    # instead of the S3-compatible endpoint, which has SSL cert issues on some regions.
+    _b2_download_host = f"f{_b2_region.split('-')[-1]}.backblazeb2.com"
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
                 "access_key": os.environ["B2_KEY_ID"],
                 "secret_key": os.environ["B2_APPLICATION_KEY"],
-                "bucket_name": os.environ["B2_BUCKET_NAME"],
+                "bucket_name": _b2_bucket,
                 "endpoint_url": os.environ["B2_ENDPOINT_URL"],
-                "region_name": os.environ.get("B2_REGION", "us-west-004"),
+                "region_name": _b2_region,
                 "default_acl": "public-read",
                 "querystring_auth": False,
+                "custom_domain": f"{_b2_download_host}/file/{_b2_bucket}",
             },
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    MEDIA_URL = f"{os.environ['B2_ENDPOINT_URL']}/{os.environ['B2_BUCKET_NAME']}/"
+    MEDIA_URL = f"https://{_b2_download_host}/file/{_b2_bucket}/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
