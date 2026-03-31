@@ -102,54 +102,50 @@ class _MembersTabState extends ConsumerState<MembersTab> {
                 onChanged: (v) => setState(() => _query = v),
               ),
               const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    SegmentedButton<_SortField>(
-                      segments: const [
-                        ButtonSegment(
-                          value: _SortField.name,
-                          label: Text('name'),
-                        ),
-                        ButtonSegment(
-                          value: _SortField.phone,
-                          label: Text('phone'),
-                        ),
-                        ButtonSegment(
-                          value: _SortField.role,
-                          label: Text('role'),
-                        ),
-                      ],
-                      selected: {_sort},
-                      onSelectionChanged:
-                          (s) => setState(() => _sort = s.first),
-                      style: ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        textStyle: WidgetStatePropertyAll(
-                          Theme.of(context).textTheme.labelSmall,
-                        ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  SegmentedButton<_SortField>(
+                    segments: const [
+                      ButtonSegment(
+                        value: _SortField.name,
+                        label: Text('name'),
                       ),
-                    ),
-                    if (widget.canManageUsers) ...[
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: () => _showBulkAddDialog(context, ref),
-                        icon: const Icon(Icons.group_add_outlined, size: 18),
-                        label: const Text('Bulk add'),
+                      ButtonSegment(
+                        value: _SortField.phone,
+                        label: Text('phone'),
                       ),
-                      const SizedBox(width: 8),
-                      FilledButton.icon(
-                        onPressed: () => _showAddMemberDialog(context, ref),
-                        icon: const Icon(
-                          Icons.person_add_alt_1_outlined,
-                          size: 18,
-                        ),
-                        label: const Text('Add member'),
+                      ButtonSegment(
+                        value: _SortField.role,
+                        label: Text('role'),
                       ),
                     ],
+                    selected: {_sort},
+                    onSelectionChanged: (s) => setState(() => _sort = s.first),
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      textStyle: WidgetStatePropertyAll(
+                        Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ),
+                  ),
+                  if (widget.canManageUsers) ...[
+                    OutlinedButton.icon(
+                      onPressed: () => _showBulkAddDialog(context, ref),
+                      icon: const Icon(Icons.group_add_outlined, size: 18),
+                      label: const Text('bulk add'),
+                    ),
+                    FilledButton.icon(
+                      onPressed: () => _showAddMemberDialog(context, ref),
+                      icon: const Icon(
+                        Icons.person_add_alt_1_outlined,
+                        size: 18,
+                      ),
+                      label: const Text('add member'),
+                    ),
                   ],
-                ),
+                ],
               ),
             ],
           ),
