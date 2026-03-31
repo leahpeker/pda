@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pda/providers/feedback_provider.dart';
 import 'package:pda/widgets/feedback_form.dart';
 
 class FeedbackButton extends ConsumerStatefulWidget {
@@ -20,9 +21,20 @@ class FeedbackButton extends ConsumerStatefulWidget {
 
 class _FeedbackButtonState extends ConsumerState<FeedbackButton> {
   bool _isOpen = false;
+  bool _wasLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(feedbackProvider, (previous, next) {
+      if (_wasLoading && next.hasValue && !next.isLoading) {
+        setState(() => _isOpen = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('feedback submitted — thanks! 🌱')),
+        );
+      }
+      _wasLoading = next.isLoading;
+    });
+
     return Stack(
       children: [
         if (_isOpen) ...[

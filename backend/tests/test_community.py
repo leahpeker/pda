@@ -576,6 +576,28 @@ class TestFeedback:
         )
         assert response.status_code == 422
 
+    def test_feedback_returns_503_on_github_api_failure(self, api_client, settings, monkeypatch):
+        from urllib.error import URLError
+
+        settings.GITHUB_TOKEN = "ghp_test123"
+        settings.GITHUB_REPO = "leahpeker/pda"
+
+        monkeypatch.setattr(
+            "community.api.urlopen",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(URLError("Connection refused")),
+        )
+
+        response = api_client.post(
+            "/api/community/feedback/",
+            {
+                "title": "Bug report",
+                "description": "Details here",
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 503
+        assert "Failed to create feedback issue" in response.json()["detail"]
+
 
 # ---------------------------------------------------------------------------
 # TestFAQ

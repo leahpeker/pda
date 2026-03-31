@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/feedback_provider.dart';
+import 'package:pda/utils/user_agent.dart';
 
 class FeedbackForm extends ConsumerStatefulWidget {
   final String currentRoute;
@@ -29,7 +31,31 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
   final _descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final List<FeedbackAttachment> _attachments = [];
-  bool _submitted = false;
+  String _userAgent = '';
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _userAgent =
+        widget.userAgent.isNotEmpty ? widget.userAgent : getUserAgent();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    if (widget.appVersion.isNotEmpty) {
+      _appVersion = widget.appVersion;
+      return;
+    }
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() => _appVersion = '${info.version}+${info.buildNumber}');
+      }
+    } on Exception {
+      // PackageInfo may be unavailable in test environments
+    }
+  }
 
   @override
   void dispose() {
@@ -97,10 +123,10 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
             currentRoute: widget.currentRoute,
-            userAgent: widget.userAgent,
+            userAgent: _userAgent,
             userDisplayName: user?.displayName ?? '',
             userPhone: user?.phoneNumber ?? '',
-            appVersion: widget.appVersion,
+            appVersion: _appVersion,
             attachments: _attachments,
           ),
         );
@@ -112,8 +138,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("couldn't submit feedback — try again")),
       );
-    } else {
-      setState(() => _submitted = true);
     }
   }
 
@@ -121,10 +145,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(feedbackProvider).isLoading;
     final isWide = MediaQuery.sizeOf(context).width >= 500;
-
-    if (_submitted) {
-      return _SuccessView(onClose: widget.onClose);
-    }
 
     return SizedBox(
       width: isWide ? 420 : double.infinity,
@@ -168,7 +188,7 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
                   const SizedBox(height: 16),
                   _MetadataSection(
                     route: widget.currentRoute,
-                    appVersion: widget.appVersion,
+                    appVersion: _appVersion,
                   ),
                   const SizedBox(height: 12),
                   _AttachmentsSection(
@@ -282,33 +302,6 @@ class _AttachmentsSection extends StatelessWidget {
             label: const Text('add screenshots or files'),
           ),
       ],
-    );
-  }
-}
-
-class _SuccessView extends StatelessWidget {
-  final VoidCallback onClose;
-
-  const _SuccessView({required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 420,
-      child: Card(
-        margin: const EdgeInsets.all(16),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('feedback submitted — thanks! 🌱'),
-              const SizedBox(height: 16),
-              TextButton(onPressed: onClose, child: const Text('close')),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
