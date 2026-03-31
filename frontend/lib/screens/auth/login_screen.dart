@@ -109,6 +109,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           obscureText: _obscurePassword,
+                          enableInteractiveSelection: true,
+                          enableSuggestions: false,
+                          autocorrect: false,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => isLoading ? null : _login(),
                           validator:

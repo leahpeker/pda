@@ -44,8 +44,8 @@ class ApprovalCredentialsDialog extends StatelessWidget {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () {
-              final loginUrl =
-                  Uri.base.replace(path: '/login', query: '').toString();
+              final origin = Uri.base.origin;
+              final loginUrl = '$origin/login';
               final message =
                   'hey! you\'ve been added to PDA 🌱\n\n'
                   'log in here: $loginUrl\n'
