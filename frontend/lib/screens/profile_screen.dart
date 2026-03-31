@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/providers/auth_provider.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/profile_avatar.dart';
 
@@ -16,140 +17,143 @@ class ProfileScreen extends ConsumerWidget {
     return AppScaffold(
       maxWidth: 600,
       child: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.all(24),
         children: [
-          // Profile header
+          // Centered avatar + name
           if (user != null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Row(
-                children: [
-                  if (user.profilePhotoUrl.isNotEmpty)
-                    ProfileAvatar(photoUrl: user.profilePhotoUrl, radius: 28)
-                  else
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor:
-                          theme.colorScheme.surfaceContainerHighest,
-                      child: Icon(
-                        Icons.person,
-                        size: 28,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.displayName.isNotEmpty
-                              ? user.displayName
-                              : user.phoneNumber,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (user.displayName.isNotEmpty)
-                          Text(
-                            user.phoneNumber,
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 13,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
+            Center(
+              child: ProfileAvatar(photoUrl: user.profilePhotoUrl, radius: 48),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                user.displayName.isNotEmpty
+                    ? user.displayName
+                    : user.phoneNumber,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const Divider(height: 24),
+            if (user.displayName.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Center(
+                child: Text(
+                  user.phoneNumber,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 32),
           ],
 
-          // User nav items
+          // Nav buttons
           if (user != null) ...[
-            const _NavTile(
+            _ProfileButton(
               icon: Icons.tune_outlined,
               label: 'settings',
-              route: '/settings',
+              onTap: () => context.go('/settings'),
             ),
-            const _NavTile(
+            const SizedBox(height: 8),
+            _ProfileButton(
               icon: Icons.event_outlined,
               label: 'my events',
-              route: '/events/mine',
+              onTap: () => context.go('/events/mine'),
             ),
-          ],
-
-          // Admin
-          if (user != null && user.hasAnyAdminPermission)
-            const _NavTile(
-              icon: Icons.admin_panel_settings_outlined,
-              label: 'admin',
-              route: '/admin',
+            if (user.hasAnyAdminPermission) ...[
+              const SizedBox(height: 8),
+              _ProfileButton(
+                icon: Icons.admin_panel_settings_outlined,
+                label: 'admin',
+                onTap: () => context.go('/admin'),
+              ),
+            ],
+            const SizedBox(height: 24),
+            _ProfileButton(
+              icon: Icons.logout_outlined,
+              label: 'log out',
+              isDestructive: true,
+              onTap: () async {
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) {
+                  context.go('/');
+                  showSnackBar(context, 'you\'re logged out');
+                }
+              },
             ),
-
-          const Divider(height: 24),
-
-          if (user != null)
-            _LogoutTile()
-          else
-            const _NavTile(
+          ] else ...[
+            _ProfileButton(
               icon: Icons.login_outlined,
               label: 'log in',
-              route: '/login',
+              onTap: () => context.go('/login'),
             ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _NavTile extends StatelessWidget {
+class _ProfileButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String route;
+  final VoidCallback onTap;
+  final bool isDestructive;
 
-  const _NavTile({
+  const _ProfileButton({
     required this.icon,
     required this.label,
-    required this.route,
+    required this.onTap,
+    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final currentPath = GoRouterState.of(context).uri.path;
-    final isSelected = currentPath.startsWith(route);
     final theme = Theme.of(context);
+    final color =
+        isDestructive ? theme.colorScheme.error : theme.colorScheme.onSurface;
 
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      selected: isSelected,
-      selectedTileColor: theme.colorScheme.primaryContainer,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-      onTap: () => context.go(route),
-    );
-  }
-}
-
-class _LogoutTile extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    return ListTile(
-      leading: Icon(Icons.logout_outlined, color: theme.colorScheme.error),
-      title: Text('log out', style: TextStyle(color: theme.colorScheme.error)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-      onTap: () async {
-        await ref.read(authProvider.notifier).logout();
-        if (context.mounted) {
-          context.go('/');
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('you\'re logged out')));
-        }
-      },
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color:
+                isDestructive
+                    ? theme.colorScheme.error.withValues(alpha: 0.3)
+                    : theme.colorScheme.outline.withValues(alpha: 0.15),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ),
+            if (!isDestructive)
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
