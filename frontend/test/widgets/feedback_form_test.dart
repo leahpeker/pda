@@ -3,17 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pda/widgets/feedback_form.dart';
 
+Widget _app(Widget child) => ProviderScope(
+  child: MaterialApp(
+    theme: ThemeData(splashFactory: NoSplash.splashFactory),
+    home: Scaffold(body: child),
+  ),
+);
+
 void main() {
   group('FeedbackForm', () {
     testWidgets('renders title and description fields', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: FeedbackForm(currentRoute: '/calendar', onClose: () {}),
-            ),
-          ),
-        ),
+        _app(FeedbackForm(currentRoute: '/calendar', onClose: () {})),
       );
       await tester.pumpAndSettle();
 
@@ -23,13 +24,7 @@ void main() {
 
     testWidgets('shows metadata section with current route', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: FeedbackForm(currentRoute: '/calendar', onClose: () {}),
-            ),
-          ),
-        ),
+        _app(FeedbackForm(currentRoute: '/calendar', onClose: () {})),
       );
       await tester.pumpAndSettle();
 
@@ -39,15 +34,8 @@ void main() {
     testWidgets('calls onClose when cancel is tapped', (tester) async {
       var closed = false;
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: FeedbackForm(
-                currentRoute: '/calendar',
-                onClose: () => closed = true,
-              ),
-            ),
-          ),
+        _app(
+          FeedbackForm(currentRoute: '/calendar', onClose: () => closed = true),
         ),
       );
       await tester.pumpAndSettle();

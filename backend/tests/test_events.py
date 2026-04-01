@@ -292,7 +292,8 @@ class TestEventManagement:
         """All EventPatchIn fields (except co_host_ids) must exist on Event model."""
         from community.api import EventPatchIn
 
-        schema_fields = set(EventPatchIn.model_fields.keys()) - {"co_host_ids"}
+        m2m_fields = {"co_host_ids", "invited_user_ids"}
+        schema_fields = set(EventPatchIn.model_fields.keys()) - m2m_fields
         model_fields = {f.name for f in Event._meta.get_fields()}
         missing = schema_fields - model_fields
         assert not missing, f"EventPatchIn fields not on Event model: {missing}"

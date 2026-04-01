@@ -213,7 +213,6 @@ class _MembersTabState extends ConsumerState<MembersTab> {
           .createUser(
             phoneNumber: result['phone_number'] as String,
             displayName: result['display_name'] as String? ?? '',
-            email: result['email'] as String? ?? '',
             roleId: result['role_id'] as String?,
           );
       if (!context.mounted) return;
@@ -221,7 +220,7 @@ class _MembersTabState extends ConsumerState<MembersTab> {
         context,
         displayName:
             data['display_name'] as String? ?? data['phone_number'] as String,
-        tempPassword: data['temporary_password'] as String,
+        magicLinkToken: data['magic_link_token'] as String,
       );
     } catch (e) {
       if (!context.mounted) return;
@@ -232,16 +231,15 @@ class _MembersTabState extends ConsumerState<MembersTab> {
   void _showCreatedPasswordDialog(
     BuildContext context, {
     required String displayName,
-    required String tempPassword,
+    required String magicLinkToken,
   }) {
     showDialog<void>(
       context: context,
       builder:
           (_) => ApprovalCredentialsDialog(
             title: 'member created',
-            body:
-                '$displayName has been added. Share their temporary password:',
-            tempPassword: tempPassword,
+            body: '$displayName has been added — share their login link:',
+            magicLinkToken: magicLinkToken,
           ),
     );
   }
@@ -513,16 +511,16 @@ class MemberCard extends ConsumerWidget {
     }
   }
 
-  void _showTempPasswordDialog(BuildContext context, String tempPassword) {
+  void _showTempPasswordDialog(BuildContext context, String magicLinkToken) {
     final name =
         user.displayName.isNotEmpty ? user.displayName : user.phoneNumber;
     showDialog<void>(
       context: context,
       builder:
           (_) => ApprovalCredentialsDialog(
-            title: 'Temporary password',
-            body: 'Temporary password for $name:',
-            tempPassword: tempPassword,
+            title: 'password reset',
+            body: 'share this login link with $name:',
+            magicLinkToken: magicLinkToken,
           ),
     );
   }

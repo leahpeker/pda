@@ -338,7 +338,7 @@ class TestJoinRequests:
             **approve_requests_headers,
         )
         assert response.status_code == 200
-        assert response.json()["temporary_password"] is not None
+        assert response.json()["magic_link_token"] is not None
         user = User.objects.get(phone_number=pending_join_request.phone_number)
         assert user.needs_onboarding is True
 
@@ -355,8 +355,8 @@ class TestJoinRequests:
             **approve_requests_headers,
         )
         assert response.status_code == 200
-        # No temp password since no user was created
-        assert response.json()["temporary_password"] is None
+        # No magic token since no user was created
+        assert response.json()["magic_link_token"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -373,7 +373,7 @@ class TestCheckPhone:
             content_type="application/json",
         )
         assert response.status_code == 200
-        assert response.json()["exists"] is True
+        assert response.json()["status"] == "member"
 
     def test_check_phone_not_exists(self, api_client, db):
         response = api_client.post(
@@ -382,7 +382,7 @@ class TestCheckPhone:
             content_type="application/json",
         )
         assert response.status_code == 200
-        assert response.json()["exists"] is False
+        assert response.json()["status"] == "unknown"
 
     def test_check_phone_invalid_format_returns_false(self, api_client, db):
         response = api_client.post(
@@ -391,7 +391,7 @@ class TestCheckPhone:
             content_type="application/json",
         )
         assert response.status_code == 200
-        assert response.json()["exists"] is False
+        assert response.json()["status"] == "unknown"
 
 
 # ---------------------------------------------------------------------------
@@ -466,10 +466,10 @@ def _mock_urlopen(monkeypatch, issue_url="https://github.com/leahpeker/pda/issue
     def fake_urlopen(request):
         captured["calls"].append(request)
         buf = io.BytesIO(json.dumps({"html_url": issue_url}).encode())
-        buf.status = 201
+        buf.status = 201  # ty: ignore[unresolved-attribute]
         return buf
 
-    monkeypatch.setattr("community.api.urlopen", fake_urlopen)
+    monkeypatch.setattr("community._feedback.urlopen", fake_urlopen)
     return captured
 
 
@@ -488,7 +488,9 @@ class TestFeedback:
     ):
         for k, v in _APP_SETTINGS.items():
             setattr(settings, k, v)
-        monkeypatch.setattr("community.api._get_github_app_token", lambda *_: "ghs_inst_token")
+        monkeypatch.setattr(
+            "community._feedback._get_github_app_token", lambda *_: "ghs_inst_token"
+        )
         captured = _mock_urlopen(monkeypatch)
 
         response = api_client.post(
@@ -517,7 +519,9 @@ class TestFeedback:
     def test_feedback_works_without_auth(self, api_client, settings, monkeypatch):
         for k, v in _APP_SETTINGS.items():
             setattr(settings, k, v)
-        monkeypatch.setattr("community.api._get_github_app_token", lambda *_: "ghs_inst_token")
+        monkeypatch.setattr(
+            "community._feedback._get_github_app_token", lambda *_: "ghs_inst_token"
+        )
         _mock_urlopen(monkeypatch)
 
         response = api_client.post(
@@ -562,9 +566,11 @@ class TestFeedback:
 
         for k, v in _APP_SETTINGS.items():
             setattr(settings, k, v)
-        monkeypatch.setattr("community.api._get_github_app_token", lambda *_: "ghs_inst_token")
         monkeypatch.setattr(
-            "community.api.urlopen",
+            "community._feedback._get_github_app_token", lambda *_: "ghs_inst_token"
+        )
+        monkeypatch.setattr(
+            "community._feedback.urlopen",
             lambda *_args, **_kwargs: (_ for _ in ()).throw(URLError("Connection refused")),
         )
 

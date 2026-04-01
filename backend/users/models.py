@@ -1,9 +1,11 @@
 import uuid
+from datetime import timedelta
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from users.roles import Role  # noqa: F401 — re-exported so Django discovers it in the users app
 
@@ -62,6 +64,26 @@ class User(AbstractUser):
             if key in (role.permissions or []):
                 return True
         return False
+
+
+class MagicLoginToken(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="magic_tokens")
+    token = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+
+    @property
+    def is_expired(self) -> bool:
+        return timezone.now() > self.expires_at
+
+    @classmethod
+    def create_for_user(cls, user: "User") -> "MagicLoginToken":
+        return cls.objects.create(
+            user=user,
+            expires_at=timezone.now() + timedelta(days=7),
+        )
 
 
 @receiver(post_save, sender=User)

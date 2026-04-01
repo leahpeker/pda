@@ -1,0 +1,769 @@
+uv run ty check -vvv .
+  2026-04-01T03:57:52.120135Z DEBUG ty: Version: 0.0.25 (d60899a14 2026-03-24)
+    at crates/ty/src/lib.rs:101 on ThreadId(1)
+
+  2026-04-01T03:57:52.120200Z DEBUG ruff_db::system::os: Architecture: aarch64, OS: macos, case-sensitive: case-insensitive
+    at crates/ruff_db/src/system/os.rs:47 on ThreadId(1)
+
+  2026-04-01T03:57:52.120213Z DEBUG ty_project::metadata: Searching for a project in '/Users/tim/repos/pda'
+    at crates/ty_project/src/metadata.rs:144 on ThreadId(1)
+
+  2026-04-01T03:57:52.120312Z DEBUG ty_project::metadata::pyproject: Resolving requires-python constraint: `>=3.13`
+    at crates/ty_project/src/metadata/pyproject.rs:76 on ThreadId(1)
+
+  2026-04-01T03:57:52.120337Z DEBUG ty_project::metadata::pyproject: Resolved requires-python constraint to: 3.13
+    at crates/ty_project/src/metadata/pyproject.rs:110 on ThreadId(1)
+
+  2026-04-01T03:57:52.120341Z DEBUG ty_project::metadata: Found project at '/Users/tim/repos/pda'
+    at crates/ty_project/src/metadata.rs:230 on ThreadId(1)
+
+  2026-04-01T03:57:52.120348Z DEBUG ty_project::metadata::configuration_file: Searching for a user-level configuration at `/Users/tim/.config/ty/ty.toml`
+    at crates/ty_project/src/metadata/configuration_file.rs:47 on ThreadId(1)
+
+  2026-04-01T03:57:52.120754Z  INFO ty_project::metadata::options: Defaulting to python-platform `darwin`
+    at crates/ty_project/src/metadata/options.rs:186 on ThreadId(1)
+
+  2026-04-01T03:57:52.120766Z DEBUG ty_site_packages: Resolving `VIRTUAL_ENV` environment variable: /Users/tim/repos/pda/.venv
+    at crates/ty_site_packages/src/lib.rs:174 on ThreadId(1)
+
+  2026-04-01T03:57:52.120794Z DEBUG ty_site_packages: Attempting to parse virtual environment metadata at '/Users/tim/repos/pda/.venv/pyvenv.cfg'
+    at crates/ty_site_packages/src/lib.rs:422 on ThreadId(1)
+
+  2026-04-01T03:57:52.120842Z DEBUG ty_site_packages: Searching for site-packages directory in sys.prefix /Users/tim/repos/pda/.venv
+    at crates/ty_site_packages/src/lib.rs:1307 on ThreadId(1)
+
+  2026-04-01T03:57:52.120884Z DEBUG ty_site_packages: Resolved site-packages directories for this virtual environment are: ["/Users/tim/repos/pda/.venv/lib/python3.14/site-packages"]
+    at crates/ty_site_packages/src/lib.rs:590 on ThreadId(1)
+
+  2026-04-01T03:57:52.120950Z DEBUG ty_site_packages: Searching for real stdlib directory in sys.prefix /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14
+    at crates/ty_site_packages/src/lib.rs:1452 on ThreadId(1)
+
+  2026-04-01T03:57:52.120957Z DEBUG ty_site_packages: Resolved real stdlib path for this virtual environment is: /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14
+    at crates/ty_site_packages/src/lib.rs:630 on ThreadId(1)
+
+  2026-04-01T03:57:52.120965Z DEBUG ty_module_resolver::resolve: Adding first-party search path `/Users/tim/repos/pda`
+    at crates/ty_module_resolver/src/resolve.rs:555 on ThreadId(1)
+
+  2026-04-01T03:57:52.120968Z DEBUG ty_module_resolver::resolve: Using vendored stdlib
+    at crates/ty_module_resolver/src/resolve.rs:589 on ThreadId(1)
+
+  2026-04-01T03:57:52.121097Z DEBUG ty_module_resolver::resolve: Adding site-packages search path `/Users/tim/repos/pda/.venv/lib/python3.14/site-packages`
+    at crates/ty_module_resolver/src/resolve.rs:611 on ThreadId(1)
+
+  2026-04-01T03:57:52.121105Z  INFO ty_project::metadata::options: Python version: Python 3.13, platform: darwin
+    at crates/ty_project/src/metadata/options.rs:273 on ThreadId(1)
+
+  2026-04-01T03:57:52.121110Z DEBUG ruff_db::files::file_root: Adding new file root '/Users/tim/repos/pda/.venv/lib/python3.14/site-packages' of kind LibrarySearchPath
+    at crates/ruff_db/src/files/file_root.rs:84 on ThreadId(1)
+
+  2026-04-01T03:57:52.121315Z DEBUG ruff_db::files::file_root: Adding new file root '/Users/tim/repos/pda' of kind Project
+    at crates/ruff_db/src/files/file_root.rs:84 on ThreadId(1)
+
+  2026-04-01T03:57:52.121332Z DEBUG ty_project: Setting included paths: 1
+    at crates/ty_project/src/lib.rs:397 on ThreadId(1)
+
+  2026-04-01T03:57:52.121337Z DEBUG ty_project: Reloading files for project `pda`
+    at crates/ty_project/src/lib.rs:600 on ThreadId(1)
+
+  2026-04-01T03:57:52.121353Z DEBUG ty: Starting main loop
+    at crates/ty/src/lib.rs:318 on ThreadId(1)
+
+  2026-04-01T03:57:52.121359Z DEBUG ty: Waiting for next main loop message.
+    at crates/ty/src/lib.rs:450 on ThreadId(1)
+
+  2026-04-01T03:57:52.121407Z DEBUG ty_project: Checking all files in project 'pda'
+    at crates/ty_project/src/lib.rs:286 on ThreadId(2)
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.122160Z DEBUG ty_project::walk: Skipping directory '/Users/tim/repos/pda/.git' because it is excluded by a default or `src.exclude` pattern
+    at crates/ty_project/src/walk.rs:200 on ThreadId(13)
+
+  2026-04-01T03:57:52.123155Z DEBUG ty_project::walk: Skipping directory '/Users/tim/repos/pda/.ruff_cache' because it is excluded by a default or `src.exclude` pattern
+    at crates/ty_project/src/walk.rs:200 on ThreadId(14)
+
+  2026-04-01T03:57:52.126938Z  INFO ty_project: Indexed 95 file(s) in 0.006s
+    at crates/ty_project/src/lib.rs:588 on ThreadId(2)
+    in ty_project::Project::index_files with project=pda
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127133Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0007_user_needs_onboarding.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c43))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127140Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/config/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(8)
+    in ty_project::check_file with file=file(Id(c5c))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127156Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/api.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127171Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/apps.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c36))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127207Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0002_joinrequest_status.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c30))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127242Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_pages.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(6)
+    in ty_project::check_file with file=file(Id(c04))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127259Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0006_eventrsvp.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(3)
+    in ty_project::check_file with file=file(Id(c17))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127263Z DEBUG ty_module_resolver::resolve: Resolving dynamic module resolution paths
+    at crates/ty_module_resolver/src/resolve.rs:759 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c36))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127295Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_user_model.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c49))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127298Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0023_event_photo.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(8)
+    in ty_project::check_file with file=file(Id(c23))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127299Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0019_migrate_join_request_data.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c1d))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127334Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_guidelines.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c56))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.127942Z DEBUG ty_module_resolver::resolve: Module `community.models` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c56))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.130758Z DEBUG ty_module_resolver::resolve: Module `community._calendar` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.135905Z DEBUG ty_module_resolver::resolve: Module `__builtins__` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(6)
+    in ty_project::check_file with file=file(Id(c04))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.136761Z DEBUG ty_module_resolver::resolve: Module `users.permissions` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c56))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.137299Z DEBUG ty_module_resolver::resolve: Module `users.roles` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c56))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.138364Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_seed.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c4f))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.139003Z DEBUG ty_module_resolver::resolve: Module `community._events` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.139171Z DEBUG ty_module_resolver::resolve: Module `users.models` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c4f))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.142192Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0011_privacy_settings.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(8)
+    in ty_project::check_file with file=file(Id(c3c))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.142274Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/management/commands/seed.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c10))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.143555Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0008_alter_joinrequest_phone_number.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c29))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.145614Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0017_faq.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c16))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.145781Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_logging.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c55))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.145996Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0010_rename_manage_guidelines.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c42))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.146132Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/notifications/service.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(8)
+    in ty_project::check_file with file=file(Id(c03))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.146323Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0024_event_visibility.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c2f))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.146590Z DEBUG ty_module_resolver::resolve: Module `config.logging_config` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c55))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.146666Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/config/__init__.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c55))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.146725Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0001_initial.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c1c))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.146782Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/config/settings.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c5b))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.148539Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_settings.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c48))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.148616Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/admin.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c09))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.148803Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0022_event_type.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c22))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.148806Z DEBUG ty_module_resolver::resolve: Module `config.settings` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c48))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.148996Z DEBUG ty_module_resolver::resolve: Module `config.middleware` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c55))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.149521Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/api.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(8)
+    in ty_project::check_file with file=file(Id(c35))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.149855Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_users.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c4e))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.150386Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0016_whatsappconfig.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c2a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.150393Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_join_requests.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(3)
+    in ty_project::check_file with file=file(Id(c0f))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.151649Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0005_assign_admin_role_to_superusers.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c3d))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.152141Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/management/commands/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c11))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.152371Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_notifications.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c50))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.153686Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0009_profile_photo.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c3b))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.153860Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0015_alter_event_end_datetime.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c28))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.154079Z DEBUG ty_module_resolver::resolve: Module `notifications.service` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c50))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.154246Z DEBUG ty_module_resolver::resolve: Module `notifications.whatsapp` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c50))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.154445Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_community.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c54))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.156237Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/notifications/service.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c50))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.156527Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0025_event_invited_users.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c24))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.156920Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0010_homepage.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c15))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.157010Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c37))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.157046Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/apps.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c0b))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.157350Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0002_add_role_model.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c41))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.157399Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_events.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c4a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.157640Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/users/__init__.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c54))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.157865Z DEBUG ty_module_resolver::resolve: Module `community.api` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c4a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.158270Z DEBUG ty_module_resolver::resolve: Module `community._shared` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(6)
+    in ty_project::check_file with file=file(Id(c04))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.158352Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/notifications/whatsapp.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c02))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.158384Z DEBUG ty_module_resolver::resolve: Module `community._feedback` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.159156Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0007_joinrequest_phone_displayname.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c2e))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.159311Z DEBUG ty_module_resolver::resolve: Module `community._guidelines` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.159352Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/config/urls.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c5a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.159614Z DEBUG ty_module_resolver::resolve: Module `community._home` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.159806Z DEBUG ty_module_resolver::resolve: Module `community._join_requests` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.159890Z DEBUG ty_module_resolver::resolve: Module `community._pages` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.159987Z DEBUG ty_module_resolver::resolve: Module `community._surveys` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.160446Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0014_homepage_donate_url.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c1b))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.160896Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0013_alter_magiclogintoken_options.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c47))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.160994Z DEBUG ty_module_resolver::resolve: Module `community._whatsapp` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c0a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.161293Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_guidelines.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c08))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.161406Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/admin.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c34))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.161682Z DEBUG ty_module_resolver::resolve: Module `users.api` not found in search paths
+    at crates/ty_module_resolver/src/resolve.rs:216 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c5a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.161932Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0007_event_other_link.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c21))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.162287Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_rsvp.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c4d))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.162606Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c0e))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.162632Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/community/__init__.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c4d))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.162691Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0001_initial.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c3a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.162751Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c27))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.162916Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_auth.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c53))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.164699Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/models.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c14))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.164745Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c40))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.164759Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/notifications/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c01))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.164797Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0005_event_co_hosts.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c2d))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.164842Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0004_event_partiful_link_event_rsvp_enabled_and_more.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c1e))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.164973Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/config/middleware.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c59))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.165147Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/config/asgi.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c5d))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.165187Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0009_merge_20260326_0219.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c1a))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.165446Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0012_magiclogintoken.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c46))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.165586Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_calendar.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(11)
+    in ty_project::check_file with file=file(Id(c07))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.165925Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_whatsapp.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c31))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.166193Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/permissions.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c33))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.166490Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0013_alter_editablepage_id.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c20))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.166521Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_feedback.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(5)
+    in ty_project::check_file with file=file(Id(c0d))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.166626Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_calendar.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c4c))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.166643Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/models.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c39))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.167805Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0018_joinformquestion_and_custom_answers.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c26))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.168786Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_photos.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c52))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.169836Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_surveys.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c13))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.170954Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0006_phone_number_display_name.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c3f))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.171359Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/community/models.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(9)
+    in ty_project::check_file with file=file(Id(c13))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.171577Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/notifications/apps.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c00))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.171714Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0021_survey_models.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c2c))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.173550Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/config/wsgi.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c58))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.173755Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0011_homepage_join_content.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c19))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.173882Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0008_user_calendar_token.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c45))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.174016Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_events.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(4)
+    in ty_project::check_file with file=file(Id(c06))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.176807Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/users/models.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(8)
+    in ty_project::check_file with file=file(Id(c35))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.176873Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/config/logging_config.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(6)
+    in ty_project::check_file with file=file(Id(c5e))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.176878Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/manage.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c32))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.177109Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0008_communityguidelines.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c1f))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.177200Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_home.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c05))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.177912Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/_shared.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c0c))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.177978Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0003_seed_default_roles.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c44))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.178024Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/test_api.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c4b))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.178393Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0012_editablepage.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c18))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.178864Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/roles.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c38))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.179247Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0020_remove_joinrequest_old_fields.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c25))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.179294Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(6)
+    in ty_project::check_file with file=file(Id(c51))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.179344Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/community/_shared.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(3)
+    in ty_project::check_file with file=file(Id(c0f))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.179422Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/management/__init__.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(6)
+    in ty_project::check_file with file=file(Id(c12))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.179351Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/tests/conftest.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(2)
+    in ty_project::check_file with file=file(Id(c57))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.179485Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/users/migrations/0004_add_roles_m2m_to_user.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(6)
+    in ty_project::check_file with file=file(Id(c3e))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.179632Z DEBUG ty_python_semantic::types: Checking file '/Users/tim/repos/pda/backend/community/migrations/0003_event_created_by.py'
+    at crates/ty_python_semantic/src/types.rs:150 on ThreadId(7)
+    in ty_project::check_file with file=file(Id(c2b))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.182228Z DEBUG ruff_db::parsed: File `/Users/tim/repos/pda/backend/users/roles.py` was reparsed after being collected in the current Salsa revision
+    at crates/ruff_db/src/parsed.rs:119 on ThreadId(10)
+    in ty_project::check_file with file=file(Id(c4b))
+    in ty_project::Project::check
+
+  2026-04-01T03:57:52.185164Z DEBUG ty_project: Checking all files took 0.058s
+    at crates/ty_project/src/lib.rs:359 on ThreadId(2)
+    in ty_project::Project::check
+
+warning[call-non-callable]: Object of type `GenericAlias` is not callable
+   --> backend/community/_events.py:354:71
+    |
+352 |     auth=JWTAuth(),
+353 | )
+354 | def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...)):
+    |                                                                       ^^^^^^^^^
+355 |     if photo.content_type not in _ALLOWED_IMAGE_TYPES:
+356 |         return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
+    |
+info: rule `call-non-callable` was selected in the configuration file
+
+warning[unresolved-attribute]: Unresolved attribute `status` on type `BytesIO`
+   --> backend/tests/test_community.py:469:9
+    |
+467 |         captured["calls"].append(request)
+468 |         buf = io.BytesIO(json.dumps({"html_url": issue_url}).encode())
+469 |         buf.status = 201
+    |         ^^^^^^^^^^
+470 |         return buf
+    |
+info: rule `unresolved-attribute` was selected in the configuration file
+
+warning[unresolved-attribute]: Object of type `Token` has no attribute `access_token`
+  --> backend/tests/test_photos.py:28:45
+   |
+27 |     refresh = RefreshToken.for_user(user)
+28 |     return {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}
+   |                                             ^^^^^^^^^^^^^^^^^^^^
+   |
+info: rule `unresolved-attribute` was selected in the configuration file
+
+warning[call-non-callable]: Object of type `GenericAlias` is not callable
+   --> backend/users/api.py:349:49
+    |
+348 | @router.post("/me/photo/", response={200: UserOut, 400: ErrorOut}, auth=JWTAuth())
+349 | def upload_photo(request, photo: UploadedFile = File(...)):
+    |                                                 ^^^^^^^^^
+350 |     if photo.content_type not in _ALLOWED_IMAGE_TYPES:
+351 |         return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
+    |
+info: rule `call-non-callable` was selected in the configuration file
+
+Found 4 diagnostics
+  2026-04-01T03:57:52.185309Z DEBUG ty: Exiting main loop
+    at crates/ty/src/lib.rs:311 on ThreadId(1)
+

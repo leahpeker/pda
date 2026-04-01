@@ -4,15 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pda/config/api_config.dart';
 import 'package:pda/widgets/feedback_button.dart';
 
+// Use NoSplash to avoid ink_sparkle.frag shader loading in tests.
+Widget _app(Widget child) => ProviderScope(
+  child: MaterialApp(
+    theme: ThemeData(splashFactory: NoSplash.splashFactory),
+    home: Scaffold(body: child),
+  ),
+);
+
 void main() {
   group('FeedbackButton', () {
     testWidgets('renders ? FAB', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(body: FeedbackButton(currentRoute: '/calendar')),
-          ),
-        ),
+        _app(const FeedbackButton(currentRoute: '/calendar')),
       );
       await tester.pumpAndSettle();
 
@@ -22,11 +26,7 @@ void main() {
 
     testWidgets('opens feedback form on tap', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(body: FeedbackButton(currentRoute: '/calendar')),
-          ),
-        ),
+        _app(const FeedbackButton(currentRoute: '/calendar')),
       );
       await tester.pumpAndSettle();
 
@@ -38,11 +38,7 @@ void main() {
 
     testWidgets('closes feedback form on cancel', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(body: FeedbackButton(currentRoute: '/calendar')),
-          ),
-        ),
+        _app(const FeedbackButton(currentRoute: '/calendar')),
       );
       await tester.pumpAndSettle();
 

@@ -1,10 +1,10 @@
 from community.api import router as community_router
-from django.conf import settings
-from django.conf.urls.static import static
 from django.urls import path, re_path
 from django.views.generic import TemplateView
 from ninja import NinjaAPI
 from users.api import router as auth_router
+
+from config.media_proxy import serve_media
 
 api = NinjaAPI(title="PDA API", version="1.0.0")
 api.add_router("/auth/", auth_router, tags=["auth"])
@@ -12,13 +12,11 @@ api.add_router("/community/", community_router, tags=["community"])
 
 urlpatterns = [
     path("api/", api.urls),
+    # Media proxy — streams files from storage backend (local disk or B2)
+    re_path(r"^media/(?P<path>.+)$", serve_media),
     # Flutter SPA catch-all (MUST BE LAST)
     re_path(
         r"^(?!.*\.(js|css|json|wasm|png|jpg|ico|svg|ttf|otf|woff|woff2|map)$).*$",
         TemplateView.as_view(template_name="flutter/index.html"),
     ),
 ]
-
-# Serve media files in local dev (production uses B2).
-if settings.DEBUG:
-    urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + urlpatterns

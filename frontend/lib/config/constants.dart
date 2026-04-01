@@ -55,6 +55,7 @@ abstract class EventDetailLabel {
   static const about = 'about';
   static const host = 'host';
   static const coHosts = 'co-hosts';
+  static const invited = 'invited';
   static const details = 'details';
   static const rsvp = 'rsvp';
 }
