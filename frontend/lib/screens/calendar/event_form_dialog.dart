@@ -574,14 +574,18 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               features.map((f) {
                 final props = f['properties'] as Map<String, dynamic>;
                 final coords = f['geometry']['coordinates'] as List<dynamic>;
+                final name = props['name'] as String? ?? '';
+                final city = props['city'] as String?;
                 final parts = <String>[
-                  if (props['name'] != null) props['name'] as String,
-                  if (props['city'] != null) props['city'] as String,
+                  if (name.isNotEmpty) name,
+                  if (city != null) city,
                   if (props['state'] != null) props['state'] as String,
                   if (props['country'] != null) props['country'] as String,
                 ];
                 return _PhotonResult(
-                  displayName: parts.join(', '),
+                  name: name,
+                  city: city != null && city != name ? city : null,
+                  fullAddress: parts.join(', '),
                   lat: (coords[1] as num).toDouble(),
                   lon: (coords[0] as num).toDouble(),
                 );
@@ -635,11 +639,22 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                     return ListTile(
                       dense: true,
                       title: Text(
-                        r.displayName,
+                        r.name,
                         style: const TextStyle(fontSize: 13),
                       ),
+                      subtitle:
+                          r.city != null
+                              ? Text(
+                                r.city!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      theme.colorScheme.onSurfaceVariant,
+                                ),
+                              )
+                              : null,
                       onTap: () {
-                        _location.text = r.displayName;
+                        _location.text = r.fullAddress;
                         setState(() {
                           _latitude = r.lat;
                           _longitude = r.lon;
@@ -1086,11 +1101,15 @@ class _DateTimeRow extends StatelessWidget {
 }
 
 class _PhotonResult {
-  final String displayName;
+  final String name;
+  final String? city;
+  final String fullAddress;
   final double lat;
   final double lon;
   const _PhotonResult({
-    required this.displayName,
+    required this.name,
+    this.city,
+    required this.fullAddress,
     required this.lat,
     required this.lon,
   });
