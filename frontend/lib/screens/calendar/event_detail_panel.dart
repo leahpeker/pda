@@ -137,31 +137,65 @@ class EventDetailContent extends ConsumerWidget {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),
-                      if (liveEvent.eventType == EventType.official) ...[
+                      if (liveEvent.eventType == EventType.official ||
+                          liveEvent.visibility ==
+                              PageVisibility.membersOnly) ...[
                         const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(
-                                  context,
-                                ).colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'official pda event',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.onSecondaryContainer,
-                            ),
-                          ),
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            if (liveEvent.eventType == EventType.official)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'official pda event',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                            if (liveEvent.visibility ==
+                                PageVisibility.membersOnly)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.tertiaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'members only',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onTertiaryContainer,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ],
@@ -469,8 +503,7 @@ class _LinkRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 color: color,
-                decoration: TextDecoration.underline,
-                decorationColor: color,
+                decoration: TextDecoration.none,
               ),
             ),
           ),

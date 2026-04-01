@@ -155,6 +155,7 @@ class _FilterChips extends StatelessWidget {
               return FilterChip(
                 label: Text(filter),
                 selected: isSelected,
+                showCheckmark: false,
                 onSelected: (_) => onSelected(filter),
               );
             }).toList(),

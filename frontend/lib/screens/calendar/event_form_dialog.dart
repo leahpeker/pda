@@ -25,8 +25,9 @@ class EventFormResult {
 /// Pass [event] to pre-fill fields for editing; omit for create mode.
 class EventFormDialog extends ConsumerStatefulWidget {
   final Event? event;
+  final DateTime? initialDate;
 
-  const EventFormDialog({super.key, this.event});
+  const EventFormDialog({super.key, this.event, this.initialDate});
 
   @override
   ConsumerState<EventFormDialog> createState() => _EventFormDialogState();
@@ -74,8 +75,12 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _partifulLink = TextEditingController(text: e.partifulLink);
       _otherLink = TextEditingController(text: e.otherLink);
       _price = TextEditingController(text: e.price);
-      _venmoLink = TextEditingController(text: e.venmoLink);
-      _cashappLink = TextEditingController(text: e.cashappLink);
+      _venmoLink = TextEditingController(
+        text: _extractHandle(e.venmoLink, 'venmo.com/'),
+      );
+      _cashappLink = TextEditingController(
+        text: _extractHandle(e.cashappLink, r'cash.app/$'),
+      );
       _zelleInfo = TextEditingController(text: e.zelleInfo);
       _showCost =
           e.price.isNotEmpty ||
@@ -109,8 +114,9 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _venmoLink = TextEditingController();
       _cashappLink = TextEditingController();
       _zelleInfo = TextEditingController();
+      final base = widget.initialDate ?? DateTime.now();
       final now = DateTime.now();
-      _start = DateTime(now.year, now.month, now.day, now.hour + 1);
+      _start = DateTime(base.year, base.month, base.day, now.hour + 1);
       _end = null;
       _rsvpEnabled = false;
       _eventType = EventType.community;
@@ -214,6 +220,21 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     return 'https://$s';
   }
 
+  /// Strips a URL down to just the handle for display in the form.
+  String _extractHandle(String url, String domain) {
+    if (url.isEmpty) return '';
+    final idx = url.indexOf(domain);
+    if (idx == -1) return url;
+    return url.substring(idx + domain.length).replaceAll('/', '');
+  }
+
+  /// Converts a bare handle (with or without @) to a full URL.
+  String _handleToLink(String handle, String baseUrl) {
+    final h = handle.trim().replaceFirst(RegExp(r'^@'), '');
+    if (h.isEmpty) return '';
+    return '$baseUrl$h';
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pop(
@@ -226,8 +247,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'partiful_link': _normalizeUrl(_partifulLink.text),
           'other_link': _normalizeUrl(_otherLink.text),
           'price': _price.text.trim(),
-          'venmo_link': _normalizeUrl(_venmoLink.text),
-          'cashapp_link': _normalizeUrl(_cashappLink.text),
+          'venmo_link': _handleToLink(_venmoLink.text, 'https://venmo.com/'),
+          'cashapp_link': _handleToLink(
+            _cashappLink.text,
+            'https://cash.app/\$',
+          ),
           'zelle_info': _zelleInfo.text.trim(),
           'start_datetime': _start.toUtc().toIso8601String(),
           'end_datetime': _end?.toUtc().toIso8601String(),
@@ -666,21 +690,21 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       TextFormField(
         controller: _venmoLink,
         decoration: const InputDecoration(
-          labelText: 'venmo link',
+          labelText: 'venmo handle',
+          hintText: 'username',
           border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.payment),
+          prefixText: '@',
         ),
-        keyboardType: TextInputType.url,
       ),
       const SizedBox(height: 12),
       TextFormField(
         controller: _cashappLink,
         decoration: const InputDecoration(
-          labelText: 'cash app link',
+          labelText: 'cash app handle',
+          hintText: 'username',
           border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.monetization_on_outlined),
+          prefixText: r'$',
         ),
-        keyboardType: TextInputType.url,
       ),
       const SizedBox(height: 12),
       TextFormField(
@@ -1119,14 +1143,7 @@ class _CoHostPickerState extends ConsumerState<_CoHostPicker> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      trailing:
-                          isSelected
-                              ? Icon(
-                                Icons.check,
-                                size: 16,
-                                color: theme.colorScheme.primary,
-                              )
-                              : null,
+                      trailing: null,
                       onTap: () {
                         _toggle(r.id, r.displayName);
                         if (!isSelected) {

@@ -385,8 +385,7 @@ class _GuestChipState extends State<_GuestChip> {
                 widget.guest.name,
                 style: const TextStyle(
                   fontSize: 13,
-                  decoration: TextDecoration.underline,
-                  decorationStyle: TextDecorationStyle.dotted,
+                  decoration: TextDecoration.none,
                 ),
               ),
             ],
