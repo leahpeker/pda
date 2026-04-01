@@ -677,12 +677,7 @@ class _MemberSection extends ConsumerWidget {
             button: true,
             label: 'Open $location in maps',
             child: InkWell(
-              onTap:
-                  () => openLocationInMaps(
-                    location,
-                    latitude: event.latitude,
-                    longitude: event.longitude,
-                  ),
+              onTap: () => openLocationInMaps(location),
               borderRadius: BorderRadius.circular(4),
               child: _DetailRow(
                 icon: Icons.location_on_outlined,
