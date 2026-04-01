@@ -119,8 +119,6 @@ if os.environ.get("B2_KEY_ID"):
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    MEDIA_URL = f"{os.environ['B2_ENDPOINT_URL']}/{os.environ['B2_BUCKET_NAME']}/"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # HTTPS / security headers

@@ -3,6 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from config.media_proxy import media_path
 from ninja import File, Router
 from ninja.files import UploadedFile
 from ninja.responses import Status
@@ -38,6 +39,10 @@ class EventListOut(BaseModel):
     whatsapp_link: str = ""
     partiful_link: str = ""
     other_link: str = ""
+    price: str = ""
+    venmo_link: str = ""
+    cashapp_link: str = ""
+    zelle_info: str = ""
     created_by_id: str | None = None
     co_host_ids: list[str] = []
     co_host_names: list[str] = []
@@ -53,6 +58,10 @@ class EventOut(BaseModel):
     whatsapp_link: str = ""
     partiful_link: str = ""
     other_link: str = ""
+    price: str = ""
+    venmo_link: str = ""
+    cashapp_link: str = ""
+    zelle_info: str = ""
     rsvp_enabled: bool = False
     created_by_id: str | None = None
     created_by_name: str | None = None
@@ -83,6 +92,10 @@ class EventIn(BaseModel):
     whatsapp_link: str = ""
     partiful_link: str = ""
     other_link: str = ""
+    price: str = ""
+    venmo_link: str = ""
+    cashapp_link: str = ""
+    zelle_info: str = ""
     rsvp_enabled: bool = False
     event_type: str = EventType.COMMUNITY
     visibility: str = PageVisibility.PUBLIC
@@ -99,6 +112,10 @@ class EventPatchIn(BaseModel):
     whatsapp_link: str | None = None
     partiful_link: str | None = None
     other_link: str | None = None
+    price: str | None = None
+    venmo_link: str | None = None
+    cashapp_link: str | None = None
+    zelle_info: str | None = None
     rsvp_enabled: bool | None = None
     event_type: str | None = None
     visibility: str | None = None
@@ -134,7 +151,7 @@ def _build_guest_list(rsvps, can_see_phones: bool) -> list[RSVPGuestOut]:
             name=r.user.display_name or r.user.phone_number,
             status=r.status,
             phone=r.user.phone_number if can_see_phones else None,
-            photo_url=r.user.profile_photo.url if r.user.profile_photo else "",
+            photo_url=media_path(r.user.profile_photo),
         )
         for r in rsvps
     ]
@@ -161,15 +178,20 @@ def _can_see_invited(requesting_user, creator, co_host_ids: set[str]) -> bool:
     return requesting_user.has_permission(PermissionKey.MANAGE_EVENTS)
 
 
+def _get_creator_name(creator) -> str | None:
+    if creator is None:
+        return None
+    return creator.display_name or creator.phone_number
+
+
 def _event_out(event: Event, requesting_user=None) -> EventOut:
     co_hosts = list(event.co_hosts.all())
     creator = event.created_by
-    creator_name = creator.display_name or creator.phone_number if creator else None
     auth_user = _authenticated_user(requesting_user)
     is_authed = auth_user is not None
-    rsvps = list(event.rsvps.all()) if (event.rsvp_enabled and is_authed) else []
     co_host_ids = {str(u.id) for u in co_hosts}
     phones_visible = _can_see_phones(auth_user, creator, co_host_ids)
+    rsvps = list(event.rsvps.all()) if (event.rsvp_enabled and is_authed) else []
     invited = (
         list(event.invited_users.all()) if _can_see_invited(auth_user, creator, co_host_ids) else []
     )
@@ -183,21 +205,25 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         whatsapp_link=_members_only(event.whatsapp_link, "", is_authed),
         partiful_link=_members_only(event.partiful_link, "", is_authed),
         other_link=_members_only(event.other_link, "", is_authed),
+        price=event.price,
+        venmo_link=_members_only(event.venmo_link, "", is_authed),
+        cashapp_link=_members_only(event.cashapp_link, "", is_authed),
+        zelle_info=_members_only(event.zelle_info, "", is_authed),
         rsvp_enabled=_members_only(event.rsvp_enabled, False, is_authed),
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
-        created_by_name=creator_name,
+        created_by_name=_get_creator_name(creator),
         co_host_ids=[str(u.id) for u in co_hosts],
         co_host_names=[u.display_name or u.phone_number for u in co_hosts],
-        co_host_photo_urls=[u.profile_photo.url if u.profile_photo else "" for u in co_hosts],
+        co_host_photo_urls=[media_path(u.profile_photo) for u in co_hosts],
         guests=_members_only(_build_guest_list(rsvps, phones_visible), [], is_authed),
         my_rsvp=_find_my_rsvp(rsvps, auth_user),
         event_type=event.event_type,
         visibility=event.visibility,
-        photo_url=event.photo.url if event.photo else "",
+        photo_url=media_path(event.photo),
         survey_slugs=list(event.surveys.filter(is_active=True).values_list("slug", flat=True)),
         invited_user_ids=[str(u.id) for u in invited],
         invited_user_names=[u.display_name or u.phone_number for u in invited],
-        invited_user_photo_urls=[u.profile_photo.url if u.profile_photo else "" for u in invited],
+        invited_user_photo_urls=[media_path(u.profile_photo) for u in invited],
     )
 
 
@@ -219,10 +245,14 @@ def list_events(request):
                 location=e.location,
                 event_type=e.event_type,
                 visibility=e.visibility,
-                photo_url=e.photo.url if e.photo else "",
+                photo_url=media_path(e.photo),
                 whatsapp_link=_members_only(e.whatsapp_link, "", is_authed),
                 partiful_link=_members_only(e.partiful_link, "", is_authed),
                 other_link=_members_only(e.other_link, "", is_authed),
+                price=e.price,
+                venmo_link=_members_only(e.venmo_link, "", is_authed),
+                cashapp_link=_members_only(e.cashapp_link, "", is_authed),
+                zelle_info=_members_only(e.zelle_info, "", is_authed),
                 created_by_id=str(e.created_by_id) if e.created_by_id else None,
                 co_host_ids=[str(c.id) for c in e.co_hosts.all()],
                 co_host_names=[c.display_name or c.phone_number for c in e.co_hosts.all()],
@@ -270,6 +300,10 @@ def create_event(request, payload: EventIn):
         whatsapp_link=payload.whatsapp_link,
         partiful_link=payload.partiful_link,
         other_link=payload.other_link,
+        price=payload.price,
+        venmo_link=payload.venmo_link,
+        cashapp_link=payload.cashapp_link,
+        zelle_info=payload.zelle_info,
         rsvp_enabled=payload.rsvp_enabled,
         event_type=payload.event_type,
         visibility=payload.visibility,
@@ -351,7 +385,7 @@ def delete_event(request, event_id: UUID):
     response={200: EventOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
     auth=JWTAuth(),
 )
-def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...)):
+def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...)):  # ty: ignore[call-non-callable]
     if photo.content_type not in _ALLOWED_IMAGE_TYPES:
         return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
     if photo.size and photo.size > _MAX_EVENT_PHOTO_SIZE:

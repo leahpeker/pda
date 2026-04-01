@@ -25,7 +25,7 @@ def _auth(user):
     from ninja_jwt.tokens import RefreshToken
 
     refresh = RefreshToken.for_user(user)
-    return {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}
+    return {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}  # ty: ignore[unresolved-attribute]
 
 
 @pytest.fixture
@@ -208,3 +208,30 @@ class TestEventPhoto:
             **_auth(member),
         )
         assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Media proxy tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestMediaProxy:
+    def test_serves_uploaded_profile_photo(self, api_client, member):
+        photo = _make_test_image()
+        upload = api_client.post("/api/auth/me/photo/", {"photo": photo}, **_auth(member))
+        assert upload.status_code == 200
+        url = upload.json()["profile_photo_url"]
+        assert url.startswith("/media/")
+        response = api_client.get(url)
+        assert response.status_code == 200
+        assert "image/" in response["Content-Type"]
+        assert "public" in response["Cache-Control"]
+
+    def test_404_for_missing_file(self, api_client):
+        response = api_client.get("/media/profile_photos/nonexistent.jpg")
+        assert response.status_code == 404
+
+    def test_path_traversal_blocked(self, api_client):
+        response = api_client.get("/media/../config/settings.py")
+        assert response.status_code in (400, 404)

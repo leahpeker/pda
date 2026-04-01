@@ -653,6 +653,21 @@ class _MemberSection extends ConsumerWidget {
             label: event.otherLink,
             url: event.otherLink,
           ),
+        if (event.price.isNotEmpty)
+          _DetailRow(icon: Icons.attach_money, text: event.price),
+        if (event.venmoLink.isNotEmpty)
+          _LinkRow(icon: Icons.payment, label: 'venmo', url: event.venmoLink),
+        if (event.cashappLink.isNotEmpty)
+          _LinkRow(
+            icon: Icons.monetization_on_outlined,
+            label: 'cash app',
+            url: event.cashappLink,
+          ),
+        if (event.zelleInfo.isNotEmpty)
+          _DetailRow(
+            icon: Icons.account_balance_outlined,
+            text: 'zelle: ${event.zelleInfo}',
+          ),
         ...event.surveySlugs.map(
           (slug) => InkWell(
             onTap: () => context.go('/surveys/$slug'),

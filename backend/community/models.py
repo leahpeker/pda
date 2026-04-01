@@ -76,6 +76,10 @@ class Event(models.Model):
     whatsapp_link = models.URLField(blank=True)
     partiful_link = models.URLField(blank=True)
     other_link = models.URLField(blank=True)
+    price = models.CharField(max_length=100, blank=True)
+    venmo_link = models.URLField(blank=True)
+    cashapp_link = models.URLField(blank=True)
+    zelle_info = models.CharField(max_length=200, blank=True)
     rsvp_enabled = models.BooleanField(default=False)
     photo = models.ImageField(upload_to="event_photos/", blank=True)
     event_type = models.CharField(
