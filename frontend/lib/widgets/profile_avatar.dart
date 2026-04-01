@@ -29,8 +29,7 @@ class ProfileAvatar extends StatelessWidget {
               : null,
       child: CircleAvatar(
         radius: radius,
-        backgroundImage:
-            photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+        backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
         onBackgroundImageError:
             photoUrl.isNotEmpty
                 ? (exception, stackTrace) =>

@@ -131,7 +131,6 @@ class TestMagicLogin:
         from datetime import timedelta
 
         from django.utils import timezone
-
         from users.models import MagicLoginToken
 
         magic = MagicLoginToken.objects.create(

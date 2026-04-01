@@ -13,3 +13,17 @@ void openUrl(String url) {
   }
   web.window.open(url, '_blank');
 }
+
+void openLocationInMaps(
+  String location, {
+  double? latitude,
+  double? longitude,
+}) {
+  final String url;
+  if (latitude != null && longitude != null) {
+    url = 'https://maps.google.com/?q=$latitude,$longitude';
+  } else {
+    url = 'https://maps.google.com/?q=${Uri.encodeComponent(location)}';
+  }
+  web.window.open(url, '_blank');
+}

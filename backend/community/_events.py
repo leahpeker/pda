@@ -33,6 +33,8 @@ class EventListOut(BaseModel):
     start_datetime: datetime
     end_datetime: datetime | None = None
     location: str
+    latitude: float | None = None
+    longitude: float | None = None
     event_type: str = EventType.COMMUNITY
     visibility: str = PageVisibility.PUBLIC
     photo_url: str = ""
@@ -55,6 +57,8 @@ class EventOut(BaseModel):
     start_datetime: datetime
     end_datetime: datetime | None = None
     location: str
+    latitude: float | None = None
+    longitude: float | None = None
     whatsapp_link: str = ""
     partiful_link: str = ""
     other_link: str = ""
@@ -89,6 +93,8 @@ class EventIn(BaseModel):
     start_datetime: datetime
     end_datetime: datetime | None = None
     location: str = ""
+    latitude: float | None = None
+    longitude: float | None = None
     whatsapp_link: str = ""
     partiful_link: str = ""
     other_link: str = ""
@@ -109,6 +115,8 @@ class EventPatchIn(BaseModel):
     start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     whatsapp_link: str | None = None
     partiful_link: str | None = None
     other_link: str | None = None
@@ -202,6 +210,8 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         start_datetime=event.start_datetime,
         end_datetime=event.end_datetime,
         location=event.location,
+        latitude=float(event.latitude) if event.latitude is not None else None,
+        longitude=float(event.longitude) if event.longitude is not None else None,
         whatsapp_link=_members_only(event.whatsapp_link, "", is_authed),
         partiful_link=_members_only(event.partiful_link, "", is_authed),
         other_link=_members_only(event.other_link, "", is_authed),
@@ -243,6 +253,8 @@ def list_events(request):
                 start_datetime=e.start_datetime,
                 end_datetime=e.end_datetime,
                 location=e.location,
+                latitude=float(e.latitude) if e.latitude is not None else None,
+                longitude=float(e.longitude) if e.longitude is not None else None,
                 event_type=e.event_type,
                 visibility=e.visibility,
                 photo_url=media_path(e.photo),
@@ -297,6 +309,8 @@ def create_event(request, payload: EventIn):
         start_datetime=payload.start_datetime,
         end_datetime=payload.end_datetime,
         location=payload.location,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
         whatsapp_link=payload.whatsapp_link,
         partiful_link=payload.partiful_link,
         other_link=payload.other_link,

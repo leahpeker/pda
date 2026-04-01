@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -60,6 +63,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   String? _calendarTarget;
   XFile? _selectedPhoto;
   bool _removePhoto = false;
+  double? _latitude;
+  double? _longitude;
+  List<_PhotonResult> _locationResults = [];
+  bool _locationSearching = false;
+  Timer? _debounceTimer;
 
   bool get _isEdit => widget.event != null;
 
@@ -103,6 +111,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           if (i < e.invitedUserNames.length)
             e.invitedUserIds[i]: e.invitedUserNames[i],
       };
+      _latitude = e.latitude;
+      _longitude = e.longitude;
     } else {
       _title = TextEditingController();
       _description = TextEditingController();
@@ -130,6 +140,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
     _title.dispose();
     _description.dispose();
@@ -243,6 +254,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'title': _title.text.trim(),
           'description': _description.text.trim(),
           'location': _location.text.trim(),
+          'latitude': _latitude,
+          'longitude': _longitude,
           'whatsapp_link': _normalizeUrl(_whatsappLink.text),
           'partiful_link': _normalizeUrl(_partifulLink.text),
           'other_link': _normalizeUrl(_otherLink.text),
@@ -531,15 +544,109 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     ];
   }
 
+  void _searchLocation(String query) {
+    _debounceTimer?.cancel();
+    if (query.trim().length < 3) {
+      setState(() {
+        _locationResults = [];
+        _latitude = null;
+        _longitude = null;
+      });
+      return;
+    }
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      setState(() => _locationSearching = true);
+      try {
+        final resp = await Dio().get<Map<String, dynamic>>(
+          'https://photon.komoot.io/api/',
+          queryParameters: {'q': query.trim(), 'limit': 5},
+        );
+        final features = (resp.data?['features'] as List<dynamic>?) ?? const [];
+        if (!mounted) return;
+        setState(() {
+          _locationResults =
+              features.map((f) {
+                final props = f['properties'] as Map<String, dynamic>;
+                final coords = f['geometry']['coordinates'] as List<dynamic>;
+                final parts = <String>[
+                  if (props['name'] != null) props['name'] as String,
+                  if (props['city'] != null) props['city'] as String,
+                  if (props['state'] != null) props['state'] as String,
+                  if (props['country'] != null) props['country'] as String,
+                ];
+                return _PhotonResult(
+                  displayName: parts.join(', '),
+                  lat: (coords[1] as num).toDouble(),
+                  lon: (coords[0] as num).toDouble(),
+                );
+              }).toList();
+        });
+      } catch (_) {
+        if (mounted) setState(() => _locationResults = []);
+      } finally {
+        if (mounted) setState(() => _locationSearching = false);
+      }
+    });
+  }
+
   Widget _buildLocationField() {
-    return TextFormField(
-      controller: _location,
-      decoration: const InputDecoration(
-        labelText: 'where?',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.place_outlined),
-      ),
-      validator: v.maxLength(300),
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: _location,
+          decoration: InputDecoration(
+            labelText: 'where?',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.place_outlined),
+            suffixIcon:
+                _locationSearching
+                    ? const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                    : null,
+          ),
+          onChanged: _searchLocation,
+          validator: v.maxLength(300),
+        ),
+        if (_locationResults.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children:
+                  _locationResults.map((r) {
+                    return ListTile(
+                      dense: true,
+                      title: Text(
+                        r.displayName,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      onTap: () {
+                        _location.text = r.displayName;
+                        setState(() {
+                          _latitude = r.lat;
+                          _longitude = r.lon;
+                          _locationResults = [];
+                        });
+                      },
+                    );
+                  }).toList(),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -971,6 +1078,17 @@ class _DateTimeRow extends StatelessWidget {
       ],
     );
   }
+}
+
+class _PhotonResult {
+  final String displayName;
+  final double lat;
+  final double lon;
+  const _PhotonResult({
+    required this.displayName,
+    required this.lat,
+    required this.lon,
+  });
 }
 
 class _CoHostResult {

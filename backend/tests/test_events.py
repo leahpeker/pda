@@ -288,6 +288,51 @@ class TestEventManagement:
         assert response.status_code == 400
         assert "end_datetime" in response.json()["detail"]
 
+    def test_create_event_with_lat_lng(self, api_client, manage_events_headers):
+        response = api_client.post(
+            "/api/community/events/",
+            {
+                "title": "Geocoded Meetup",
+                "start_datetime": "2026-07-01T18:00:00Z",
+                "location": "The Vegan Cafe",
+                "latitude": 37.774929,
+                "longitude": -122.419416,
+            },
+            content_type="application/json",
+            **manage_events_headers,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert abs(data["latitude"] - 37.774929) < 0.000001
+        assert abs(data["longitude"] - -122.419416) < 0.000001
+
+    def test_create_event_without_lat_lng_returns_null(self, api_client, manage_events_headers):
+        response = api_client.post(
+            "/api/community/events/",
+            {
+                "title": "No Location Event",
+                "start_datetime": "2026-07-01T18:00:00Z",
+            },
+            content_type="application/json",
+            **manage_events_headers,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["latitude"] is None
+        assert data["longitude"] is None
+
+    def test_patch_event_adds_lat_lng(self, api_client, manage_events_headers, sample_event):
+        response = api_client.patch(
+            f"/api/community/events/{sample_event.id}/",
+            {"latitude": 40.712776, "longitude": -74.005974},
+            content_type="application/json",
+            **manage_events_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert abs(data["latitude"] - 40.712776) < 0.000001
+        assert abs(data["longitude"] - -74.005974) < 0.000001
+
     def test_event_patch_fields_match_model(self):
         """All EventPatchIn fields (except co_host_ids) must exist on Event model."""
         from community.api import EventPatchIn

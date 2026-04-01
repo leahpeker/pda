@@ -73,6 +73,8 @@ class Event(models.Model):
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField(null=True, blank=True)
     location = models.CharField(max_length=300, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     whatsapp_link = models.URLField(blank=True)
     partiful_link = models.URLField(blank=True)
     other_link = models.URLField(blank=True)

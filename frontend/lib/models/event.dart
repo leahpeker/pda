@@ -27,6 +27,8 @@ abstract class Event with _$Event {
     required DateTime startDatetime,
     DateTime? endDatetime,
     required String location,
+    double? latitude,
+    double? longitude,
     @Default('') String whatsappLink,
     @Default('') String partifulLink,
     @Default('') String otherLink,

@@ -346,27 +346,23 @@ class _HostChip extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String text;
+  final Color? color;
 
-  const _DetailRow({required this.icon, required this.text});
+  const _DetailRow({required this.icon, required this.text, this.color});
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor =
+        color ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        Icon(icon, size: 18, color: effectiveColor),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 15,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 15, color: effectiveColor),
           ),
         ),
       ],
@@ -677,7 +673,24 @@ class _MemberSection extends ConsumerWidget {
 
       final detailRows = <Widget>[
         if (location.isNotEmpty)
-          _DetailRow(icon: Icons.location_on_outlined, text: location),
+          Semantics(
+            button: true,
+            label: 'Open $location in maps',
+            child: InkWell(
+              onTap:
+                  () => openLocationInMaps(
+                    location,
+                    latitude: event.latitude,
+                    longitude: event.longitude,
+                  ),
+              borderRadius: BorderRadius.circular(4),
+              child: _DetailRow(
+                icon: Icons.location_on_outlined,
+                text: location,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
         if (event.whatsappLink.isNotEmpty)
           _LinkRow(
             icon: Icons.chat_bubble_outline,
