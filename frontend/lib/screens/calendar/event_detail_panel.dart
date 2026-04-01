@@ -681,7 +681,7 @@ class _MemberSection extends ConsumerWidget {
               borderRadius: BorderRadius.circular(4),
               child: _DetailRow(
                 icon: Icons.location_on_outlined,
-                text: location,
+                text: location.split(', ').first,
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
