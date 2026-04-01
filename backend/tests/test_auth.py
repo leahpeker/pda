@@ -85,6 +85,80 @@ class TestLogin:
         )
         assert response.status_code == 401
 
+    def test_login_paused_user_returns_403(self, api_client, test_user):
+        test_user.is_paused = True
+        test_user.save(update_fields=["is_paused"])
+        response = api_client.post(
+            "/api/auth/login/",
+            {"phone_number": "+12025550101", "password": "testpass123"},
+            content_type="application/json",
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"] == "your membership is currently paused"
+
+
+# ---------------------------------------------------------------------------
+# TestMagicLogin
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestMagicLogin:
+    def test_magic_login_valid_returns_tokens(self, api_client, test_user):
+        from users.models import MagicLoginToken
+
+        magic = MagicLoginToken.create_for_user(test_user)
+        response = api_client.get(f"/api/auth/magic-login/{magic.token}/")
+        assert response.status_code == 200
+        data = response.json()
+        assert "access" in data
+        assert "refresh" in data
+
+    def test_magic_login_invalid_token(self, api_client, db):
+        response = api_client.get("/api/auth/magic-login/00000000-0000-0000-0000-000000000000/")
+        assert response.status_code == 400
+
+    def test_magic_login_used_token(self, api_client, test_user):
+        from users.models import MagicLoginToken
+
+        magic = MagicLoginToken.create_for_user(test_user)
+        magic.used = True
+        magic.save(update_fields=["used"])
+        response = api_client.get(f"/api/auth/magic-login/{magic.token}/")
+        assert response.status_code == 400
+
+    def test_magic_login_expired_token(self, api_client, test_user):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from users.models import MagicLoginToken
+
+        magic = MagicLoginToken.objects.create(
+            user=test_user,
+            expires_at=timezone.now() - timedelta(minutes=1),
+        )
+        response = api_client.get(f"/api/auth/magic-login/{magic.token}/")
+        assert response.status_code == 400
+
+    def test_magic_login_paused_user_returns_403(self, api_client, test_user):
+        from users.models import MagicLoginToken
+
+        test_user.is_paused = True
+        test_user.save(update_fields=["is_paused"])
+        magic = MagicLoginToken.create_for_user(test_user)
+        response = api_client.get(f"/api/auth/magic-login/{magic.token}/")
+        assert response.status_code == 403
+        assert response.json()["detail"] == "your membership is currently paused"
+
+    def test_magic_login_marks_token_used(self, api_client, test_user):
+        from users.models import MagicLoginToken
+
+        magic = MagicLoginToken.create_for_user(test_user)
+        api_client.get(f"/api/auth/magic-login/{magic.token}/")
+        magic.refresh_from_db()
+        assert magic.used is True
+
 
 # ---------------------------------------------------------------------------
 # TestRefreshToken
@@ -157,6 +231,16 @@ class TestMe:
         response = api_client.get("/api/auth/me/", **onboarding_headers)
         assert response.status_code == 200
         assert response.json()["needs_onboarding"] is True
+
+    def test_me_paused_user_returns_403(self, api_client, test_user):
+        from ninja_jwt.tokens import RefreshToken
+
+        test_user.is_paused = True
+        test_user.save(update_fields=["is_paused"])
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {RefreshToken.for_user(test_user).access_token}"}  # type: ignore
+        response = api_client.get("/api/auth/me/", **headers)
+        assert response.status_code == 403
+        assert response.json()["detail"] == "your membership is currently paused"
 
 
 # ---------------------------------------------------------------------------

@@ -161,6 +161,7 @@ class UserOut(BaseModel):
     profile_photo_url: str = ""
     show_phone: bool = True
     show_email: bool = True
+    is_paused: bool = False
     roles: list[RoleOut]
 
     @classmethod
@@ -175,6 +176,7 @@ class UserOut(BaseModel):
             profile_photo_url=media_path(user.profile_photo),
             show_phone=user.show_phone,
             show_email=user.show_email,
+            is_paused=user.is_paused,
             roles=[
                 RoleOut(
                     id=str(r.id), name=r.name, is_default=r.is_default, permissions=r.permissions
@@ -228,7 +230,7 @@ class UserPatchIn(BaseModel):
     phone_number: str | None = None
     display_name: str | None = None
     email: str | None = None
-    is_active: bool | None = None
+    is_paused: bool | None = None
 
 
 class MePatchIn(BaseModel):
@@ -272,19 +274,24 @@ class ErrorOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/login/", response={200: TokenOut, 401: ErrorOut}, auth=None)
+@router.post("/login/", response={200: TokenOut, 401: ErrorOut, 403: ErrorOut}, auth=None)
 def login(request, payload: LoginIn):
     from django.contrib.auth import authenticate
 
-    user = authenticate(request, username=payload.phone_number, password=payload.password)
-    if user is None:
+    auth_user = authenticate(request, username=payload.phone_number, password=payload.password)
+    if auth_user is None:
         logger.warning("Authentication failure: invalid credentials")
         return Status(401, ErrorOut(detail="Invalid credentials"))
+    user = User.objects.get(pk=auth_user.pk)
+    if user.is_paused:
+        return Status(403, ErrorOut(detail="your membership is currently paused"))
     refresh = RefreshToken.for_user(user)
     return Status(200, TokenOut(access=str(refresh.access_token), refresh=str(refresh)))  # type: ignore
 
 
-@router.get("/magic-login/{token}/", response={200: TokenOut, 400: ErrorOut}, auth=None)
+@router.get(
+    "/magic-login/{token}/", response={200: TokenOut, 400: ErrorOut, 403: ErrorOut}, auth=None
+)
 def magic_login(request, token: str):
     try:
         magic = MagicLoginToken.objects.select_related("user").get(token=token)
@@ -292,6 +299,8 @@ def magic_login(request, token: str):
         return Status(400, ErrorOut(detail="Invalid or expired login link."))
     if magic.used or magic.is_expired:
         return Status(400, ErrorOut(detail="This login link has already been used or has expired."))
+    if magic.user.is_paused:
+        return Status(403, ErrorOut(detail="your membership is currently paused"))
     magic.used = True
     magic.save(update_fields=["used"])
     refresh = RefreshToken.for_user(magic.user)
@@ -312,9 +321,11 @@ def refresh_token(request, payload: RefreshIn):
         return Status(401, ErrorOut(detail="Token refresh failed"))
 
 
-@router.get("/me/", response={200: UserOut, 401: ErrorOut}, auth=JWTAuth())
+@router.get("/me/", response={200: UserOut, 401: ErrorOut, 403: ErrorOut}, auth=JWTAuth())
 def me(request):
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
+    if user.is_paused:
+        return Status(403, ErrorOut(detail="your membership is currently paused"))
     return Status(200, UserOut.from_user(user))
 
 
@@ -378,7 +389,7 @@ def delete_photo(request):
 )
 def get_member_profile(request, user_id: str):
     try:
-        user = User.objects.get(pk=user_id, is_active=True)
+        user = User.objects.get(pk=user_id, is_active=True, is_paused=False)
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="Member not found."))
     is_own_profile = str(request.auth.pk) == user_id
@@ -531,7 +542,7 @@ class UserSearchOut(BaseModel):
 def search_users(request, q: str = ""):
     import re
 
-    qs = User.objects.filter(is_active=True).exclude(pk=request.auth.pk)
+    qs = User.objects.filter(is_active=True, is_paused=False).exclude(pk=request.auth.pk)
     q = q.strip()
     if q:
         digits = re.sub(r"\D", "", q)
@@ -578,21 +589,33 @@ def update_user(request, user_id: str, payload: UserPatchIn):
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="User not found."))
 
+    err = _apply_user_patch(user, user_id, payload, requester_id=str(request.auth.pk))
+    if err:
+        return Status(400, ErrorOut(detail=err))
+    user.save()
+    return Status(200, UserOut.from_user(user))
+
+
+def _apply_user_patch(
+    user: User, user_id: str, payload: UserPatchIn, requester_id: str
+) -> str | None:
+    """Apply UserPatchIn fields to user. Returns an error message string on failure, else None."""
     if payload.phone_number is not None:
         if User.objects.exclude(pk=user_id).filter(phone_number=payload.phone_number).exists():
-            return Status(400, ErrorOut(detail="A user with that phone number already exists."))
+            return "A user with that phone number already exists."
         try:
             user.phone_number = _validate_phone(payload.phone_number)
         except ValueError as e:
-            return Status(400, ErrorOut(detail=str(e)))
+            return str(e)
     if payload.display_name is not None:
         user.display_name = payload.display_name
     if payload.email is not None:
         user.email = payload.email
-    if payload.is_active is not None:
-        user.is_active = payload.is_active
-    user.save()
-    return Status(200, UserOut.from_user(user))
+    if payload.is_paused and requester_id == str(user.pk):
+        return "You cannot pause your own account."
+    if payload.is_paused is not None:
+        user.is_paused = payload.is_paused
+    return None
 
 
 @router.delete(

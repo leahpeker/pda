@@ -36,6 +36,7 @@ class User(AbstractUser):
     profile_photo = models.ImageField(upload_to="profile_photos/", blank=True)
     show_phone = models.BooleanField(default=True)
     show_email = models.BooleanField(default=True)
+    is_paused = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Remove inherited AbstractUser fields

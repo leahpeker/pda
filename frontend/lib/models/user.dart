@@ -30,6 +30,7 @@ abstract class User with _$User {
     @Default('') String profilePhotoUrl,
     @Default(true) bool showPhone,
     @Default(true) bool showEmail,
+    @Default(false) bool isPaused,
     @Default([]) List<Role> roles,
   }) = _User;
 
