@@ -560,7 +560,12 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       try {
         final resp = await Dio().get<Map<String, dynamic>>(
           'https://photon.komoot.io/api/',
-          queryParameters: {'q': query.trim(), 'limit': 5},
+          queryParameters: {
+            'q': query.trim(),
+            'limit': 5,
+            'lat': 40.7128, // bias results toward NYC
+            'lon': -74.006,
+          },
         );
         final features = (resp.data?['features'] as List<dynamic>?) ?? const [];
         if (!mounted) return;
