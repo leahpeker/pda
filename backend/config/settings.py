@@ -111,15 +111,12 @@ if os.environ.get("B2_KEY_ID"):
                 "bucket_name": os.environ["B2_BUCKET_NAME"],
                 "endpoint_url": os.environ["B2_ENDPOINT_URL"],
                 "region_name": os.environ.get("B2_REGION", "us-west-004"),
-                "default_acl": "public-read",
-                "querystring_auth": False,
             },
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    MEDIA_URL = f"{os.environ['B2_ENDPOINT_URL']}/{os.environ['B2_BUCKET_NAME']}/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

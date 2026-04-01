@@ -153,7 +153,10 @@ class _MembersTabState extends ConsumerState<MembersTab> {
         Expanded(
           child: usersAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Failed to load members: $e')),
+            error:
+                (e, _) => const Center(
+                  child: Text('couldn\'t load members — try refreshing'),
+                ),
             data: (users) {
               final filtered = _filterAndSort(users);
               if (filtered.isEmpty) {
@@ -190,6 +193,7 @@ class _MembersTabState extends ConsumerState<MembersTab> {
                       user: filtered[index],
                       allRoles: allRoles,
                       canManageRoles: widget.canManageRoles,
+                      canManageUsers: widget.canManageUsers,
                     ),
               );
             },
@@ -213,7 +217,6 @@ class _MembersTabState extends ConsumerState<MembersTab> {
           .createUser(
             phoneNumber: result['phone_number'] as String,
             displayName: result['display_name'] as String? ?? '',
-            email: result['email'] as String? ?? '',
             roleId: result['role_id'] as String?,
           );
       if (!context.mounted) return;
@@ -221,7 +224,7 @@ class _MembersTabState extends ConsumerState<MembersTab> {
         context,
         displayName:
             data['display_name'] as String? ?? data['phone_number'] as String,
-        tempPassword: data['temporary_password'] as String,
+        magicLinkToken: data['magic_link_token'] as String,
       );
     } catch (e) {
       if (!context.mounted) return;
@@ -232,16 +235,15 @@ class _MembersTabState extends ConsumerState<MembersTab> {
   void _showCreatedPasswordDialog(
     BuildContext context, {
     required String displayName,
-    required String tempPassword,
+    required String magicLinkToken,
   }) {
     showDialog<void>(
       context: context,
       builder:
           (_) => ApprovalCredentialsDialog(
             title: 'member created',
-            body:
-                '$displayName has been added. Share their temporary password:',
-            tempPassword: tempPassword,
+            body: '$displayName has been added — share their login link:',
+            magicLinkToken: magicLinkToken,
           ),
     );
   }
@@ -258,12 +260,14 @@ class MemberCard extends ConsumerWidget {
   final User user;
   final List<Role> allRoles;
   final bool canManageRoles;
+  final bool canManageUsers;
 
   const MemberCard({
     super.key,
     required this.user,
     required this.allRoles,
     required this.canManageRoles,
+    required this.canManageUsers,
   });
 
   @override
@@ -272,58 +276,55 @@ class MemberCard extends ConsumerWidget {
     final currentUser = ref.watch(authProvider).valueOrNull;
     final isOwnAccount = currentUser?.id == user.id;
 
-    return Card(
-      elevation: 2,
-      child: SelectionArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                user.displayName.isNotEmpty
-                                    ? user.displayName
-                                    : '(no name)',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                            if (user.needsOnboarding) ...[
-                              const SizedBox(width: 6),
-                              Tooltip(
-                                message: 'hasn\'t logged in yet',
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    shape: BoxShape.circle,
-                                  ),
+    return Opacity(
+      opacity: user.isPaused ? 0.5 : 1.0,
+      child: Card(
+        elevation: 2,
+        child: SelectionArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  user.displayName.isNotEmpty
+                                      ? user.displayName
+                                      : '(no name)',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
                                 ),
                               ),
+                              if (user.needsOnboarding) ...[
+                                const SizedBox(width: 6),
+                                Tooltip(
+                                  message: 'hasn\'t logged in yet',
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.tertiary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          user.phoneNumber,
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
-                        ),
-                        if (user.email.isNotEmpty)
+                          const SizedBox(height: 2),
                           Text(
-                            user.email,
+                            user.phoneNumber,
                             style: TextStyle(
                               color:
                                   Theme.of(
@@ -331,73 +332,109 @@ class MemberCard extends ConsumerWidget {
                                   ).colorScheme.onSurfaceVariant,
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-                  if (user.isSuperuser)
-                    Chip(
-                      label: const Text('Superuser'),
-                      backgroundColor:
-                          Theme.of(context).colorScheme.errorContainer,
-                      labelStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                        fontSize: 11,
+                          if (user.email.isNotEmpty)
+                            Text(
+                              user.email,
+                              style: TextStyle(
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
+                    if (user.isPaused)
+                      Chip(
+                        label: const Text('paused'),
+                        backgroundColor:
+                            Theme.of(context).colorScheme.surfaceContainerHigh,
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                      ),
+                    if (user.isSuperuser)
+                      Chip(
+                        label: const Text('Superuser'),
+                        backgroundColor:
+                            Theme.of(context).colorScheme.errorContainer,
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          fontSize: 11,
+                        ),
+                      ),
+                  ],
+                ),
+                if (user.roles.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children:
+                        user.roles.map((r) => RoleBadge(role: r)).toList(),
+                  ),
                 ],
-              ),
-              if (user.roles.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: user.roles.map((r) => RoleBadge(role: r)).toList(),
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (canManageRoles)
+                      OutlinedButton.icon(
+                        icon: const Icon(
+                          Icons.verified_user_outlined,
+                          size: 16,
+                        ),
+                        label: const Text('Edit roles'),
+                        onPressed:
+                            () => _showRoleEditor(
+                              context,
+                              ref,
+                              notifier,
+                              isOwnAccount,
+                            ),
+                      ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.key_outlined, size: 16),
+                      label: const Text('Reset password'),
+                      onPressed: () => _handleResetPassword(context, notifier),
+                    ),
+                    if (canManageUsers && !isOwnAccount)
+                      OutlinedButton.icon(
+                        icon: Icon(
+                          user.isPaused
+                              ? Icons.play_arrow_outlined
+                              : Icons.pause_outlined,
+                          size: 16,
+                        ),
+                        label: Text(user.isPaused ? 'unpause' : 'pause'),
+                        onPressed: () => _handleTogglePause(context, notifier),
+                      ),
+                    OutlinedButton.icon(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      label: Text(
+                        'Delete',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                      onPressed: () => _handleDelete(context, notifier),
+                    ),
+                  ],
                 ),
               ],
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (canManageRoles)
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.verified_user_outlined, size: 16),
-                      label: const Text('Edit roles'),
-                      onPressed:
-                          () => _showRoleEditor(
-                            context,
-                            ref,
-                            notifier,
-                            isOwnAccount,
-                          ),
-                    ),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.key_outlined, size: 16),
-                    label: const Text('Reset password'),
-                    onPressed: () => _handleResetPassword(context, notifier),
-                  ),
-                  OutlinedButton.icon(
-                    icon: Icon(
-                      Icons.delete_outline,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    label: Text(
-                      'Delete',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    onPressed: () => _handleDelete(context, notifier),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -450,7 +487,7 @@ class MemberCard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        showErrorSnackBar(context, 'Failed to update roles: $e');
+        showErrorSnackBar(context, ApiError.from(e).message);
       }
     }
   }
@@ -465,7 +502,7 @@ class MemberCard extends ConsumerWidget {
       _showTempPasswordDialog(context, tempPassword);
     } catch (e) {
       if (!context.mounted) return;
-      showErrorSnackBar(context, 'Failed to reset password: $e');
+      showErrorSnackBar(context, ApiError.from(e).message);
     }
   }
 
@@ -508,21 +545,59 @@ class MemberCard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        showErrorSnackBar(context, 'Failed: $e');
+        showErrorSnackBar(context, ApiError.from(e).message);
       }
     }
   }
 
-  void _showTempPasswordDialog(BuildContext context, String tempPassword) {
+  Future<void> _handleTogglePause(
+    BuildContext context,
+    UserManagementNotifier notifier,
+  ) async {
+    final name =
+        user.displayName.isNotEmpty ? user.displayName : user.phoneNumber;
+    final action = user.isPaused ? 'unpause' : 'pause';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: Text('$action member?'),
+            content: Text('$action $name\'s membership?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text(action),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true) return;
+    try {
+      await notifier.togglePause(user.id, paused: !user.isPaused);
+      if (context.mounted) {
+        showSnackBar(context, '$name ${user.isPaused ? 'unpaused' : 'paused'}');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'couldn\'t $action — try again');
+      }
+    }
+  }
+
+  void _showTempPasswordDialog(BuildContext context, String magicLinkToken) {
     final name =
         user.displayName.isNotEmpty ? user.displayName : user.phoneNumber;
     showDialog<void>(
       context: context,
       builder:
           (_) => ApprovalCredentialsDialog(
-            title: 'Temporary password',
-            body: 'Temporary password for $name:',
-            tempPassword: tempPassword,
+            title: 'password reset',
+            body: 'share this login link with $name:',
+            magicLinkToken: magicLinkToken,
           ),
     );
   }

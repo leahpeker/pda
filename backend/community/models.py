@@ -73,9 +73,15 @@ class Event(models.Model):
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField(null=True, blank=True)
     location = models.CharField(max_length=300, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     whatsapp_link = models.URLField(blank=True)
     partiful_link = models.URLField(blank=True)
     other_link = models.URLField(blank=True)
+    price = models.CharField(max_length=100, blank=True)
+    venmo_link = models.URLField(blank=True)
+    cashapp_link = models.URLField(blank=True)
+    zelle_info = models.CharField(max_length=200, blank=True)
     rsvp_enabled = models.BooleanField(default=False)
     photo = models.ImageField(upload_to="event_photos/", blank=True)
     event_type = models.CharField(
@@ -104,6 +110,11 @@ class Event(models.Model):
         "users.User",
         blank=True,
         related_name="co_hosted_events",
+    )
+    invited_users = models.ManyToManyField(
+        "users.User",
+        blank=True,
+        related_name="invited_events",
     )
 
     class Meta:

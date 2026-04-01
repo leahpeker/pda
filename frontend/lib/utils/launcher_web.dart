@@ -13,3 +13,9 @@ void openUrl(String url) {
   }
   web.window.open(url, '_blank');
 }
+
+void openLocationInMaps(String location) {
+  final url =
+      'https://maps.google.com/?q=${Uri.encodeComponent(location)}';
+  web.window.open(url, '_blank');
+}

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/utils/file_download.dart';
 import 'package:pda/utils/ics_generator.dart';
@@ -118,21 +119,87 @@ class EventDetailContent extends ConsumerWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      liveEvent.title,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          liveEvent.title,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                      if (liveEvent.eventType == EventType.official ||
+                          liveEvent.visibility ==
+                              PageVisibility.membersOnly) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            if (liveEvent.eventType == EventType.official)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'official pda event',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                            if (liveEvent.visibility ==
+                                PageVisibility.membersOnly)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.tertiaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'members only',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onTertiaryContainer,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -238,30 +305,40 @@ class _HostChip extends StatelessWidget {
       onTap:
           host.id.isNotEmpty ? () => context.push('/members/${host.id}') : null,
       borderRadius: BorderRadius.circular(20),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (hasPhoto)
-            CircleAvatar(
-              radius: 14,
-              backgroundImage: NetworkImage(host.photoUrl),
-            )
-          else
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: cs.primaryContainer,
-              child: Text(
-                initials,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onPrimaryContainer,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasPhoto)
+              CircleAvatar(
+                radius: 14,
+                backgroundImage: NetworkImage(host.photoUrl),
+              )
+            else
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: cs.primaryContainer,
+                child: Text(
+                  initials,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onPrimaryContainer,
+                  ),
                 ),
               ),
+            const SizedBox(width: 8),
+            Text(
+              host.name,
+              style: TextStyle(fontSize: 15, color: cs.onSurface),
             ),
-          const SizedBox(width: 8),
-          Text(host.name, style: TextStyle(fontSize: 15, color: cs.onSurface)),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -270,27 +347,23 @@ class _HostChip extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String text;
+  final Color? color;
 
-  const _DetailRow({required this.icon, required this.text});
+  const _DetailRow({required this.icon, required this.text, this.color});
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor =
+        color ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        Icon(icon, size: 18, color: effectiveColor),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 15,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 15, color: effectiveColor),
           ),
         ),
       ],
@@ -437,8 +510,7 @@ class _LinkRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 color: color,
-                decoration: TextDecoration.underline,
-                decorationColor: color,
+                decoration: TextDecoration.none,
               ),
             ),
           ),
@@ -492,7 +564,7 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to delete event: $e');
+        showErrorSnackBar(context, ApiError.from(e).message);
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -602,7 +674,19 @@ class _MemberSection extends ConsumerWidget {
 
       final detailRows = <Widget>[
         if (location.isNotEmpty)
-          _DetailRow(icon: Icons.location_on_outlined, text: location),
+          Semantics(
+            button: true,
+            label: 'Open $location in maps',
+            child: InkWell(
+              onTap: () => openLocationInMaps(location),
+              borderRadius: BorderRadius.circular(4),
+              child: _DetailRow(
+                icon: Icons.location_on_outlined,
+                text: location.split(', ').first,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
         if (event.whatsappLink.isNotEmpty)
           _LinkRow(
             icon: Icons.chat_bubble_outline,
@@ -620,6 +704,21 @@ class _MemberSection extends ConsumerWidget {
             icon: Icons.link_outlined,
             label: event.otherLink,
             url: event.otherLink,
+          ),
+        if (event.price.isNotEmpty)
+          _DetailRow(icon: Icons.attach_money, text: event.price),
+        if (event.venmoLink.isNotEmpty)
+          _LinkRow(icon: Icons.payment, label: 'venmo', url: event.venmoLink),
+        if (event.cashappLink.isNotEmpty)
+          _LinkRow(
+            icon: Icons.monetization_on_outlined,
+            label: 'cash app',
+            url: event.cashappLink,
+          ),
+        if (event.zelleInfo.isNotEmpty)
+          _DetailRow(
+            icon: Icons.account_balance_outlined,
+            text: 'zelle: ${event.zelleInfo}',
           ),
         ...event.surveySlugs.map(
           (slug) => InkWell(
@@ -649,6 +748,23 @@ class _MemberSection extends ConsumerWidget {
         ),
       ];
 
+      final invitedChips = [
+        for (var i = 0; i < event.invitedUserNames.length; i++)
+          _HostChip(
+            host: (
+              id:
+                  i < event.invitedUserIds.length
+                      ? event.invitedUserIds[i]
+                      : '',
+              name: event.invitedUserNames[i],
+              photoUrl:
+                  i < event.invitedUserPhotoUrls.length
+                      ? event.invitedUserPhotoUrls[i]
+                      : '',
+            ),
+          ),
+      ];
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -664,6 +780,13 @@ class _MemberSection extends ConsumerWidget {
                 children: [for (final host in hosts) _HostChip(host: host)],
               ),
             ),
+          if (invitedChips.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _SectionCard(
+              label: EventDetailLabel.invited,
+              child: Wrap(spacing: 12, runSpacing: 8, children: invitedChips),
+            ),
+          ],
           if (detailRows.isNotEmpty) ...[
             const SizedBox(height: 12),
             _SectionCard(
@@ -712,8 +835,8 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
   final _phoneKey = GlobalKey<FormState>();
   final _loginKey = GlobalKey<FormState>();
 
-  // null = phone step, true = login step, false = join step
-  bool? _isMember;
+  // null = phone step, "member" / "pending" / "unknown"
+  String? _phoneStatus;
   bool _loading = false;
   String? _error;
 
@@ -735,10 +858,10 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
         '/api/community/check-phone/',
         data: {'phone_number': _phoneNumber},
       );
-      final exists = (res.data as Map<String, dynamic>)['exists'] as bool;
-      setState(() => _isMember = exists);
+      final status = (res.data as Map<String, dynamic>)['status'] as String;
+      setState(() => _phoneStatus = status);
     } catch (e) {
-      setState(() => _error = 'Something went wrong. Please try again.');
+      setState(() => _error = 'something went wrong — try again');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -755,7 +878,7 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
           .read(authProvider.notifier)
           .login(_phoneNumber, _passwordCtrl.text);
     } catch (e) {
-      setState(() => _error = 'Incorrect password. Please try again.');
+      setState(() => _error = 'incorrect password — try again');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -764,7 +887,7 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
   @override
   Widget build(BuildContext context) {
     // Phone step
-    if (_isMember == null) {
+    if (_phoneStatus == null) {
       return _JuicyGate(
         headline: '🔒 log in to see the juicy details',
         subtext:
@@ -789,7 +912,7 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
     }
 
     // Login step (member found)
-    if (_isMember == true) {
+    if (_phoneStatus == 'member') {
       return _JuicyGate(
         headline: '👋 hey, welcome back!',
         subtext: 'pop in your password and we\'ll get you in',
@@ -822,13 +945,26 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
                   ),
                   const SizedBox(width: 8),
                   TextButton(
-                    onPressed: () => setState(() => _isMember = null),
+                    onPressed: () => setState(() => _phoneStatus = null),
                     child: const Text('back'),
                   ),
                 ],
               ),
             ],
           ),
+        ),
+      );
+    }
+
+    // Request in review
+    if (_phoneStatus == 'pending') {
+      return _JuicyGate(
+        headline: '⏳ your request is in review',
+        subtext: 'hang tight — we\'ll get back to you soon',
+        error: null,
+        child: TextButton(
+          onPressed: () => setState(() => _phoneStatus = null),
+          child: const Text('back'),
         ),
       );
     }
@@ -846,7 +982,7 @@ class _LoginOrJoinSectionState extends ConsumerState<_LoginOrJoinSection> {
           ),
           const SizedBox(width: 8),
           TextButton(
-            onPressed: () => setState(() => _isMember = null),
+            onPressed: () => setState(() => _phoneStatus = null),
             child: const Text('back'),
           ),
         ],

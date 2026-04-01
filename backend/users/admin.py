@@ -8,7 +8,7 @@ from users.roles import PROTECTED_ROLE_NAMES, Role
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     list_display = ("phone_number", "display_name", "is_staff", "created_at")
-    list_filter = ("is_staff", "is_superuser", "is_active")
+    list_filter = ("is_staff", "is_superuser", "is_active", "is_paused")
     search_fields = ("phone_number", "display_name", "email")
     ordering = ("-created_at",)
     fieldsets = (
@@ -16,7 +16,16 @@ class UserAdmin(BaseUserAdmin):
         ("Personal info", {"fields": ("display_name", "email")}),
         (
             "Permissions",
-            {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")},
+            {
+                "fields": (
+                    "is_active",
+                    "is_paused",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
         ),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )

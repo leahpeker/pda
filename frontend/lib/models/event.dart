@@ -27,9 +27,15 @@ abstract class Event with _$Event {
     required DateTime startDatetime,
     DateTime? endDatetime,
     required String location,
+    double? latitude,
+    double? longitude,
     @Default('') String whatsappLink,
     @Default('') String partifulLink,
     @Default('') String otherLink,
+    @Default('') String price,
+    @Default('') String venmoLink,
+    @Default('') String cashappLink,
+    @Default('') String zelleInfo,
     @Default(false) bool rsvpEnabled,
     String? createdById,
     String? createdByName,
@@ -42,6 +48,9 @@ abstract class Event with _$Event {
     @Default(PageVisibility.public_) String visibility,
     @Default('') String photoUrl,
     @Default([]) List<String> surveySlugs,
+    @Default([]) List<String> invitedUserIds,
+    @Default([]) List<String> invitedUserNames,
+    @Default([]) List<String> invitedUserPhotoUrls,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);

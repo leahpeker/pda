@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,8 +28,9 @@ class EventFormResult {
 /// Pass [event] to pre-fill fields for editing; omit for create mode.
 class EventFormDialog extends ConsumerStatefulWidget {
   final Event? event;
+  final DateTime? initialDate;
 
-  const EventFormDialog({super.key, this.event});
+  const EventFormDialog({super.key, this.event, this.initialDate});
 
   @override
   ConsumerState<EventFormDialog> createState() => _EventFormDialogState();
@@ -41,6 +45,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late final TextEditingController _whatsappLink;
   late final TextEditingController _partifulLink;
   late final TextEditingController _otherLink;
+  late final TextEditingController _price;
+  late final TextEditingController _venmoLink;
+  late final TextEditingController _cashappLink;
+  late final TextEditingController _zelleInfo;
+  bool _showCost = false;
   late DateTime _start;
   late DateTime? _end;
   late bool _rsvpEnabled;
@@ -48,10 +57,17 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late String _visibility;
   late Set<String> _coHostIds;
   late Map<String, String> _coHostNames;
+  late Set<String> _invitedUserIds;
+  late Map<String, String> _invitedUserNames;
   // which field the inline calendar is editing: 'start', 'end', or null (hidden)
   String? _calendarTarget;
   XFile? _selectedPhoto;
   bool _removePhoto = false;
+  double? _latitude;
+  double? _longitude;
+  List<_PhotonResult> _locationResults = [];
+  bool _locationSearching = false;
+  Timer? _debounceTimer;
 
   bool get _isEdit => widget.event != null;
 
@@ -66,6 +82,19 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _whatsappLink = TextEditingController(text: e.whatsappLink);
       _partifulLink = TextEditingController(text: e.partifulLink);
       _otherLink = TextEditingController(text: e.otherLink);
+      _price = TextEditingController(text: e.price);
+      _venmoLink = TextEditingController(
+        text: _extractHandle(e.venmoLink, 'venmo.com/'),
+      );
+      _cashappLink = TextEditingController(
+        text: _extractHandle(e.cashappLink, r'cash.app/$'),
+      );
+      _zelleInfo = TextEditingController(text: e.zelleInfo);
+      _showCost =
+          e.price.isNotEmpty ||
+          e.venmoLink.isNotEmpty ||
+          e.cashappLink.isNotEmpty ||
+          e.zelleInfo.isNotEmpty;
       _start = e.startDatetime.toLocal();
       _end = e.endDatetime?.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
@@ -76,6 +105,14 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
         for (var i = 0; i < e.coHostIds.length; i++)
           if (i < e.coHostNames.length) e.coHostIds[i]: e.coHostNames[i],
       };
+      _invitedUserIds = Set<String>.from(e.invitedUserIds);
+      _invitedUserNames = {
+        for (var i = 0; i < e.invitedUserIds.length; i++)
+          if (i < e.invitedUserNames.length)
+            e.invitedUserIds[i]: e.invitedUserNames[i],
+      };
+      _latitude = e.latitude;
+      _longitude = e.longitude;
     } else {
       _title = TextEditingController();
       _description = TextEditingController();
@@ -83,19 +120,27 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _whatsappLink = TextEditingController();
       _partifulLink = TextEditingController();
       _otherLink = TextEditingController();
+      _price = TextEditingController();
+      _venmoLink = TextEditingController();
+      _cashappLink = TextEditingController();
+      _zelleInfo = TextEditingController();
+      final base = widget.initialDate ?? DateTime.now();
       final now = DateTime.now();
-      _start = DateTime(now.year, now.month, now.day, now.hour + 1);
+      _start = DateTime(base.year, base.month, base.day, now.hour + 1);
       _end = null;
       _rsvpEnabled = false;
       _eventType = EventType.community;
       _visibility = PageVisibility.public_;
       _coHostIds = {};
       _coHostNames = {};
+      _invitedUserIds = {};
+      _invitedUserNames = {};
     }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
     _title.dispose();
     _description.dispose();
@@ -103,6 +148,10 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     _whatsappLink.dispose();
     _partifulLink.dispose();
     _otherLink.dispose();
+    _price.dispose();
+    _venmoLink.dispose();
+    _cashappLink.dispose();
+    _zelleInfo.dispose();
     super.dispose();
   }
 
@@ -182,6 +231,21 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     return 'https://$s';
   }
 
+  /// Strips a URL down to just the handle for display in the form.
+  String _extractHandle(String url, String domain) {
+    if (url.isEmpty) return '';
+    final idx = url.indexOf(domain);
+    if (idx == -1) return url;
+    return url.substring(idx + domain.length).replaceAll('/', '');
+  }
+
+  /// Converts a bare handle (with or without @) to a full URL.
+  String _handleToLink(String handle, String baseUrl) {
+    final h = handle.trim().replaceFirst(RegExp(r'^@'), '');
+    if (h.isEmpty) return '';
+    return '$baseUrl$h';
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pop(
@@ -190,15 +254,25 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'title': _title.text.trim(),
           'description': _description.text.trim(),
           'location': _location.text.trim(),
+          'latitude': _latitude,
+          'longitude': _longitude,
           'whatsapp_link': _normalizeUrl(_whatsappLink.text),
           'partiful_link': _normalizeUrl(_partifulLink.text),
           'other_link': _normalizeUrl(_otherLink.text),
+          'price': _price.text.trim(),
+          'venmo_link': _handleToLink(_venmoLink.text, 'https://venmo.com/'),
+          'cashapp_link': _handleToLink(
+            _cashappLink.text,
+            'https://cash.app/\$',
+          ),
+          'zelle_info': _zelleInfo.text.trim(),
           'start_datetime': _start.toUtc().toIso8601String(),
           'end_datetime': _end?.toUtc().toIso8601String(),
           'rsvp_enabled': _rsvpEnabled,
           'event_type': _eventType,
           'visibility': _visibility,
           'co_host_ids': _coHostIds.toList(),
+          'invited_user_ids': _invitedUserIds.toList(),
         },
         photo: _selectedPhoto,
         removePhoto: _removePhoto,
@@ -470,15 +544,129 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     ];
   }
 
+  void _searchLocation(String query) {
+    _debounceTimer?.cancel();
+    if (query.trim().length < 3) {
+      setState(() {
+        _locationResults = [];
+        _latitude = null;
+        _longitude = null;
+      });
+      return;
+    }
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      setState(() => _locationSearching = true);
+      try {
+        final resp = await Dio().get<Map<String, dynamic>>(
+          'https://photon.komoot.io/api/',
+          queryParameters: {
+            'q': query.trim(),
+            'limit': 5,
+            'lat': 40.7128, // bias results toward NYC
+            'lon': -74.006,
+          },
+        );
+        final features = (resp.data?['features'] as List<dynamic>?) ?? const [];
+        if (!mounted) return;
+        setState(() {
+          _locationResults =
+              features.map((f) {
+                final props = f['properties'] as Map<String, dynamic>;
+                final coords = f['geometry']['coordinates'] as List<dynamic>;
+                final name = props['name'] as String? ?? '';
+                final city = props['city'] as String?;
+                final parts = <String>[
+                  if (name.isNotEmpty) name,
+                  if (city != null) city,
+                  if (props['state'] != null) props['state'] as String,
+                  if (props['country'] != null) props['country'] as String,
+                ];
+                return _PhotonResult(
+                  name: name,
+                  city: city != null && city != name ? city : null,
+                  fullAddress: parts.join(', '),
+                  lat: (coords[1] as num).toDouble(),
+                  lon: (coords[0] as num).toDouble(),
+                );
+              }).toList();
+        });
+      } catch (_) {
+        if (mounted) setState(() => _locationResults = []);
+      } finally {
+        if (mounted) setState(() => _locationSearching = false);
+      }
+    });
+  }
+
   Widget _buildLocationField() {
-    return TextFormField(
-      controller: _location,
-      decoration: const InputDecoration(
-        labelText: 'where?',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.place_outlined),
-      ),
-      validator: v.maxLength(300),
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: _location,
+          decoration: InputDecoration(
+            labelText: 'where?',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.place_outlined),
+            suffixIcon:
+                _locationSearching
+                    ? const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                    : null,
+          ),
+          onChanged: _searchLocation,
+          validator: v.maxLength(300),
+        ),
+        if (_locationResults.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children:
+                  _locationResults.map((r) {
+                    return ListTile(
+                      dense: true,
+                      title: Text(
+                        r.name,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      subtitle:
+                          r.city != null
+                              ? Text(
+                                r.city!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      theme.colorScheme.onSurfaceVariant,
+                                ),
+                              )
+                              : null,
+                      onTap: () {
+                        _location.text = r.fullAddress;
+                        setState(() {
+                          _latitude = r.lat;
+                          _longitude = r.lon;
+                          _locationResults = [];
+                        });
+                      },
+                    );
+                  }).toList(),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -569,6 +757,94 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     ];
   }
 
+  List<Widget> _buildCostSection(ThemeData theme) {
+    if (!_showCost) {
+      return [
+        Center(
+          child: TextButton.icon(
+            onPressed: () => setState(() => _showCost = true),
+            icon: const Icon(Icons.attach_money, size: 18),
+            label: const Text('add cost'),
+          ),
+        ),
+      ];
+    }
+    return [
+      const Divider(),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Text(
+            'cost & payment',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _showCost = false;
+                _price.clear();
+                _venmoLink.clear();
+                _cashappLink.clear();
+                _zelleInfo.clear();
+              });
+            },
+            child: const Text('remove'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'costs should only cover shared orders or direct expenses — no fees or markups',
+        style: TextStyle(
+          fontSize: 12,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _price,
+        decoration: const InputDecoration(
+          labelText: 'cost',
+          hintText: 'e.g. \$5 for groceries',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.attach_money),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _venmoLink,
+        decoration: const InputDecoration(
+          labelText: 'venmo handle',
+          hintText: 'username',
+          border: OutlineInputBorder(),
+          prefixText: '@',
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _cashappLink,
+        decoration: const InputDecoration(
+          labelText: 'cash app handle',
+          hintText: 'username',
+          border: OutlineInputBorder(),
+          prefixText: r'$',
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _zelleInfo,
+        decoration: const InputDecoration(
+          labelText: 'zelle (email or phone)',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.account_balance_outlined),
+        ),
+      ),
+    ];
+  }
+
   Widget _buildRsvpToggle(ThemeData theme) {
     return SwitchListTile(
       value: _rsvpEnabled,
@@ -595,6 +871,29 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
         selectedIds: _coHostIds,
         selectedNames: _coHostNames,
         onChanged: (ids) => setState(() => _coHostIds = ids),
+        scrollController: _scrollController,
+      ),
+    ];
+  }
+
+  List<Widget> _buildInvitePicker(ThemeData theme) {
+    return [
+      const Divider(),
+      const SizedBox(height: 8),
+      Text('invite members', style: theme.textTheme.labelLarge),
+      const SizedBox(height: 4),
+      Text(
+        'invited list is only visible to you and co-hosts',
+        style: TextStyle(
+          fontSize: 12,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(height: 8),
+      _CoHostPicker(
+        selectedIds: _invitedUserIds,
+        selectedNames: _invitedUserNames,
+        onChanged: (ids) => setState(() => _invitedUserIds = ids),
         scrollController: _scrollController,
       ),
     ];
@@ -639,6 +938,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 const SizedBox(height: 16),
                 ..._buildLinksSection(theme),
                 const SizedBox(height: 16),
+                ..._buildCostSection(theme),
+                const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 8),
                 _buildRsvpToggle(theme),
@@ -682,6 +983,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 ],
                 const SizedBox(height: 16),
                 ..._buildCoHostPicker(theme),
+                const SizedBox(height: 8),
+                ..._buildInvitePicker(theme),
                 const SizedBox(height: 8),
               ],
             ),
@@ -795,6 +1098,21 @@ class _DateTimeRow extends StatelessWidget {
       ],
     );
   }
+}
+
+class _PhotonResult {
+  final String name;
+  final String? city;
+  final String fullAddress;
+  final double lat;
+  final double lon;
+  const _PhotonResult({
+    required this.name,
+    this.city,
+    required this.fullAddress,
+    required this.lat,
+    required this.lon,
+  });
 }
 
 class _CoHostResult {
@@ -967,14 +1285,7 @@ class _CoHostPickerState extends ConsumerState<_CoHostPicker> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      trailing:
-                          isSelected
-                              ? Icon(
-                                Icons.check,
-                                size: 16,
-                                color: theme.colorScheme.primary,
-                              )
-                              : null,
+                      trailing: null,
                       onTap: () {
                         _toggle(r.id, r.displayName);
                         if (!isSelected) {

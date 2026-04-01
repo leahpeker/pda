@@ -4,6 +4,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:pda/models/join_request.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/join_request_management_provider.dart';
+import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/approval_credentials_dialog.dart';
@@ -42,14 +43,14 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
       );
       ref.invalidate(joinRequestsProvider);
       if (status == JoinRequestStatus.approved && mounted) {
-        final tempPassword = response.data['temporary_password'] as String?;
-        if (tempPassword != null) {
-          await _showApprovalModal(displayName, phoneNumber, tempPassword);
+        final magicLinkToken = response.data['magic_link_token'] as String?;
+        if (magicLinkToken != null) {
+          await _showApprovalModal(displayName, phoneNumber, magicLinkToken);
         }
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to update status: $e');
+        showErrorSnackBar(context, ApiError.from(e).message);
       }
     }
   }
@@ -57,15 +58,15 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
   Future<void> _showApprovalModal(
     String displayName,
     String phoneNumber,
-    String tempPassword,
+    String magicLinkToken,
   ) async {
     await showDialog<void>(
       context: context,
       builder:
           (_) => ApprovalCredentialsDialog(
             title: '$displayName approved! 🎉',
-            body: 'Share these login credentials with them:',
-            tempPassword: tempPassword,
+            body: 'share this login link with them:',
+            magicLinkToken: magicLinkToken,
             phoneNumber: phoneNumber,
           ),
     );
@@ -155,6 +156,7 @@ class _FilterChips extends StatelessWidget {
               return FilterChip(
                 label: Text(filter),
                 selected: isSelected,
+                showCheckmark: false,
                 onSelected: (_) => onSelected(filter),
               );
             }).toList(),

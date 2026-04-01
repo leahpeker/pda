@@ -124,8 +124,8 @@ class TestBulkCreateUsers:
         data = response.json()
         assert data["created"] == 3
         assert data["failed"] == 0
-        assert len(data["temporary_password"]) == 16
         assert all(r["success"] for r in data["results"])
+        assert all(len(r["magic_link_token"]) == 36 for r in data["results"] if r["success"])
 
     def test_bulk_create_users_requires_permission(self, api_client, auth_headers):
         response = api_client.post(
@@ -181,9 +181,8 @@ class TestBulkCreateUsers:
         )
         assert response.status_code == 200
         data = response.json()
-        # All created users share one temp password
-        assert data["temporary_password"]
         assert data["created"] == 2
+        assert all(r.get("magic_link_token") for r in data["results"] if r["success"])
 
     def test_bulk_create_users_empty_list(self, api_client, manage_users_headers):
         response = api_client.post(
@@ -245,6 +244,14 @@ class TestSearchUsers:
         assert response.status_code == 200
         assert len(response.json()) <= 10
 
+    def test_search_excludes_paused_users(self, api_client, auth_headers, other_user):
+        other_user.is_paused = True
+        other_user.save(update_fields=["is_paused"])
+        response = api_client.get("/api/auth/users/search/?q=Other", **auth_headers)
+        assert response.status_code == 200
+        ids = [u["id"] for u in response.json()]
+        assert str(other_user.pk) not in ids
+
 
 # ---------------------------------------------------------------------------
 # TestUpdateUser
@@ -284,16 +291,16 @@ class TestUpdateUser:
         )
         assert response.status_code == 400
 
-    def test_update_user_is_active(self, api_client, manage_users_headers, other_user):
+    def test_update_user_pause(self, api_client, manage_users_headers, other_user):
         response = api_client.patch(
             f"/api/auth/users/{other_user.pk}/",
-            {"is_active": False},
+            {"is_paused": True},
             content_type="application/json",
             **manage_users_headers,
         )
         assert response.status_code == 200
         other_user.refresh_from_db()
-        assert other_user.is_active is False
+        assert other_user.is_paused is True
 
     def test_update_user_requires_auth(self, api_client, other_user):
         response = api_client.patch(
@@ -311,6 +318,37 @@ class TestUpdateUser:
             **auth_headers,
         )
         assert response.status_code == 403
+
+    def test_cannot_pause_own_account(self, api_client, manage_users_headers, manage_users_user):
+        response = api_client.patch(
+            f"/api/auth/users/{manage_users_user.pk}/",
+            {"is_paused": True},
+            content_type="application/json",
+            **manage_users_headers,
+        )
+        assert response.status_code == 400
+
+    def test_admin_list_includes_paused_users(self, api_client, manage_users_headers, other_user):
+        other_user.is_paused = True
+        other_user.save(update_fields=["is_paused"])
+        response = api_client.get("/api/auth/users/", **manage_users_headers)
+        assert response.status_code == 200
+        ids = [u["id"] for u in response.json()]
+        assert str(other_user.pk) in ids
+
+
+# ---------------------------------------------------------------------------
+# TestMemberProfile
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestMemberProfile:
+    def test_member_profile_returns_404_for_paused_user(self, api_client, auth_headers, other_user):
+        other_user.is_paused = True
+        other_user.save(update_fields=["is_paused"])
+        response = api_client.get(f"/api/auth/users/{other_user.pk}/profile/", **auth_headers)
+        assert response.status_code == 404
 
 
 # ---------------------------------------------------------------------------
@@ -369,6 +407,6 @@ class TestResetPassword:
         )
         assert response.status_code == 200
         data = response.json()
-        assert len(data["temporary_password"]) == 16
+        assert len(data["magic_link_token"]) == 36  # UUID format
         other_user.refresh_from_db()
-        assert other_user.check_password(data["temporary_password"])
+        assert not other_user.has_usable_password()

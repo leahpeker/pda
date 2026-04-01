@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/providers/auth_provider.dart';
@@ -19,7 +20,6 @@ class ProfileScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          // Centered avatar + name
           if (user != null) ...[
             Center(
               child: ProfileAvatar(photoUrl: user.profilePhotoUrl, radius: 48),
@@ -35,23 +35,23 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            if (user.displayName.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Center(
-                child: Text(
-                  user.phoneNumber,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
-                ),
+            const SizedBox(height: 24),
+            _InfoTile(
+              icon: Icons.phone_outlined,
+              label: 'phone',
+              value: user.phoneNumber,
+              visible: user.showPhone,
+            ),
+            if (user.email.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _InfoTile(
+                icon: Icons.email_outlined,
+                label: 'email',
+                value: user.email,
+                visible: user.showEmail,
               ),
             ],
-            const SizedBox(height: 32),
-          ],
-
-          // Nav buttons
-          if (user != null) ...[
+            const SizedBox(height: 24),
             _ProfileButton(
               icon: Icons.tune_outlined,
               label: 'settings',
@@ -91,6 +91,80 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => context.go('/login'),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool visible;
+
+  const _InfoTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.visible,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 15)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.content_copy_outlined, size: 16),
+            tooltip: 'copy',
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: value));
+              showSnackBar(context, 'copied ✓');
+            },
+          ),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: visible ? 'visible to members' : 'hidden from members',
+            child: Icon(
+              visible
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              size: 16,
+              color:
+                  visible
+                      ? theme.colorScheme.primary.withValues(alpha: 0.7)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+          ),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import secrets
 import string
 
 import phonenumbers
+from config.media_proxy import media_path
 from django.db import models
 from ninja import File, Router
 from ninja.files import UploadedFile
@@ -11,7 +12,7 @@ from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
 from pydantic import BaseModel
 
-from users.models import User
+from users.models import MagicLoginToken, User
 from users.permissions import PermissionKey
 from users.roles import PROTECTED_ROLE_NAMES, Role
 
@@ -28,6 +29,12 @@ router = Router()
 def _generate_temp_password(length: int = 16) -> str:
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
+def _create_magic_token(user: User) -> str:
+    """Create a one-time magic login token. Returns the token UUID string."""
+    magic = MagicLoginToken.create_for_user(user)
+    return str(magic.token)
 
 
 def _is_last_admin(user: User) -> bool:
@@ -63,21 +70,21 @@ def _create_user_with_role(
     *,
     needs_onboarding: bool = True,
 ) -> tuple[User, str]:
-    """Validate phone, create user, assign role. Returns (user, temp_password).
+    """Validate phone, create user, assign role. Returns (user, magic_link_token).
 
     Raises ValueError on validation failure (bad phone, duplicate, bad role).
     """
     validated_phone = _validate_phone(phone)
     if User.objects.filter(phone_number=validated_phone).exists():
         raise ValueError("A user with that phone number already exists.")
-    temp_password = _generate_temp_password()
     user = User.objects.create_user(
         phone_number=validated_phone,
-        password=temp_password,
         display_name=display_name,
         email=email,
         needs_onboarding=needs_onboarding,
     )
+    user.set_unusable_password()
+    user.save(update_fields=["password"])
     try:
         if role_id:
             role = Role.objects.get(pk=role_id)
@@ -89,7 +96,8 @@ def _create_user_with_role(
     except Role.DoesNotExist:
         user.delete()
         raise ValueError("Role not found.")
-    return user, temp_password
+    magic_token = _create_magic_token(user)
+    return user, magic_token
 
 
 def _validate_admin_role_change(
@@ -153,6 +161,7 @@ class UserOut(BaseModel):
     profile_photo_url: str = ""
     show_phone: bool = True
     show_email: bool = True
+    is_paused: bool = False
     roles: list[RoleOut]
 
     @classmethod
@@ -164,9 +173,10 @@ class UserOut(BaseModel):
             email=user.email or "",
             is_superuser=user.is_superuser,
             needs_onboarding=user.needs_onboarding,
-            profile_photo_url=user.profile_photo.url if user.profile_photo else "",
+            profile_photo_url=media_path(user.profile_photo),
             show_phone=user.show_phone,
             show_email=user.show_email,
+            is_paused=user.is_paused,
             roles=[
                 RoleOut(
                     id=str(r.id), name=r.name, is_default=r.is_default, permissions=r.permissions
@@ -195,7 +205,7 @@ class UserCreateOut(BaseModel):
     id: str
     phone_number: str
     display_name: str
-    temporary_password: str
+    magic_link_token: str
 
 
 class BulkUserCreateIn(BaseModel):
@@ -207,20 +217,20 @@ class BulkUserResult(BaseModel):
     phone_number: str
     success: bool
     error: str | None = None
+    magic_link_token: str | None = None
 
 
 class BulkUserCreateOut(BaseModel):
     results: list[BulkUserResult]
     created: int
     failed: int
-    temporary_password: str
 
 
 class UserPatchIn(BaseModel):
     phone_number: str | None = None
     display_name: str | None = None
     email: str | None = None
-    is_active: bool | None = None
+    is_paused: bool | None = None
 
 
 class MePatchIn(BaseModel):
@@ -242,7 +252,7 @@ class UserRolesIn(BaseModel):
 
 class ResetPasswordOut(BaseModel):
     detail: str
-    temporary_password: str
+    magic_link_token: str
 
 
 class RoleIn(BaseModel):
@@ -264,15 +274,36 @@ class ErrorOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/login/", response={200: TokenOut, 401: ErrorOut}, auth=None)
+@router.post("/login/", response={200: TokenOut, 401: ErrorOut, 403: ErrorOut}, auth=None)
 def login(request, payload: LoginIn):
     from django.contrib.auth import authenticate
 
-    user = authenticate(request, username=payload.phone_number, password=payload.password)
-    if user is None:
+    auth_user = authenticate(request, username=payload.phone_number, password=payload.password)
+    if auth_user is None:
         logger.warning("Authentication failure: invalid credentials")
         return Status(401, ErrorOut(detail="Invalid credentials"))
+    user = User.objects.get(pk=auth_user.pk)
+    if user.is_paused:
+        return Status(403, ErrorOut(detail="your membership is currently paused"))
     refresh = RefreshToken.for_user(user)
+    return Status(200, TokenOut(access=str(refresh.access_token), refresh=str(refresh)))  # type: ignore
+
+
+@router.get(
+    "/magic-login/{token}/", response={200: TokenOut, 400: ErrorOut, 403: ErrorOut}, auth=None
+)
+def magic_login(request, token: str):
+    try:
+        magic = MagicLoginToken.objects.select_related("user").get(token=token)
+    except MagicLoginToken.DoesNotExist:
+        return Status(400, ErrorOut(detail="Invalid or expired login link."))
+    if magic.used or magic.is_expired:
+        return Status(400, ErrorOut(detail="This login link has already been used or has expired."))
+    if magic.user.is_paused:
+        return Status(403, ErrorOut(detail="your membership is currently paused"))
+    magic.used = True
+    magic.save(update_fields=["used"])
+    refresh = RefreshToken.for_user(magic.user)
     return Status(200, TokenOut(access=str(refresh.access_token), refresh=str(refresh)))  # type: ignore
 
 
@@ -290,9 +321,11 @@ def refresh_token(request, payload: RefreshIn):
         return Status(401, ErrorOut(detail="Token refresh failed"))
 
 
-@router.get("/me/", response={200: UserOut, 401: ErrorOut}, auth=JWTAuth())
+@router.get("/me/", response={200: UserOut, 401: ErrorOut, 403: ErrorOut}, auth=JWTAuth())
 def me(request):
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
+    if user.is_paused:
+        return Status(403, ErrorOut(detail="your membership is currently paused"))
     return Status(200, UserOut.from_user(user))
 
 
@@ -325,7 +358,7 @@ _ALLOWED_IMAGE_TYPES = {
 
 
 @router.post("/me/photo/", response={200: UserOut, 400: ErrorOut}, auth=JWTAuth())
-def upload_photo(request, photo: UploadedFile = File(...)):
+def upload_photo(request, photo: UploadedFile = File(...)):  # ty: ignore[call-non-callable]
     if photo.content_type not in _ALLOWED_IMAGE_TYPES:
         return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
     if photo.size and photo.size > _MAX_PHOTO_SIZE:
@@ -356,7 +389,7 @@ def delete_photo(request):
 )
 def get_member_profile(request, user_id: str):
     try:
-        user = User.objects.get(pk=user_id, is_active=True)
+        user = User.objects.get(pk=user_id, is_active=True, is_paused=False)
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="Member not found."))
     is_own_profile = str(request.auth.pk) == user_id
@@ -367,7 +400,7 @@ def get_member_profile(request, user_id: str):
             display_name=user.display_name,
             phone_number=user.phone_number if (user.show_phone or is_own_profile) else "",
             email=(user.email or "") if (user.show_email or is_own_profile) else "",
-            profile_photo_url=user.profile_photo.url if user.profile_photo else "",
+            profile_photo_url=media_path(user.profile_photo),
         ),
     )
 
@@ -420,7 +453,7 @@ def create_user(request, payload: UserCreateIn):
         return Status(403, ErrorOut(detail="Permission denied."))
 
     try:
-        user, temp_password = _create_user_with_role(
+        user, magic_token = _create_user_with_role(
             payload.phone_number, payload.display_name, payload.email, payload.role_id
         )
     except ValueError as e:
@@ -432,7 +465,7 @@ def create_user(request, payload: UserCreateIn):
             id=str(user.id),
             phone_number=user.phone_number,
             display_name=user.display_name,
-            temporary_password=temp_password,
+            magic_link_token=magic_token,
         ),
     )
 
@@ -450,7 +483,6 @@ def bulk_create_users(request, payload: BulkUserCreateIn):
     results: list[BulkUserResult] = []
     created = 0
     failed = 0
-    temp_password = _generate_temp_password()
 
     for i, raw_phone in enumerate(payload.phone_numbers):
         try:
@@ -476,20 +508,27 @@ def bulk_create_users(request, payload: BulkUserCreateIn):
 
         user = User.objects.create_user(
             phone_number=validated_phone,
-            password=temp_password,
             needs_onboarding=True,
         )
+        user.set_unusable_password()
+        user.save(update_fields=["password"])
         if member_role:
             user.roles.add(member_role)
 
-        results.append(BulkUserResult(row=i + 1, phone_number=validated_phone, success=True))
+        magic_token = _create_magic_token(user)
+        results.append(
+            BulkUserResult(
+                row=i + 1,
+                phone_number=validated_phone,
+                success=True,
+                magic_link_token=magic_token,
+            )
+        )
         created += 1
 
     return Status(
         200,
-        BulkUserCreateOut(
-            results=results, created=created, failed=failed, temporary_password=temp_password
-        ),
+        BulkUserCreateOut(results=results, created=created, failed=failed),
     )
 
 
@@ -503,7 +542,7 @@ class UserSearchOut(BaseModel):
 def search_users(request, q: str = ""):
     import re
 
-    qs = User.objects.filter(is_active=True).exclude(pk=request.auth.pk)
+    qs = User.objects.filter(is_active=True, is_paused=False).exclude(pk=request.auth.pk)
     q = q.strip()
     if q:
         digits = re.sub(r"\D", "", q)
@@ -550,21 +589,33 @@ def update_user(request, user_id: str, payload: UserPatchIn):
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="User not found."))
 
+    err = _apply_user_patch(user, user_id, payload, requester_id=str(request.auth.pk))
+    if err:
+        return Status(400, ErrorOut(detail=err))
+    user.save()
+    return Status(200, UserOut.from_user(user))
+
+
+def _apply_user_patch(
+    user: User, user_id: str, payload: UserPatchIn, requester_id: str
+) -> str | None:
+    """Apply UserPatchIn fields to user. Returns an error message string on failure, else None."""
     if payload.phone_number is not None:
         if User.objects.exclude(pk=user_id).filter(phone_number=payload.phone_number).exists():
-            return Status(400, ErrorOut(detail="A user with that phone number already exists."))
+            return "A user with that phone number already exists."
         try:
             user.phone_number = _validate_phone(payload.phone_number)
         except ValueError as e:
-            return Status(400, ErrorOut(detail=str(e)))
+            return str(e)
     if payload.display_name is not None:
         user.display_name = payload.display_name
     if payload.email is not None:
         user.email = payload.email
-    if payload.is_active is not None:
-        user.is_active = payload.is_active
-    user.save()
-    return Status(200, UserOut.from_user(user))
+    if payload.is_paused and requester_id == str(user.pk):
+        return "You cannot pause your own account."
+    if payload.is_paused is not None:
+        user.is_paused = payload.is_paused
+    return None
 
 
 @router.delete(
@@ -625,15 +676,15 @@ def reset_password(request, user_id: str):
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="User not found."))
-    temp_password = _generate_temp_password()
-    user.set_password(temp_password)
+    user.set_unusable_password()
     user.needs_onboarding = True
     user.save()
+    magic_token = _create_magic_token(user)
     return Status(
         200,
         ResetPasswordOut(
-            detail="Password reset. Share the temporary password with the user.",
-            temporary_password=temp_password,
+            detail="Password reset. Share the magic login link with the user.",
+            magic_link_token=magic_token,
         ),
     )
 

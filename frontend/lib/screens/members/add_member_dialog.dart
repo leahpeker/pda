@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/providers/user_management_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
-import 'package:pda/widgets/temp_password_field.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/loading_button.dart';
 import 'package:pda/widgets/phone_form_field.dart';
@@ -21,18 +21,14 @@ class AddMemberDialog extends StatefulWidget {
 class _AddMemberDialogState extends State<AddMemberDialog> {
   final _formKey = GlobalKey<FormState>();
   final _displayNameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
   final _displayNameFocus = FocusNode();
-  final _emailFocus = FocusNode();
   String _phoneNumber = '';
   String? _selectedRoleId;
 
   @override
   void dispose() {
     _displayNameCtrl.dispose();
-    _emailCtrl.dispose();
     _displayNameFocus.dispose();
-    _emailFocus.dispose();
     super.dispose();
   }
 
@@ -58,31 +54,17 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                   controller: _displayNameCtrl,
                   focusNode: _displayNameFocus,
                   keyboardType: TextInputType.name,
-                  textInputAction: TextInputAction.next,
-                  onEditingComplete: () => _emailFocus.requestFocus(),
+                  textInputAction: TextInputAction.done,
                   decoration: const InputDecoration(
                     labelText: 'Display name (optional)',
                     border: OutlineInputBorder(),
                   ),
                   validator: v.maxLength(64),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _emailCtrl,
-                  focusNode: _emailFocus,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.done,
-                  decoration: const InputDecoration(
-                    labelText: 'Email (optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: v.optionalEmail(),
                   onFieldSubmitted: (_) {
                     if (!_formKey.currentState!.validate()) return;
                     Navigator.of(context).pop({
                       'phone_number': _phoneNumber,
                       'display_name': _displayNameCtrl.text.trim(),
-                      'email': _emailCtrl.text.trim(),
                       if (_selectedRoleId != null) 'role_id': _selectedRoleId,
                     });
                   },
@@ -123,7 +105,6 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
             Navigator.of(context).pop({
               'phone_number': _phoneNumber,
               'display_name': _displayNameCtrl.text.trim(),
-              'email': _emailCtrl.text.trim(),
               if (_selectedRoleId != null) 'role_id': _selectedRoleId,
             });
           },
@@ -242,7 +223,7 @@ class _BulkAddDialogState extends State<BulkAddDialog> {
     final results = (_results!['results'] as List).cast<Map<String, dynamic>>();
     final created = _results!['created'] as int;
     final failed = _results!['failed'] as int;
-    final tempPassword = _results!['temporary_password'] as String;
+    final origin = Uri.base.origin;
 
     return SingleChildScrollView(
       child: Column(
@@ -261,9 +242,21 @@ class _BulkAddDialogState extends State<BulkAddDialog> {
           ),
           if (created > 0) ...[
             const SizedBox(height: 12),
-            const Text('Temporary password (share with new members):'),
+            const Text('Login links (share with each new member):'),
             const SizedBox(height: 6),
-            TempPasswordField(password: tempPassword),
+            ...results
+                .where(
+                  (r) => r['success'] == true && r['magic_link_token'] != null,
+                )
+                .map(
+                  (r) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _MagicLinkRow(
+                      phone: r['phone_number'] as String,
+                      url: '$origin/magic-login/${r['magic_link_token']}',
+                    ),
+                  ),
+                ),
           ],
           if (failed > 0) ...[
             const SizedBox(height: 12),
@@ -289,6 +282,55 @@ class _BulkAddDialogState extends State<BulkAddDialog> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _MagicLinkRow extends StatelessWidget {
+  final String phone;
+  final String url;
+
+  const _MagicLinkRow({required this.phone, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(phone, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 2),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  url,
+                  style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                onTap: () => Clipboard.setData(ClipboardData(text: url)),
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.content_copy_outlined,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

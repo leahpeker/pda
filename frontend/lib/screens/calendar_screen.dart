@@ -59,7 +59,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     final result = await showDialog<EventFormResult>(
       context: context,
-      builder: (_) => const EventFormDialog(),
+      builder: (_) => EventFormDialog(initialDate: _selectedDate),
     );
     if (result == null) return;
 
