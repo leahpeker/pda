@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/screens/auth/login_screen.dart';
+import 'package:pda/screens/auth/magic_login_screen.dart';
 import 'package:pda/screens/auth/onboarding_screen.dart';
 import 'package:pda/screens/auth/new_password_screen.dart';
 import 'package:pda/screens/calendar_screen.dart';
@@ -131,6 +132,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/magic-login/:token',
+        name: 'magic-login',
+        builder:
+            (_, state) =>
+                MagicLoginScreen(token: state.pathParameters['token']!),
       ),
       GoRoute(
         path: '/onboarding',
