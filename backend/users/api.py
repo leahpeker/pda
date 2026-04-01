@@ -3,6 +3,7 @@ import secrets
 import string
 
 import phonenumbers
+from config.media_proxy import media_path
 from django.db import models
 from ninja import File, Router
 from ninja.files import UploadedFile
@@ -171,7 +172,7 @@ class UserOut(BaseModel):
             email=user.email or "",
             is_superuser=user.is_superuser,
             needs_onboarding=user.needs_onboarding,
-            profile_photo_url=user.profile_photo.url if user.profile_photo else "",
+            profile_photo_url=media_path(user.profile_photo),
             show_phone=user.show_phone,
             show_email=user.show_email,
             roles=[
@@ -346,7 +347,7 @@ _ALLOWED_IMAGE_TYPES = {
 
 
 @router.post("/me/photo/", response={200: UserOut, 400: ErrorOut}, auth=JWTAuth())
-def upload_photo(request, photo: UploadedFile = File(...)):
+def upload_photo(request, photo: UploadedFile = File(...)):  # ty: ignore[call-non-callable]
     if photo.content_type not in _ALLOWED_IMAGE_TYPES:
         return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
     if photo.size and photo.size > _MAX_PHOTO_SIZE:
@@ -388,7 +389,7 @@ def get_member_profile(request, user_id: str):
             display_name=user.display_name,
             phone_number=user.phone_number if (user.show_phone or is_own_profile) else "",
             email=(user.email or "") if (user.show_email or is_own_profile) else "",
-            profile_photo_url=user.profile_photo.url if user.profile_photo else "",
+            profile_photo_url=media_path(user.profile_photo),
         ),
     )
 
