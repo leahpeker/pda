@@ -466,7 +466,7 @@ def _mock_urlopen(monkeypatch, issue_url="https://github.com/leahpeker/pda/issue
     def fake_urlopen(request):
         captured["calls"].append(request)
         buf = io.BytesIO(json.dumps({"html_url": issue_url}).encode())
-        buf.status = 201
+        buf.status = 201  # ty: ignore[unresolved-attribute]
         return buf
 
     monkeypatch.setattr("community._feedback.urlopen", fake_urlopen)
