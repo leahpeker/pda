@@ -41,6 +41,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late final TextEditingController _whatsappLink;
   late final TextEditingController _partifulLink;
   late final TextEditingController _otherLink;
+  late final TextEditingController _price;
+  late final TextEditingController _venmoLink;
+  late final TextEditingController _cashappLink;
+  late final TextEditingController _zelleInfo;
+  bool _showCost = false;
   late DateTime _start;
   late DateTime? _end;
   late bool _rsvpEnabled;
@@ -68,6 +73,15 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _whatsappLink = TextEditingController(text: e.whatsappLink);
       _partifulLink = TextEditingController(text: e.partifulLink);
       _otherLink = TextEditingController(text: e.otherLink);
+      _price = TextEditingController(text: e.price);
+      _venmoLink = TextEditingController(text: e.venmoLink);
+      _cashappLink = TextEditingController(text: e.cashappLink);
+      _zelleInfo = TextEditingController(text: e.zelleInfo);
+      _showCost =
+          e.price.isNotEmpty ||
+          e.venmoLink.isNotEmpty ||
+          e.cashappLink.isNotEmpty ||
+          e.zelleInfo.isNotEmpty;
       _start = e.startDatetime.toLocal();
       _end = e.endDatetime?.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
@@ -91,6 +105,10 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _whatsappLink = TextEditingController();
       _partifulLink = TextEditingController();
       _otherLink = TextEditingController();
+      _price = TextEditingController();
+      _venmoLink = TextEditingController();
+      _cashappLink = TextEditingController();
+      _zelleInfo = TextEditingController();
       final now = DateTime.now();
       _start = DateTime(now.year, now.month, now.day, now.hour + 1);
       _end = null;
@@ -113,6 +131,10 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     _whatsappLink.dispose();
     _partifulLink.dispose();
     _otherLink.dispose();
+    _price.dispose();
+    _venmoLink.dispose();
+    _cashappLink.dispose();
+    _zelleInfo.dispose();
     super.dispose();
   }
 
@@ -203,6 +225,10 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'whatsapp_link': _normalizeUrl(_whatsappLink.text),
           'partiful_link': _normalizeUrl(_partifulLink.text),
           'other_link': _normalizeUrl(_otherLink.text),
+          'price': _price.text.trim(),
+          'venmo_link': _normalizeUrl(_venmoLink.text),
+          'cashapp_link': _normalizeUrl(_cashappLink.text),
+          'zelle_info': _zelleInfo.text.trim(),
           'start_datetime': _start.toUtc().toIso8601String(),
           'end_datetime': _end?.toUtc().toIso8601String(),
           'rsvp_enabled': _rsvpEnabled,
@@ -580,6 +606,94 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     ];
   }
 
+  List<Widget> _buildCostSection(ThemeData theme) {
+    if (!_showCost) {
+      return [
+        Center(
+          child: TextButton.icon(
+            onPressed: () => setState(() => _showCost = true),
+            icon: const Icon(Icons.attach_money, size: 18),
+            label: const Text('add cost'),
+          ),
+        ),
+      ];
+    }
+    return [
+      const Divider(),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Text(
+            'cost & payment',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _showCost = false;
+                _price.clear();
+                _venmoLink.clear();
+                _cashappLink.clear();
+                _zelleInfo.clear();
+              });
+            },
+            child: const Text('remove'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'costs should only cover shared orders or direct expenses — no fees or markups',
+        style: TextStyle(
+          fontSize: 12,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _price,
+        decoration: const InputDecoration(
+          labelText: 'cost',
+          hintText: 'e.g. \$5 for groceries',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.attach_money),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _venmoLink,
+        decoration: const InputDecoration(
+          labelText: 'venmo link',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.payment),
+        ),
+        keyboardType: TextInputType.url,
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _cashappLink,
+        decoration: const InputDecoration(
+          labelText: 'cash app link',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.monetization_on_outlined),
+        ),
+        keyboardType: TextInputType.url,
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _zelleInfo,
+        decoration: const InputDecoration(
+          labelText: 'zelle (email or phone)',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.account_balance_outlined),
+        ),
+      ),
+    ];
+  }
+
   Widget _buildRsvpToggle(ThemeData theme) {
     return SwitchListTile(
       value: _rsvpEnabled,
@@ -672,6 +786,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 _buildDescriptionField(),
                 const SizedBox(height: 16),
                 ..._buildLinksSection(theme),
+                const SizedBox(height: 16),
+                ..._buildCostSection(theme),
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 8),
