@@ -76,7 +76,7 @@ class UserManagementNotifier extends AsyncNotifier<void> {
   Future<String> resetPassword(String userId) async {
     final api = ref.read(apiClientProvider);
     final response = await api.post('/api/auth/users/$userId/reset-password/');
-    return response.data['temporary_password'] as String;
+    return response.data['magic_link_token'] as String;
   }
 
   Future<void> updateUserRoles(String userId, List<String> roleIds) async {

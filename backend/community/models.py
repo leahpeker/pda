@@ -105,6 +105,11 @@ class Event(models.Model):
         blank=True,
         related_name="co_hosted_events",
     )
+    invited_users = models.ManyToManyField(
+        "users.User",
+        blank=True,
+        related_name="invited_events",
+    )
 
     class Meta:
         ordering = ["start_datetime"]

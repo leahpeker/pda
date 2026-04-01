@@ -171,8 +171,8 @@ class TestUserManagementAPI:
         assert response.status_code == 201
         data = response.json()
         assert data["phone_number"] == "+12025551234"
-        assert "temporary_password" in data
-        assert len(data["temporary_password"]) == 16
+        assert "magic_link_token" in data
+        assert len(data["magic_link_token"]) == 36  # UUID format
 
     def test_create_user_duplicate_phone(self, api_client, admin_headers, test_user):
         response = api_client.post(
@@ -258,8 +258,8 @@ class TestUserManagementAPI:
         )
         assert response.status_code == 200
         data = response.json()
-        assert "temporary_password" in data
-        assert len(data["temporary_password"]) == 16
+        assert "magic_link_token" in data
+        assert len(data["magic_link_token"]) == 36  # UUID format
 
     def test_reset_password_requires_manage_users(self, api_client, auth_headers, test_user):
         response = api_client.post(
@@ -278,9 +278,9 @@ class TestUserManagementAPI:
 class TestCreateUserWithRole:
     def test_creates_user_with_default_member_role(self):
         Role.objects.get_or_create(name="member", defaults={"is_default": True})
-        user, temp_password = _create_user_with_role("+12025559999", "Test User", "t@e.com", None)
+        user, magic_token = _create_user_with_role("+12025559999", "Test User", "t@e.com", None)
         assert user.phone_number == "+12025559999"
-        assert len(temp_password) == 16
+        assert len(magic_token) == 36  # UUID format
         assert user.roles.filter(name="member").exists()
 
     def test_creates_user_with_specific_role(self):
@@ -687,8 +687,8 @@ class TestJoinRequestManagement:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["temporary_password"] is not None
-        assert len(data["temporary_password"]) == 16
+        assert data["magic_link_token"] is not None
+        assert len(data["magic_link_token"]) == 36  # UUID format
         user = User.objects.get(phone_number=sample_join_request.phone_number)
         assert user.display_name == "Sprout Seedling"
         assert user.needs_onboarding is True

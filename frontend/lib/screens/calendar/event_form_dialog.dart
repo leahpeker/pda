@@ -48,6 +48,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late String _visibility;
   late Set<String> _coHostIds;
   late Map<String, String> _coHostNames;
+  late Set<String> _invitedUserIds;
+  late Map<String, String> _invitedUserNames;
   // which field the inline calendar is editing: 'start', 'end', or null (hidden)
   String? _calendarTarget;
   XFile? _selectedPhoto;
@@ -76,6 +78,12 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
         for (var i = 0; i < e.coHostIds.length; i++)
           if (i < e.coHostNames.length) e.coHostIds[i]: e.coHostNames[i],
       };
+      _invitedUserIds = Set<String>.from(e.invitedUserIds);
+      _invitedUserNames = {
+        for (var i = 0; i < e.invitedUserIds.length; i++)
+          if (i < e.invitedUserNames.length)
+            e.invitedUserIds[i]: e.invitedUserNames[i],
+      };
     } else {
       _title = TextEditingController();
       _description = TextEditingController();
@@ -91,6 +99,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _visibility = PageVisibility.public_;
       _coHostIds = {};
       _coHostNames = {};
+      _invitedUserIds = {};
+      _invitedUserNames = {};
     }
   }
 
@@ -199,6 +209,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'event_type': _eventType,
           'visibility': _visibility,
           'co_host_ids': _coHostIds.toList(),
+          'invited_user_ids': _invitedUserIds.toList(),
         },
         photo: _selectedPhoto,
         removePhoto: _removePhoto,
@@ -600,6 +611,29 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
     ];
   }
 
+  List<Widget> _buildInvitePicker(ThemeData theme) {
+    return [
+      const Divider(),
+      const SizedBox(height: 8),
+      Text('invite members', style: theme.textTheme.labelLarge),
+      const SizedBox(height: 4),
+      Text(
+        'invited list is only visible to you and co-hosts',
+        style: TextStyle(
+          fontSize: 12,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(height: 8),
+      _CoHostPicker(
+        selectedIds: _invitedUserIds,
+        selectedNames: _invitedUserNames,
+        onChanged: (ids) => setState(() => _invitedUserIds = ids),
+        scrollController: _scrollController,
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     String dateFmt(DateTime d) =>
@@ -682,6 +716,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 ],
                 const SizedBox(height: 16),
                 ..._buildCoHostPicker(theme),
+                const SizedBox(height: 8),
+                ..._buildInvitePicker(theme),
                 const SizedBox(height: 8),
               ],
             ),

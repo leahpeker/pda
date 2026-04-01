@@ -68,6 +68,23 @@ class AuthNotifier extends AsyncNotifier<User?> {
     }
   }
 
+  Future<void> magicLogin(String token) async {
+    state = const AsyncLoading();
+    final api = ref.read(apiClientProvider);
+    final storage = ref.read(secureStorageProvider);
+    final response = await api.get('/api/auth/magic-login/$token/');
+    final accessToken = response.data['access'] as String;
+    await storage.saveTokens(
+      access: accessToken,
+      refresh: response.data['refresh'] as String,
+    );
+    final meResponse = await api.get(
+      '/api/auth/me/',
+      accessToken: accessToken,
+    );
+    state = AsyncData(User.fromJson(meResponse.data as Map<String, dynamic>));
+  }
+
   Future<void> updateProfile({
     String? displayName,
     String? email,

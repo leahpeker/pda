@@ -124,8 +124,8 @@ class TestBulkCreateUsers:
         data = response.json()
         assert data["created"] == 3
         assert data["failed"] == 0
-        assert len(data["temporary_password"]) == 16
         assert all(r["success"] for r in data["results"])
+        assert all(len(r["magic_link_token"]) == 36 for r in data["results"] if r["success"])
 
     def test_bulk_create_users_requires_permission(self, api_client, auth_headers):
         response = api_client.post(
@@ -181,9 +181,8 @@ class TestBulkCreateUsers:
         )
         assert response.status_code == 200
         data = response.json()
-        # All created users share one temp password
-        assert data["temporary_password"]
         assert data["created"] == 2
+        assert all(r.get("magic_link_token") for r in data["results"] if r["success"])
 
     def test_bulk_create_users_empty_list(self, api_client, manage_users_headers):
         response = api_client.post(
@@ -369,6 +368,6 @@ class TestResetPassword:
         )
         assert response.status_code == 200
         data = response.json()
-        assert len(data["temporary_password"]) == 16
+        assert len(data["magic_link_token"]) == 36  # UUID format
         other_user.refresh_from_db()
-        assert other_user.check_password(data["temporary_password"])
+        assert not other_user.has_usable_password()

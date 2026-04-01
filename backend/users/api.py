@@ -11,7 +11,7 @@ from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
 from pydantic import BaseModel
 
-from users.models import User
+from users.models import MagicLoginToken, User
 from users.permissions import PermissionKey
 from users.roles import PROTECTED_ROLE_NAMES, Role
 
@@ -28,6 +28,12 @@ router = Router()
 def _generate_temp_password(length: int = 16) -> str:
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
+def _create_magic_token(user: User) -> str:
+    """Create a one-time magic login token. Returns the token UUID string."""
+    magic = MagicLoginToken.create_for_user(user)
+    return str(magic.token)
 
 
 def _is_last_admin(user: User) -> bool:
@@ -63,21 +69,21 @@ def _create_user_with_role(
     *,
     needs_onboarding: bool = True,
 ) -> tuple[User, str]:
-    """Validate phone, create user, assign role. Returns (user, temp_password).
+    """Validate phone, create user, assign role. Returns (user, magic_link_token).
 
     Raises ValueError on validation failure (bad phone, duplicate, bad role).
     """
     validated_phone = _validate_phone(phone)
     if User.objects.filter(phone_number=validated_phone).exists():
         raise ValueError("A user with that phone number already exists.")
-    temp_password = _generate_temp_password()
     user = User.objects.create_user(
         phone_number=validated_phone,
-        password=temp_password,
         display_name=display_name,
         email=email,
         needs_onboarding=needs_onboarding,
     )
+    user.set_unusable_password()
+    user.save(update_fields=["password"])
     try:
         if role_id:
             role = Role.objects.get(pk=role_id)
@@ -89,7 +95,8 @@ def _create_user_with_role(
     except Role.DoesNotExist:
         user.delete()
         raise ValueError("Role not found.")
-    return user, temp_password
+    magic_token = _create_magic_token(user)
+    return user, magic_token
 
 
 def _validate_admin_role_change(
@@ -195,7 +202,7 @@ class UserCreateOut(BaseModel):
     id: str
     phone_number: str
     display_name: str
-    temporary_password: str
+    magic_link_token: str
 
 
 class BulkUserCreateIn(BaseModel):
@@ -207,13 +214,13 @@ class BulkUserResult(BaseModel):
     phone_number: str
     success: bool
     error: str | None = None
+    magic_link_token: str | None = None
 
 
 class BulkUserCreateOut(BaseModel):
     results: list[BulkUserResult]
     created: int
     failed: int
-    temporary_password: str
 
 
 class UserPatchIn(BaseModel):
@@ -242,7 +249,7 @@ class UserRolesIn(BaseModel):
 
 class ResetPasswordOut(BaseModel):
     detail: str
-    temporary_password: str
+    magic_link_token: str
 
 
 class RoleIn(BaseModel):
@@ -273,6 +280,20 @@ def login(request, payload: LoginIn):
         logger.warning("Authentication failure: invalid credentials")
         return Status(401, ErrorOut(detail="Invalid credentials"))
     refresh = RefreshToken.for_user(user)
+    return Status(200, TokenOut(access=str(refresh.access_token), refresh=str(refresh)))  # type: ignore
+
+
+@router.get("/magic-login/{token}/", response={200: TokenOut, 400: ErrorOut}, auth=None)
+def magic_login(request, token: str):
+    try:
+        magic = MagicLoginToken.objects.select_related("user").get(token=token)
+    except MagicLoginToken.DoesNotExist:
+        return Status(400, ErrorOut(detail="Invalid or expired login link."))
+    if magic.used or magic.is_expired:
+        return Status(400, ErrorOut(detail="This login link has already been used or has expired."))
+    magic.used = True
+    magic.save(update_fields=["used"])
+    refresh = RefreshToken.for_user(magic.user)
     return Status(200, TokenOut(access=str(refresh.access_token), refresh=str(refresh)))  # type: ignore
 
 
@@ -420,7 +441,7 @@ def create_user(request, payload: UserCreateIn):
         return Status(403, ErrorOut(detail="Permission denied."))
 
     try:
-        user, temp_password = _create_user_with_role(
+        user, magic_token = _create_user_with_role(
             payload.phone_number, payload.display_name, payload.email, payload.role_id
         )
     except ValueError as e:
@@ -432,7 +453,7 @@ def create_user(request, payload: UserCreateIn):
             id=str(user.id),
             phone_number=user.phone_number,
             display_name=user.display_name,
-            temporary_password=temp_password,
+            magic_link_token=magic_token,
         ),
     )
 
@@ -450,7 +471,6 @@ def bulk_create_users(request, payload: BulkUserCreateIn):
     results: list[BulkUserResult] = []
     created = 0
     failed = 0
-    temp_password = _generate_temp_password()
 
     for i, raw_phone in enumerate(payload.phone_numbers):
         try:
@@ -476,20 +496,27 @@ def bulk_create_users(request, payload: BulkUserCreateIn):
 
         user = User.objects.create_user(
             phone_number=validated_phone,
-            password=temp_password,
             needs_onboarding=True,
         )
+        user.set_unusable_password()
+        user.save(update_fields=["password"])
         if member_role:
             user.roles.add(member_role)
 
-        results.append(BulkUserResult(row=i + 1, phone_number=validated_phone, success=True))
+        magic_token = _create_magic_token(user)
+        results.append(
+            BulkUserResult(
+                row=i + 1,
+                phone_number=validated_phone,
+                success=True,
+                magic_link_token=magic_token,
+            )
+        )
         created += 1
 
     return Status(
         200,
-        BulkUserCreateOut(
-            results=results, created=created, failed=failed, temporary_password=temp_password
-        ),
+        BulkUserCreateOut(results=results, created=created, failed=failed),
     )
 
 
@@ -625,15 +652,15 @@ def reset_password(request, user_id: str):
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="User not found."))
-    temp_password = _generate_temp_password()
-    user.set_password(temp_password)
+    user.set_unusable_password()
     user.needs_onboarding = True
     user.save()
+    magic_token = _create_magic_token(user)
     return Status(
         200,
         ResetPasswordOut(
-            detail="Password reset. Share the temporary password with the user.",
-            temporary_password=temp_password,
+            detail="Password reset. Share the magic login link with the user.",
+            magic_link_token=magic_token,
         ),
     )
 
