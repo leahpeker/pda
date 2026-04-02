@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('community', '0030_eventpoll_polloption_eventpoll_winning_option_and_more'),
+        ("community", "0030_eventpoll_polloption_eventpoll_winning_option_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='polloption',
-            options={'ordering': ['datetime']},
+            name="polloption",
+            options={"ordering": ["datetime"]},
         ),
     ]
