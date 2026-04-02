@@ -52,7 +52,9 @@ def _validate_datetime_poll_answer(
         if option not in valid_options:
             return f'Invalid datetime option for "{q.label}".'
         if availability not in PollAvailability.VALID:
-            return f'Invalid availability "{availability}" for "{q.label}". Must be "yes" or "maybe".'
+            return (
+                f'Invalid availability "{availability}" for "{q.label}". Must be "yes" or "maybe".'
+            )
     return None
 
 
@@ -76,6 +78,19 @@ def _is_answer_empty(answer: str | dict) -> bool:
     return not answer.strip()
 
 
+def _validate_one_answer(
+    answer: str | dict[str, str],
+    q: SurveyQuestion,
+) -> str | None:
+    if q.field_type in _DICT_VALIDATORS:
+        if not isinstance(answer, dict):
+            return f'Invalid answer format for "{q.label}".'
+        return _DICT_VALIDATORS[q.field_type](answer, q)
+    if not isinstance(answer, str):
+        return f'Invalid answer format for "{q.label}".'
+    return _TEXT_VALIDATORS.get(q.field_type, lambda a, _q: None)(answer, q)
+
+
 def _validate_survey_answers(
     answers: dict[str, str | dict[str, str]],
     questions: dict[str, SurveyQuestion],
@@ -86,16 +101,7 @@ def _validate_survey_answers(
             if q.required:
                 return f'"{q.label}" is required.'
             continue
-
-        if q.field_type in _DICT_VALIDATORS:
-            if not isinstance(answer, dict):
-                return f'Invalid answer format for "{q.label}".'
-            error = _DICT_VALIDATORS[q.field_type](answer, q)
-        else:
-            if not isinstance(answer, str):
-                return f'Invalid answer format for "{q.label}".'
-            error = _TEXT_VALIDATORS.get(q.field_type, lambda a, q: None)(answer, q)
-
+        error = _validate_one_answer(answer, q)
         if error:
             return error
     return None

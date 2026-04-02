@@ -436,5 +436,3 @@ class TestRoleManagementAPI:
         response = api_client.delete(f"/api/auth/roles/{role.id}/", **manage_users_headers)
         assert response.status_code == 400
         assert "users assigned" in response.json()["detail"]
-
-

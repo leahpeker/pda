@@ -84,7 +84,7 @@ def _poll_out(poll: EventPoll, requesting_user=None) -> EventPollOut:
     winning_option = poll.winning_option
     return EventPollOut(
         id=str(poll.id),
-        event_id=str(poll.event_id),
+        event_id=str(poll.event_id),  # ty: ignore[unresolved-attribute]
         is_active=poll.is_active,
         options=[_option_out(opt, my_votes) for opt in options],
         winning_option_id=str(winning_option.id) if winning_option else None,
@@ -158,7 +158,9 @@ def vote_on_event_poll(request, event_id: UUID, payload: EventPollVoteIn):
         if availability not in PollAvailability.VALID:
             return Status(
                 400,
-                ErrorOut(detail=f'Invalid availability "{availability}" — must be "yes" or "maybe".'),
+                ErrorOut(
+                    detail=f'Invalid availability "{availability}" — must be "yes" or "maybe".'
+                ),
             )
     option_ids = {str(pk) for pk in poll.options.values_list("id", flat=True)}
     for option_id in payload.votes:
@@ -223,9 +225,9 @@ def finalize_event_poll(request, event_id: UUID, payload: EventPollFinalizeIn):
         event.start_datetime = winning_option.datetime
         event.datetime_tbd = False
         event.save(update_fields=["start_datetime", "datetime_tbd"])
-        yes_voter_ids = winning_option.votes.filter(
-            availability=PollAvailability.YES
-        ).values_list("user_id", flat=True)
+        yes_voter_ids = winning_option.votes.filter(availability=PollAvailability.YES).values_list(
+            "user_id", flat=True
+        )
         for user_id in yes_voter_ids:
             EventRSVP.objects.update_or_create(
                 event=event,
