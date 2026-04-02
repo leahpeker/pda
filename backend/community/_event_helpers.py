@@ -1,11 +1,19 @@
 """Helper functions for event output serialization and visibility checks."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from config.media_proxy import media_path
+from users.models import User as UserModel
 from users.permissions import PermissionKey
 
 from community._event_schemas import EventOut, RSVPGuestOut
 from community._shared import _authenticated_user, _members_only
 from community.models import Event, PageVisibility, SurveyQuestionType
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def _can_see_phones(requesting_user, creator, co_host_ids: set[str]) -> bool:
@@ -146,3 +154,20 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         invited_user_names=[u.display_name or u.phone_number for u in invited],
         invited_user_photo_urls=[media_path(u.profile_photo) for u in invited],
     )
+
+
+def _update_invited_users(
+    event: Event,
+    invited_user_ids: Iterable[str],
+    inviter: UserModel,
+) -> None:
+    """Update event.invited_users and notify newly added users."""
+    from notifications.service import create_event_invite_notifications
+
+    id_list = list(invited_user_ids)
+    old_ids = set(event.invited_users.values_list("pk", flat=True))
+    invited = UserModel.objects.filter(pk__in=id_list)
+    event.invited_users.set(invited)
+    new_ids = {str(uid) for uid in id_list} - {str(uid) for uid in old_ids}
+    if new_ids:
+        create_event_invite_notifications(event, new_ids, inviter)

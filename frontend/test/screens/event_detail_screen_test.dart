@@ -8,6 +8,8 @@ import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/screens/event_detail_screen.dart';
 
+import '../helpers/provider_overrides.dart';
+
 // Narrow viewport → drawer nav, avoiding wide AppBar overflow.
 const _kTestSize = Size(700, 900);
 
@@ -48,6 +50,7 @@ Widget _buildSubject({Event? event, AuthNotifier? authNotifier}) {
                 : (throw Exception('not found')),
       ),
       authProvider.overrideWith(() => authNotifier ?? _GuestAuthNotifier()),
+      silentNotificationsOverride,
     ],
     child: MaterialApp.router(routerConfig: router),
   );

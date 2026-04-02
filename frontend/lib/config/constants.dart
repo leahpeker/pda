@@ -58,6 +58,10 @@ abstract class RoleName {
   static const admin = 'admin';
 }
 
+abstract class NotificationType {
+  static const eventInvite = 'event_invite';
+}
+
 abstract class EventDetailLabel {
   static const when = 'when';
   static const about = 'about';

@@ -7,10 +7,11 @@ from ninja import File, Router
 from ninja.files import UploadedFile
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
+from notifications.service import create_event_invite_notifications
 from users.models import User as UserModel
 from users.permissions import PermissionKey
 
-from community._event_helpers import _can_see_invite_only, _event_out
+from community._event_helpers import _can_see_invite_only, _event_out, _update_invited_users
 from community._event_schemas import (
     _ALLOWED_IMAGE_TYPES,
     _MAX_EVENT_PHOTO_SIZE,
@@ -143,6 +144,7 @@ def create_event(request, payload: EventIn):
     if payload.invited_user_ids:
         invited = UserModel.objects.filter(pk__in=payload.invited_user_ids)
         event.invited_users.set(invited)
+        create_event_invite_notifications(event, payload.invited_user_ids, request.auth)
     return Status(201, _event_out(event, request.auth))
 
 
@@ -180,8 +182,7 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         co_hosts = UserModel.objects.filter(pk__in=co_host_ids)
         event.co_hosts.set(co_hosts)
     if invited_user_ids is not None:
-        invited = UserModel.objects.filter(pk__in=invited_user_ids)
-        event.invited_users.set(invited)
+        _update_invited_users(event, invited_user_ids, request.auth)
 
     event.save()
     return Status(200, _event_out(event, request.auth))

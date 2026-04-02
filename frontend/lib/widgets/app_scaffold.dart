@@ -5,6 +5,7 @@ import 'package:pda/config/api_config.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/widgets/feedback_button.dart';
+import 'package:pda/widgets/notification_bell.dart';
 import 'package:pda/widgets/profile_avatar.dart';
 
 class AppScaffold extends ConsumerWidget {
@@ -34,7 +35,7 @@ class AppScaffold extends ConsumerWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: _LogoButton(onTap: () => _showPdaMenu(context, user)),
-        actions: actions,
+        actions: [if (user != null) const NotificationBell(), ...?actions],
       ),
       body:
           enableFeedback && user != null
