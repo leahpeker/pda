@@ -82,7 +82,9 @@ class TestCreatePoll:
         )
         assert response.status_code == 400
 
-    def test_create_poll_duplicate_fails(self, api_client, auth_headers, poll_with_options, poll_event):
+    def test_create_poll_duplicate_fails(
+        self, api_client, auth_headers, poll_with_options, poll_event
+    ):
         payload = {"options": ["2026-10-01T18:00:00Z", "2026-10-02T18:00:00Z"]}
         response = api_client.post(
             f"/api/community/events/{poll_event.id}/poll/",
@@ -143,12 +145,8 @@ class TestGetPoll:
         self, api_client, auth_headers, poll_with_options, poll_event, test_user
     ):
         option = poll_with_options.options.first()
-        PollVote.objects.create(
-            option=option, user=test_user, availability=PollAvailability.YES
-        )
-        response = api_client.get(
-            f"/api/community/events/{poll_event.id}/poll/", **auth_headers
-        )
+        PollVote.objects.create(option=option, user=test_user, availability=PollAvailability.YES)
+        response = api_client.get(f"/api/community/events/{poll_event.id}/poll/", **auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["my_votes"][str(option.id)] == PollAvailability.YES
@@ -188,9 +186,7 @@ class TestVoteOnPoll:
         self, api_client, auth_headers, poll_with_options, poll_event, test_user
     ):
         option = poll_with_options.options.first()
-        PollVote.objects.create(
-            option=option, user=test_user, availability=PollAvailability.YES
-        )
+        PollVote.objects.create(option=option, user=test_user, availability=PollAvailability.YES)
         payload = {"votes": {str(option.id): PollAvailability.MAYBE}}
         response = api_client.post(
             f"/api/community/events/{poll_event.id}/poll/vote/",
@@ -236,9 +232,7 @@ class TestVoteOnPoll:
         )
         assert response.status_code == 400
 
-    def test_vote_invalid_option_id(
-        self, api_client, auth_headers, poll_with_options, poll_event
-    ):
+    def test_vote_invalid_option_id(self, api_client, auth_headers, poll_with_options, poll_event):
         import uuid
 
         payload = {"votes": {str(uuid.uuid4()): PollAvailability.YES}}
@@ -268,9 +262,7 @@ class TestVoteOnPoll:
 
 @pytest.mark.django_db
 class TestFinalizePoll:
-    def test_finalize_success(
-        self, api_client, auth_headers, poll_with_options, poll_event
-    ):
+    def test_finalize_success(self, api_client, auth_headers, poll_with_options, poll_event):
         option = poll_with_options.options.first()
         payload = {"winning_option_id": str(option.id)}
         response = api_client.post(
@@ -317,9 +309,7 @@ class TestFinalizePoll:
         )
         assert response.status_code == 400
 
-    def test_finalize_invalid_option(
-        self, api_client, auth_headers, poll_with_options, poll_event
-    ):
+    def test_finalize_invalid_option(self, api_client, auth_headers, poll_with_options, poll_event):
         import uuid
 
         payload = {"winning_option_id": str(uuid.uuid4())}
@@ -366,9 +356,7 @@ class TestFinalizePoll:
 
 @pytest.mark.django_db
 class TestDeletePoll:
-    def test_delete_success(
-        self, api_client, auth_headers, poll_with_options, poll_event
-    ):
+    def test_delete_success(self, api_client, auth_headers, poll_with_options, poll_event):
         response = api_client.delete(
             f"/api/community/events/{poll_event.id}/poll/",
             **auth_headers,
@@ -380,9 +368,7 @@ class TestDeletePoll:
         self, api_client, auth_headers, poll_with_options, poll_event, test_user
     ):
         option = poll_with_options.options.first()
-        PollVote.objects.create(
-            option=option, user=test_user, availability=PollAvailability.YES
-        )
+        PollVote.objects.create(option=option, user=test_user, availability=PollAvailability.YES)
         api_client.delete(
             f"/api/community/events/{poll_event.id}/poll/",
             **auth_headers,

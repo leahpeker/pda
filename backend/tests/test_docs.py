@@ -23,7 +23,7 @@ def manage_docs_headers(manage_docs_user):
     from ninja_jwt.tokens import RefreshToken
 
     refresh = RefreshToken.for_user(manage_docs_user)
-    return {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}
+    return {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}  # ty: ignore[unresolved-attribute]
 
 
 @pytest.fixture
