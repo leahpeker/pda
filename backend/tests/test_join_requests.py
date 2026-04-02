@@ -259,7 +259,9 @@ class TestJoinRequestManagement:
         )
         from ninja_jwt.tokens import RefreshToken
 
-        admin_headers = {"HTTP_AUTHORIZATION": f"Bearer {RefreshToken.for_user(admin).access_token}"}  # type: ignore
+        admin_headers = {
+            "HTTP_AUTHORIZATION": f"Bearer {RefreshToken.for_user(admin).access_token}"  # type: ignore
+        }
         response = api_client.get("/api/community/join-requests/", **admin_headers)
         assert response.status_code == 200
 
