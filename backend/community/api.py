@@ -6,12 +6,12 @@ from community._calendar import router as calendar_router
 from community._docs import router as docs_router
 
 # Re-export symbols imported directly in tests
-from community._events import (  # noqa: F401
-    EventPatchIn,
+from community._event_helpers import (  # noqa: F401
     _build_guest_list,
     _can_see_phones,
     _find_my_rsvp,
 )
+from community._event_schemas import EventPatchIn  # noqa: F401
 from community._events import router as events_router
 from community._feedback import router as feedback_router
 from community._guidelines import router as guidelines_router
