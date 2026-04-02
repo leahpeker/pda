@@ -1,19 +1,34 @@
 """Survey CRUD, questions, and response endpoints."""
 
-from collections.abc import Callable
-from datetime import datetime
 from uuid import UUID
 
+from config.media_proxy import media_path
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
-from pydantic import BaseModel
 from users.permissions import PermissionKey
 
 from community._shared import ErrorOut, _authenticated_user, _optional_jwt
+from community._survey_schemas import (
+    FinalizePollIn,
+    PollResultOut,
+    PollResultsOut,
+    SurveyAnswersIn,
+    SurveyIn,
+    SurveyListOut,
+    SurveyOut,
+    SurveyPatchIn,
+    SurveyQuestionIn,
+    SurveyQuestionOrderIn,
+    SurveyQuestionOut,
+    SurveyResponseOut,
+    VoterOut,
+)
+from community._survey_validators import _build_survey_answers, _validate_survey_answers
 from community.models import (
     DatetimePollResult,
     Event,
+    PollAvailability,
     Survey,
     SurveyQuestion,
     SurveyQuestionType,
@@ -22,103 +37,6 @@ from community.models import (
 )
 
 router = Router()
-
-
-class SurveyQuestionOut(BaseModel):
-    id: str
-    label: str
-    field_type: str
-    options: list[str] = []
-    required: bool
-    display_order: int
-
-
-class PollResultOut(BaseModel):
-    id: str
-    winning_datetime: datetime
-    finalized_by_id: str | None = None
-    finalized_at: datetime
-
-
-class TallyOut(BaseModel):
-    question_id: str
-    tallies: dict[str, int]
-    total_responses: int
-
-
-class SurveyOut(BaseModel):
-    id: str
-    title: str
-    description: str
-    slug: str
-    visibility: str
-    is_active: bool
-    one_response_per_user: bool = False
-    linked_event_id: str | None = None
-    created_by_id: str | None = None
-    created_at: datetime
-    questions: list[SurveyQuestionOut] = []
-    response_count: int = 0
-    poll_result: PollResultOut | None = None
-    my_response_id: str | None = None
-
-
-class SurveyListOut(BaseModel):
-    id: str
-    title: str
-    slug: str
-    visibility: str
-    is_active: bool
-    linked_event_id: str | None = None
-    created_at: datetime
-    response_count: int = 0
-
-
-class SurveyIn(BaseModel):
-    title: str
-    description: str = ""
-    slug: str
-    visibility: str = SurveyVisibility.PUBLIC
-    is_active: bool = True
-    one_response_per_user: bool = False
-    linked_event_id: str | None = None
-
-
-class SurveyPatchIn(BaseModel):
-    title: str | None = None
-    description: str | None = None
-    slug: str | None = None
-    visibility: str | None = None
-    is_active: bool | None = None
-    one_response_per_user: bool | None = None
-    linked_event_id: str | None = None
-
-
-class FinalizePollIn(BaseModel):
-    winning_datetime: datetime
-
-
-class SurveyQuestionIn(BaseModel):
-    label: str
-    field_type: str = SurveyQuestionType.TEXT
-    options: list[str] = []
-    required: bool = False
-
-
-class SurveyQuestionOrderIn(BaseModel):
-    question_ids: list[str]
-
-
-class SurveyResponseOut(BaseModel):
-    id: str
-    user_id: str | None = None
-    user_name: str | None = None
-    answers: dict
-    submitted_at: datetime
-
-
-class SurveyAnswersIn(BaseModel):
-    answers: dict[str, str]
 
 
 def _survey_question_out(q: SurveyQuestion) -> SurveyQuestionOut:
@@ -155,10 +73,12 @@ def _survey_out(
     except DatetimePollResult.DoesNotExist:
         pass
     my_response_id = None
+    my_answers = None
     if requesting_user is not None:
         existing = survey.responses.filter(user=requesting_user).first()
         if existing:
             my_response_id = str(existing.id)
+            my_answers = existing.answers
     return SurveyOut(
         id=str(survey.id),
         title=survey.title,
@@ -174,97 +94,8 @@ def _survey_out(
         response_count=survey.responses.count(),
         poll_result=poll_result,
         my_response_id=my_response_id,
+        my_answers=my_answers,
     )
-
-
-def _validate_choice_answer(answer: str, q: SurveyQuestion) -> str | None:
-    if answer not in (q.options or []):
-        return f'Invalid option for "{q.label}".'
-    return None
-
-
-def _validate_multiselect_answer(answer: str, q: SurveyQuestion) -> str | None:
-    for val in answer.split(","):
-        if val.strip() and val.strip() not in (q.options or []):
-            return f'Invalid option for "{q.label}".'
-    return None
-
-
-def _validate_number_answer(answer: str, q: SurveyQuestion) -> str | None:
-    try:
-        float(answer)
-    except ValueError:
-        return f'"{q.label}" must be a number.'
-    return None
-
-
-def _validate_yes_no_answer(answer: str, q: SurveyQuestion) -> str | None:
-    if answer not in ("yes", "no"):
-        return f'"{q.label}" must be yes or no.'
-    return None
-
-
-def _validate_rating_answer(answer: str, q: SurveyQuestion) -> str | None:
-    try:
-        val = int(answer)
-        if val < 1 or val > 5:
-            return f'"{q.label}" must be between 1 and 5.'
-    except ValueError:
-        return f'"{q.label}" must be a number between 1 and 5.'
-    return None
-
-
-def _validate_datetime_poll_answer(answer: str, q: SurveyQuestion) -> str | None:
-    for val in answer.split(","):
-        if val.strip() and val.strip() not in (q.options or []):
-            return f'Invalid datetime option for "{q.label}".'
-    return None
-
-
-_SURVEY_VALIDATORS: dict[str, Callable[[str, SurveyQuestion], str | None]] = {
-    SurveyQuestionType.SELECT: _validate_choice_answer,
-    SurveyQuestionType.DROPDOWN: _validate_choice_answer,
-    SurveyQuestionType.MULTISELECT: _validate_multiselect_answer,
-    SurveyQuestionType.NUMBER: _validate_number_answer,
-    SurveyQuestionType.YES_NO: _validate_yes_no_answer,
-    SurveyQuestionType.RATING: _validate_rating_answer,
-    SurveyQuestionType.DATETIME_POLL: _validate_datetime_poll_answer,
-}
-
-
-def _validate_survey_answer_value(answer: str, q: SurveyQuestion) -> str | None:
-    """Validate a single answer value against its question type."""
-    validator = _SURVEY_VALIDATORS.get(q.field_type)
-    if validator:
-        return validator(answer, q)
-    return None
-
-
-def _validate_survey_answers(
-    answers: dict[str, str],
-    questions: dict[str, SurveyQuestion],
-) -> str | None:
-    for q_id, q in questions.items():
-        answer = answers.get(q_id, "").strip()
-        if q.required and not answer:
-            return f'"{q.label}" is required.'
-        if answer:
-            error = _validate_survey_answer_value(answer, q)
-            if error:
-                return error
-    return None
-
-
-def _build_survey_answers(
-    answers: dict[str, str],
-    questions: dict[str, SurveyQuestion],
-) -> dict:
-    result = {}
-    for q_id, q in questions.items():
-        answer = answers.get(q_id, "").strip()
-        if answer:
-            result[q_id] = {"label": q.label, "answer": answer}
-    return result
 
 
 def _apply_linked_event_update(updates: dict) -> tuple[dict, str | None]:
@@ -518,19 +349,45 @@ def _response_out(response: SurveyResponse, user_name: str | None) -> SurveyResp
     )
 
 
-def _tally_question(q: SurveyQuestion, responses: list[SurveyResponse]) -> TallyOut:
-    counts: dict[str, int] = {opt: 0 for opt in (q.options or [])}
+def _voter_out(user) -> VoterOut:
+    return VoterOut(
+        user_id=str(user.pk),
+        name=user.display_name or user.phone_number,
+        photo_url=media_path(user.profile_photo),
+    )
+
+
+def _tally_question(q: SurveyQuestion, responses: list[SurveyResponse]) -> PollResultsOut:
+    options = q.options or []
+    counts: dict[str, dict[str, int]] = {
+        opt: {PollAvailability.YES: 0, PollAvailability.MAYBE: 0} for opt in options
+    }
+    voters: dict[str, list[VoterOut]] = {opt: [] for opt in options}
     for r in responses:
         answer_data = r.answers.get(str(q.id))
         if not answer_data:
             continue
-        for val in answer_data.get("answer", "").split(","):
-            val = val.strip()
-            if val in counts:
-                counts[val] += 1
-    return TallyOut(
+        answer = answer_data.get("answer")
+        voter = _voter_out(r.user) if r.user else None
+        # Dict answer: {"iso": "yes"|"maybe"}
+        if isinstance(answer, dict):
+            for opt, availability in answer.items():
+                if opt in counts and availability in PollAvailability.VALID:
+                    counts[opt][availability] += 1
+                    if voter:
+                        voters[opt].append(voter)
+        # Legacy comma-separated string answer: treat as "yes"
+        elif isinstance(answer, str):
+            for val in answer.split(","):
+                val = val.strip()
+                if val in counts:
+                    counts[val][PollAvailability.YES] += 1
+                    if voter:
+                        voters[val].append(voter)
+    return PollResultsOut(
         question_id=str(q.id),
         tallies=counts,
+        voters=voters,
         total_responses=len(responses),
     )
 
@@ -599,18 +456,18 @@ def submit_survey_response(request, slug: str, payload: SurveyAnswersIn):
 
 @router.get(
     "/surveys/{survey_id}/tallies/",
-    response={200: list[TallyOut], 403: ErrorOut, 404: ErrorOut},
+    response={200: list[PollResultsOut], 403: ErrorOut, 404: ErrorOut},
     auth=JWTAuth(),
 )
 def get_survey_tallies(request, survey_id: UUID):
     try:
-        survey = Survey.objects.prefetch_related("questions", "responses").get(id=survey_id)
+        survey = Survey.objects.prefetch_related("questions").get(id=survey_id)
     except Survey.DoesNotExist:
         return Status(404, ErrorOut(detail="Survey not found."))
     poll_questions = [
         q for q in survey.questions.all() if q.field_type == SurveyQuestionType.DATETIME_POLL
     ]
-    responses = list(survey.responses.all())
+    responses = list(survey.responses.select_related("user").all())
     tallies = [_tally_question(q, responses) for q in poll_questions]
     return Status(200, tallies)
 

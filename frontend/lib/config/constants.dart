@@ -48,6 +48,11 @@ abstract class FieldType {
   static const datetimePoll = 'datetime_poll';
 }
 
+abstract class PollAvailability {
+  static const yes = 'yes';
+  static const maybe = 'maybe';
+}
+
 abstract class RoleName {
   static const admin = 'admin';
 }

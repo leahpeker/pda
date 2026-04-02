@@ -56,22 +56,65 @@ class PollResult {
   }
 }
 
-class PollTally {
+class PollVoter {
+  final String userId;
+  final String name;
+  final String photoUrl;
+
+  const PollVoter({
+    required this.userId,
+    required this.name,
+    required this.photoUrl,
+  });
+
+  factory PollVoter.fromJson(Map<String, dynamic> json) {
+    return PollVoter(
+      userId: json['user_id'] as String,
+      name: json['name'] as String,
+      photoUrl: json['photo_url'] as String? ?? '',
+    );
+  }
+}
+
+class PollResults {
   final String questionId;
-  final Map<String, int> tallies;
+  final Map<String, Map<String, int>>
+  tallies; // option -> {"yes": N, "maybe": M}
+  final Map<String, List<PollVoter>> voters;
   final int totalResponses;
 
-  const PollTally({
+  const PollResults({
     required this.questionId,
     required this.tallies,
+    this.voters = const {},
     required this.totalResponses,
   });
 
-  factory PollTally.fromJson(Map<String, dynamic> json) {
-    return PollTally(
+  /// Total votes (yes + maybe) for an option.
+  int totalForOption(String option) {
+    final counts = tallies[option];
+    if (counts == null) return 0;
+    return (counts['yes'] ?? 0) + (counts['maybe'] ?? 0);
+  }
+
+  factory PollResults.fromJson(Map<String, dynamic> json) {
+    final votersRaw = json['voters'] as Map<String, dynamic>? ?? {};
+    final talliesRaw = json['tallies'] as Map<String, dynamic>;
+    return PollResults(
       questionId: json['question_id'] as String,
-      tallies: (json['tallies'] as Map<String, dynamic>).map(
-        (k, v) => MapEntry(k, v as int),
+      tallies: talliesRaw.map(
+        (k, v) => MapEntry(
+          k,
+          (v as Map<String, dynamic>).map((ik, iv) => MapEntry(ik, iv as int)),
+        ),
+      ),
+      voters: votersRaw.map(
+        (k, v) => MapEntry(
+          k,
+          (v as List<dynamic>)
+              .map((e) => PollVoter.fromJson(e as Map<String, dynamic>))
+              .toList(),
+        ),
       ),
       totalResponses: json['total_responses'] as int,
     );
@@ -93,6 +136,7 @@ class Survey {
   final int responseCount;
   final PollResult? pollResult;
   final String? myResponseId;
+  final Map<String, dynamic>? myAnswers;
 
   const Survey({
     required this.id,
@@ -109,6 +153,7 @@ class Survey {
     this.responseCount = 0,
     this.pollResult,
     this.myResponseId,
+    this.myAnswers,
   });
 
   factory Survey.fromJson(Map<String, dynamic> json) {
@@ -134,6 +179,7 @@ class Survey {
               ? PollResult.fromJson(json['poll_result'] as Map<String, dynamic>)
               : null,
       myResponseId: json['my_response_id'] as String?,
+      myAnswers: json['my_answers'] as Map<String, dynamic>?,
     );
   }
 }

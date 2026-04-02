@@ -10,6 +10,7 @@ import 'package:pda/screens/calendar/event_detail_panel.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
+import 'package:pda/utils/create_datetime_poll.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/config/constants.dart';
 
@@ -114,7 +115,16 @@ class _EventManagementBodyState extends ConsumerState<_EventManagementBody> {
       if (result.photo != null) {
         await uploadEventPhoto(ref, eventId, result.photo!);
       }
+      if (result.datetimePollOptions.isNotEmpty) {
+        await createDatetimePoll(
+          ref: ref,
+          eventId: eventId,
+          eventTitle: result.data['title'] as String,
+          options: result.datetimePollOptions,
+        );
+      }
       ref.invalidate(eventsProvider);
+      if (mounted) context.push('/events/$eventId');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, ApiError.from(e).message);
@@ -288,6 +298,14 @@ class _EventManagementRow extends ConsumerWidget {
         await uploadEventPhoto(ref, event.id, result.photo!);
       } else if (result.removePhoto) {
         await deleteEventPhoto(ref, event.id);
+      }
+      if (result.datetimePollOptions.isNotEmpty) {
+        await createDatetimePoll(
+          ref: ref,
+          eventId: event.id,
+          eventTitle: result.data['title'] as String,
+          options: result.datetimePollOptions,
+        );
       }
       ref.invalidate(eventsProvider);
     } catch (e) {

@@ -38,6 +38,8 @@ abstract class Event with _$Event {
     @Default('') String zelleInfo,
     @Default(false) bool rsvpEnabled,
     @Default(false) bool datetimeTbd,
+    @Default(false) bool hasPoll,
+    String? datetimePollSlug,
     String? createdById,
     String? createdByName,
     @Default([]) List<String> coHostIds,

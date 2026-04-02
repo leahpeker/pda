@@ -499,3 +499,46 @@ class TestFindMyRsvp:
             self._make_rsvp("u1", RSVPStatus.MAYBE),
         ]
         assert _find_my_rsvp(rsvps, user) == RSVPStatus.ATTENDING
+
+
+# ---------------------------------------------------------------------------
+# Public/auth event listing
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestEventVisibility:
+    def test_events_public(self, api_client):
+        response = api_client.get("/api/community/events/")
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+
+    def test_events_authenticated(self, api_client, auth_headers):
+        response = api_client.get("/api/community/events/", **auth_headers)
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+
+    def test_events_strips_private_fields_for_anonymous(self, api_client, auth_headers, test_user):
+        from community.models import Event
+        from django.utils import timezone
+
+        event = Event.objects.create(
+            title="Test",
+            start_datetime=timezone.now(),
+            end_datetime=timezone.now(),
+            location="",
+            whatsapp_link="https://chat.whatsapp.com/abc",
+            partiful_link="https://partiful.com/e/abc",
+            rsvp_enabled=False,
+            created_by=test_user,
+        )
+        anon_res = api_client.get("/api/community/events/")
+        authed_res = api_client.get("/api/community/events/", **auth_headers)
+
+        anon_event = next(e for e in anon_res.json() if e["id"] == str(event.id))
+        authed_event = next(e for e in authed_res.json() if e["id"] == str(event.id))
+
+        assert anon_event["whatsapp_link"] == ""
+        assert anon_event["partiful_link"] == ""
+        assert authed_event["whatsapp_link"] == "https://chat.whatsapp.com/abc"
+        assert authed_event["partiful_link"] == "https://partiful.com/e/abc"

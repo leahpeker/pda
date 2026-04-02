@@ -1,6 +1,5 @@
 """Events CRUD, RSVP, and event photo endpoints."""
 
-from datetime import datetime
 from uuid import UUID
 
 from config.media_proxy import media_path
@@ -8,142 +7,30 @@ from ninja import File, Router
 from ninja.files import UploadedFile
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
-from pydantic import BaseModel
 from users.models import User as UserModel
 from users.permissions import PermissionKey
 
+from community._event_schemas import (
+    _ALLOWED_IMAGE_TYPES,
+    _MAX_EVENT_PHOTO_SIZE,
+    EventIn,
+    EventListOut,
+    EventOut,
+    EventPatchIn,
+    RSVPGuestOut,
+    RSVPIn,
+)
 from community._shared import ErrorOut, _authenticated_user, _members_only, _optional_jwt
-from community.models import Event, EventRSVP, EventType, PageVisibility, RSVPStatus
+from community.models import (
+    Event,
+    EventRSVP,
+    EventType,
+    PageVisibility,
+    RSVPStatus,
+    SurveyQuestionType,
+)
 
 router = Router()
-
-
-class RSVPGuestOut(BaseModel):
-    user_id: str
-    name: str
-    status: str
-    phone: str | None = None
-    photo_url: str = ""
-
-
-class EventListOut(BaseModel):
-    id: str
-    title: str
-    description: str
-    start_datetime: datetime
-    end_datetime: datetime | None = None
-    location: str
-    latitude: float | None = None
-    longitude: float | None = None
-    event_type: str = EventType.COMMUNITY
-    visibility: str = PageVisibility.PUBLIC
-    photo_url: str = ""
-    whatsapp_link: str = ""
-    partiful_link: str = ""
-    other_link: str = ""
-    price: str = ""
-    venmo_link: str = ""
-    cashapp_link: str = ""
-    zelle_info: str = ""
-    created_by_id: str | None = None
-    co_host_ids: list[str] = []
-    co_host_names: list[str] = []
-    datetime_tbd: bool = False
-
-
-class EventOut(BaseModel):
-    id: str
-    title: str
-    description: str
-    start_datetime: datetime
-    end_datetime: datetime | None = None
-    location: str
-    latitude: float | None = None
-    longitude: float | None = None
-    whatsapp_link: str = ""
-    partiful_link: str = ""
-    other_link: str = ""
-    price: str = ""
-    venmo_link: str = ""
-    cashapp_link: str = ""
-    zelle_info: str = ""
-    rsvp_enabled: bool = False
-    created_by_id: str | None = None
-    created_by_name: str | None = None
-    co_host_ids: list[str] = []
-    co_host_names: list[str] = []
-    co_host_photo_urls: list[str] = []
-    guests: list[RSVPGuestOut] = []
-    my_rsvp: str | None = None
-    event_type: str = EventType.COMMUNITY
-    visibility: str = PageVisibility.PUBLIC
-    photo_url: str = ""
-    datetime_tbd: bool = False
-    survey_slugs: list[str] = []
-    invited_user_ids: list[str] = []
-    invited_user_names: list[str] = []
-    invited_user_photo_urls: list[str] = []
-
-
-class RSVPIn(BaseModel):
-    status: str
-
-
-class EventIn(BaseModel):
-    title: str
-    description: str = ""
-    start_datetime: datetime
-    end_datetime: datetime | None = None
-    location: str = ""
-    latitude: float | None = None
-    longitude: float | None = None
-    whatsapp_link: str = ""
-    partiful_link: str = ""
-    other_link: str = ""
-    price: str = ""
-    venmo_link: str = ""
-    cashapp_link: str = ""
-    zelle_info: str = ""
-    rsvp_enabled: bool = False
-    datetime_tbd: bool = False
-    event_type: str = EventType.COMMUNITY
-    visibility: str = PageVisibility.PUBLIC
-    co_host_ids: list[str] = []
-    invited_user_ids: list[str] = []
-
-
-class EventPatchIn(BaseModel):
-    title: str | None = None
-    description: str | None = None
-    start_datetime: datetime | None = None
-    end_datetime: datetime | None = None
-    location: str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    whatsapp_link: str | None = None
-    partiful_link: str | None = None
-    other_link: str | None = None
-    price: str | None = None
-    venmo_link: str | None = None
-    cashapp_link: str | None = None
-    zelle_info: str | None = None
-    rsvp_enabled: bool | None = None
-    datetime_tbd: bool | None = None
-    event_type: str | None = None
-    visibility: str | None = None
-    co_host_ids: list[str] | None = None
-    invited_user_ids: list[str] | None = None
-
-
-_MAX_EVENT_PHOTO_SIZE = 10 * 1024 * 1024  # 10 MB
-_ALLOWED_IMAGE_TYPES = {
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-    "image/heic",
-    "image/heif",
-}
 
 
 def _can_see_phones(requesting_user, creator, co_host_ids: set[str]) -> bool:
@@ -196,6 +83,18 @@ def _get_creator_name(creator) -> str | None:
     return creator.display_name or creator.phone_number
 
 
+def _get_datetime_poll_slug(event: Event) -> str | None:
+    poll_survey = (
+        event.surveys.filter(
+            is_active=True,
+            questions__field_type=SurveyQuestionType.DATETIME_POLL,
+        )
+        .values_list("slug", flat=True)
+        .first()
+    )
+    return poll_survey
+
+
 def _event_out(event: Event, requesting_user=None) -> EventOut:
     co_hosts = list(event.co_hosts.all())
     creator = event.created_by
@@ -236,6 +135,8 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         visibility=event.visibility,
         photo_url=media_path(event.photo),
         survey_slugs=list(event.surveys.filter(is_active=True).values_list("slug", flat=True)),
+        datetime_poll_slug=_get_datetime_poll_slug(event),
+        has_poll=hasattr(event, "poll"),
         invited_user_ids=[str(u.id) for u in invited],
         invited_user_names=[u.display_name or u.phone_number for u in invited],
         invited_user_photo_urls=[media_path(u.profile_photo) for u in invited],

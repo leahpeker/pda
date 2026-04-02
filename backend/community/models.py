@@ -100,6 +100,7 @@ class Event(models.Model):
         created_by_id: uuid.UUID | None
         rsvps: "Manager[EventRSVP]"
         surveys: "Manager[Survey]"
+        poll: "EventPoll"
     created_by = models.ForeignKey(
         "users.User",
         null=True,
@@ -255,6 +256,12 @@ class SurveyQuestionType(models.TextChoices):
     DATETIME_POLL = "datetime_poll", "Datetime poll"
 
 
+class PollAvailability:
+    YES = "yes"
+    MAYBE = "maybe"
+    VALID = {YES, MAYBE}
+
+
 class Survey(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
@@ -356,6 +363,84 @@ class DatetimePollResult(models.Model):
 
     def __str__(self):
         return f"Poll result for {self.survey.title}: {self.winning_datetime:%Y-%m-%d %H:%M}"
+
+
+class EventPoll(models.Model):
+    if TYPE_CHECKING:
+        created_by_id: uuid.UUID | None
+        finalized_by_id: uuid.UUID | None
+        winning_option_id: uuid.UUID | None
+        options: "Manager[PollOption]"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name="poll")
+    created_by = models.ForeignKey(
+        "users.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_polls",
+    )
+    is_active = models.BooleanField(default=True)
+    winning_option = models.ForeignKey(
+        "community.PollOption",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    finalized_by = models.ForeignKey(
+        "users.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="finalized_event_polls",
+    )
+    finalized_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Poll for {self.event.title}"
+
+
+class PollOption(models.Model):
+    if TYPE_CHECKING:
+        poll_id: uuid.UUID
+        votes: "Manager[PollVote]"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    poll = models.ForeignKey(EventPoll, on_delete=models.CASCADE, related_name="options")
+    datetime = models.DateTimeField()
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["datetime"]
+        unique_together = [("poll", "datetime")]
+
+    def __str__(self):
+        return f"{self.poll.event.title}: {self.datetime:%Y-%m-%d %H:%M}"
+
+
+class PollVote(models.Model):
+    if TYPE_CHECKING:
+        user_id: uuid.UUID
+        option_id: uuid.UUID
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    option = models.ForeignKey(PollOption, on_delete=models.CASCADE, related_name="votes")
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="poll_votes")
+    availability = models.CharField(max_length=10)
+    voted_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("option", "user")]
+        ordering = ["-voted_at"]
+
+    def __str__(self):
+        return f"{self.user} → {self.option}: {self.availability}"
 
 
 class DocFolder(models.Model):

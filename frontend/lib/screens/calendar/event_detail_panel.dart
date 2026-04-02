@@ -15,6 +15,8 @@ import 'package:pda/providers/event_provider.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/widgets/loading_button.dart';
 import 'package:pda/widgets/phone_form_field.dart';
+import 'package:pda/utils/create_datetime_poll.dart';
+import 'package:pda/widgets/embedded_event_poll.dart';
 import 'event_form_dialog.dart';
 import 'rsvp_section.dart';
 import 'package:pda/config/constants.dart';
@@ -232,18 +234,21 @@ class EventDetailContent extends ConsumerWidget {
           const SizedBox(height: 16),
           _SectionCard(
             label: EventDetailLabel.when,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  liveEvent.datetimeTbd
-                      ? [
-                        const Text(
-                          'date & time tbd',
-                          style: TextStyle(fontSize: 15, height: 1.4),
-                        ),
-                      ]
-                      : _buildDateTimeRows(formatDate, start, end),
-            ),
+            child:
+                liveEvent.hasPoll
+                    ? EmbeddedEventPoll(event: liveEvent)
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children:
+                          liveEvent.datetimeTbd
+                              ? [
+                                const Text(
+                                  'date & time tbd',
+                                  style: TextStyle(fontSize: 15, height: 1.4),
+                                ),
+                              ]
+                              : _buildDateTimeRows(formatDate, start, end),
+                    ),
           ),
           if (liveEvent.description.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -597,6 +602,14 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
       } else if (result.removePhoto) {
         await deleteEventPhoto(ref, widget.event.id);
       }
+      if (result.datetimePollOptions.isNotEmpty) {
+        await createDatetimePoll(
+          ref: ref,
+          eventId: widget.event.id,
+          eventTitle: result.data['title'] as String,
+          options: result.datetimePollOptions,
+        );
+      }
       ref.invalidate(eventsProvider);
       ref.invalidate(eventDetailProvider(widget.event.id));
     } catch (e) {
@@ -727,32 +740,34 @@ class _MemberSection extends ConsumerWidget {
             icon: Icons.account_balance_outlined,
             text: 'zelle: ${event.zelleInfo}',
           ),
-        ...event.surveySlugs.map(
-          (slug) => InkWell(
-            onTap: () => context.go('/surveys/$slug'),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.rate_review_rounded,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
+        ...event.surveySlugs
+            .where((slug) => slug != event.datetimePollSlug)
+            .map(
+              (slug) => InkWell(
+                onTap: () => context.go('/surveys/$slug'),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.rate_review_rounded,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'give feedback',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'give feedback',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
       ];
 
       final invitedChips = [

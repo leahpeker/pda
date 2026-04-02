@@ -355,77 +355,180 @@ class _DatetimePollField extends ConsumerStatefulWidget {
 }
 
 class _DatetimePollFieldState extends ConsumerState<_DatetimePollField> {
-  late Set<String> _selected;
+  // Maps ISO option -> "yes" or "maybe"
+  late Map<String, String> _selected;
 
   @override
   void initState() {
     super.initState();
-    _selected = const {};
+    final myAnswers = widget.survey.myAnswers;
+    if (myAnswers != null) {
+      final answerData = myAnswers[widget.question.id] as Map<String, dynamic>?;
+      final answer = answerData?['answer'];
+      if (answer is Map<String, dynamic>) {
+        _selected = answer.map((k, v) => MapEntry(k, v as String));
+      } else {
+        _selected = {};
+      }
+    } else {
+      _selected = {};
+    }
   }
 
-  String _joinSelected() => _selected.join(',');
+  String _encodeSelected() {
+    // Encode as JSON string for FormField compatibility
+    return _selected.entries.map((e) => '${e.key}:${e.value}').join(',');
+  }
 
-  void _toggle(String iso, bool? checked, FormFieldState<String> state) {
+  void _setAvailability(
+    String iso,
+    String availability,
+    FormFieldState<String> state,
+  ) {
     setState(() {
-      if (checked == true) {
-        _selected = {..._selected, iso};
+      if (_selected[iso] == availability) {
+        _selected = Map.of(_selected)..remove(iso);
       } else {
-        _selected = _selected.where((s) => s != iso).toSet();
+        _selected = {..._selected, iso: availability};
       }
-      state.didChange(_joinSelected());
+      state.didChange(_encodeSelected());
     });
   }
 
   Widget _buildOption(
     BuildContext context,
     String iso,
-    PollTally? tally,
+    PollResults? results,
     String? winnerIso,
     FormFieldState<String> state,
   ) {
-    final theme = Theme.of(context);
     final label = _formatPollOption(iso);
-    final count = tally?.tallies[iso] ?? 0;
-    final total = tally?.totalResponses ?? 0;
+    final totalCount = results?.totalForOption(iso) ?? 0;
+    final total = results?.totalResponses ?? 0;
+    final voters = results?.voters[iso] ?? [];
+    final counts = results?.tallies[iso] ?? {};
+    final yesCount = counts['yes'] ?? 0;
+    final maybeCount = counts['maybe'] ?? 0;
     final isWinner =
         winnerIso != null && _normalizeIso(iso) == _normalizeIso(winnerIso);
 
     if (widget.isFinalized) {
       return _PollOptionResult(
         label: label,
-        count: count,
+        count: totalCount,
         total: total,
         isWinner: isWinner,
       );
     }
 
-    return CheckboxListTile(
-      title: _PollOptionTitle(
-        label: label,
-        count: count,
-        textColor: theme.colorScheme.onSurface,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _PollOptionTitle(
+            label: label,
+            count: totalCount,
+            voters: voters,
+            onVotersTap:
+                voters.isNotEmpty
+                    ? () => _showVoters(context, label, voters)
+                    : null,
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              _SurveyAvailabilityChip(
+                label: 'yes',
+                icon: Icons.check_circle_outline,
+                isActive: _selected[iso] == 'yes',
+                count: yesCount,
+                onTap: () => _setAvailability(iso, 'yes', state),
+              ),
+              const SizedBox(width: 8),
+              _SurveyAvailabilityChip(
+                label: 'maybe',
+                icon: Icons.help_outline,
+                isActive: _selected[iso] == 'maybe',
+                count: maybeCount,
+                onTap: () => _setAvailability(iso, 'maybe', state),
+              ),
+            ],
+          ),
+        ],
       ),
-      value: _selected.contains(iso),
-      onChanged: (checked) => _toggle(iso, checked, state),
-      dense: true,
-      contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  void _showVoters(BuildContext context, String label, List<PollVoter> voters) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder:
+          (ctx) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: Theme.of(ctx).textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${voters.length} vote${voters.length == 1 ? '' : 's'}',
+                    style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  for (final voter in voters)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundImage:
+                                voter.photoUrl.isNotEmpty
+                                    ? NetworkImage(voter.photoUrl)
+                                    : null,
+                            child:
+                                voter.photoUrl.isEmpty
+                                    ? Text(
+                                      voter.name.isNotEmpty
+                                          ? voter.name[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(fontSize: 12),
+                                    )
+                                    : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(voter.name),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final talliesAsync = ref.watch(pollTalliesProvider(widget.survey.id));
-    final tallies = talliesAsync.valueOrNull;
-    final questionTallies =
-        tallies?.where((t) => t.questionId == widget.question.id).firstOrNull;
+    final resultsAsync = ref.watch(pollResultsProvider(widget.survey.id));
+    final allResults = resultsAsync.valueOrNull;
+    final questionResults =
+        allResults
+            ?.where((t) => t.questionId == widget.question.id)
+            .firstOrNull;
     final winnerIso =
         widget.survey.pollResult?.winningDatetime.toUtc().toIso8601String();
 
     return FormField<String>(
       initialValue: '',
       validator: widget.validator,
-      onSaved: (_) => widget.onSaved(_joinSelected()),
+      onSaved: (_) => widget.onSaved(_encodeSelected()),
       builder: (state) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +539,7 @@ class _DatetimePollFieldState extends ConsumerState<_DatetimePollField> {
             const SizedBox(height: 8),
             if (!widget.isFinalized)
               Text(
-                'select all times that work for you',
+                'for each option, mark yes or maybe',
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -445,7 +548,7 @@ class _DatetimePollFieldState extends ConsumerState<_DatetimePollField> {
             const SizedBox(height: 8),
             ...widget.question.options.map(
               (iso) =>
-                  _buildOption(context, iso, questionTallies, winnerIso, state),
+                  _buildOption(context, iso, questionResults, winnerIso, state),
             ),
             if (state.hasError)
               Padding(
@@ -465,6 +568,57 @@ class _DatetimePollFieldState extends ConsumerState<_DatetimePollField> {
   }
 }
 
+class _SurveyAvailabilityChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isActive;
+  final int count;
+  final VoidCallback? onTap;
+
+  const _SurveyAvailabilityChip({
+    required this.label,
+    required this.icon,
+    required this.isActive,
+    required this.count,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color =
+        isActive ? theme.colorScheme.primary : theme.colorScheme.outline;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Semantics(
+        button: onTap != null,
+        label: '$label${isActive ? ' selected' : ''}',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color),
+            color: isActive ? color.withValues(alpha: 0.1) : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 4),
+              Text(
+                count > 0 ? '$label ($count)' : label,
+                style: theme.textTheme.bodySmall?.copyWith(color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Normalises an ISO 8601 string for comparison (strips trailing Z vs +00:00 etc.)
 String _normalizeIso(String iso) {
   try {
@@ -477,28 +631,117 @@ String _normalizeIso(String iso) {
 class _PollOptionTitle extends StatelessWidget {
   final String label;
   final int count;
-  final Color textColor;
+  final List<PollVoter> voters;
+  final VoidCallback? onVotersTap;
 
   const _PollOptionTitle({
     required this.label,
     required this.count,
-    required this.textColor,
+    required this.voters,
+    this.onVotersTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Expanded(child: Text(label)),
-        if (count > 0)
+        if (voters.isNotEmpty)
+          InkWell(
+            onTap: onVotersTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Semantics(
+              button: true,
+              label: 'see who voted',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _SurveyVoterAvatarStack(voters: voters),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$count',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (count > 0)
           Text(
-            '$count vote${count == 1 ? '' : 's'}',
-            style: TextStyle(
-              fontSize: 12,
-              color: textColor.withValues(alpha: 0.5),
+            '$count',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SurveyVoterAvatarStack extends StatelessWidget {
+  final List<PollVoter> voters;
+
+  const _SurveyVoterAvatarStack({required this.voters});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    const size = 20.0;
+    const overlap = 7.0;
+    const maxShow = 4;
+    final showing = voters.take(maxShow).toList();
+    final extra = voters.length - showing.length;
+
+    return SizedBox(
+      height: size,
+      width:
+          showing.length * (size - overlap) + overlap + (extra > 0 ? size : 0),
+      child: Stack(
+        children: [
+          for (var i = 0; i < showing.length; i++)
+            Positioned(
+              left: i * (size - overlap),
+              child: CircleAvatar(
+                radius: size / 2,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                backgroundImage:
+                    showing[i].photoUrl.isNotEmpty
+                        ? NetworkImage(showing[i].photoUrl)
+                        : null,
+                child:
+                    showing[i].photoUrl.isEmpty
+                        ? Text(
+                          showing[i].name.isNotEmpty
+                              ? showing[i].name[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                        : null,
+              ),
+            ),
+          if (extra > 0)
+            Positioned(
+              left: showing.length * (size - overlap),
+              child: CircleAvatar(
+                radius: size / 2,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                child: Text(
+                  '+$extra',
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

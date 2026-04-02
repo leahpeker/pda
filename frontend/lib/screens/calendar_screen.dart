@@ -9,6 +9,7 @@ import 'package:pda/screens/calendar/list_view.dart';
 import 'package:pda/screens/calendar/month_view.dart';
 import 'package:pda/screens/calendar/week_view.dart';
 import 'package:pda/services/api_error.dart';
+import 'package:pda/utils/create_datetime_poll.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/phone_form_field.dart';
 
@@ -73,7 +74,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       if (result.photo != null) {
         await uploadEventPhoto(ref, eventId, result.photo!);
       }
+      if (result.datetimePollOptions.isNotEmpty) {
+        await createDatetimePoll(
+          ref: ref,
+          eventId: eventId,
+          eventTitle: result.data['title'] as String,
+          options: result.datetimePollOptions,
+        );
+      }
       ref.invalidate(eventsProvider);
+      if (mounted) context.push('/events/$eventId');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

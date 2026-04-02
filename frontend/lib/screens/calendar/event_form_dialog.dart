@@ -10,17 +10,24 @@ import 'package:pda/utils/time_format.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/config/constants.dart';
+import 'package:pda/models/event_poll.dart';
+import 'package:pda/providers/event_poll_provider.dart';
+import 'package:pda/widgets/poll_widgets.dart';
+
+final _pollDateFmt = DateFormat('EEE, MMM d · h:mm a');
 
 /// Result returned by [EventFormDialog] — JSON data + optional photo.
 class EventFormResult {
   final Map<String, dynamic> data;
   final XFile? photo;
   final bool removePhoto;
+  final List<String> datetimePollOptions;
 
   const EventFormResult({
     required this.data,
     this.photo,
     this.removePhoto = false,
+    this.datetimePollOptions = const [],
   });
 }
 
@@ -64,11 +71,13 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   String? _calendarTarget;
   XFile? _selectedPhoto;
   bool _removePhoto = false;
+  bool _removingPoll = false;
   double? _latitude;
   double? _longitude;
   List<_PhotonResult> _locationResults = [];
   bool _locationSearching = false;
   Timer? _debounceTimer;
+  final List<DateTime> _datetimePollOptions = [];
 
   bool get _isEdit => widget.event != null;
 
@@ -272,7 +281,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'start_datetime': _start.toUtc().toIso8601String(),
           'end_datetime': _end?.toUtc().toIso8601String(),
           'rsvp_enabled': _rsvpEnabled,
-          'datetime_tbd': _datetimeTbd,
+          'datetime_tbd': _datetimeTbd || _datetimePollOptions.isNotEmpty,
           'event_type': _eventType,
           'visibility': _visibility,
           'co_host_ids': _coHostIds.toList(),
@@ -280,8 +289,204 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
         },
         photo: _selectedPhoto,
         removePhoto: _removePhoto,
+        datetimePollOptions:
+            _datetimePollOptions
+                .map((dt) => dt.toUtc().toIso8601String())
+                .toList(),
       ),
     );
+  }
+
+  Future<void> _addDatetimePollOption() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now),
+    );
+    if (time == null || !mounted) return;
+    setState(() {
+      _datetimePollOptions.add(
+        DateTime(date.year, date.month, date.day, time.hour, time.minute),
+      );
+    });
+  }
+
+  List<Widget> _buildWhenSection(
+    ThemeData theme,
+    String Function(DateTime) dateFmt,
+  ) {
+    // Editing an event with a poll.
+    if (_isEdit && (widget.event?.hasPoll ?? false)) {
+      // Poll finalized — datetime_tbd is false, show normal date + note.
+      if (!(widget.event?.datetimeTbd ?? true)) {
+        return [
+          ..._buildDateTimeSection(dateFmt),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 14,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                'set by poll',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ];
+      }
+      // Poll still active — show live editor.
+      return [
+        _LivePollEditor(
+          eventId: widget.event!.id,
+          onRemovePoll: () => _removePoll(context),
+          removingPoll: _removingPoll,
+        ),
+      ];
+    }
+
+    // Building a poll — hide date pickers, show poll options.
+    if (_datetimePollOptions.isNotEmpty) {
+      return [
+        Row(
+          children: [
+            Expanded(
+              child: Text('time options', style: theme.textTheme.titleSmall),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _datetimePollOptions.clear()),
+              child: const Text('cancel poll'),
+            ),
+          ],
+        ),
+        Text(
+          'members will vote on these — date is set when you pick a winner',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        for (var i = 0; i < _datetimePollOptions.length; i++)
+          Row(
+            children: [
+              const Icon(Icons.access_time_outlined, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _pollDateFmt.format(_datetimePollOptions[i]).toLowerCase(),
+                ),
+              ),
+              IconButton(
+                tooltip: 'remove option',
+                icon: const Icon(Icons.close, size: 18),
+                onPressed:
+                    () => setState(() => _datetimePollOptions.removeAt(i)),
+              ),
+            ],
+          ),
+        TextButton.icon(
+          onPressed: _addDatetimePollOption,
+          icon: const Icon(Icons.add),
+          label: const Text('add another time'),
+        ),
+      ];
+    }
+
+    // Default: date/time pickers + offer to switch to a poll.
+    return [
+      ..._buildDateTimeSection(dateFmt),
+      const SizedBox(height: 10),
+      InkWell(
+        onTap: _addDatetimePollOption,
+        borderRadius: BorderRadius.circular(24),
+        child: Semantics(
+          button: true,
+          label: 'poll members for a time',
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.poll_outlined,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'or poll members for a time',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  Future<void> _removePoll(BuildContext ctx) async {
+    final eventId = widget.event?.id;
+    if (eventId == null) return;
+    final nav = Navigator.of(ctx);
+    final messenger = ScaffoldMessenger.of(ctx);
+    final confirmed = await showDialog<bool>(
+      context: ctx,
+      builder:
+          (dlgCtx) => AlertDialog(
+            title: const Text('remove poll?'),
+            content: const Text(
+              'This will delete the poll and all votes. This cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dlgCtx).pop(false),
+                child: const Text('cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dlgCtx).pop(true),
+                child: Text(
+                  'remove',
+                  style: TextStyle(color: Theme.of(dlgCtx).colorScheme.error),
+                ),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _removingPoll = true);
+    try {
+      await deleteEventPoll(ref: ref, eventId: eventId);
+      if (!mounted) return;
+      nav.pop();
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('couldn\'t remove poll — try again'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _removingPoll = false);
+    }
   }
 
   Future<void> _pickPhoto() async {
@@ -770,8 +975,6 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       ];
     }
     return [
-      const Divider(),
-      const SizedBox(height: 8),
       Row(
         children: [
           Text(
@@ -930,7 +1133,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 const SizedBox(height: 12),
                 _buildNoFeesNote(theme),
                 const SizedBox(height: 16),
-                ..._buildDateTimeSection(dateFmt),
+                ..._buildWhenSection(theme, dateFmt),
                 const SizedBox(height: 16),
                 _buildLocationField(),
                 const SizedBox(height: 12),
@@ -938,19 +1141,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 const SizedBox(height: 16),
                 ..._buildLinksSection(theme),
                 const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
                 ..._buildCostSection(theme),
                 const SizedBox(height: 16),
                 const Divider(),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: _datetimeTbd,
-                  onChanged: (v) => setState(() => _datetimeTbd = v),
-                  title: const Text('date & time tbd'),
-                  subtitle: const Text(
-                    'show as tbd on the calendar — use a datetime poll to finalize',
-                  ),
-                  contentPadding: EdgeInsets.zero,
-                ),
                 const SizedBox(height: 8),
                 _buildRsvpToggle(theme),
                 const SizedBox(height: 8),
@@ -1340,6 +1535,161 @@ class _PhotoButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Inline editor for an active poll's options — shown inside EventFormDialog
+/// when editing an event that already has a poll.
+class _LivePollEditor extends ConsumerStatefulWidget {
+  final String eventId;
+  final VoidCallback onRemovePoll;
+  final bool removingPoll;
+
+  const _LivePollEditor({
+    required this.eventId,
+    required this.onRemovePoll,
+    required this.removingPoll,
+  });
+
+  @override
+  ConsumerState<_LivePollEditor> createState() => _LivePollEditorState();
+}
+
+class _LivePollEditorState extends ConsumerState<_LivePollEditor> {
+  bool _adding = false;
+
+  Future<void> _addOption() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now),
+    );
+    if (time == null || !mounted) return;
+    final dt = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    setState(() => _adding = true);
+    try {
+      await addPollOption(ref: ref, eventId: widget.eventId, datetime: dt);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('couldn\'t add option — try again')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _adding = false);
+    }
+  }
+
+  Future<void> _removeOption(EventPollOption option) async {
+    try {
+      await deletePollOption(
+        ref: ref,
+        eventId: widget.eventId,
+        optionId: option.id,
+      );
+    } catch (e) {
+      if (mounted) {
+        final msg =
+            e.toString().contains('at least 2')
+                ? 'a poll needs at least 2 options'
+                : 'couldn\'t remove option — try again';
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final pollAsync = ref.watch(eventPollProvider(widget.eventId));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text('time options', style: theme.textTheme.titleSmall),
+            ),
+            TextButton(
+              onPressed: widget.removingPoll ? null : widget.onRemovePoll,
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.error,
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(widget.removingPoll ? 'removing...' : 'remove poll'),
+            ),
+          ],
+        ),
+        Text(
+          'members are voting on these',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        pollAsync.when(
+          loading:
+              () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          error: (_, __) => const Text('couldn\'t load options'),
+          data: (poll) {
+            if (poll == null) return const SizedBox.shrink();
+            final options = poll.options;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final option in options)
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time_outlined, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(formatPollOption(option.datetime))),
+                      Text(
+                        '${option.totalCount}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'remove option',
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed:
+                            options.length > 2
+                                ? () => _removeOption(option)
+                                : null,
+                      ),
+                    ],
+                  ),
+              ],
+            );
+          },
+        ),
+        TextButton.icon(
+          onPressed: _adding ? null : _addOption,
+          icon: const Icon(Icons.add),
+          label: Text(_adding ? 'adding...' : 'add another time'),
+        ),
+      ],
     );
   }
 }

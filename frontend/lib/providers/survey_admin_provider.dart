@@ -20,6 +20,7 @@ class SurveyAdminNotifier extends AsyncNotifier<List<Survey>> {
     String description = '',
     String visibility = PageVisibility.public_,
     String? linkedEventId,
+    bool oneResponsePerUser = false,
   }) async {
     final api = ref.read(apiClientProvider);
     final response = await api.post(
@@ -29,6 +30,7 @@ class SurveyAdminNotifier extends AsyncNotifier<List<Survey>> {
         'slug': slug,
         'description': description,
         'visibility': visibility,
+        'one_response_per_user': oneResponsePerUser,
         if (linkedEventId != null) 'linked_event_id': linkedEventId,
       },
     );

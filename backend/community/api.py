@@ -18,6 +18,7 @@ from community._guidelines import router as guidelines_router
 from community._home import router as home_router
 from community._join_requests import router as join_requests_router
 from community._pages import router as pages_router
+from community._polls import router as polls_router
 from community._surveys import router as surveys_router
 from community._whatsapp import router as whatsapp_router
 
@@ -30,5 +31,6 @@ router.add_router("", feedback_router)
 router.add_router("", events_router)
 router.add_router("", calendar_router)
 router.add_router("", whatsapp_router)
+router.add_router("", polls_router)
 router.add_router("", surveys_router)
 router.add_router("", docs_router)

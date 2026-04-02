@@ -75,7 +75,7 @@ class _ResponsesBody extends ConsumerWidget {
         ),
         if (_hasPollQuestion) ...[
           const SizedBox(height: 20),
-          _PollTallySection(surveyId: surveyId, survey: survey!),
+          _PollResultsSection(surveyId: surveyId, survey: survey!),
         ],
         const SizedBox(height: 20),
         if (responses.isEmpty)
@@ -113,17 +113,18 @@ class _ResponsesBody extends ConsumerWidget {
   }
 }
 
-class _PollTallySection extends ConsumerStatefulWidget {
+class _PollResultsSection extends ConsumerStatefulWidget {
   final String surveyId;
   final Survey survey;
 
-  const _PollTallySection({required this.surveyId, required this.survey});
+  const _PollResultsSection({required this.surveyId, required this.survey});
 
   @override
-  ConsumerState<_PollTallySection> createState() => _PollTallySectionState();
+  ConsumerState<_PollResultsSection> createState() =>
+      _PollResultsSectionState();
 }
 
-class _PollTallySectionState extends ConsumerState<_PollTallySection> {
+class _PollResultsSectionState extends ConsumerState<_PollResultsSection> {
   bool _finalizing = false;
 
   Future<void> _confirmFinalize(DateTime winningDt) async {
@@ -172,7 +173,7 @@ class _PollTallySectionState extends ConsumerState<_PollTallySection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final talliesAsync = ref.watch(pollTalliesProvider(widget.surveyId));
+    final talliesAsync = ref.watch(pollResultsProvider(widget.surveyId));
     final isFinalized = widget.survey.pollResult != null;
 
     return Container(
@@ -262,7 +263,7 @@ class _PollTallySectionState extends ConsumerState<_PollTallySection> {
                             const SizedBox(height: 8),
                           ],
                           ...q.options.map((iso) {
-                            final count = tally?.tallies[iso] ?? 0;
+                            final count = tally?.totalForOption(iso) ?? 0;
                             final fraction = total > 0 ? count / total : 0.0;
                             final label = _formatPollOptionShort(iso);
                             final isWinner =
