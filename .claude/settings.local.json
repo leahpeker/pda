@@ -12,7 +12,8 @@
       "WebFetch(domain:tally.so)",
       "WebFetch(domain:docs.railway.com)",
       "Skill(update-config)",
-      "mcp__dart-flutter__analyze_files"
+      "mcp__dart-flutter__analyze_files",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   },
   "enabledMcpjsonServers": [

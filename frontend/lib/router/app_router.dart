@@ -52,7 +52,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (isLoading) return null;
 
-      final loc = state.matchedLocation;
+      final loc = state.matchedLocation.toLowerCase();
 
       // Users with needs_onboarding are routed based on whether they're
       // first-time (no display name yet) or just resetting their password.
@@ -121,147 +121,184 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/', name: 'home', builder: (_, __) => const HomeScreen()),
+      GoRoute(
+        path: '/',
+        name: 'home',
+        caseSensitive: false,
+        builder: (_, __) => const HomeScreen(),
+      ),
       GoRoute(
         path: '/join',
         name: 'join',
+        caseSensitive: false,
         builder: (_, __) => const JoinScreen(),
       ),
       GoRoute(
         path: '/join/success',
         name: 'join-success',
+        caseSensitive: false,
         builder: (_, __) => const JoinSuccessScreen(),
       ),
       GoRoute(
         path: '/login',
         name: 'login',
+        caseSensitive: false,
         builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
         path: '/magic-login/:token',
         name: 'magic-login',
+        caseSensitive: false,
         builder: (_, state) =>
             MagicLoginScreen(token: state.pathParameters['token']!),
       ),
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',
+        caseSensitive: false,
         builder: (_, __) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/new-password',
         name: 'new-password',
+        caseSensitive: false,
         builder: (_, __) => const NewPasswordScreen(),
       ),
       GoRoute(
         path: '/calendar',
         name: 'calendar',
+        caseSensitive: false,
         builder: (_, __) => const CalendarScreen(),
       ),
       GoRoute(
         path: '/members',
         name: 'members',
+        caseSensitive: false,
         builder: (_, __) => const MembersScreen(),
       ),
       GoRoute(
         path: '/join-requests',
         name: 'join-requests',
+        caseSensitive: false,
         builder: (_, __) => const JoinRequestsScreen(),
       ),
       GoRoute(
         path: '/events/mine',
         name: 'my-events',
+        caseSensitive: false,
         builder: (_, __) => const EventManagementScreen(myEventsOnly: true),
       ),
       GoRoute(
         path: '/events/manage',
         name: 'manage-events',
+        caseSensitive: false,
         builder: (_, __) => const EventManagementScreen(),
       ),
       GoRoute(
         path: '/guidelines',
         name: 'guidelines',
+        caseSensitive: false,
         builder: (_, __) => const GuidelinesScreen(),
       ),
-      GoRoute(path: '/faq', name: 'faq', builder: (_, __) => const FAQScreen()),
+      GoRoute(
+        path: '/faq',
+        name: 'faq',
+        caseSensitive: false,
+        builder: (_, __) => const FAQScreen(),
+      ),
       GoRoute(
         path: '/settings',
         name: 'settings',
+        caseSensitive: false,
         builder: (_, __) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/donate',
         name: 'donate',
+        caseSensitive: false,
         builder: (_, __) => const DonateScreen(),
       ),
       GoRoute(
         path: '/volunteer',
         name: 'volunteer',
+        caseSensitive: false,
         builder: (_, __) => const VolunteerScreen(),
       ),
       GoRoute(
         path: '/admin',
         name: 'admin',
+        caseSensitive: false,
         builder: (_, __) => const AdminScreen(),
       ),
       GoRoute(
         path: '/admin/join-form',
         name: 'join-form-config',
+        caseSensitive: false,
         builder: (_, __) => const JoinFormConfigScreen(),
       ),
       GoRoute(
         path: '/admin/surveys',
         name: 'survey-admin',
+        caseSensitive: false,
         builder: (_, __) => const SurveyAdminScreen(),
       ),
       GoRoute(
         path: '/admin/surveys/:id',
         name: 'survey-builder',
+        caseSensitive: false,
         builder: (_, state) =>
             SurveyBuilderScreen(surveyId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/admin/surveys/:id/responses',
         name: 'survey-responses',
+        caseSensitive: false,
         builder: (_, state) =>
             SurveyResponsesScreen(surveyId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/admin/whatsapp',
         name: 'whatsapp-config',
+        caseSensitive: false,
         builder: (_, __) => const WhatsAppConfigScreen(),
       ),
       GoRoute(
         path: '/docs',
         name: 'docs',
+        caseSensitive: false,
         builder: (_, __) => const DocsScreen(),
       ),
       GoRoute(
         path: '/docs/:id',
         name: 'doc-detail',
+        caseSensitive: false,
         builder: (_, state) =>
             DocDetailScreen(docId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/profile',
         name: 'profile',
+        caseSensitive: false,
         builder: (_, __) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/members/:id',
         name: 'member-profile',
+        caseSensitive: false,
         builder: (_, state) =>
             MemberProfileScreen(userId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/surveys/:slug',
         name: 'survey',
+        caseSensitive: false,
         builder: (_, state) =>
             SurveyScreen(slug: state.pathParameters['slug']!),
       ),
       GoRoute(
         path: '/events/:id',
         name: 'event-detail',
+        caseSensitive: false,
         builder: (_, state) =>
             EventDetailScreen(eventId: state.pathParameters['id']!),
       ),
