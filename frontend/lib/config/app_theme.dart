@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 /// Builds the app [ThemeData] with accessibility-first typography.
 ///
 /// When [dyslexiaMode] is true, the text theme is configured with wider
-/// letter spacing, more line height, and will use Atkinson Hyperlegible when
-/// the google_fonts dependency is available.
+/// letter spacing and more line height.
 ThemeData buildAppTheme({bool dyslexiaMode = false}) {
   const seedColor = Color(0xFF2E7D32);
   final colorScheme = ColorScheme.fromSeed(seedColor: seedColor);
