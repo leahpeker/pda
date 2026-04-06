@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 
 /// Builds the app [ThemeData] with accessibility-first typography.
 ///
-/// When [dyslexiaMode] is true, the text theme is configured with wider
-/// letter spacing and more line height.
+/// When [dyslexiaMode] is true, the text theme switches to OpenDyslexic and
+/// is configured with wider letter spacing and more line height.
 ThemeData buildAppTheme({bool dyslexiaMode = false}) {
   const seedColor = Color(0xFF2E7D32);
   final colorScheme = ColorScheme.fromSeed(seedColor: seedColor);
+  final String? fontFamily = dyslexiaMode ? 'OpenDyslexic' : null;
 
-  final textTheme = _buildTextTheme(dyslexiaMode: dyslexiaMode);
+  final textTheme = _buildTextTheme(
+    dyslexiaMode: dyslexiaMode,
+    fontFamily: fontFamily,
+  );
 
   return ThemeData(
     colorScheme: colorScheme,
@@ -19,12 +23,16 @@ ThemeData buildAppTheme({bool dyslexiaMode = false}) {
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       backgroundColor: seedColor,
-      contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+      contentTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 14,
+        fontFamily: fontFamily,
+      ),
     ),
   );
 }
 
-TextTheme _buildTextTheme({required bool dyslexiaMode}) {
+TextTheme _buildTextTheme({required bool dyslexiaMode, String? fontFamily}) {
   // Base spacing values
   final double bodyHeight = dyslexiaMode ? 1.7 : 1.5;
   final double labelHeight = dyslexiaMode ? 1.5 : 1.3;
@@ -33,43 +41,49 @@ TextTheme _buildTextTheme({required bool dyslexiaMode}) {
 
   return TextTheme(
     // Display styles — large hero text
-    displayLarge: const TextStyle(
+    displayLarge: TextStyle(
       fontSize: 57,
       fontWeight: FontWeight.w400,
       height: 1.12,
       letterSpacing: -0.25,
+      fontFamily: fontFamily,
     ),
-    displayMedium: const TextStyle(
+    displayMedium: TextStyle(
       fontSize: 45,
       fontWeight: FontWeight.w400,
       height: 1.16,
       letterSpacing: 0,
+      fontFamily: fontFamily,
     ),
-    displaySmall: const TextStyle(
+    displaySmall: TextStyle(
       fontSize: 36,
       fontWeight: FontWeight.w400,
       height: 1.22,
       letterSpacing: 0,
+      fontFamily: fontFamily,
     ),
 
     // Headline styles — page titles, section headings
-    headlineLarge: const TextStyle(
+    headlineLarge: TextStyle(
       fontSize: 32,
       fontWeight: FontWeight.w400,
       height: 1.25,
       letterSpacing: 0,
+      fontFamily: fontFamily,
     ),
-    headlineMedium: const TextStyle(
+    headlineMedium: TextStyle(
       fontSize: 28,
       fontWeight: FontWeight.w400,
       height: 1.29,
       letterSpacing: 0,
+      fontFamily: fontFamily,
     ),
-    headlineSmall: const TextStyle(
+    headlineSmall: TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.w400,
       height: 1.33,
       letterSpacing: 0,
+      fontFamily: fontFamily,
     ),
 
     // Title styles — card titles, dialog titles
@@ -78,18 +92,21 @@ TextTheme _buildTextTheme({required bool dyslexiaMode}) {
       fontWeight: FontWeight.w500,
       height: labelHeight,
       letterSpacing: labelLetterSpacing,
+      fontFamily: fontFamily,
     ),
     titleMedium: TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w500,
       height: labelHeight,
       letterSpacing: labelLetterSpacing,
+      fontFamily: fontFamily,
     ),
     titleSmall: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w500,
       height: labelHeight,
       letterSpacing: labelLetterSpacing,
+      fontFamily: fontFamily,
     ),
 
     // Body styles — primary reading text, minimum 14px
@@ -98,18 +115,21 @@ TextTheme _buildTextTheme({required bool dyslexiaMode}) {
       fontWeight: FontWeight.w400,
       height: bodyHeight,
       letterSpacing: bodyLetterSpacing,
+      fontFamily: fontFamily,
     ),
     bodyMedium: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w400,
       height: bodyHeight,
       letterSpacing: bodyLetterSpacing,
+      fontFamily: fontFamily,
     ),
     bodySmall: TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w400,
       height: bodyHeight,
       letterSpacing: bodyLetterSpacing,
+      fontFamily: fontFamily,
     ),
 
     // Label styles — badges, captions, helper text, minimum 12px
@@ -118,18 +138,21 @@ TextTheme _buildTextTheme({required bool dyslexiaMode}) {
       fontWeight: FontWeight.w500,
       height: labelHeight,
       letterSpacing: labelLetterSpacing,
+      fontFamily: fontFamily,
     ),
     labelMedium: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w500,
       height: labelHeight,
       letterSpacing: labelLetterSpacing,
+      fontFamily: fontFamily,
     ),
     labelSmall: TextStyle(
       fontSize: 11,
       fontWeight: FontWeight.w500,
       height: labelHeight,
       letterSpacing: labelLetterSpacing,
+      fontFamily: fontFamily,
     ),
   );
 }
