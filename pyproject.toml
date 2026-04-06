@@ -19,6 +19,7 @@ dependencies = [
     "django-storages[s3]>=1.14,<2.0",
     "Pillow>=11.0,<13.0",
     "PyJWT[crypto]>=2.0,<3.0",
+    "email-validator>=2.0,<3.0",
 ]
 
 [dependency-groups]

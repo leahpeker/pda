@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
+import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/app_scaffold.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -110,6 +111,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) => _newPwFocusNode.requestFocus(),
+                        validator: v.optionalEmail(),
                       ),
                       const SizedBox(height: 20),
                       TextFormField(

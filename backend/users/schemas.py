@@ -1,7 +1,18 @@
+from typing import Annotated
+
 from config.media_proxy import media_path
-from pydantic import BaseModel
+from pydantic import BaseModel, BeforeValidator, EmailStr
 
 from users.models import User
+
+
+def _empty_str_to_none(v: str | None) -> str | None:
+    if v is None or (isinstance(v, str) and v.strip() == ""):
+        return None
+    return v
+
+
+OptionalEmail = Annotated[EmailStr | None, BeforeValidator(_empty_str_to_none)]
 
 
 class LoginIn(BaseModel):
@@ -75,7 +86,7 @@ class MemberProfileOut(BaseModel):
 class UserCreateIn(BaseModel):
     phone_number: str
     display_name: str = ""
-    email: str = ""
+    email: OptionalEmail = None
     role_id: str | None = None
 
 
@@ -107,13 +118,13 @@ class BulkUserCreateOut(BaseModel):
 class UserPatchIn(BaseModel):
     phone_number: str | None = None
     display_name: str | None = None
-    email: str | None = None
+    email: OptionalEmail = None
     is_paused: bool | None = None
 
 
 class MePatchIn(BaseModel):
     display_name: str | None = None
-    email: str | None = None
+    email: OptionalEmail = None
     needs_onboarding: bool | None = None
     show_phone: bool | None = None
     show_email: bool | None = None
@@ -150,7 +161,7 @@ class ErrorOut(BaseModel):
 class OnboardingIn(BaseModel):
     new_password: str
     display_name: str | None = None
-    email: str = ""
+    email: OptionalEmail = None
 
 
 class UserSearchOut(BaseModel):
