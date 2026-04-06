@@ -53,6 +53,16 @@ class EventFormWhenSection extends StatefulWidget {
 class _EventFormWhenSectionState extends State<EventFormWhenSection> {
   DateTimePickerMode? _startPickerMode;
   DateTimePickerMode? _endPickerMode;
+  late bool _dateSetByPoll;
+
+  @override
+  void initState() {
+    super.initState();
+    _dateSetByPoll =
+        widget.isEdit &&
+        (widget.event?.hasPoll ?? false) &&
+        !(widget.event?.datetimeTbd ?? true);
+  }
 
   void _toggleStartMode(DateTimePickerMode mode) {
     setState(() {
@@ -83,7 +93,10 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
           width: widget.pickerWidth,
           child: DateTimePicker(
             initialDateTime: widget.start,
-            onDateTimeChanged: widget.onStartChanged,
+            onDateTimeChanged: (dt) {
+              setState(() => _dateSetByPoll = false);
+              widget.onStartChanged(dt);
+            },
             firstDate: DateTime(2000),
             lastDate: DateTime(2100),
             mode: _startPickerMode!,
@@ -155,7 +168,10 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
           width: widget.pickerWidth,
           child: DateTimePicker(
             initialDateTime: widget.end!,
-            onDateTimeChanged: widget.onEndChanged,
+            onDateTimeChanged: (dt) {
+              setState(() => _dateSetByPoll = false);
+              widget.onEndChanged(dt);
+            },
             firstDate: DateTime(2000),
             lastDate: DateTime(2100),
             mode: _endPickerMode!,
@@ -169,39 +185,41 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Editing an event with a poll.
-    if (widget.isEdit && (widget.event?.hasPoll ?? false)) {
-      // Poll finalized — show normal date pickers + badge.
-      if (!(widget.event?.datetimeTbd ?? true)) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ..._buildDateTimeRows(),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  Icons.check_circle_outline,
-                  size: 14,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  'set by poll',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      }
-      // Poll still active — show live editor.
+    // Editing an event with an active (non-finalized) poll — show live editor.
+    if (widget.isEdit &&
+        (widget.event?.hasPoll ?? false) &&
+        (widget.event?.datetimeTbd ?? true)) {
       return LivePollEditor(
         eventId: widget.event!.id,
         onRemovePoll: widget.onRemovePoll,
         removingPoll: widget.removingPoll,
+      );
+    }
+
+    // Editing an event with a finalized poll and date unchanged — show badge.
+    if (_dateSetByPoll) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ..._buildDateTimeRows(),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 14,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                'set by poll',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
       );
     }
 
