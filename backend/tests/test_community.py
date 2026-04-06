@@ -295,6 +295,24 @@ class TestErrorReport:
         )
         assert response.status_code == 422
 
+    def test_error_report_with_enriched_fields(self, api_client, auth_headers):
+        response = api_client.post(
+            "/api/community/error-report/",
+            {
+                "error": "Something broke",
+                "stack_trace": "at line 42",
+                "context": "global",
+                "route": "/calendar",
+                "user_agent": "Mozilla/5.0",
+                "app_version": "abc123",
+                "client_timestamp": "2026-04-06T12:00:00Z",
+            },
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 201
+        assert response.json()["detail"] == "Error report received."
+
 
 # ---------------------------------------------------------------------------
 # TestFAQ

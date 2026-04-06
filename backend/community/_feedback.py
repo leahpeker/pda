@@ -23,6 +23,10 @@ class ErrorReportIn(BaseModel):
     error: str = Field(max_length=2000)
     stack_trace: str = Field(default="", max_length=10000)
     context: str = Field(default="", max_length=500)
+    route: str = Field(default="", max_length=500)
+    user_agent: str = Field(default="", max_length=500)
+    app_version: str = Field(default="", max_length=50)
+    client_timestamp: str = Field(default="", max_length=50)
 
 
 class ErrorReportOut(BaseModel):
@@ -50,13 +54,20 @@ class FeedbackOut(BaseModel):
 
 @router.post("/error-report/", response={201: ErrorReportOut}, auth=JWTAuth())
 def report_error(request, payload: ErrorReportIn):
-    frontend_logger.error(
-        "Frontend error: %s (context: %s)",
-        payload.error,
-        payload.context or "unknown",
-    )
+    extra = {
+        k: v
+        for k, v in {
+            "context": payload.context or "unknown",
+            "route": payload.route,
+            "user_agent": payload.user_agent,
+            "app_version": payload.app_version,
+            "client_timestamp": payload.client_timestamp,
+        }.items()
+        if v
+    }
+    frontend_logger.error("Frontend error: %s", payload.error, extra=extra)
     if payload.stack_trace:
-        frontend_logger.error("Stack trace: %s", payload.stack_trace)
+        frontend_logger.error("Stack trace: %s", payload.stack_trace, extra=extra)
     return Status(201, ErrorReportOut(detail="Error report received."))
 
 

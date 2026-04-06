@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pda/services/error_reporter.dart';
+import 'package:pda/services/route_tracker.dart';
 import 'package:pda/services/secure_storage.dart';
 
 import '../helpers/fake_secure_storage.dart';
@@ -19,6 +20,8 @@ void main() {
     mockDio = MockDio();
     reporter = ErrorReporter.withDio(storage, mockDio);
   });
+
+  tearDown(() => RouteTracker.instance.update(''));
 
   group('ErrorReporter', () {
     test('posts error data to backend when token is available', () async {
@@ -48,10 +51,41 @@ void main() {
         ),
       ).captured;
       expect(captured[0], '/api/community/error-report/');
-      final data = captured[1] as Map<String, String>;
+      final data = captured[1] as Map<String, dynamic>;
       expect(data['error'], 'Test error');
       expect(data['stack_trace'], 'at line 42');
       expect(data['context'], '/calendar');
+      expect(data.containsKey('route'), isTrue);
+      expect(data.containsKey('user_agent'), isTrue);
+      expect(data.containsKey('app_version'), isTrue);
+      expect(data.containsKey('client_timestamp'), isTrue);
+    });
+
+    test('includes current route from RouteTracker', () async {
+      RouteTracker.instance.update('/events/123');
+      await storage.saveTokens(access: 'test-token', refresh: 'refresh');
+      when(
+        () => mockDio.post(
+          any(),
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async =>
+            Response(requestOptions: RequestOptions(), statusCode: 201),
+      );
+
+      await reporter.report(error: 'Test error');
+
+      final captured = verify(
+        () => mockDio.post(
+          captureAny(),
+          data: captureAny(named: 'data'),
+          options: captureAny(named: 'options'),
+        ),
+      ).captured;
+      final data = captured[1] as Map<String, dynamic>;
+      expect(data['route'], '/events/123');
     });
 
     test('does not post when no token is available', () async {

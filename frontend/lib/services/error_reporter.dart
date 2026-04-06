@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
 import 'package:pda/config/api_config.dart';
+import 'package:pda/services/route_tracker.dart';
 import 'package:pda/services/secure_storage.dart';
+import 'package:pda/utils/user_agent.dart';
 
 final _log = Logger('ErrorReporter');
 
@@ -39,6 +41,10 @@ class ErrorReporter {
               ? stackTrace.substring(0, 10000)
               : stackTrace,
           'context': context,
+          'route': RouteTracker.instance.currentRoute,
+          'user_agent': getUserAgent(),
+          'app_version': gitSha,
+          'client_timestamp': DateTime.now().toUtc().toIso8601String(),
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );

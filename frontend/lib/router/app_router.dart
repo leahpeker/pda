@@ -31,6 +31,7 @@ import 'package:pda/screens/whatsapp_config_screen.dart';
 import 'package:pda/screens/profile_screen.dart';
 import 'package:pda/screens/member_profile_screen.dart';
 import 'package:pda/config/constants.dart';
+import 'package:pda/services/route_tracker.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Use ref.listen (not ref.watch) so auth state changes trigger redirect
@@ -51,6 +52,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoading = authState.isLoading;
 
       if (isLoading) return null;
+
+      RouteTracker.instance.update(state.matchedLocation);
 
       final loc = state.matchedLocation.toLowerCase();
 

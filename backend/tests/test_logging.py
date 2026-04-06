@@ -353,3 +353,25 @@ class TestErrorReportEndpoint:
             **auth_headers,
         )
         assert response.status_code == 201
+
+    @pytest.mark.django_db
+    def test_error_report_logs_enriched_fields(self, caplog, auth_headers):
+        client = Client()
+        with caplog.at_level(logging.ERROR, logger="pda.frontend"):
+            client.post(
+                "/api/community/error-report/",
+                {
+                    "error": "Something broke",
+                    "route": "/calendar",
+                    "app_version": "abc123",
+                    "client_timestamp": "2026-04-06T12:00:00Z",
+                },
+                content_type="application/json",
+                **auth_headers,
+            )
+        frontend_logs = [r for r in caplog.records if r.name == "pda.frontend"]
+        assert len(frontend_logs) >= 1
+        record = frontend_logs[0]
+        assert record.route == "/calendar"
+        assert record.app_version == "abc123"
+        assert record.client_timestamp == "2026-04-06T12:00:00Z"
