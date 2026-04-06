@@ -89,17 +89,23 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
       ),
       if (_startPickerMode != null) ...[
         const SizedBox(height: 8),
-        SizedBox(
-          width: widget.pickerWidth,
-          child: DateTimePicker(
-            initialDateTime: widget.start,
-            onDateTimeChanged: (dt) {
-              setState(() => _dateSetByPoll = false);
-              widget.onStartChanged(dt);
-            },
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-            mode: _startPickerMode!,
+        TapRegion(
+          onTapOutside: (_) => setState(() {
+            _startPickerMode = null;
+            _endPickerMode = null;
+          }),
+          child: SizedBox(
+            width: widget.pickerWidth,
+            child: DateTimePicker(
+              initialDateTime: widget.start,
+              onDateTimeChanged: (dt) {
+                setState(() => _dateSetByPoll = false);
+                widget.onStartChanged(dt);
+              },
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              mode: _startPickerMode!,
+            ),
           ),
         ),
       ],
@@ -164,17 +170,23 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
       ),
       if (_endPickerMode != null) ...[
         const SizedBox(height: 8),
-        SizedBox(
-          width: widget.pickerWidth,
-          child: DateTimePicker(
-            initialDateTime: widget.end!,
-            onDateTimeChanged: (dt) {
-              setState(() => _dateSetByPoll = false);
-              widget.onEndChanged(dt);
-            },
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-            mode: _endPickerMode!,
+        TapRegion(
+          onTapOutside: (_) => setState(() {
+            _startPickerMode = null;
+            _endPickerMode = null;
+          }),
+          child: SizedBox(
+            width: widget.pickerWidth,
+            child: DateTimePicker(
+              initialDateTime: widget.end!,
+              onDateTimeChanged: (dt) {
+                setState(() => _dateSetByPoll = false);
+                widget.onEndChanged(dt);
+              },
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              mode: _endPickerMode!,
+            ),
           ),
         ),
       ],
@@ -218,6 +230,45 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          InkWell(
+            onTap: () {
+              widget.onAddPollOption();
+              setState(() => _dateSetByPoll = false);
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Semantics(
+              button: true,
+              label: 're-poll members for a time',
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.poll_outlined,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      're-poll members for a time',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       );
