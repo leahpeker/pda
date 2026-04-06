@@ -58,6 +58,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   XFile? _selectedPhoto;
   bool _removePhoto = false;
   bool _removingPoll = false;
+  late bool _showDetails;
   double? _latitude;
   double? _longitude;
   final List<DateTime> _datetimePollOptions = [];
@@ -67,6 +68,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   @override
   void initState() {
     super.initState();
+    _showDetails = widget.event != null;
     final e = widget.event;
     if (e != null) {
       _title = TextEditingController(text: e.title);
@@ -337,8 +339,6 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                   textCapitalization: TextCapitalization.sentences,
                   validator: v.all([v.required(), v.maxLength(300)]),
                 ),
-                const SizedBox(height: 12),
-                const EventFormNoFeesNote(),
                 const SizedBox(height: 16),
                 EventFormWhenSection(
                   isEdit: _isEdit,
@@ -376,54 +376,72 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                     _longitude = coords.lon;
                   }),
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _description,
-                  decoration: const InputDecoration(
-                    labelText: 'tell us more',
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
+                const SizedBox(height: 8),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        setState(() => _showDetails = !_showDetails),
+                    icon: Icon(
+                      _showDetails ? Icons.expand_less : Icons.expand_more,
+                      size: 18,
+                    ),
+                    label: Text(
+                      _showDetails ? 'fewer details' : 'more details',
+                    ),
                   ),
-                  maxLines: 3,
-                  textCapitalization: TextCapitalization.sentences,
-                  validator: v.maxLength(2000),
                 ),
-                const SizedBox(height: 16),
-                EventFormLinksAndCostSection(
-                  whatsappLink: _whatsappLink,
-                  partifulLink: _partifulLink,
-                  otherLink: _otherLink,
-                  price: _price,
-                  venmoLink: _venmoLink,
-                  cashappLink: _cashappLink,
-                  zelleInfo: _zelleInfo,
-                  rsvpEnabled: _rsvpEnabled,
-                  initialShowCost: _initialShowCost,
-                  normalizeUrl: _normalizeUrl,
-                ),
-                const SizedBox(height: 16),
-                EventFormSettingsSection(
-                  rsvpEnabled: _rsvpEnabled,
-                  visibility: _visibility,
-                  eventType: _eventType,
-                  partifulLinkText: _partifulLink.text,
-                  coHostIds: _coHostIds,
-                  coHostNames: _coHostNames,
-                  invitedUserIds: _invitedUserIds,
-                  invitedUserNames: _invitedUserNames,
-                  scrollController: _scrollController,
-                  onRsvpChanged: (val) => setState(() => _rsvpEnabled = val),
-                  onVisibilityChanged: (val) =>
-                      setState(() => _visibility = val),
-                  onOfficialChanged: (val) => setState(
-                    () => _eventType = val
-                        ? EventType.official
-                        : EventType.community,
+                if (_showDetails) ...[
+                  const SizedBox(height: 8),
+                  const EventFormNoFeesNote(),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _description,
+                    decoration: const InputDecoration(
+                      labelText: 'tell us more',
+                      border: OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                    ),
+                    maxLines: 3,
+                    textCapitalization: TextCapitalization.sentences,
+                    validator: v.maxLength(2000),
                   ),
-                  onCoHostsChanged: (ids) => setState(() => _coHostIds = ids),
-                  onInvitedChanged: (ids) =>
-                      setState(() => _invitedUserIds = ids),
-                ),
+                  const SizedBox(height: 16),
+                  EventFormLinksAndCostSection(
+                    whatsappLink: _whatsappLink,
+                    partifulLink: _partifulLink,
+                    otherLink: _otherLink,
+                    price: _price,
+                    venmoLink: _venmoLink,
+                    cashappLink: _cashappLink,
+                    zelleInfo: _zelleInfo,
+                    rsvpEnabled: _rsvpEnabled,
+                    initialShowCost: _initialShowCost,
+                    normalizeUrl: _normalizeUrl,
+                  ),
+                  const SizedBox(height: 16),
+                  EventFormSettingsSection(
+                    rsvpEnabled: _rsvpEnabled,
+                    visibility: _visibility,
+                    eventType: _eventType,
+                    partifulLinkText: _partifulLink.text,
+                    coHostIds: _coHostIds,
+                    coHostNames: _coHostNames,
+                    invitedUserIds: _invitedUserIds,
+                    invitedUserNames: _invitedUserNames,
+                    scrollController: _scrollController,
+                    onRsvpChanged: (val) => setState(() => _rsvpEnabled = val),
+                    onVisibilityChanged: (val) =>
+                        setState(() => _visibility = val),
+                    onOfficialChanged: (val) => setState(
+                      () => _eventType = val
+                          ? EventType.official
+                          : EventType.community,
+                    ),
+                    onCoHostsChanged: (ids) => setState(() => _coHostIds = ids),
+                    onInvitedChanged: (ids) =>
+                        setState(() => _invitedUserIds = ids),
+                  ),
+                ],
                 const SizedBox(height: 8),
               ],
             ),
