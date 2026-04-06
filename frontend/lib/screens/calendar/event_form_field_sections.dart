@@ -1,5 +1,41 @@
 import 'package:flutter/material.dart';
 
+class EventFormNoFeesNote extends StatelessWidget {
+  const EventFormNoFeesNote({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 16,
+            color: theme.colorScheme.onSecondaryContainer,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'keep it accessible \u{2728} events should be free or at-cost only '
+              '(e.g. splitting the grocery bill). no fees or markups please!',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// A date+time summary row with separate tappable date and time chips.
 ///
 /// Tapping the date chip calls [onDateTap]; tapping the time chip calls
