@@ -10,12 +10,14 @@ class DayView extends StatefulWidget {
   final List<Event> events;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
+  final VoidCallback? onLongPress;
 
   const DayView({
     super.key,
     required this.events,
     required this.selectedDate,
     required this.onDateChanged,
+    this.onLongPress,
   });
 
   @override
@@ -95,7 +97,17 @@ class _DayViewState extends State<DayView> {
             onNext: _goToNextDay,
           ),
           const Divider(height: 1),
-          Expanded(child: _buildBody(context, events)),
+          Expanded(
+            child: Semantics(
+              onLongPressHint: widget.onLongPress != null ? 'create event' : null,
+              child: InkWell(
+                onLongPress: widget.onLongPress,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                child: _buildBody(context, events),
+              ),
+            ),
+          ),
         ],
       ),
     );

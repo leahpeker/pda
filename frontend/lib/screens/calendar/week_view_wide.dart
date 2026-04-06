@@ -13,6 +13,7 @@ class WideWeekGrid extends StatelessWidget {
   final bool Function(DateTime) isToday;
   final ValueChanged<Event> onEventTapped;
   final ValueChanged<DateTime>? onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
 
   static const double _dayLabelHeight = 52.0;
   static const double _chipHeight = 22.0;
@@ -26,6 +27,7 @@ class WideWeekGrid extends StatelessWidget {
     required this.isToday,
     required this.onEventTapped,
     this.onDayTapped,
+    this.onDayLongPressed,
   });
 
   @override
@@ -79,12 +81,21 @@ class WideWeekGrid extends StatelessWidget {
                                 ? theme.colorScheme.onPrimary
                                 : theme.colorScheme.onSurface;
                             return Expanded(
-                              child: InkWell(
-                                onTap: onDayTapped != null
-                                    ? () => onDayTapped!(day)
+                              child: Semantics(
+                                button: onDayTapped != null,
+                                label: DateFormat('EEEE, MMMM d').format(day),
+                                onLongPressHint: onDayLongPressed != null
+                                    ? 'create event'
                                     : null,
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
+                                child: InkWell(
+                                  onTap: onDayTapped != null
+                                      ? () => onDayTapped!(day)
+                                      : null,
+                                  onLongPress: onDayLongPressed != null
+                                      ? () => onDayLongPressed!(day)
+                                      : null,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
                                   decoration: BoxDecoration(
                                     color: bgColor,
                                     borderRadius: BorderRadius.circular(8),
@@ -114,7 +125,8 @@ class WideWeekGrid extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            );
+                            ),
+                          );
                           }).toList(),
                         ),
                       ),
@@ -143,9 +155,16 @@ class WideWeekGrid extends StatelessWidget {
                                     label: DateFormat(
                                       'EEEE, MMMM d',
                                     ).format(days[col]),
+                                    onLongPressHint: onDayLongPressed != null
+                                        ? 'create event'
+                                        : null,
                                     child: InkWell(
                                       onTap: onDayTapped != null
                                           ? () => onDayTapped!(days[col])
+                                          : null,
+                                      onLongPress: onDayLongPressed != null
+                                          ? () =>
+                                              onDayLongPressed!(days[col])
                                           : null,
                                       child: Container(
                                         decoration: BoxDecoration(

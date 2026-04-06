@@ -11,6 +11,7 @@ class MonthRow extends StatelessWidget {
   final bool Function(DateTime) isToday;
   final bool Function(DateTime) isCurrentMonth;
   final ValueChanged<DateTime> onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
   final ValueChanged<Event> onEventTapped;
   final double dayLabelHeight;
   final double chipHeight;
@@ -24,6 +25,7 @@ class MonthRow extends StatelessWidget {
     required this.isToday,
     required this.isCurrentMonth,
     required this.onDayTapped,
+    this.onDayLongPressed,
     required this.onEventTapped,
     required this.dayLabelHeight,
     required this.chipHeight,
@@ -169,8 +171,12 @@ class MonthRow extends StatelessWidget {
       child: Semantics(
         button: true,
         label: DateFormat('MMMM d').format(day),
+        onLongPressHint: onDayLongPressed != null ? 'create event' : null,
         child: InkWell(
           onTap: () => onDayTapped(day),
+          onLongPress: onDayLongPressed != null
+              ? () => onDayLongPressed!(day)
+              : null,
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           child: Container(

@@ -10,6 +10,7 @@ class WeekView extends StatefulWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
   final ValueChanged<DateTime>? onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
 
   const WeekView({
     super.key,
@@ -17,6 +18,7 @@ class WeekView extends StatefulWidget {
     required this.selectedDate,
     required this.onDateChanged,
     this.onDayTapped,
+    this.onDayLongPressed,
   });
 
   @override
@@ -117,6 +119,7 @@ class _WeekViewState extends State<WeekView> {
                     isToday: _isToday,
                     onEventTapped: (e) => showEventDetail(context, e),
                     onDayTapped: widget.onDayTapped,
+                    onDayLongPressed: widget.onDayLongPressed,
                   )
                 : NarrowWeekGrid(
                     days: days,
@@ -124,6 +127,7 @@ class _WeekViewState extends State<WeekView> {
                     isToday: _isToday,
                     onEventTapped: (e) => showEventDetail(context, e),
                     onDayTapped: widget.onDayTapped,
+                    onDayLongPressed: widget.onDayLongPressed,
                   ),
           ),
         ],

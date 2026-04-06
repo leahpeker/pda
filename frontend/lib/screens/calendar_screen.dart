@@ -46,6 +46,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     setState(() => _selectedDate = DateTime(now.year, now.month, now.day));
   }
 
+  Future<void> _createEventForDate(DateTime date) async {
+    setState(() => _selectedDate = date);
+    await _openCreateEvent();
+  }
+
   Future<void> _openCreateEvent() async {
     final user = ref.read(authProvider).value;
 
@@ -156,6 +161,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               _view = _CalendarView.day;
             });
           },
+          onDayLongPressed: _createEventForDate,
         );
       case _CalendarView.week:
         return WeekView(
@@ -168,12 +174,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               _view = _CalendarView.day;
             });
           },
+          onDayLongPressed: _createEventForDate,
         );
       case _CalendarView.day:
         return DayView(
           events: events,
           selectedDate: _selectedDate,
           onDateChanged: _onDateChanged,
+          onLongPress: () => _createEventForDate(_selectedDate),
         );
       case _CalendarView.list:
         return EventListView(events: events);

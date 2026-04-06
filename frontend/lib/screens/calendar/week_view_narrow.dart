@@ -12,6 +12,7 @@ class NarrowWeekGrid extends StatelessWidget {
   final bool Function(DateTime) isToday;
   final ValueChanged<Event> onEventTapped;
   final ValueChanged<DateTime>? onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
 
   static int maxVisibleForHeight(double height) {
     if (height.isInfinite) return 3;
@@ -29,6 +30,7 @@ class NarrowWeekGrid extends StatelessWidget {
     required this.isToday,
     required this.onEventTapped,
     this.onDayTapped,
+    this.onDayLongPressed,
   });
 
   List<Event> _eventsForDay(DateTime day) {
@@ -68,6 +70,7 @@ class NarrowWeekGrid extends StatelessWidget {
                       isLast: i == 6,
                       maxVisible: maxVisible,
                       onDayTapped: onDayTapped,
+                      onDayLongPressed: onDayLongPressed,
                       onEventTapped: onEventTapped,
                     ),
                   );
@@ -88,6 +91,7 @@ class NarrowDayRow extends StatelessWidget {
   final bool isLast;
   final int maxVisible;
   final ValueChanged<DateTime>? onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
   final ValueChanged<Event> onEventTapped;
 
   const NarrowDayRow({
@@ -98,6 +102,7 @@ class NarrowDayRow extends StatelessWidget {
     required this.isLast,
     required this.maxVisible,
     required this.onDayTapped,
+    this.onDayLongPressed,
     required this.onEventTapped,
   });
 
@@ -110,8 +115,11 @@ class NarrowDayRow extends StatelessWidget {
     return Semantics(
       button: onDayTapped != null,
       label: DateFormat('EEEE, MMMM d').format(day),
+      onLongPressHint: onDayLongPressed != null ? 'create event' : null,
       child: InkWell(
         onTap: onDayTapped != null ? () => onDayTapped!(day) : null,
+        onLongPress:
+            onDayLongPressed != null ? () => onDayLongPressed!(day) : null,
         child: Container(
           decoration: BoxDecoration(
             border: Border(
