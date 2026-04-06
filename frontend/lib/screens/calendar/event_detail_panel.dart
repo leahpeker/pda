@@ -284,15 +284,20 @@ class _EventPhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     if (event.photoUrl.isEmpty) return const SizedBox.shrink();
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final maxHeight = screenWidth >= 720 ? 220.0 : 180.0;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          event.photoUrl,
-          height: 200,
-          width: double.infinity,
-          fit: BoxFit.cover,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Image.network(
+            event.photoUrl,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );

@@ -18,6 +18,7 @@ import 'package:pda/screens/calendar/live_poll_editor.dart';
 import 'package:pda/screens/calendar/event_form_field_sections.dart';
 import 'package:pda/widgets/date_time_picker.dart';
 import 'package:pda/widgets/date_time_picker_dialog.dart';
+import 'package:pda/widgets/photo_crop_dialog.dart';
 
 export 'package:pda/screens/calendar/event_form_result.dart'
     show EventFormResult;
@@ -297,12 +298,28 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       maxHeight: 800,
       imageQuality: 85,
     );
-    if (image != null) {
-      setState(() {
-        _selectedPhoto = image;
-        _removePhoto = false;
-      });
-    }
+    if (image == null) return;
+
+    final rawBytes = await image.readAsBytes();
+    if (!mounted) return;
+
+    final croppedBytes = await showPhotoCropDialog(
+      context: context,
+      imageBytes: rawBytes,
+      mode: PhotoCropMode.rectangle,
+      aspectRatio: 2 / 1,
+    );
+    if (croppedBytes == null) return;
+
+    final croppedFile = XFile.fromData(
+      croppedBytes,
+      name: image.name,
+      mimeType: image.mimeType,
+    );
+    setState(() {
+      _selectedPhoto = croppedFile;
+      _removePhoto = false;
+    });
   }
 
   void _searchLocation(String query) {
