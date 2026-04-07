@@ -83,8 +83,8 @@ class _TodayIconButton extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Icon(Icons.calendar_today_outlined, size: 28, color: color),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
+                Positioned(
+                  bottom: 1,
                   child: Text(
                     '$day',
                     style: TextStyle(

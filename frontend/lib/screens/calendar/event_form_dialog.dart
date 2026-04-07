@@ -6,7 +6,6 @@ import 'package:pda/models/event.dart';
 import 'package:pda/config/constants.dart';
 import 'package:pda/providers/event_poll_provider.dart';
 import 'package:pda/screens/calendar/event_form_result.dart';
-import 'package:pda/screens/calendar/event_form_field_sections.dart';
 import 'package:pda/screens/calendar/event_form_photo_section.dart';
 import 'package:pda/screens/calendar/event_form_when_section.dart';
 import 'package:pda/screens/calendar/event_form_location_field.dart';
@@ -49,13 +48,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late bool _rsvpEnabled;
   late bool _allowPlusOnes;
   late bool _datetimeTbd;
-  late String _eventType;
-  late String _visibility;
+  late String _visibilityChoice;
   late String _invitePermission;
   late Set<String> _coHostIds;
   late Map<String, String> _coHostNames;
   late Set<String> _invitedUserIds;
-  late Map<String, String> _invitedUserNames;
   XFile? _selectedPhoto;
   bool _removePhoto = false;
   bool _removingPoll = false;
@@ -97,8 +94,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _rsvpEnabled = e.rsvpEnabled;
       _allowPlusOnes = e.allowPlusOnes;
       _datetimeTbd = e.datetimeTbd;
-      _eventType = e.eventType;
-      _visibility = e.visibility;
+      _visibilityChoice = fieldsToVisibilityChoice(e.visibility, e.eventType);
       _invitePermission = e.invitePermission;
       _coHostIds = Set<String>.from(e.coHostIds);
       _coHostNames = {
@@ -106,11 +102,6 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           if (i < e.coHostNames.length) e.coHostIds[i]: e.coHostNames[i],
       };
       _invitedUserIds = Set<String>.from(e.invitedUserIds);
-      _invitedUserNames = {
-        for (var i = 0; i < e.invitedUserIds.length; i++)
-          if (i < e.invitedUserNames.length)
-            e.invitedUserIds[i]: e.invitedUserNames[i],
-      };
       _latitude = e.latitude;
       _longitude = e.longitude;
     } else {
@@ -132,13 +123,11 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _rsvpEnabled = false;
       _allowPlusOnes = false;
       _datetimeTbd = false;
-      _eventType = EventType.community;
-      _visibility = PageVisibility.public_;
+      _visibilityChoice = EventVisibilityChoice.public_;
       _invitePermission = InvitePermission.allMembers;
       _coHostIds = {};
       _coHostNames = {};
       _invitedUserIds = {};
-      _invitedUserNames = {};
     }
   }
 
@@ -180,6 +169,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final (visibility, eventType) = visibilityChoiceToFields(_visibilityChoice);
     Navigator.of(context).pop(
       EventFormResult(
         data: {
@@ -203,8 +193,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'rsvp_enabled': _rsvpEnabled,
           'allow_plus_ones': _allowPlusOnes,
           'datetime_tbd': _datetimeTbd || _datetimePollOptions.isNotEmpty,
-          'event_type': _eventType,
-          'visibility': _visibility,
+          'event_type': eventType,
+          'visibility': visibility,
           'invite_permission': _invitePermission,
           'co_host_ids': _coHostIds.toList(),
           'invited_user_ids': _invitedUserIds.toList(),
@@ -400,8 +390,6 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                 ),
                 if (_showDetails) ...[
                   const SizedBox(height: 8),
-                  const EventFormNoFeesNote(),
-                  const SizedBox(height: 16),
                   EventFormLinksAndCostSection(
                     whatsappLink: _whatsappLink,
                     partifulLink: _partifulLink,
@@ -414,34 +402,23 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
                     initialShowCost: _initialShowCost,
                     normalizeUrl: _normalizeUrl,
                   ),
-                  const SizedBox(height: 16),
                   EventFormSettingsSection(
                     rsvpEnabled: _rsvpEnabled,
                     allowPlusOnes: _allowPlusOnes,
-                    visibility: _visibility,
-                    eventType: _eventType,
+                    visibilityChoice: _visibilityChoice,
                     partifulLinkText: _partifulLink.text,
                     invitePermission: _invitePermission,
                     coHostIds: _coHostIds,
                     coHostNames: _coHostNames,
-                    invitedUserIds: _invitedUserIds,
-                    invitedUserNames: _invitedUserNames,
                     scrollController: _scrollController,
                     onRsvpChanged: (val) => setState(() => _rsvpEnabled = val),
                     onAllowPlusOnesChanged: (val) =>
                         setState(() => _allowPlusOnes = val),
-                    onVisibilityChanged: (val) =>
-                        setState(() => _visibility = val),
-                    onOfficialChanged: (val) => setState(
-                      () => _eventType = val
-                          ? EventType.official
-                          : EventType.community,
-                    ),
+                    onVisibilityChoiceChanged: (val) =>
+                        setState(() => _visibilityChoice = val),
                     onInvitePermissionChanged: (val) =>
                         setState(() => _invitePermission = val),
                     onCoHostsChanged: (ids) => setState(() => _coHostIds = ids),
-                    onInvitedChanged: (ids) =>
-                        setState(() => _invitedUserIds = ids),
                   ),
                 ],
                 const SizedBox(height: 8),

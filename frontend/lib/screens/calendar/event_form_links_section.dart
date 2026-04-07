@@ -34,21 +34,28 @@ class EventFormLinksAndCostSection extends StatefulWidget {
 
 class _EventFormLinksAndCostSectionState
     extends State<EventFormLinksAndCostSection> {
-  late bool _showCost;
+  bool _linksExpanded = false;
+  bool _costExpanded = false;
 
   @override
   void initState() {
     super.initState();
-    _showCost = widget.initialShowCost;
+    _linksExpanded = _hasAnyLink();
+    _costExpanded = widget.initialShowCost;
   }
 
   @override
   void didUpdateWidget(EventFormLinksAndCostSection old) {
     super.didUpdateWidget(old);
     if (widget.initialShowCost && !old.initialShowCost) {
-      _showCost = true;
+      _costExpanded = true;
     }
   }
+
+  bool _hasAnyLink() =>
+      widget.whatsappLink.text.isNotEmpty ||
+      widget.partifulLink.text.isNotEmpty ||
+      widget.otherLink.text.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -57,157 +64,223 @@ class _EventFormLinksAndCostSectionState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Divider(),
-        const SizedBox(height: 8),
-        Text('links', style: theme.textTheme.labelLarge),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: widget.whatsappLink,
-          decoration: const InputDecoration(
-            labelText: 'whatsapp group link (optional)',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.chat_outlined),
-          ),
-          keyboardType: TextInputType.url,
-          validator: (val) {
-            if (val == null || val.trim().isEmpty) return null;
-            final normalized = widget.normalizeUrl(val.trim());
-            final uri = Uri.tryParse(normalized);
-            if (uri == null || !uri.hasAuthority) return 'Enter a valid URL';
-            final host = uri.host;
-            final isWhatsApp =
-                host.contains('whatsapp.com') ||
-                host == 'wa.me' ||
-                host == 'whats.app';
-            if (!isWhatsApp) return 'Must be a WhatsApp link';
-            return null;
-          },
+        _CollapsibleSection(
+          title: 'links',
+          initiallyExpanded: _linksExpanded,
+          onExpansionChanged: (val) => setState(() => _linksExpanded = val),
+          children: [
+            const SizedBox(height: 4),
+            TextFormField(
+              controller: widget.whatsappLink,
+              decoration: const InputDecoration(
+                labelText: 'whatsapp group link (optional)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.chat_outlined),
+              ),
+              keyboardType: TextInputType.url,
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) return null;
+                final normalized = widget.normalizeUrl(val.trim());
+                final uri = Uri.tryParse(normalized);
+                if (uri == null || !uri.hasAuthority) {
+                  return 'Enter a valid URL';
+                }
+                final host = uri.host;
+                final isWhatsApp =
+                    host.contains('whatsapp.com') ||
+                    host == 'wa.me' ||
+                    host == 'whats.app';
+                if (!isWhatsApp) return 'Must be a WhatsApp link';
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: widget.partifulLink,
+              decoration: InputDecoration(
+                labelText: 'partiful link (optional)',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.celebration_outlined),
+                helperText:
+                    widget.rsvpEnabled &&
+                        widget.partifulLink.text.trim().isNotEmpty
+                    ? 'consider using app RSVPs instead of partiful'
+                    : null,
+                helperStyle: TextStyle(color: theme.colorScheme.tertiary),
+              ),
+              keyboardType: TextInputType.url,
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) return null;
+                final normalized = widget.normalizeUrl(val.trim());
+                final uri = Uri.tryParse(normalized);
+                if (uri == null || !uri.hasAuthority) {
+                  return 'Enter a valid URL';
+                }
+                if (!uri.host.contains('partiful.com')) {
+                  return 'Must be a Partiful link (partiful.com/...)';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: widget.otherLink,
+              decoration: const InputDecoration(
+                labelText: 'other link (optional)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.link),
+              ),
+              keyboardType: TextInputType.url,
+              validator: v.optionalUrl(httpsOnly: true),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: widget.partifulLink,
-          decoration: InputDecoration(
-            labelText: 'partiful link (optional)',
-            border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.celebration_outlined),
-            helperText:
-                widget.rsvpEnabled && widget.partifulLink.text.trim().isNotEmpty
-                ? 'consider using app RSVPs instead of partiful'
-                : null,
-            helperStyle: TextStyle(color: theme.colorScheme.tertiary),
-          ),
-          keyboardType: TextInputType.url,
-          validator: (val) {
-            if (val == null || val.trim().isEmpty) return null;
-            final normalized = widget.normalizeUrl(val.trim());
-            final uri = Uri.tryParse(normalized);
-            if (uri == null || !uri.hasAuthority) return 'Enter a valid URL';
-            if (!uri.host.contains('partiful.com')) {
-              return 'Must be a Partiful link (partiful.com/...)';
+        const Divider(),
+        _CollapsibleSection(
+          title: 'cost & payment',
+          initiallyExpanded: _costExpanded,
+          onExpansionChanged: (val) {
+            setState(() => _costExpanded = val);
+            if (!val) {
+              widget.price.clear();
+              widget.venmoLink.clear();
+              widget.cashappLink.clear();
+              widget.zelleInfo.clear();
             }
-            return null;
           },
+          children: [
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer.withValues(
+                  alpha: 0.4,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'costs should only cover shared orders or direct expenses — no fees or markups',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: widget.price,
+              decoration: const InputDecoration(
+                labelText: 'cost',
+                hintText: 'e.g. \$5 for groceries',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.attach_money),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: widget.venmoLink,
+              decoration: const InputDecoration(
+                labelText: 'venmo handle',
+                hintText: 'username',
+                border: OutlineInputBorder(),
+                prefixText: '@',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: widget.cashappLink,
+              decoration: const InputDecoration(
+                labelText: 'cash app handle',
+                hintText: 'username',
+                border: OutlineInputBorder(),
+                prefixText: r'$',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: widget.zelleInfo,
+              decoration: const InputDecoration(
+                labelText: 'zelle (email or phone)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.account_balance_outlined),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: widget.otherLink,
-          decoration: const InputDecoration(
-            labelText: 'other link (optional)',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.link),
-          ),
-          keyboardType: TextInputType.url,
-          validator: v.optionalUrl(httpsOnly: true),
-        ),
-        const SizedBox(height: 16),
-        ..._buildCostSection(theme),
+        const Divider(),
       ],
     );
   }
+}
 
-  List<Widget> _buildCostSection(ThemeData theme) {
-    if (!_showCost) {
-      return [
-        const Divider(),
-        Center(
-          child: TextButton.icon(
-            onPressed: () => setState(() => _showCost = true),
-            icon: const Icon(Icons.attach_money, size: 18),
-            label: const Text('add cost'),
-          ),
-        ),
-      ];
-    }
-    return [
-      Row(
-        children: [
-          Text(
-            'cost & payment',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.primary,
+class _CollapsibleSection extends StatefulWidget {
+  final String title;
+  final bool initiallyExpanded;
+  final ValueChanged<bool> onExpansionChanged;
+  final List<Widget> children;
+
+  const _CollapsibleSection({
+    required this.title,
+    required this.initiallyExpanded,
+    required this.onExpansionChanged,
+    required this.children,
+  });
+
+  @override
+  State<_CollapsibleSection> createState() => _CollapsibleSectionState();
+}
+
+class _CollapsibleSectionState extends State<_CollapsibleSection> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.initiallyExpanded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () {
+            setState(() => _expanded = !_expanded);
+            widget.onExpansionChanged(_expanded);
+          },
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                Text(widget.title, style: theme.textTheme.labelLarge),
+                const Spacer(),
+                Icon(
+                  _expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
             ),
           ),
-          const Spacer(),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _showCost = false;
-                widget.price.clear();
-                widget.venmoLink.clear();
-                widget.cashappLink.clear();
-                widget.zelleInfo.clear();
-              });
-            },
-            child: const Text('remove'),
-          ),
-        ],
-      ),
-      const SizedBox(height: 4),
-      Text(
-        'costs should only cover shared orders or direct expenses — no fees or markups',
-        style: TextStyle(
-          fontSize: 12,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
         ),
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        controller: widget.price,
-        decoration: const InputDecoration(
-          labelText: 'cost',
-          hintText: 'e.g. \$5 for groceries',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.attach_money),
-        ),
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        controller: widget.venmoLink,
-        decoration: const InputDecoration(
-          labelText: 'venmo handle',
-          hintText: 'username',
-          border: OutlineInputBorder(),
-          prefixText: '@',
-        ),
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        controller: widget.cashappLink,
-        decoration: const InputDecoration(
-          labelText: 'cash app handle',
-          hintText: 'username',
-          border: OutlineInputBorder(),
-          prefixText: r'$',
-        ),
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        controller: widget.zelleInfo,
-        decoration: const InputDecoration(
-          labelText: 'zelle (email or phone)',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.account_balance_outlined),
-        ),
-      ),
-    ];
+        if (_expanded) ...[...widget.children, const SizedBox(height: 8)],
+      ],
+    );
   }
 }
