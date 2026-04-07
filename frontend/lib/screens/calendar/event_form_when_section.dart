@@ -261,10 +261,12 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
         children: [
           Text('date & time tbd', style: theme.textTheme.bodyMedium),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _buildPollButton(theme, 'edit poll'),
-              const SizedBox(width: 12),
               TextButton(
                 onPressed: widget.removingPoll ? null : widget.onRemovePoll,
                 style: TextButton.styleFrom(
@@ -317,13 +319,15 @@ class _EventFormWhenSectionState extends State<EventFormWhenSection> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _buildPollButton(
                 theme,
                 'edit poll ($count option${count == 1 ? '' : 's'})',
               ),
-              const SizedBox(width: 12),
               TextButton(
                 onPressed: () => widget.onPollOptionsChanged([]),
                 child: const Text('cancel poll'),
