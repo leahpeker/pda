@@ -32,6 +32,7 @@ def _build_guest_list(rsvps, can_see_phones: bool) -> list[RSVPGuestOut]:
             user_id=str(r.user_id),
             name=r.user.display_name or r.user.phone_number,
             status=r.status,
+            has_plus_one=r.has_plus_one,
             phone=r.user.phone_number if can_see_phones else None,
             photo_url=media_path(r.user.profile_photo),
         )
@@ -137,6 +138,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         zelle_info=_members_only(event.zelle_info, "", is_authed),
         rsvp_enabled=_members_only(event.rsvp_enabled, False, is_authed),
         datetime_tbd=event.datetime_tbd,
+        allow_plus_ones=event.allow_plus_ones,
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
         created_by_name=_get_creator_name(creator),
         co_host_ids=[str(u.id) for u in co_hosts],
@@ -153,6 +155,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         invited_user_ids=[str(u.id) for u in invited],
         invited_user_names=[u.display_name or u.phone_number for u in invited],
         invited_user_photo_urls=[media_path(u.profile_photo) for u in invited],
+        invite_permission=event.invite_permission,
     )
 
 

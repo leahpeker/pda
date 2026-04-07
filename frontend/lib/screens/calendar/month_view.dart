@@ -9,6 +9,7 @@ class MonthView extends StatefulWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
   final ValueChanged<DateTime> onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
 
   const MonthView({
     super.key,
@@ -16,6 +17,7 @@ class MonthView extends StatefulWidget {
     required this.selectedDate,
     required this.onDateChanged,
     required this.onDayTapped,
+    this.onDayLongPressed,
   });
 
   @override
@@ -214,6 +216,7 @@ class _MonthViewState extends State<MonthView> {
                 isToday: _isToday,
                 isCurrentMonth: _isCurrentMonth,
                 onDayTapped: widget.onDayTapped,
+                onDayLongPressed: widget.onDayLongPressed,
                 onEventTapped: (e) => showEventDetail(context, e),
                 dayLabelHeight: _dayLabelHeight,
                 chipHeight: _chipHeight,

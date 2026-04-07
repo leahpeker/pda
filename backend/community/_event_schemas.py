@@ -4,13 +4,14 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from community.models import EventType, PageVisibility
+from community.models import EventType, InvitePermission, PageVisibility
 
 
 class RSVPGuestOut(BaseModel):
     user_id: str
     name: str
     status: str
+    has_plus_one: bool = False
     phone: str | None = None
     photo_url: str = ""
 
@@ -38,6 +39,7 @@ class EventListOut(BaseModel):
     co_host_ids: list[str] = []
     co_host_names: list[str] = []
     datetime_tbd: bool = False
+    allow_plus_ones: bool = False
 
 
 class EventOut(BaseModel):
@@ -68,16 +70,19 @@ class EventOut(BaseModel):
     visibility: str = PageVisibility.PUBLIC
     photo_url: str = ""
     datetime_tbd: bool = False
+    allow_plus_ones: bool = False
     survey_slugs: list[str] = []
     datetime_poll_slug: str | None = None
     has_poll: bool = False
     invited_user_ids: list[str] = []
     invited_user_names: list[str] = []
     invited_user_photo_urls: list[str] = []
+    invite_permission: str = InvitePermission.ALL_MEMBERS
 
 
 class RSVPIn(BaseModel):
     status: str
+    has_plus_one: bool = False
 
 
 class EventIn(BaseModel):
@@ -97,8 +102,10 @@ class EventIn(BaseModel):
     zelle_info: str = ""
     rsvp_enabled: bool = False
     datetime_tbd: bool = False
+    allow_plus_ones: bool = False
     event_type: str = EventType.COMMUNITY
     visibility: str = PageVisibility.PUBLIC
+    invite_permission: str = InvitePermission.ALL_MEMBERS
     co_host_ids: list[str] = []
     invited_user_ids: list[str] = []
 
@@ -120,8 +127,10 @@ class EventPatchIn(BaseModel):
     zelle_info: str | None = None
     rsvp_enabled: bool | None = None
     datetime_tbd: bool | None = None
+    allow_plus_ones: bool | None = None
     event_type: str | None = None
     visibility: str | None = None
+    invite_permission: str | None = None
     co_host_ids: list[str] | None = None
     invited_user_ids: list[str] | None = None
 

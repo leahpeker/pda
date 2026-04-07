@@ -21,7 +21,9 @@ Widget _app(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
   group('showPhotoCropDialog', () {
-    testWidgets('renders crop dialog with expected actions', (tester) async {
+    testWidgets('circle mode renders with correct title and actions', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(800, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
@@ -43,9 +45,64 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pump();
 
-      expect(find.text('adjust photo'), findsOneWidget);
+      expect(find.text('crop profile photo'), findsOneWidget);
       expect(find.text('cancel'), findsOneWidget);
-      expect(find.text('done'), findsOneWidget);
+      expect(find.text('save crop'), findsOneWidget);
+    });
+
+    testWidgets('rectangle mode renders with correct title', (tester) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => TextButton(
+                onPressed: () => showPhotoCropDialog(
+                  context: ctx,
+                  imageBytes: _kMinimalPng,
+                  mode: PhotoCropMode.rectangle,
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pump();
+
+      expect(find.text('crop event photo'), findsOneWidget);
+      expect(find.text('cancel'), findsOneWidget);
+      expect(find.text('save crop'), findsOneWidget);
+    });
+
+    testWidgets('renders helper instruction text', (tester) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => TextButton(
+                onPressed: () =>
+                    showPhotoCropDialog(context: ctx, imageBytes: _kMinimalPng),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pump();
+
+      expect(find.text('pinch to zoom, drag to reposition'), findsOneWidget);
     });
 
     testWidgets('cancel returns null', (tester) async {
@@ -63,6 +120,40 @@ void main() {
                   result = await showPhotoCropDialog(
                     context: ctx,
                     imageBytes: _kMinimalPng,
+                  );
+                },
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pump();
+
+      await tester.tap(find.text('cancel'));
+      await tester.pumpAndSettle();
+
+      expect(result, isNull);
+    });
+
+    testWidgets('cancel returns null in rectangle mode', (tester) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      Uint8List? result = Uint8List(0); // non-null sentinel
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => TextButton(
+                onPressed: () async {
+                  result = await showPhotoCropDialog(
+                    context: ctx,
+                    imageBytes: _kMinimalPng,
+                    mode: PhotoCropMode.rectangle,
                   );
                 },
                 child: const Text('open'),

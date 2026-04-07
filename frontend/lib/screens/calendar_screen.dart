@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/screens/calendar/day_view.dart';
@@ -10,7 +11,10 @@ import 'package:pda/screens/calendar/month_view.dart';
 import 'package:pda/screens/calendar/week_view.dart';
 import 'package:pda/screens/guest_add_event_dialog.dart';
 import 'package:pda/utils/create_datetime_poll.dart';
+import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+
+final _log = Logger('CalendarScreen');
 
 enum _CalendarView { month, week, day, list }
 
@@ -43,6 +47,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _goToToday() {
     final now = DateTime.now();
     setState(() => _selectedDate = DateTime(now.year, now.month, now.day));
+  }
+
+  Future<void> _createEventForDate(DateTime date) async {
+    setState(() => _selectedDate = date);
+    await _openCreateEvent();
   }
 
   Future<void> _openCreateEvent() async {
@@ -82,8 +91,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         );
       }
       ref.invalidate(eventsProvider);
-      if (mounted) context.push('/events/$eventId');
-    } catch (e) {
+      _log.info('created event $eventId');
+      if (mounted) {
+        showSnackBar(context, 'event created 🌱');
+        context.push('/events/$eventId');
+      }
+    } catch (e, st) {
+      _log.warning('failed to create event', e, st);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -102,23 +116,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     ref.listen(authProvider, (_, __) => ref.invalidate(eventsProvider));
 
     return AppScaffold(
-      actions: [
-        if (_view != _CalendarView.list)
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: OutlinedButton(
-              onPressed: _goToToday,
-              child: const Text('today'),
-            ),
-          ),
-      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openCreateEvent,
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text('add event'),
+      ),
       child: Column(
         children: [
           _CalendarToolbar(
             selected: _view,
             onSelected: _onViewChanged,
             onToday: _goToToday,
-            compact: true,
           ),
           Expanded(
             child: eventsAsync.when(
@@ -127,14 +135,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 child: Text('couldn\'t load events — try refreshing'),
               ),
               data: (events) => _buildView(events),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8, top: 4),
-            child: FilledButton.icon(
-              onPressed: _openCreateEvent,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('add event'),
             ),
           ),
         ],
@@ -155,6 +155,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               _view = _CalendarView.day;
             });
           },
+          onDayLongPressed: _createEventForDate,
         );
       case _CalendarView.week:
         return WeekView(
@@ -167,12 +168,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               _view = _CalendarView.day;
             });
           },
+          onDayLongPressed: _createEventForDate,
         );
       case _CalendarView.day:
         return DayView(
           events: events,
           selectedDate: _selectedDate,
           onDateChanged: _onDateChanged,
+          onLongPress: () => _createEventForDate(_selectedDate),
         );
       case _CalendarView.list:
         return EventListView(events: events);
@@ -184,38 +187,83 @@ class _CalendarToolbar extends StatelessWidget {
   final _CalendarView selected;
   final ValueChanged<_CalendarView> onSelected;
   final VoidCallback onToday;
-  final bool compact;
 
   const _CalendarToolbar({
     required this.selected,
     required this.onSelected,
     required this.onToday,
-    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          SegmentedButton<_CalendarView>(
-            segments: const [
-              ButtonSegment(value: _CalendarView.month, label: Text('month')),
-              ButtonSegment(value: _CalendarView.week, label: Text('week')),
-              ButtonSegment(value: _CalendarView.day, label: Text('day')),
-              ButtonSegment(value: _CalendarView.list, label: Text('list')),
-            ],
-            selected: {selected},
-            onSelectionChanged: (s) => onSelected(s.first),
-            showSelectedIcon: false,
+          if (selected != _CalendarView.list)
+            _TodayIconButton(onPressed: onToday),
+          Expanded(
+            child: SegmentedButton<_CalendarView>(
+              segments: const [
+                ButtonSegment(value: _CalendarView.month, label: Text('month')),
+                ButtonSegment(value: _CalendarView.week, label: Text('week')),
+                ButtonSegment(value: _CalendarView.day, label: Text('day')),
+                ButtonSegment(value: _CalendarView.list, label: Text('list')),
+              ],
+              selected: {selected},
+              onSelectionChanged: (s) => onSelected(s.first),
+              showSelectedIcon: false,
+            ),
           ),
-          if (!compact) ...[
-            const SizedBox(height: 6),
-            OutlinedButton(onPressed: onToday, child: const Text('today')),
-          ],
         ],
+      ),
+    );
+  }
+}
+
+class _TodayIconButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _TodayIconButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final day = DateTime.now().day;
+    final color = Theme.of(context).colorScheme.primary;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Tooltip(
+        message: 'go to today',
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: Semantics(
+            button: true,
+            label: 'go to today',
+            excludeSemantics: true,
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(Icons.calendar_today_outlined, size: 28, color: color),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '$day',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

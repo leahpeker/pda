@@ -352,3 +352,52 @@ class TestCompleteOnboarding:
         )
         assert response.status_code == 200
         assert response.json()["display_name"] == "Padded Name"
+
+    def test_complete_onboarding_invalid_email_rejected(self, api_client, onboarding_headers):
+        response = api_client.post(
+            "/api/auth/complete-onboarding/",
+            {"display_name": "Named", "new_password": "securepass99", "email": "notanemail"},
+            content_type="application/json",
+            **onboarding_headers,
+        )
+        assert response.status_code == 422
+
+    def test_complete_onboarding_empty_email_accepted(self, api_client, onboarding_headers):
+        response = api_client.post(
+            "/api/auth/complete-onboarding/",
+            {"display_name": "Named", "new_password": "securepass99", "email": ""},
+            content_type="application/json",
+            **onboarding_headers,
+        )
+        assert response.status_code == 200
+
+
+@pytest.mark.django_db
+class TestUpdateMe:
+    def test_update_me_invalid_email_rejected(self, api_client, auth_headers):
+        response = api_client.patch(
+            "/api/auth/me/",
+            {"email": "notanemail"},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 422
+
+    def test_update_me_valid_email_accepted(self, api_client, auth_headers):
+        response = api_client.patch(
+            "/api/auth/me/",
+            {"email": "valid@example.com"},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["email"] == "valid@example.com"
+
+    def test_update_me_empty_email_accepted(self, api_client, auth_headers):
+        response = api_client.patch(
+            "/api/auth/me/",
+            {"email": ""},
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 200

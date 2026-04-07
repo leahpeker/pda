@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
-import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/utils/app_icons.dart';
 import 'package:pda/utils/share.dart';
@@ -174,7 +173,7 @@ class EventDetailContent extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  'members only',
+                                  'pda members only',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -289,12 +288,7 @@ class _EventPhoto extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          event.photoUrl,
-          height: 200,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
+        child: Image.network(event.photoUrl, fit: BoxFit.contain),
       ),
     );
   }

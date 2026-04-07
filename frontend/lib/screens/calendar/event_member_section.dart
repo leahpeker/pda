@@ -8,6 +8,7 @@ import 'package:pda/utils/launcher.dart';
 import 'package:pda/screens/calendar/event_detail_widgets.dart';
 import 'package:pda/screens/calendar/event_login_gate.dart';
 import 'rsvp_section.dart';
+import 'invite_modal.dart';
 
 class EventSectionCard extends StatelessWidget {
   final String label;
@@ -77,6 +78,9 @@ class EventMemberSection extends ConsumerWidget {
               : '',
         ));
       }
+
+      final isCoHost =
+          user.id == event.createdById || event.coHostIds.contains(user.id);
 
       final detailRows = <Widget>[
         if (location.isNotEmpty)
@@ -160,21 +164,6 @@ class EventMemberSection extends ConsumerWidget {
             ),
       ];
 
-      final invitedChips = [
-        for (var i = 0; i < event.invitedUserNames.length; i++)
-          EventDetailHostChip(
-            host: (
-              id: i < event.invitedUserIds.length
-                  ? event.invitedUserIds[i]
-                  : '',
-              name: event.invitedUserNames[i],
-              photoUrl: i < event.invitedUserPhotoUrls.length
-                  ? event.invitedUserPhotoUrls[i]
-                  : '',
-            ),
-          ),
-      ];
-
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -191,13 +180,6 @@ class EventMemberSection extends ConsumerWidget {
                 ],
               ),
             ),
-          if (invitedChips.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            EventSectionCard(
-              label: EventDetailLabel.invited,
-              child: Wrap(spacing: 12, runSpacing: 8, children: invitedChips),
-            ),
-          ],
           if (detailRows.isNotEmpty) ...[
             const SizedBox(height: 12),
             EventSectionCard(
@@ -210,6 +192,20 @@ class EventMemberSection extends ConsumerWidget {
                     if (i < detailRows.length - 1) const SizedBox(height: 8),
                   ],
                 ],
+              ),
+            ),
+          ],
+          if (isCoHost ||
+              event.invitePermission == InvitePermission.allMembers) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: FilledButton.tonalIcon(
+                icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
+                label: const Text('invite friends'),
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (_) => InviteModal(event: event),
+                ),
               ),
             ),
           ],

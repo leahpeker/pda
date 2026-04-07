@@ -1,7 +1,9 @@
 """Events CRUD, RSVP, and event photo endpoints."""
 
+import logging
 from uuid import UUID
 
+from config.audit import audit_log
 from config.media_proxy import media_path
 from ninja import File, Router
 from ninja.files import UploadedFile
@@ -77,6 +79,7 @@ def list_events(request):
                 zelle_info=_members_only(e.zelle_info, "", is_authed),
                 created_by_id=str(e.created_by_id) if e.created_by_id else None,
                 datetime_tbd=e.datetime_tbd,
+                allow_plus_ones=e.allow_plus_ones,
                 co_host_ids=[str(c.id) for c in e.co_hosts.all()],
                 co_host_names=[c.display_name or c.phone_number for c in e.co_hosts.all()],
             )
@@ -112,6 +115,15 @@ def create_event(request, payload: EventIn):
     # Official events require tag_official_event permission.
     if payload.event_type == EventType.OFFICIAL:
         if not request.auth.has_permission(PermissionKey.TAG_OFFICIAL_EVENT):
+            audit_log(
+                logging.WARNING,
+                "permission_denied",
+                request,
+                details={
+                    "endpoint": "create_event",
+                    "required_permission": PermissionKey.TAG_OFFICIAL_EVENT,
+                },
+            )
             return Status(403, ErrorOut(detail="Permission denied."))
 
     if payload.end_datetime is not None and payload.end_datetime <= payload.start_datetime:
@@ -134,8 +146,10 @@ def create_event(request, payload: EventIn):
         zelle_info=payload.zelle_info,
         rsvp_enabled=payload.rsvp_enabled,
         datetime_tbd=payload.datetime_tbd,
+        allow_plus_ones=payload.allow_plus_ones,
         event_type=payload.event_type,
         visibility=payload.visibility,
+        invite_permission=payload.invite_permission,
         created_by=request.auth,
     )
     if payload.co_host_ids:
@@ -145,6 +159,18 @@ def create_event(request, payload: EventIn):
         invited = UserModel.objects.filter(pk__in=payload.invited_user_ids)
         event.invited_users.set(invited)
         create_event_invite_notifications(event, payload.invited_user_ids, request.auth)
+    audit_log(
+        logging.INFO,
+        "event_created",
+        request,
+        target_type="event",
+        target_id=str(event.id),
+        details={
+            "title": event.title,
+            "event_type": event.event_type,
+            "visibility": event.visibility,
+        },
+    )
     return Status(201, _event_out(event, request.auth))
 
 
@@ -163,12 +189,31 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
     is_creator = event.created_by_id == request.auth.pk
     is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
     if not is_manager and not is_creator and not is_cohost:
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            target_type="event",
+            target_id=str(event_id),
+            details={"endpoint": "update_event"},
+        )
         return Status(403, ErrorOut(detail="Permission denied."))
 
     updates = payload.model_dump(exclude_unset=True)
     if updates.get("event_type") == EventType.OFFICIAL and not request.auth.has_permission(
         PermissionKey.TAG_OFFICIAL_EVENT
     ):
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            target_type="event",
+            target_id=str(event_id),
+            details={
+                "endpoint": "update_event",
+                "required_permission": PermissionKey.TAG_OFFICIAL_EVENT,
+            },
+        )
         return Status(403, ErrorOut(detail="Permission denied."))
     effective_start = updates.get("start_datetime", event.start_datetime)
     effective_end = updates.get("end_datetime", event.end_datetime)
@@ -185,6 +230,14 @@ def update_event(request, event_id: UUID, payload: EventPatchIn):
         _update_invited_users(event, invited_user_ids, request.auth)
 
     event.save()
+    audit_log(
+        logging.INFO,
+        "event_updated",
+        request,
+        target_type="event",
+        target_id=str(event_id),
+        details={"fields_changed": list(updates.keys())},
+    )
     return Status(200, _event_out(event, request.auth))
 
 
@@ -201,11 +254,28 @@ def delete_event(request, event_id: UUID):
     is_creator = event.created_by_id == request.auth.pk
     is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
     if not is_manager and not is_creator and not is_cohost:
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            target_type="event",
+            target_id=str(event_id),
+            details={"endpoint": "delete_event"},
+        )
         return Status(403, ErrorOut(detail="Permission denied."))
 
+    title = event.title
     if event.photo:
         event.photo.delete(save=False)
     event.delete()
+    audit_log(
+        logging.INFO,
+        "event_deleted",
+        request,
+        target_type="event",
+        target_id=str(event_id),
+        details={"title": title},
+    )
     return Status(204, None)
 
 
@@ -227,12 +297,23 @@ def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...))
     is_creator = event.created_by_id == request.auth.pk
     is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
     if not is_manager and not is_creator and not is_cohost:
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            target_type="event",
+            target_id=str(event_id),
+            details={"endpoint": "upload_event_photo"},
+        )
         return Status(403, ErrorOut(detail="Permission denied."))
     if event.photo:
         event.photo.delete(save=False)
     name = photo.name or ""
     ext = name.rsplit(".", 1)[-1] if "." in name else "jpg"
     event.photo.save(f"{event_id}.{ext}", photo, save=True)
+    audit_log(
+        logging.INFO, "event_photo_uploaded", request, target_type="event", target_id=str(event_id)
+    )
     return Status(200, _event_out(event, request.auth))
 
 
@@ -250,11 +331,22 @@ def delete_event_photo(request, event_id: UUID):
     is_creator = event.created_by_id == request.auth.pk
     is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
     if not is_manager and not is_creator and not is_cohost:
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            target_type="event",
+            target_id=str(event_id),
+            details={"endpoint": "delete_event_photo"},
+        )
         return Status(403, ErrorOut(detail="Permission denied."))
     if event.photo:
         event.photo.delete(save=False)
         event.photo = ""
         event.save(update_fields=["photo"])
+    audit_log(
+        logging.INFO, "event_photo_deleted", request, target_type="event", target_id=str(event_id)
+    )
     return Status(200, _event_out(event, request.auth))
 
 
@@ -291,7 +383,15 @@ def upsert_rsvp(request, event_id: UUID, payload: RSVPIn):
     EventRSVP.objects.update_or_create(
         event=event,
         user=request.auth,
-        defaults={"status": payload.status},
+        defaults={"status": payload.status, "has_plus_one": payload.has_plus_one},
+    )
+    audit_log(
+        logging.INFO,
+        "rsvp_changed",
+        request,
+        target_type="event",
+        target_id=str(event_id),
+        details={"status": payload.status},
     )
     event.refresh_from_db()
     event = (
@@ -311,4 +411,5 @@ def delete_rsvp(request, event_id: UUID):
     deleted, _ = EventRSVP.objects.filter(event_id=event_id, user=request.auth).delete()
     if not deleted:
         return Status(404, ErrorOut(detail="RSVP not found."))
+    audit_log(logging.INFO, "rsvp_deleted", request, target_type="event", target_id=str(event_id))
     return Status(204, None)

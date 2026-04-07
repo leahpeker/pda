@@ -77,60 +77,105 @@ final Uint8List _kMinimalPng = Uint8List.fromList([
   0x82,
 ]);
 
+Widget _openButton(
+  BuildContext ctx, {
+  PhotoCropMode mode = PhotoCropMode.circle,
+}) => TextButton(
+  onPressed: () =>
+      showPhotoCropDialog(context: ctx, imageBytes: _kMinimalPng, mode: mode),
+  child: const Text('open'),
+);
+
 void main() {
   group('photo crop dialog accessibility', () {
-    testWidgets('meets labeled tap target guideline', (tester) async {
-      tester.view.physicalSize = const Size(800, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+    group('circle mode', () {
+      testWidgets('meets labeled tap target guideline', (tester) async {
+        tester.view.physicalSize = const Size(800, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
 
-      final handle = tester.ensureSemantics();
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (ctx) => TextButton(
-                onPressed: () =>
-                    showPhotoCropDialog(context: ctx, imageBytes: _kMinimalPng),
-                child: const Text('open'),
-              ),
-            ),
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: Builder(builder: (ctx) => _openButton(ctx))),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('open'));
-      await tester.pump();
+        await tester.tap(find.text('open'));
+        await tester.pump();
 
-      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
-      handle.dispose();
+        await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+        handle.dispose();
+      });
+
+      testWidgets('meets android tap target guideline', (tester) async {
+        tester.view.physicalSize = const Size(800, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: Builder(builder: (ctx) => _openButton(ctx))),
+          ),
+        );
+
+        await tester.tap(find.text('open'));
+        await tester.pump();
+
+        await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+        handle.dispose();
+      });
     });
 
-    testWidgets('meets android tap target guideline', (tester) async {
-      tester.view.physicalSize = const Size(800, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+    group('rectangle mode', () {
+      testWidgets('meets labeled tap target guideline', (tester) async {
+        tester.view.physicalSize = const Size(800, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
 
-      final handle = tester.ensureSemantics();
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (ctx) => TextButton(
-                onPressed: () =>
-                    showPhotoCropDialog(context: ctx, imageBytes: _kMinimalPng),
-                child: const Text('open'),
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) =>
+                    _openButton(ctx, mode: PhotoCropMode.rectangle),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('open'));
-      await tester.pump();
+        await tester.tap(find.text('open'));
+        await tester.pump();
 
-      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
-      handle.dispose();
+        await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+        handle.dispose();
+      });
+
+      testWidgets('meets android tap target guideline', (tester) async {
+        tester.view.physicalSize = const Size(800, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) =>
+                    _openButton(ctx, mode: PhotoCropMode.rectangle),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('open'));
+        await tester.pump();
+
+        await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+        handle.dispose();
+      });
     });
   });
 }

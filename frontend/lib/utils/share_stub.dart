@@ -1,5 +1,5 @@
 import 'package:share_plus/share_plus.dart';
 
 void shareUrl(String url, {String? subject}) {
-  Share.share(url, subject: subject);
+  SharePlus.instance.share(ShareParams(text: url, subject: subject));
 }

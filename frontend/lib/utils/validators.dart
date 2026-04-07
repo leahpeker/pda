@@ -56,11 +56,12 @@ Validator displayName() {
 
 /// Optional email: skips if empty, validates format if provided.
 Validator optionalEmail() {
+  final re = RegExp(
+    r'^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$',
+  );
   return (v) {
     if (v == null || v.trim().isEmpty) return null;
-    if (!v.contains('@') || !v.contains('.')) {
-      return 'Enter a valid email address';
-    }
+    if (!re.hasMatch(v.trim())) return 'enter a valid email address';
     return null;
   };
 }

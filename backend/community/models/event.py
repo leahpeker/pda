@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from django.db import models
 
-from community.models.choices import EventType, PageVisibility, RSVPStatus
+from community.models.choices import EventType, InvitePermission, PageVisibility, RSVPStatus
 
 if TYPE_CHECKING:
     from django.db.models import Manager
@@ -32,6 +32,7 @@ class Event(models.Model):
     zelle_info = models.CharField(max_length=200, blank=True)
     rsvp_enabled = models.BooleanField(default=False)
     datetime_tbd = models.BooleanField(default=False)
+    allow_plus_ones = models.BooleanField(default=False)
     photo = models.ImageField(upload_to="event_photos/", blank=True)
     event_type = models.CharField(
         max_length=20,
@@ -42,6 +43,11 @@ class Event(models.Model):
         max_length=20,
         choices=PageVisibility.choices,
         default=PageVisibility.PUBLIC,
+    )
+    invite_permission = models.CharField(
+        max_length=20,
+        choices=InvitePermission.choices,
+        default=InvitePermission.ALL_MEMBERS,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     if TYPE_CHECKING:
@@ -81,6 +87,7 @@ class EventRSVP(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="rsvps")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="event_rsvps")
     status = models.CharField(max_length=20, choices=RSVPStatus.choices)
+    has_plus_one = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

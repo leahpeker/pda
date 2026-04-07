@@ -13,6 +13,7 @@ class WideWeekGrid extends StatelessWidget {
   final bool Function(DateTime) isToday;
   final ValueChanged<Event> onEventTapped;
   final ValueChanged<DateTime>? onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
 
   static const double _dayLabelHeight = 52.0;
   static const double _chipHeight = 22.0;
@@ -26,6 +27,7 @@ class WideWeekGrid extends StatelessWidget {
     required this.isToday,
     required this.onEventTapped,
     this.onDayTapped,
+    this.onDayLongPressed,
   });
 
   @override
@@ -66,145 +68,28 @@ class WideWeekGrid extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Day header row
-                      SizedBox(
+                      _WideDayHeaderRow(
+                        days: days,
+                        isToday: isToday,
+                        onDayTapped: onDayTapped,
+                        onDayLongPressed: onDayLongPressed,
                         height: _dayLabelHeight,
-                        child: Row(
-                          children: days.map((day) {
-                            final today = isToday(day);
-                            final bgColor = today
-                                ? theme.colorScheme.primary
-                                : Colors.transparent;
-                            final fgColor = today
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurface;
-                            return Expanded(
-                              child: InkWell(
-                                onTap: onDayTapped != null
-                                    ? () => onDayTapped!(day)
-                                    : null,
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: bgColor,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        DateFormat(
-                                          'EEE',
-                                        ).format(day).toLowerCase(),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: fgColor,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${day.day}',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: fgColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
                       ),
                       Divider(
                         height: 1,
                         color: theme.dividerColor.withValues(alpha: 0.4),
                       ),
-                      // Event area
                       Expanded(
-                        child: Stack(
-                          children: [
-                            // Tappable column cells with overflow indicators
-                            Row(
-                              children: List.generate(7, (col) {
-                                final overflow = placements
-                                    .where(
-                                      (p) =>
-                                          p.row >= _maxEventRows &&
-                                          col >= p.startCol &&
-                                          col <= p.endCol,
-                                    )
-                                    .length;
-                                return Expanded(
-                                  child: Semantics(
-                                    button: onDayTapped != null,
-                                    label: DateFormat(
-                                      'EEEE, MMMM d',
-                                    ).format(days[col]),
-                                    child: InkWell(
-                                      onTap: onDayTapped != null
-                                          ? () => onDayTapped!(days[col])
-                                          : null,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          border: Border(
-                                            right: col < 6
-                                                ? BorderSide(
-                                                    color: theme.dividerColor
-                                                        .withValues(alpha: 0.4),
-                                                    width: 0.5,
-                                                  )
-                                                : BorderSide.none,
-                                          ),
-                                        ),
-                                        child: overflow > 0
-                                            ? Align(
-                                                alignment:
-                                                    Alignment.bottomCenter,
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        bottom: 4,
-                                                      ),
-                                                  child: Text(
-                                                    '+$overflow more',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: theme
-                                                          .colorScheme
-                                                          .primary,
-                                                    ),
-                                                  ),
-                                                ),
-                                              )
-                                            : null,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
-                            // Event spans
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Stack(
-                                children: placements
-                                    .where((p) => p.row < _maxEventRows)
-                                    .map(
-                                      (p) => _buildWideEventChip(
-                                        p,
-                                        colWidth,
-                                        days,
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                            ),
-                          ],
+                        child: _WideEventArea(
+                          days: days,
+                          placements: placements,
+                          colWidth: colWidth,
+                          maxEventRows: _maxEventRows,
+                          chipHeight: _chipHeight,
+                          chipSpacing: _chipSpacing,
+                          onDayTapped: onDayTapped,
+                          onDayLongPressed: onDayLongPressed,
+                          onEventTapped: onEventTapped,
                         ),
                       ),
                     ],
@@ -239,15 +124,217 @@ class WideWeekGrid extends StatelessWidget {
       ),
     );
   }
+}
 
-  Positioned _buildWideEventChip(
-    SpanPlacement p,
-    double colWidth,
-    List<DateTime> days,
-  ) {
+class _WideDayHeaderRow extends StatelessWidget {
+  final List<DateTime> days;
+  final bool Function(DateTime) isToday;
+  final ValueChanged<DateTime>? onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
+  final double height;
+
+  const _WideDayHeaderRow({
+    required this.days,
+    required this.isToday,
+    required this.height,
+    this.onDayTapped,
+    this.onDayLongPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: height,
+      child: Row(
+        children: days.map((day) {
+          final today = isToday(day);
+          final bgColor = today
+              ? theme.colorScheme.primary
+              : Colors.transparent;
+          final fgColor = today
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurface;
+          return Expanded(
+            child: Semantics(
+              button: onDayTapped != null,
+              label: DateFormat('EEEE, MMMM d').format(day),
+              onLongPressHint: onDayLongPressed != null ? 'create event' : null,
+              child: InkWell(
+                onTap: onDayTapped != null ? () => onDayTapped!(day) : null,
+                onLongPress: onDayLongPressed != null
+                    ? () => onDayLongPressed!(day)
+                    : null,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        DateFormat('EEE').format(day).toLowerCase(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: fgColor,
+                        ),
+                      ),
+                      Text(
+                        '${day.day}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: fgColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _WideEventArea extends StatelessWidget {
+  final List<DateTime> days;
+  final List<SpanPlacement> placements;
+  final double colWidth;
+  final int maxEventRows;
+  final double chipHeight;
+  final double chipSpacing;
+  final ValueChanged<DateTime>? onDayTapped;
+  final ValueChanged<DateTime>? onDayLongPressed;
+  final ValueChanged<Event> onEventTapped;
+
+  const _WideEventArea({
+    required this.days,
+    required this.placements,
+    required this.colWidth,
+    required this.maxEventRows,
+    required this.chipHeight,
+    required this.chipSpacing,
+    required this.onEventTapped,
+    this.onDayTapped,
+    this.onDayLongPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Stack(
+      children: [
+        Row(
+          children: List.generate(7, (col) {
+            final overflow = placements
+                .where(
+                  (p) =>
+                      p.row >= maxEventRows &&
+                      col >= p.startCol &&
+                      col <= p.endCol,
+                )
+                .length;
+            return Expanded(
+              child: Semantics(
+                button: onDayTapped != null,
+                label: DateFormat('EEEE, MMMM d').format(days[col]),
+                onLongPressHint: onDayLongPressed != null
+                    ? 'create event'
+                    : null,
+                child: InkWell(
+                  onTap: onDayTapped != null
+                      ? () => onDayTapped!(days[col])
+                      : null,
+                  onLongPress: onDayLongPressed != null
+                      ? () => onDayLongPressed!(days[col])
+                      : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: col < 6
+                            ? BorderSide(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.4,
+                                ),
+                                width: 0.5,
+                              )
+                            : BorderSide.none,
+                      ),
+                    ),
+                    child: overflow > 0
+                        ? Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                '$overflow more',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Stack(
+            children: placements
+                .where((p) => p.row < maxEventRows)
+                .map(
+                  (p) => _WideEventChip(
+                    placement: p,
+                    colWidth: colWidth,
+                    chipHeight: chipHeight,
+                    chipSpacing: chipSpacing,
+                    days: days,
+                    onEventTapped: onEventTapped,
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WideEventChip extends StatelessWidget {
+  final SpanPlacement placement;
+  final double colWidth;
+  final double chipHeight;
+  final double chipSpacing;
+  final List<DateTime> days;
+  final ValueChanged<Event> onEventTapped;
+
+  const _WideEventChip({
+    required this.placement,
+    required this.colWidth,
+    required this.chipHeight,
+    required this.chipSpacing,
+    required this.days,
+    required this.onEventTapped,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = placement;
     final left = p.startCol * colWidth;
     final width = (p.endCol - p.startCol + 1) * colWidth;
-    final top = p.row * (_chipHeight + _chipSpacing);
+    final top = p.row * (chipHeight + chipSpacing);
     final colors = eventColors(p.event.id);
 
     final continuesFromPrev =
@@ -272,7 +359,7 @@ class WideWeekGrid extends StatelessWidget {
       left: left,
       top: top,
       width: width,
-      height: _chipHeight,
+      height: chipHeight,
       child: Semantics(
         button: true,
         label: p.event.title,

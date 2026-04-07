@@ -63,7 +63,7 @@ def _create_user_with_role(
     user = User.objects.create_user(
         phone_number=validated_phone,
         display_name=display_name,
-        email=email,
+        email=email or "",
         needs_onboarding=needs_onboarding,
     )
     user.set_unusable_password()

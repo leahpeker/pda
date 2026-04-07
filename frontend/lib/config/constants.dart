@@ -37,6 +37,29 @@ abstract class PageVisibility {
   static const inviteOnly = 'invite_only';
 }
 
+/// Combined visibility + event-type choice used in the event form UI.
+/// Maps to separate [PageVisibility] and [EventType] values for the API.
+abstract class EventVisibilityChoice {
+  static const official = 'official';
+  static const public_ = 'public';
+  static const membersOnly = 'members_only';
+  static const inviteOnly = 'invite_only';
+}
+
+/// Converts a form [choice] into the `(visibility, eventType)` pair for API submission.
+(String visibility, String eventType) visibilityChoiceToFields(String choice) {
+  if (choice == EventVisibilityChoice.official) {
+    return (PageVisibility.public_, EventType.official);
+  }
+  return (choice, EventType.community);
+}
+
+/// Converts existing event fields back into a single [EventVisibilityChoice] value.
+String fieldsToVisibilityChoice(String visibility, String eventType) {
+  if (eventType == EventType.official) return EventVisibilityChoice.official;
+  return visibility;
+}
+
 abstract class FieldType {
   static const text = 'text';
   static const textarea = 'textarea';
@@ -60,6 +83,11 @@ abstract class RoleName {
 
 abstract class NotificationType {
   static const eventInvite = 'event_invite';
+}
+
+abstract class InvitePermission {
+  static const allMembers = 'all_members';
+  static const coHostsOnly = 'co_hosts_only';
 }
 
 abstract class EventDetailLabel {
