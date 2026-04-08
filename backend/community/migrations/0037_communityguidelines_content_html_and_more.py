@@ -3,6 +3,37 @@
 from django.db import migrations, models
 
 
+def backfill_content_html(apps, schema_editor):
+    from community._delta_html import delta_to_html
+
+    CommunityGuidelines = apps.get_model("community", "CommunityGuidelines")
+    FAQ = apps.get_model("community", "FAQ")
+    HomePage = apps.get_model("community", "HomePage")
+    EditablePage = apps.get_model("community", "EditablePage")
+    Document = apps.get_model("community", "Document")
+
+    for obj in CommunityGuidelines.objects.filter(content_html=""):
+        obj.content_html = delta_to_html(obj.content)
+        obj.save(update_fields=["content_html"])
+
+    for obj in FAQ.objects.filter(content_html=""):
+        obj.content_html = delta_to_html(obj.content)
+        obj.save(update_fields=["content_html"])
+
+    for obj in HomePage.objects.filter(content_html=""):
+        obj.content_html = delta_to_html(obj.content)
+        obj.join_content_html = delta_to_html(obj.join_content)
+        obj.save(update_fields=["content_html", "join_content_html"])
+
+    for obj in EditablePage.objects.filter(content_html=""):
+        obj.content_html = delta_to_html(obj.content)
+        obj.save(update_fields=["content_html"])
+
+    for obj in Document.objects.filter(content_html=""):
+        obj.content_html = delta_to_html(obj.content)
+        obj.save(update_fields=["content_html"])
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("community", "0036_remove_eventrsvp_plus_one_count_and_more"),
@@ -39,4 +70,5 @@ class Migration(migrations.Migration):
             name="join_content_html",
             field=models.TextField(default=""),
         ),
+        migrations.RunPython(backfill_content_html, migrations.RunPython.noop),
     ]
