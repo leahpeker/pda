@@ -126,9 +126,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                         decoration: const InputDecoration(
                           labelText: 'display name *',
                           hintText: 'e.g. Alex R',
-                          helperText:
-                              'letters and spaces only; at least first name + '
-                              'last initial',
+                          helperText: 'at least first name + last initial',
                           border: OutlineInputBorder(),
                         ),
                         validator: v.displayName(),

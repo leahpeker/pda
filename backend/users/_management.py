@@ -3,6 +3,7 @@
 import logging
 import re
 
+from community._shared import validate_display_name
 from config.audit import audit_log
 from django.db import models as dj_models
 from ninja import Router
@@ -50,6 +51,11 @@ def create_user(request, payload: UserCreateIn):
             details={"endpoint": "create_user", "required_permission": PermissionKey.CREATE_USER},
         )
         return Status(403, ErrorOut(detail="Permission denied."))
+
+    if payload.display_name:
+        name_error = validate_display_name(payload.display_name)
+        if name_error:
+            return Status(400, ErrorOut(detail=name_error))
 
     try:
         user, magic_token = _create_user_with_role(
@@ -248,19 +254,30 @@ def update_user(request, user_id: str, payload: UserPatchIn):
     return Status(200, UserOut.from_user(user))
 
 
+def _patch_phone(user: User, user_id: str, phone_number: str) -> str | None:
+    """Validate and apply a phone number change. Returns error string or None."""
+    if User.objects.exclude(pk=user_id).filter(phone_number=phone_number).exists():
+        return "A user with that phone number already exists."
+    try:
+        user.phone_number = _validate_phone(phone_number)
+    except ValueError as e:
+        return str(e)
+    return None
+
+
 def _apply_user_patch(
     user: User, user_id: str, payload: UserPatchIn, requester_id: str
 ) -> str | None:
     """Apply UserPatchIn fields to user. Returns an error message string on failure, else None."""
     if payload.phone_number is not None:
-        if User.objects.exclude(pk=user_id).filter(phone_number=payload.phone_number).exists():
-            return "A user with that phone number already exists."
-        try:
-            user.phone_number = _validate_phone(payload.phone_number)
-        except ValueError as e:
-            return str(e)
+        err = _patch_phone(user, user_id, payload.phone_number)
+        if err:
+            return err
     if payload.display_name is not None:
-        user.display_name = payload.display_name
+        err = validate_display_name(payload.display_name)
+        if err:
+            return err
+        user.display_name = payload.display_name.strip()
     if payload.email is not None:
         user.email = payload.email
     if payload.is_paused and requester_id == str(user.pk):

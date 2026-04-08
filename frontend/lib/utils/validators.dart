@@ -42,13 +42,25 @@ Validator minLength(int min, [String? message]) {
   };
 }
 
-/// Letters and spaces only (matches backend display name rule).
+/// Unicode letters, combining marks, apostrophes, hyphens, spaces, and periods.
+/// Rejects digits and symbols (emails, phone numbers, URLs).
 Validator displayName() {
-  final re = RegExp(r'^[a-zA-Z ]+$');
+  final re = RegExp(r"^[\p{L}\p{M}' \-\.]+$", unicode: true);
   return all([
     required(),
-    (v) => (v != null && !re.hasMatch(v.trim()))
-        ? 'Letters and spaces only'
+    (v) => (v != null && v.trim().isNotEmpty && !re.hasMatch(v.trim()))
+        ? 'letters, spaces, hyphens, and apostrophes only'
+        : null,
+    maxLength(64),
+  ]);
+}
+
+/// Optional display name: skips format check if empty, same rules if provided.
+Validator optionalDisplayName() {
+  final re = RegExp(r"^[\p{L}\p{M}' \-\.]+$", unicode: true);
+  return all([
+    (v) => (v != null && v.trim().isNotEmpty && !re.hasMatch(v.trim()))
+        ? 'letters, spaces, hyphens, and apostrophes only'
         : null,
     maxLength(64),
   ]);
