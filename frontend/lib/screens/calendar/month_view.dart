@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/screens/calendar/calendar_nav_row.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 import 'package:pda/screens/calendar/month_row.dart';
 
@@ -8,6 +9,7 @@ class MonthView extends StatefulWidget {
   final List<Event> events;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
+  final VoidCallback onToday;
   final ValueChanged<DateTime> onDayTapped;
   final ValueChanged<DateTime>? onDayLongPressed;
 
@@ -16,6 +18,7 @@ class MonthView extends StatefulWidget {
     required this.events,
     required this.selectedDate,
     required this.onDateChanged,
+    required this.onToday,
     required this.onDayTapped,
     this.onDayLongPressed,
   });
@@ -123,7 +126,14 @@ class _MonthViewState extends State<MonthView> {
       },
       child: Column(
         children: [
-          _buildMonthHeader(context, headerLabel),
+          CalendarNavRow(
+            label: headerLabel,
+            onPrev: _goToPreviousMonth,
+            onNext: _goToNextMonth,
+            onToday: widget.onToday,
+            prevTooltip: 'previous month',
+            nextTooltip: 'next month',
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _buildDayOfWeekHeaders(context),
@@ -147,28 +157,6 @@ class _MonthViewState extends State<MonthView> {
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthHeader(BuildContext context, String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: _goToPreviousMonth,
-            tooltip: 'Previous month',
-          ),
-          Text(label, style: Theme.of(context).textTheme.titleMedium),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: _goToNextMonth,
-            tooltip: 'Next month',
           ),
         ],
       ),

@@ -84,7 +84,7 @@ class _TodayIconButton extends StatelessWidget {
               children: [
                 Icon(Icons.calendar_today_outlined, size: 28, color: color),
                 Positioned(
-                  bottom: 1,
+                  bottom: 4,
                   child: Text(
                     '$day',
                     style: TextStyle(

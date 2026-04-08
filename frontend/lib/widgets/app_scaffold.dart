@@ -101,8 +101,8 @@ class _LogoButton extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Image.asset(
                 'assets/logo.png',
-                height: 32,
-                errorBuilder: (_, __, ___) => const SizedBox(height: 32),
+                height: 22,
+                errorBuilder: (_, __, ___) => const SizedBox(height: 22),
               ),
             ),
           ),

@@ -20,6 +20,7 @@ void main() {
           events: events,
           selectedDate: DateTime(2026, 3, 25),
           onDateChanged: (_) {},
+          onToday: () {},
           onDayTapped: (_) {},
         ),
       ),

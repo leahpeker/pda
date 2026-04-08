@@ -123,11 +123,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
       child: Column(
         children: [
-          _CalendarToolbar(
-            selected: _view,
-            onSelected: _onViewChanged,
-            onToday: _goToToday,
-          ),
+          _CalendarToolbar(selected: _view, onSelected: _onViewChanged),
           Expanded(
             child: eventsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -149,6 +145,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           events: events,
           selectedDate: _selectedDate,
           onDateChanged: _onDateChanged,
+          onToday: _goToToday,
           onDayTapped: (date) {
             setState(() {
               _selectedDate = date;
@@ -162,6 +159,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           events: events,
           selectedDate: _selectedDate,
           onDateChanged: _onDateChanged,
+          onToday: _goToToday,
           onDayTapped: (date) {
             setState(() {
               _selectedDate = date;
@@ -175,6 +173,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           events: events,
           selectedDate: _selectedDate,
           onDateChanged: _onDateChanged,
+          onToday: _goToToday,
           onLongPress: () => _createEventForDate(_selectedDate),
         );
       case _CalendarView.list:
@@ -186,84 +185,23 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 class _CalendarToolbar extends StatelessWidget {
   final _CalendarView selected;
   final ValueChanged<_CalendarView> onSelected;
-  final VoidCallback onToday;
 
-  const _CalendarToolbar({
-    required this.selected,
-    required this.onSelected,
-    required this.onToday,
-  });
+  const _CalendarToolbar({required this.selected, required this.onSelected});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: [
-          if (selected != _CalendarView.list)
-            _TodayIconButton(onPressed: onToday),
-          Expanded(
-            child: SegmentedButton<_CalendarView>(
-              segments: const [
-                ButtonSegment(value: _CalendarView.month, label: Text('month')),
-                ButtonSegment(value: _CalendarView.week, label: Text('week')),
-                ButtonSegment(value: _CalendarView.day, label: Text('day')),
-                ButtonSegment(value: _CalendarView.list, label: Text('list')),
-              ],
-              selected: {selected},
-              onSelectionChanged: (s) => onSelected(s.first),
-              showSelectedIcon: false,
-            ),
-          ),
+      child: SegmentedButton<_CalendarView>(
+        segments: const [
+          ButtonSegment(value: _CalendarView.month, label: Text('month')),
+          ButtonSegment(value: _CalendarView.week, label: Text('week')),
+          ButtonSegment(value: _CalendarView.day, label: Text('day')),
+          ButtonSegment(value: _CalendarView.list, label: Text('list')),
         ],
-      ),
-    );
-  }
-}
-
-class _TodayIconButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const _TodayIconButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final day = DateTime.now().day;
-    final color = Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Tooltip(
-        message: 'go to today',
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(8),
-          child: Semantics(
-            button: true,
-            label: 'go to today',
-            excludeSemantics: true,
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(Icons.calendar_today_outlined, size: 28, color: color),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      '$day',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        selected: {selected},
+        onSelectionChanged: (s) => onSelected(s.first),
+        showSelectedIcon: false,
       ),
     );
   }
