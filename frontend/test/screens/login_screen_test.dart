@@ -146,7 +146,7 @@ void main() {
     await tester.tap(find.byType(FilledButton));
     await tester.pump();
 
-    expect(find.textContaining('Invalid email or password'), findsOneWidget);
+    expect(find.textContaining('wrong number or password'), findsOneWidget);
   });
 
   testWidgets('button is disabled while loading', (tester) async {
