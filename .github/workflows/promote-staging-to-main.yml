@@ -28,7 +28,38 @@ jobs:
           echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
           echo "Staging is $AHEAD commit(s) ahead of main"
 
-      - name: Create PR and auto-merge
+      - name: Wait for Railway deploy on staging
+        if: steps.check.outputs.ahead != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          STAGING_SHA=$(git rev-parse origin/staging)
+          echo "Checking Railway deploy status for $STAGING_SHA"
+
+          TIMEOUT=300
+          INTERVAL=15
+          ELAPSED=0
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            STATE=$(gh api "repos/${{ github.repository }}/commits/$STAGING_SHA/status" --jq '.state')
+            echo "Railway status: $STATE (${ELAPSED}s elapsed)"
+
+            if [ "$STATE" = "success" ]; then
+              echo "Railway deploy succeeded — proceeding with promotion"
+              exit 0
+            elif [ "$STATE" = "failure" ]; then
+              echo "::error::Railway deploy failed on staging — not promoting to main"
+              exit 1
+            fi
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          echo "::error::Timed out waiting for Railway deploy on staging (${TIMEOUT}s)"
+          exit 1
+
+      - name: Create PR and merge
         if: steps.check.outputs.ahead != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,7 +71,15 @@ jobs:
             --body "Automated promotion of staging to main." \
             2>/dev/null || gh pr list --base main --head staging --json url --jq '.[0].url')
           echo "PR: $PR_URL"
-          gh pr merge "$PR_URL" --merge --auto --delete-branch=false
+
+          gh pr merge "$PR_URL" --merge --admin --delete-branch=false
+
+          STATE=$(gh pr view "$PR_URL" --json state --jq '.state')
+          if [ "$STATE" != "MERGED" ]; then
+            echo "::error::PR was not merged — current state: $STATE"
+            exit 1
+          fi
+          echo "PR merged successfully"
 
       - name: Nothing to promote
         if: steps.check.outputs.ahead == '0'
