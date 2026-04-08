@@ -394,6 +394,9 @@ def generate_magic_link(request, user_id: str):
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="User not found."))
+    user.set_unusable_password()
+    user.needs_onboarding = True
+    user.save(update_fields=["password", "needs_onboarding"])
     magic_token = _create_magic_token(user)
     audit_log(
         logging.INFO,
