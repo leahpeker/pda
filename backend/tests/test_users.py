@@ -410,3 +410,48 @@ class TestResetPassword:
         assert len(data["magic_link_token"]) == 36  # UUID format
         other_user.refresh_from_db()
         assert not other_user.has_usable_password()
+
+
+# ---------------------------------------------------------------------------
+# TestGenerateMagicLink
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestGenerateMagicLink:
+    def test_generate_magic_link_success(self, api_client, manage_users_headers, other_user):
+        response = api_client.post(
+            f"/api/auth/users/{other_user.pk}/magic-link/",
+            **manage_users_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["magic_link_token"]) == 36  # UUID format
+
+    def test_generate_magic_link_sets_needs_onboarding(
+        self, api_client, manage_users_headers, other_user
+    ):
+        other_user.needs_onboarding = False
+        other_user.save(update_fields=["needs_onboarding"])
+        response = api_client.post(
+            f"/api/auth/users/{other_user.pk}/magic-link/",
+            **manage_users_headers,
+        )
+        assert response.status_code == 200
+        other_user.refresh_from_db()
+        assert other_user.needs_onboarding
+        assert not other_user.has_usable_password()
+
+    def test_generate_magic_link_not_found(self, api_client, manage_users_headers):
+        response = api_client.post(
+            "/api/auth/users/00000000-0000-0000-0000-000000000000/magic-link/",
+            **manage_users_headers,
+        )
+        assert response.status_code == 404
+
+    def test_generate_magic_link_requires_permission(self, api_client, auth_headers, other_user):
+        response = api_client.post(
+            f"/api/auth/users/{other_user.pk}/magic-link/",
+            **auth_headers,
+        )
+        assert response.status_code == 403
