@@ -211,6 +211,63 @@ class TestJoinRequestSubmission:
         )
         assert response.status_code == 400
 
+    def test_submit_display_name_with_email_rejected(self, api_client, why_join_id):
+        response = api_client.post(
+            "/api/community/join-request/",
+            {
+                "display_name": "user@example.com",
+                "phone_number": "+12025550705",
+                "answers": {why_join_id: "I care"},
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+
+    def test_submit_display_name_with_url_rejected(self, api_client, why_join_id):
+        response = api_client.post(
+            "/api/community/join-request/",
+            {
+                "display_name": "http://evil.com",
+                "phone_number": "+12025550706",
+                "answers": {why_join_id: "I care"},
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.parametrize(
+        "name,phone",
+        [
+            ("José O'Brien", "+12025550707"),
+            ("Müller-Schmidt", "+12025550709"),
+            ("Юлия К", "+12025550710"),
+            ("田中 太郎", "+12025550711"),
+        ],
+    )
+    def test_submit_display_name_unicode_accepted(self, api_client, why_join_id, name, phone):
+        response = api_client.post(
+            "/api/community/join-request/",
+            {
+                "display_name": name,
+                "phone_number": phone,
+                "answers": {why_join_id: "Collective liberation."},
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 201, f"Expected 201 for name: {name!r}"
+
+    def test_submit_display_name_hyphen_apostrophe_accepted(self, api_client, why_join_id):
+        response = api_client.post(
+            "/api/community/join-request/",
+            {
+                "display_name": "Mary-Jane O'Brien",
+                "phone_number": "+12025550708",
+                "answers": {why_join_id: "Collective liberation."},
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 201
+
     def test_default_status_is_pending(self, api_client, why_join_id):
         response = api_client.post(
             "/api/community/join-request/",

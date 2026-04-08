@@ -101,9 +101,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                         textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Display name is required'
-                            : null,
+                        validator: v.displayName(),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(

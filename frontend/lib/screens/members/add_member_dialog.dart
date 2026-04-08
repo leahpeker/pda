@@ -62,7 +62,7 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                     labelText: 'Display name (optional)',
                     border: OutlineInputBorder(),
                   ),
-                  validator: v.maxLength(64),
+                  validator: v.optionalDisplayName(),
                   onFieldSubmitted: (_) {
                     if (!_formKey.currentState!.validate()) return;
                     Navigator.of(context).pop({

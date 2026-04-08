@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:pda/models/event.dart';
+import 'package:pda/screens/calendar/calendar_nav_row.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
@@ -10,6 +11,7 @@ class DayView extends StatefulWidget {
   final List<Event> events;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
+  final VoidCallback onToday;
   final VoidCallback? onLongPress;
 
   const DayView({
@@ -17,6 +19,7 @@ class DayView extends StatefulWidget {
     required this.events,
     required this.selectedDate,
     required this.onDateChanged,
+    required this.onToday,
     this.onLongPress,
   });
 
@@ -91,10 +94,15 @@ class _DayViewState extends State<DayView> {
       },
       child: Column(
         children: [
-          _DayHeader(
-            selectedDay: _selectedDay,
+          CalendarNavRow(
+            label: DateFormat(
+              'EEEE, MMMM d, y',
+            ).format(_selectedDay).toLowerCase(),
             onPrev: _goToPrevDay,
             onNext: _goToNextDay,
+            onToday: widget.onToday,
+            prevTooltip: 'previous day',
+            nextTooltip: 'next day',
           ),
           const Divider(height: 1),
           Expanded(
@@ -126,50 +134,6 @@ class _DayViewState extends State<DayView> {
       itemBuilder: (context, index) {
         return _DayEventCard(event: events[index]);
       },
-    );
-  }
-}
-
-class _DayHeader extends StatelessWidget {
-  final DateTime selectedDay;
-  final VoidCallback onPrev;
-  final VoidCallback onNext;
-
-  const _DayHeader({
-    required this.selectedDay,
-    required this.onPrev,
-    required this.onNext,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final label = DateFormat(
-      'EEEE, MMMM d, y',
-    ).format(selectedDay).toLowerCase();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            tooltip: 'previous day',
-            onPressed: onPrev,
-          ),
-          Expanded(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            tooltip: 'next day',
-            onPressed: onNext,
-          ),
-        ],
-      ),
     );
   }
 }

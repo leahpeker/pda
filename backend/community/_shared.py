@@ -38,7 +38,25 @@ class ErrorOut(BaseModel):
     detail: str
 
 
-DISPLAY_NAME_RE = re.compile(r"^[a-zA-Z ]+$")
+_DISPLAY_NAME_REJECT_RE = re.compile(r'[\d@#$%^&*()+=\[\]{}<>|\\/:;!?~`"]')
+
+
+def validate_display_name(name: str) -> str | None:
+    """Return an error message if the display name is invalid, or None if valid.
+
+    Allows Unicode letters, combining marks, apostrophes, hyphens, spaces, and periods.
+    Rejects digits, email/URL characters, and names that contain no letters.
+    """
+    stripped = name.strip()
+    if not stripped:
+        return "display name is required"
+    if len(stripped) > 64:
+        return "display name must be at most 64 characters"
+    if _DISPLAY_NAME_REJECT_RE.search(stripped):
+        return "display name contains invalid characters — no numbers or symbols"
+    if all(c in " '-." for c in stripped):
+        return "display name must contain at least one letter"
+    return None
 
 
 def _validate_phone(raw: str) -> str:

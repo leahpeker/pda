@@ -13,7 +13,7 @@ from ninja_jwt.authentication import JWTAuth
 from pydantic import BaseModel
 from users.permissions import PermissionKey
 
-from community._shared import DISPLAY_NAME_RE, ErrorOut, _validate_phone, logger
+from community._shared import ErrorOut, _validate_phone, logger, validate_display_name
 from community.models import (
     JoinFormQuestion,
     JoinFormQuestionType,
@@ -349,13 +349,9 @@ def reorder_join_form_questions(request, payload: JoinFormQuestionOrderIn):
 @router.post("/join-request/", response={201: JoinRequestOut, 400: ErrorOut}, auth=None)
 def submit_join_request(request, payload: JoinRequestIn):
     display_name = payload.display_name.strip()
-    if not display_name:
-        return Status(400, ErrorOut(detail="display_name is required."))
-    if not DISPLAY_NAME_RE.match(display_name) or len(display_name) > 64:
-        return Status(
-            400,
-            ErrorOut(detail="Display name must contain only letters and spaces (max 64 chars)."),
-        )
+    name_error = validate_display_name(display_name)
+    if name_error:
+        return Status(400, ErrorOut(detail=name_error))
 
     try:
         validated_phone = _validate_phone(payload.phone_number)

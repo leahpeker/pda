@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pda/models/event.dart';
+import 'package:pda/screens/calendar/calendar_nav_row.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 import 'package:pda/screens/calendar/week_view_wide.dart';
 import 'package:pda/screens/calendar/week_view_narrow.dart';
@@ -9,6 +10,7 @@ class WeekView extends StatefulWidget {
   final List<Event> events;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateChanged;
+  final VoidCallback onToday;
   final ValueChanged<DateTime>? onDayTapped;
   final ValueChanged<DateTime>? onDayLongPressed;
 
@@ -17,6 +19,7 @@ class WeekView extends StatefulWidget {
     required this.events,
     required this.selectedDate,
     required this.onDateChanged,
+    required this.onToday,
     this.onDayTapped,
     this.onDayLongPressed,
   });
@@ -71,7 +74,6 @@ class _WeekViewState extends State<WeekView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final days = _weekDays;
     final isWide = MediaQuery.sizeOf(context).width >= 600;
 
@@ -86,30 +88,13 @@ class _WeekViewState extends State<WeekView> {
       },
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: _goToPreviousWeek,
-                  tooltip: 'previous week',
-                ),
-                Expanded(
-                  child: Text(
-                    _weekRangeLabel(),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: _goToNextWeek,
-                  tooltip: 'next week',
-                ),
-              ],
-            ),
+          CalendarNavRow(
+            label: _weekRangeLabel(),
+            onPrev: _goToPreviousWeek,
+            onNext: _goToNextWeek,
+            onToday: widget.onToday,
+            prevTooltip: 'previous week',
+            nextTooltip: 'next week',
           ),
           Expanded(
             child: isWide

@@ -2,6 +2,7 @@
 
 import logging
 
+from community._shared import validate_display_name
 from config.audit import audit_log
 from config.media_proxy import media_path
 from ninja import File, Router
@@ -133,7 +134,10 @@ def update_me(request, payload: MePatchIn):
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
     changed = []
     if payload.display_name is not None:
-        user.display_name = payload.display_name
+        name_error = validate_display_name(payload.display_name)
+        if name_error:
+            return Status(400, ErrorOut(detail=name_error))
+        user.display_name = payload.display_name.strip()
         changed.append("display_name")
     if payload.email is not None:
         user.email = payload.email
@@ -220,6 +224,9 @@ def complete_onboarding(request, payload: OnboardingIn):
         return Status(400, ErrorOut(detail="New password must be at least 8 characters."))
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
     if payload.display_name is not None:
+        name_error = validate_display_name(payload.display_name)
+        if name_error:
+            return Status(400, ErrorOut(detail=name_error))
         user.display_name = payload.display_name.strip()
     if payload.email:
         user.email = payload.email
