@@ -95,15 +95,12 @@ class _LogoButton extends StatelessWidget {
         child: Semantics(
           button: true,
           label: 'PDA menu',
-          child: SizedBox(
-            height: 48,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Image.asset(
-                'assets/logo.png',
-                height: 20,
-                errorBuilder: (_, __, ___) => const SizedBox(height: 20),
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+            child: Image.asset(
+              'assets/logo.png',
+              height: 20,
+              errorBuilder: (_, __, ___) => const SizedBox(height: 20),
             ),
           ),
         ),

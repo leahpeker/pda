@@ -151,7 +151,9 @@ class _RSVPSectionState extends ConsumerState<RSVPSection> {
     final myGuest = currentUser == null
         ? null
         : guests.where((g) => g.userId == currentUser.id).firstOrNull;
-    if (myGuest != null && myGuest.hasPlusOne != _bringingPlusOne && !_loading) {
+    if (myGuest != null &&
+        myGuest.hasPlusOne != _bringingPlusOne &&
+        !_loading) {
       _bringingPlusOne = myGuest.hasPlusOne;
     }
 
