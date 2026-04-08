@@ -6,6 +6,7 @@ import logging
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.http import JsonResponse, StreamingHttpResponse
 
 logger = logging.getLogger("pda")
@@ -15,7 +16,7 @@ _HEARTBEAT_INTERVAL = 30  # seconds
 
 
 @sync_to_async
-def _get_user_from_token(token_str: str) -> object | None:
+def _get_user_from_token(token_str: str) -> AbstractBaseUser | None:
     """Validate a JWT access token and return the user, or None."""
     from django.contrib.auth import get_user_model
     from ninja_jwt.tokens import AccessToken

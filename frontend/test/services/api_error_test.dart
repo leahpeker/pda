@@ -116,10 +116,7 @@ void main() {
 
   group('ApiError.message', () {
     test('invalidCredentials has correct message', () {
-      expect(
-        const InvalidCredentials().message,
-        'wrong number or password',
-      );
+      expect(const InvalidCredentials().message, 'wrong number or password');
     });
 
     test('networkError has correct message', () {

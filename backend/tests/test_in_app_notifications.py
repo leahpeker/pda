@@ -404,6 +404,7 @@ class TestCreateJoinRequestNotifications:
         self._make_user_with_permission("+12025550205", PermissionKey.APPROVE_JOIN_REQUESTS)
         create_join_request_notifications("Luna Green")
         notif = Notification.objects.first()
+        assert notif is not None
         assert "Luna Green" in notif.message
 
     def test_no_error_when_no_recipients(self, db):

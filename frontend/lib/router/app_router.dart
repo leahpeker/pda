@@ -18,6 +18,7 @@ import 'package:pda/screens/faq_screen.dart';
 import 'package:pda/screens/guidelines_screen.dart';
 import 'package:pda/screens/event_detail_screen.dart';
 import 'package:pda/screens/donate_screen.dart';
+import 'package:pda/screens/install_app_screen.dart';
 import 'package:pda/screens/settings_screen.dart';
 import 'package:pda/screens/volunteer_screen.dart';
 import 'package:pda/screens/admin_screen.dart';
@@ -248,6 +249,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'donate',
         caseSensitive: false,
         builder: (_, __) => const DonateScreen(),
+      ),
+      GoRoute(
+        path: '/install',
+        name: 'install',
+        caseSensitive: false,
+        builder: (_, __) => const InstallAppScreen(),
       ),
       GoRoute(
         path: '/volunteer',

@@ -139,6 +139,14 @@ void _showPdaMenu(BuildContext context, User? user) {
                 context.go('/faq');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.install_mobile_outlined),
+              title: const Text('install app'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/install');
+              },
+            ),
             if (user != null)
               ListTile(
                 leading: const Icon(Icons.library_books_outlined),
