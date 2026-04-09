@@ -10,13 +10,11 @@ class ApprovalCredentialsDialog extends StatelessWidget {
   const ApprovalCredentialsDialog({
     super.key,
     required this.title,
-    required this.body,
     required this.magicLinkToken,
     this.phoneNumber,
   });
 
   final String title;
-  final String body;
   final String magicLinkToken;
   final String? phoneNumber;
 
@@ -33,19 +31,16 @@ class ApprovalCredentialsDialog extends StatelessWidget {
       title: Text(title),
       content: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(body),
-          const SizedBox(height: 16),
           _SendLinkButton(url: url, phoneNumber: phone),
+          const SizedBox(height: 8),
+          Text(
+            'link expires in 7 days',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('done'),
-        ),
-      ],
     );
   }
 }

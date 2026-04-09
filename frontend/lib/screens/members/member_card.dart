@@ -258,14 +258,10 @@ class MemberCard extends ConsumerWidget {
       final token = await notifier.generateMagicLink(user.id);
       _log.info('generate magic link succeeded for user ${user.id}');
       if (!context.mounted) return;
-      final name = user.displayName.isNotEmpty
-          ? user.displayName
-          : user.phoneNumber;
       showDialog<void>(
         context: context,
         builder: (_) => ApprovalCredentialsDialog(
           title: 'magic sign-in link',
-          body: 'share this login link with $name:',
           magicLinkToken: token,
           phoneNumber: user.phoneNumber,
         ),

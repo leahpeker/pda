@@ -205,8 +205,6 @@ class _SingleSuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName =
-        data['display_name'] as String? ?? data['phone_number'] as String;
     final phoneNumber = data['phone_number'] as String?;
     final token = data['magic_link_token'] as String;
     final url = '${Uri.base.origin}/magic-login/$token';
@@ -218,13 +216,16 @@ class _SingleSuccessView extends StatelessWidget {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('$displayName has been added — share their login link:'),
-        const SizedBox(height: 16),
         FilledButton(
           onPressed: () => _handleTap(context, phoneNumber, message),
           child: const Text('send magic link'),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'link expires in 7 days',
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
         ),
       ],
     );
