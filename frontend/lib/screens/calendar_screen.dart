@@ -10,8 +10,8 @@ import 'package:pda/screens/calendar/list_view.dart';
 import 'package:pda/screens/calendar/month_view.dart';
 import 'package:pda/screens/calendar/week_view.dart';
 import 'package:pda/screens/guest_add_event_dialog.dart';
-import 'package:pda/utils/create_datetime_poll.dart';
 import 'package:pda/utils/snackbar.dart';
+import 'package:pda/utils/submit_event.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 
 final _log = Logger('CalendarScreen');
@@ -70,24 +70,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (result == null) return;
 
     try {
-      final api = ref.read(apiClientProvider);
-      final response = await api.post(
-        '/api/community/events/',
-        data: result.data,
-      );
-      final eventId = (response.data as Map<String, dynamic>)['id'] as String;
-      if (result.photo != null) {
-        await uploadEventPhoto(ref, eventId, result.photo!);
-      }
-      if (result.datetimePollOptions.isNotEmpty) {
-        await createDatetimePoll(
-          ref: ref,
-          eventId: eventId,
-          eventTitle: result.data['title'] as String,
-          options: result.datetimePollOptions,
-        );
-      }
-      ref.invalidate(eventsProvider);
+      final eventId = await submitNewEvent(ref, result);
       _log.info('created event $eventId');
       if (mounted) {
         showSnackBar(context, 'event created 🌱');
@@ -113,11 +96,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     ref.listen(authProvider, (_, __) => ref.invalidate(eventsProvider));
 
     return AppScaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateEvent,
-        icon: const Icon(Icons.add, size: 18),
-        label: const Text('add event'),
-      ),
       child: Column(
         children: [
           _CalendarToolbar(selected: _view, onSelected: _onViewChanged),

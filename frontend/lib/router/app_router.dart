@@ -13,6 +13,7 @@ import 'package:pda/screens/join_screen.dart';
 import 'package:pda/screens/join_success_screen.dart';
 import 'package:pda/screens/faq_screen.dart';
 import 'package:pda/screens/guidelines_screen.dart';
+import 'package:pda/screens/add_event_screen.dart';
 import 'package:pda/screens/event_detail_screen.dart';
 import 'package:pda/screens/donate_screen.dart';
 import 'package:pda/screens/install_app_screen.dart';
@@ -399,6 +400,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: () =>
               survey_screen.SurveyScreen(slug: state.pathParameters['slug']!),
         ),
+      ),
+      GoRoute(
+        path: '/events/add',
+        name: 'add-event',
+        caseSensitive: false,
+        builder: (_, __) => const AddEventScreen(),
       ),
       GoRoute(
         path: '/events/:id',

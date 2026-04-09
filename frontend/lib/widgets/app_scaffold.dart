@@ -122,6 +122,14 @@ void _showPdaMenu(BuildContext context, User? user) {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.eco_outlined),
+              title: const Text('home'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/');
+              },
+            ),
             if (user != null)
               ListTile(
                 leading: const Icon(Icons.spa_outlined),
@@ -210,7 +218,7 @@ class _BottomNav extends StatelessWidget {
 
     int selectedIndex;
     if (isCalendar) {
-      selectedIndex = 1;
+      selectedIndex = 0;
     } else if (isProfile) {
       selectedIndex = 2;
     } else {
@@ -223,23 +231,23 @@ class _BottomNav extends StatelessWidget {
       onDestinationSelected: (index) {
         switch (index) {
           case 0:
-            context.go('/');
-          case 1:
             context.go('/calendar');
+          case 1:
+            context.go('/events/add');
           case 2:
             context.go('/profile');
         }
       },
       destinations: [
         const NavigationDestination(
-          icon: Icon(Icons.eco_outlined),
-          selectedIcon: Icon(Icons.eco),
-          label: 'home',
-        ),
-        const NavigationDestination(
           icon: Icon(Icons.calendar_month_outlined),
           selectedIcon: Icon(Icons.calendar_month),
           label: 'calendar',
+        ),
+        NavigationDestination(
+          icon: _addEventIcon(context),
+          selectedIcon: _addEventIcon(context),
+          label: 'add event',
         ),
         NavigationDestination(
           icon: _profileIcon(user, isProfile),
@@ -247,6 +255,19 @@ class _BottomNav extends StatelessWidget {
           label: 'profile',
         ),
       ],
+    );
+  }
+
+  static Widget _addEventIcon(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.add, size: 20, color: colorScheme.onPrimaryContainer),
     );
   }
 

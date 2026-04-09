@@ -432,14 +432,24 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
+        persistentFooterAlignment: AlignmentDirectional.centerEnd,
         persistentFooterButtons: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('cancel'),
-          ),
-          FilledButton(
-            onPressed: _submit,
-            child: Text(_isEdit ? 'save' : 'add'),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('cancel'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _submit,
+                  child: Text(_isEdit ? 'save' : 'add'),
+                ),
+              ],
+            ),
           ),
         ],
         body: SafeArea(

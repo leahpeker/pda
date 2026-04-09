@@ -24,6 +24,11 @@ void main() {
           builder: (_, __) => const SizedBox(),
         ),
         GoRoute(
+          path: '/events/add',
+          name: 'add-event',
+          builder: (_, __) => const SizedBox(),
+        ),
+        GoRoute(
           path: '/profile',
           name: 'profile',
           builder: (_, __) => const SizedBox(),
@@ -75,7 +80,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+    await tester.tap(find.byIcon(Icons.calendar_month));
     await tester.pumpAndSettle();
 
     expect(find.text('calendar screen'), findsOneWidget);
