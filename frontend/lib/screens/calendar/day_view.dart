@@ -200,6 +200,11 @@ class _DayEventCard extends StatelessWidget {
       excludeSemantics: true,
       child: InkWell(
         onTap: () => showEventDetail(context, event),
+        onHover: (hovering) {
+          if (hovering && event.photoUrl.isNotEmpty) {
+            precacheImage(NetworkImage(event.photoUrl), context);
+          }
+        },
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
         borderRadius: BorderRadius.circular(8),

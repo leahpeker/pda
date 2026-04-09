@@ -92,7 +92,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('login link requested — an admin will send it to you'),
+            content: Text(
+              'login link requested — an admin will send it to you',
+            ),
           ),
         );
       }
