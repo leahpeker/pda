@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:pda/config/api_config.dart';
 import 'package:pda/screens/calendar/event_form_models.dart';
 import 'package:pda/utils/validators.dart' as v;
 
@@ -43,13 +44,8 @@ class _EventFormLocationFieldState extends State<EventFormLocationField> {
       setState(() => _locationSearching = true);
       try {
         final resp = await Dio().get<Map<String, dynamic>>(
-          'https://photon.komoot.io/api/',
-          queryParameters: {
-            'q': query.trim(),
-            'limit': 5,
-            'lat': 40.7128, // bias results toward NYC
-            'lon': -74.006,
-          },
+          '$apiBaseUrl/api/community/geocode/',
+          queryParameters: {'q': query.trim(), 'limit': 5},
         );
         final features = (resp.data?['features'] as List<dynamic>?) ?? const [];
         if (!mounted) return;

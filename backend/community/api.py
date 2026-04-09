@@ -14,6 +14,7 @@ from community._event_helpers import (  # noqa: F401
 from community._event_schemas import EventPatchIn  # noqa: F401
 from community._events import router as events_router
 from community._feedback import router as feedback_router
+from community._geocode import router as geocode_router
 from community._guidelines import router as guidelines_router
 from community._home import router as home_router
 from community._join_form import router as join_form_router
@@ -38,3 +39,4 @@ router.add_router("", polls_router)
 router.add_router("", surveys_router)
 router.add_router("", surveys_public_router)
 router.add_router("", docs_router)
+router.add_router("", geocode_router)
