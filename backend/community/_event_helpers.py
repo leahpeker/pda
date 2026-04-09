@@ -141,6 +141,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         allow_plus_ones=event.allow_plus_ones,
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
         created_by_name=_get_creator_name(creator),
+        created_by_photo_url=media_path(creator.profile_photo) if creator else "",
         co_host_ids=[str(u.id) for u in co_hosts],
         co_host_names=[u.display_name or u.phone_number for u in co_hosts],
         co_host_photo_urls=[media_path(u.profile_photo) for u in co_hosts],

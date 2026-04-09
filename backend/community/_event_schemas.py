@@ -61,6 +61,7 @@ class EventOut(BaseModel):
     rsvp_enabled: bool = False
     created_by_id: str | None = None
     created_by_name: str | None = None
+    created_by_photo_url: str = ""
     co_host_ids: list[str] = []
     co_host_names: list[str] = []
     co_host_photo_urls: list[str] = []

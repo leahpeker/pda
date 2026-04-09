@@ -44,6 +44,7 @@ abstract class Event with _$Event {
     String? datetimePollSlug,
     String? createdById,
     String? createdByName,
+    @Default('') String createdByPhotoUrl,
     @Default([]) List<String> coHostIds,
     @Default([]) List<String> coHostNames,
     @Default([]) List<String> coHostPhotoUrls,

@@ -60,13 +60,12 @@ class EventMemberSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).value;
     if (user != null) {
-      // Build host list: creator first (no photo), then co-hosts (with photos)
       final hosts = <({String id, String name, String photoUrl})>[];
       if (event.createdByName != null) {
         hosts.add((
           id: event.createdById ?? '',
           name: event.createdByName!,
-          photoUrl: '',
+          photoUrl: event.createdByPhotoUrl,
         ));
       }
       for (var i = 0; i < event.coHostNames.length; i++) {
