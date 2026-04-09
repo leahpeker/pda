@@ -1,6 +1,6 @@
 class NotificationSseClient {
   NotificationSseClient({
-    required String token,
+    required Future<String?> Function() tokenProvider,
     required void Function() onNotification,
   });
 

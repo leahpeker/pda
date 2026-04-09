@@ -13,13 +13,13 @@ class NotificationSseClient {
   int _retryCount = 0;
   bool _closed = false;
 
-  final String _token;
+  final Future<String?> Function() _tokenProvider;
   final void Function() _onNotification;
 
   NotificationSseClient({
-    required String token,
+    required Future<String?> Function() tokenProvider,
     required void Function() onNotification,
-  }) : _token = token,
+  }) : _tokenProvider = tokenProvider,
        _onNotification = onNotification {
     _connect();
   }
@@ -28,30 +28,33 @@ class NotificationSseClient {
 
   void _connect() {
     if (_closed) return;
-    final url = '$apiBaseUrl/api/notifications/stream/?token=$_token';
-    _source = web.EventSource(url);
+    _tokenProvider().then((token) {
+      if (_closed || token == null) return;
+      final url = '$apiBaseUrl/api/notifications/stream/?token=$token';
+      _source = web.EventSource(url);
 
-    _source!.addEventListener(
-      'connected',
-      (web.Event _) {
-        _retryCount = 0;
-        _log.info('SSE connected');
-      }.toJS,
-    );
+      _source!.addEventListener(
+        'connected',
+        (web.Event _) {
+          _retryCount = 0;
+          _log.info('SSE connected');
+        }.toJS,
+      );
 
-    _source!.addEventListener(
-      'notification',
-      (web.Event _) {
-        _retryCount = 0;
-        _onNotification();
-      }.toJS,
-    );
+      _source!.addEventListener(
+        'notification',
+        (web.Event _) {
+          _retryCount = 0;
+          _onNotification();
+        }.toJS,
+      );
 
-    _source!.onerror = (web.Event _) {
-      _source?.close();
-      _source = null;
-      _scheduleReconnect();
-    }.toJS;
+      _source!.onerror = (web.Event _) {
+        _source?.close();
+        _source = null;
+        _scheduleReconnect();
+      }.toJS;
+    });
   }
 
   void _scheduleReconnect() {

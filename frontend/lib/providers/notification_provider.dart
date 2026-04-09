@@ -46,17 +46,13 @@ final unreadCountProvider = StreamProvider<int>((ref) async* {
     });
   }
 
-  // Attempt to connect SSE with the stored access token.
   final storage = ref.read(secureStorageProvider);
-  final token = await storage.getAccessToken();
-  if (token != null) {
-    sseClient = NotificationSseClient(
-      token: token,
-      onNotification: () {
-        if (!trigger.isClosed) trigger.add(null);
-      },
-    );
-  }
+  sseClient = NotificationSseClient(
+    tokenProvider: () => storage.getAccessToken(),
+    onNotification: () {
+      if (!trigger.isClosed) trigger.add(null);
+    },
+  );
 
   ref.onDispose(() {
     sseClient?.close();
