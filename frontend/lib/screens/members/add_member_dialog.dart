@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:pda/models/user.dart';
@@ -6,9 +7,7 @@ import 'package:pda/providers/user_management_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/launcher_stub.dart';
 import 'package:pda/utils/snackbar.dart';
-import 'package:pda/widgets/approval_credentials_dialog.dart';
 import 'package:pda/widgets/loading_button.dart';
-import 'package:flutter/services.dart';
 import 'bulk_add_form.dart';
 import 'single_add_form.dart';
 
@@ -222,32 +221,10 @@ class _SingleSuccessView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('$displayName has been added — share their login link:'),
-        const SizedBox(height: 12),
-        const Text(
-          'login link',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-        const SizedBox(height: 4),
-        MagicLinkField(url: url),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
+        const SizedBox(height: 16),
+        FilledButton(
           onPressed: () => _handleTap(context, phoneNumber, message),
-          icon: Icon(
-            phoneNumber != null
-                ? Icons.sms_outlined
-                : Icons.content_copy_outlined,
-            size: 16,
-          ),
-          label: Text(
-            phoneNumber != null
-                ? 'text welcome message'
-                : 'copy welcome message',
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'includes login link — expires in 7 days',
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+          child: const Text('send magic link'),
         ),
       ],
     );
@@ -265,12 +242,12 @@ class _SingleSuccessView extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: message));
         showSnackBar(
           context,
-          "couldn't open texting app — message copied instead",
+          "couldn't open texting app — link copied instead",
         );
       }
     } else {
       Clipboard.setData(ClipboardData(text: message));
-      showSnackBar(context, 'welcome message copied ✓');
+      showSnackBar(context, 'link copied ✓');
     }
   }
 }

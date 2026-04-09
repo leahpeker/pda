@@ -94,20 +94,6 @@ class UserManagementNotifier extends AsyncNotifier<void> {
     }
   }
 
-  Future<String> resetPassword(String userId) async {
-    final api = ref.read(apiClientProvider);
-    try {
-      final response = await api.post(
-        '/api/auth/users/$userId/reset-password/',
-      );
-      _log.info('reset password for user $userId');
-      return response.data['magic_link_token'] as String;
-    } catch (e, st) {
-      _log.warning('failed to reset password for user $userId', e, st);
-      rethrow;
-    }
-  }
-
   Future<String> generateMagicLink(String userId) async {
     final api = ref.read(apiClientProvider);
     try {

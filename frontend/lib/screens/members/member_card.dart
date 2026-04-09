@@ -158,11 +158,6 @@ class MemberCard extends ConsumerWidget {
                       onPressed: () =>
                           _handleGenerateMagicLink(context, notifier),
                     ),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.key_outlined, size: 16),
-                      label: const Text('Reset password'),
-                      onPressed: () => _handleResetPassword(context, notifier),
-                    ),
                     if (canManageUsers && !isOwnAccount)
                       OutlinedButton.icon(
                         icon: Icon(
@@ -282,22 +277,6 @@ class MemberCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleResetPassword(
-    BuildContext context,
-    UserManagementNotifier notifier,
-  ) async {
-    try {
-      final tempPassword = await notifier.resetPassword(user.id);
-      _log.info('reset password succeeded for user ${user.id}');
-      if (!context.mounted) return;
-      _showTempPasswordDialog(context, tempPassword);
-    } catch (e, st) {
-      _log.warning('failed to reset password for user ${user.id}', e, st);
-      if (!context.mounted) return;
-      showErrorSnackBar(context, ApiError.from(e).message);
-    }
-  }
-
   Future<void> _handleDelete(
     BuildContext context,
     UserManagementNotifier notifier,
@@ -381,21 +360,6 @@ class MemberCard extends ConsumerWidget {
         showErrorSnackBar(context, 'couldn\'t $action — try again');
       }
     }
-  }
-
-  void _showTempPasswordDialog(BuildContext context, String magicLinkToken) {
-    final name = user.displayName.isNotEmpty
-        ? user.displayName
-        : user.phoneNumber;
-    showDialog<void>(
-      context: context,
-      builder: (_) => ApprovalCredentialsDialog(
-        title: 'password reset',
-        body: 'share this login link with $name:',
-        magicLinkToken: magicLinkToken,
-        phoneNumber: user.phoneNumber,
-      ),
-    );
   }
 }
 
