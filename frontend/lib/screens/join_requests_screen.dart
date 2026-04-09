@@ -77,6 +77,7 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
       context: context,
       builder: (_) => ApprovalCredentialsDialog(
         title: '$displayName approved! 🎉',
+        body: 'share this login link with them:',
         magicLinkToken: magicLinkToken,
         phoneNumber: phoneNumber,
       ),

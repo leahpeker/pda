@@ -218,6 +218,8 @@ class _SingleSuccessView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        Text('${phoneNumber ?? 'member'} added 🌱'),
+        const SizedBox(height: 16),
         FilledButton(
           onPressed: () => _handleTap(context, phoneNumber, message),
           child: const Text('send magic link'),

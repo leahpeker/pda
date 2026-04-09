@@ -12,11 +12,13 @@ class ApprovalCredentialsDialog extends StatelessWidget {
     required this.title,
     required this.magicLinkToken,
     this.phoneNumber,
+    this.body,
   });
 
   final String title;
   final String magicLinkToken;
   final String? phoneNumber;
+  final String? body;
 
   String get _loginUrl {
     final origin = Uri.base.origin;
@@ -33,6 +35,7 @@ class ApprovalCredentialsDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          if (body != null) ...[Text(body!), const SizedBox(height: 16)],
           _SendLinkButton(url: url, phoneNumber: phone),
           const SizedBox(height: 8),
           Text(
@@ -41,6 +44,12 @@ class ApprovalCredentialsDialog extends StatelessWidget {
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('done'),
+        ),
+      ],
     );
   }
 }
