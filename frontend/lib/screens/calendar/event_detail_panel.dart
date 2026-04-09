@@ -16,6 +16,9 @@ export 'event_form_dialog.dart' show EventFormDialog, EventFormResult;
 /// Shows the event detail panel as a side panel (wide) or navigates to the
 /// full event page (narrow).
 void showEventDetail(BuildContext context, Event event) {
+  if (event.photoUrl.isNotEmpty) {
+    precacheImage(NetworkImage(event.photoUrl), context);
+  }
   final width = MediaQuery.sizeOf(context).width;
   if (width >= 720) {
     _showSidePanel(context, event);
@@ -288,7 +291,28 @@ class _EventPhoto extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.network(event.photoUrl, fit: BoxFit.contain),
+        child: Image.network(
+          event.photoUrl,
+          fit: BoxFit.contain,
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            if (wasSynchronouslyLoaded) return child;
+            return AnimatedOpacity(
+              opacity: frame == null ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              child: child,
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return AspectRatio(
+              aspectRatio: 16 / 9,
+              child: ColoredBox(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

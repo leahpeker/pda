@@ -15,27 +15,28 @@ sealed class ApiError {
       case DioExceptionType.receiveTimeout:
         return const NetworkError();
       case DioExceptionType.badResponse:
-        final statusCode = error.response?.statusCode;
-        if (statusCode == 401) return const InvalidCredentials();
-        if (statusCode == 409) {
-          final data = error.response?.data;
-          final detail = data is Map ? data['detail'] as String? : null;
-          if (detail == 'already_invited') return const AlreadyInvited();
-        }
-        if (statusCode == 400 || statusCode == 422) {
-          final data = error.response?.data;
-          final detail = data is Map ? data['detail'] as String? : null;
-          return ValidationError(
-            detail ?? 'Invalid request. Please check your input.',
-          );
-        }
-        if (statusCode != null && statusCode >= 500) {
-          return const ServerError();
-        }
-        return const UnknownError();
+        return _fromResponse(error.response);
       default:
         return const UnknownError();
     }
+  }
+
+  static ApiError _fromResponse(Response<dynamic>? response) {
+    final statusCode = response?.statusCode;
+    final data = response?.data;
+    final detail = data is Map ? data['detail'] as String? : null;
+
+    if (statusCode == 401) return const InvalidCredentials();
+    if (statusCode == 409 && detail == 'already_invited') {
+      return const AlreadyInvited();
+    }
+    if (statusCode == 400 || statusCode == 422) {
+      return ValidationError(
+        detail ?? 'Invalid request. Please check your input.',
+      );
+    }
+    if (statusCode != null && statusCode >= 500) return const ServerError();
+    return const UnknownError();
   }
 }
 
