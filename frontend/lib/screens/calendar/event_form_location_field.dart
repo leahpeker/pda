@@ -1,19 +1,20 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:pda/config/api_config.dart';
 import 'package:pda/screens/calendar/event_form_models.dart';
+import 'package:pda/services/api_client.dart';
 import 'package:pda/utils/validators.dart' as v;
 
 class EventFormLocationField extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<({double lat, double lon})> onLocationSelected;
+  final ApiClient apiClient;
 
   const EventFormLocationField({
     super.key,
     required this.controller,
     required this.onLocationSelected,
+    required this.apiClient,
   });
 
   @override
@@ -43,11 +44,14 @@ class _EventFormLocationFieldState extends State<EventFormLocationField> {
       if (!mounted) return;
       setState(() => _locationSearching = true);
       try {
-        final resp = await Dio().get<Map<String, dynamic>>(
-          '$apiBaseUrl/api/community/geocode/',
+        final resp = await widget.apiClient.get(
+          '/api/community/geocode/',
           queryParameters: {'q': query.trim(), 'limit': 5},
         );
-        final features = (resp.data?['features'] as List<dynamic>?) ?? const [];
+        final features =
+            ((resp.data as Map<String, dynamic>?)?['features']
+                as List<dynamic>?) ??
+            const [];
         if (!mounted) return;
         setState(() {
           _locationResults = features.map((f) {

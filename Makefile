@@ -40,7 +40,7 @@ install:
 	cd frontend && flutter pub get
 
 run:
-	cd backend && uv run python manage.py runserver 0.0.0.0:8000
+	cd backend && uv run uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --reload
 
 test:
 	cd backend && uv run python -m pytest tests/ -v

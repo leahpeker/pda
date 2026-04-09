@@ -13,6 +13,7 @@ import 'package:pda/screens/calendar/co_host_picker.dart';
 import 'package:pda/screens/calendar/event_form_collapsible_section.dart';
 import 'package:pda/screens/calendar/event_form_links_section.dart';
 import 'package:pda/screens/calendar/event_form_settings_section.dart';
+import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/photo_crop_dialog.dart';
 
@@ -347,6 +348,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
             const SizedBox(height: 20),
             EventFormLocationField(
               controller: _location,
+              apiClient: ref.read(apiClientProvider),
               onLocationSelected: (coords) => setState(() {
                 _latitude = coords.lat;
                 _longitude = coords.lon;
