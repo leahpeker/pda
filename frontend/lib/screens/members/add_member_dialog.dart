@@ -102,7 +102,7 @@ class _AddMemberDialogState extends ConsumerState<AddMemberDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('add member'),
+      title: const Text('add member', textAlign: TextAlign.center),
       content: SizedBox(
         width: 480,
         child: SingleChildScrollView(
