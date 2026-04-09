@@ -54,6 +54,7 @@ class _FeedbackButtonState extends ConsumerState<FeedbackButton> {
           ),
           Positioned(
             bottom: 80,
+            left: 16,
             right: 16,
             child: FeedbackForm(
               currentRoute: widget.currentRoute,

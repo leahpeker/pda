@@ -87,7 +87,7 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
     final isWide = MediaQuery.sizeOf(context).width >= 500;
 
     return SizedBox(
-      width: isWide ? 420 : double.infinity,
+      width: isWide ? 420 : null,
       child: Card(
         margin: const EdgeInsets.all(16),
         child: Padding(
