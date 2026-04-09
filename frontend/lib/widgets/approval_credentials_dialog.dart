@@ -30,7 +30,7 @@ class ApprovalCredentialsDialog extends StatelessWidget {
     final url = _loginUrl;
     final phone = phoneNumber;
     return AlertDialog(
-      title: Text(title),
+      title: Text(title, textAlign: TextAlign.center),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
