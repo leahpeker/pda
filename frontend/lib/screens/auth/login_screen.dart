@@ -77,6 +77,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _requestLoginLink() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final api = ref.read(apiClientProvider);
+      await api.post(
+        '/api/community/request-login-link/',
+        data: {'phone_number': _phoneNumber},
+      );
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('login link requested — an admin will send it to you'),
+          ),
+        );
+      }
+    } catch (e, st) {
+      _log.warning('request login link failed', e, st);
+      if (mounted) {
+        setState(() {
+          _error = ApiError.from(e).message;
+          _loading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _login() async {
     if (!_passwordFormKey.currentState!.validate()) return;
     setState(() {
@@ -128,6 +158,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final invited =
+        GoRouterState.of(context).uri.queryParameters['invited'] == 'true';
     return AppScaffold(
       child: Center(
         child: ConstrainedBox(
@@ -141,6 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onSubmit: _checkPhone,
                 loading: _loading,
                 error: _error,
+                invited: invited,
               ),
               _LoginStep.password => _PasswordStep(
                 formKey: _passwordFormKey,
@@ -151,6 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     setState(() => _obscurePassword = !_obscurePassword),
                 onSubmit: _login,
                 onBack: _resetToPhone,
+                onRequestLoginLink: _requestLoginLink,
                 loading: _loading,
                 error: _error,
               ),
@@ -170,6 +204,7 @@ class _PhoneStep extends StatelessWidget {
   final VoidCallback onSubmit;
   final bool loading;
   final String? error;
+  final bool invited;
 
   const _PhoneStep({
     required this.formKey,
@@ -177,6 +212,7 @@ class _PhoneStep extends StatelessWidget {
     required this.onSubmit,
     required this.loading,
     required this.error,
+    this.invited = false,
   });
 
   @override
@@ -198,6 +234,20 @@ class _PhoneStep extends StatelessWidget {
               style: TextStyle(color: Colors.grey[700]),
             ),
             const SizedBox(height: 32),
+            if (invited) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: const Text(
+                  "you've already been invited! enter your phone number to log in",
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             FocusTraversalOrder(
               order: const NumericFocusOrder(1),
               child: PhoneFormField(
@@ -248,6 +298,7 @@ class _PasswordStep extends StatelessWidget {
   final VoidCallback onToggleObscure;
   final VoidCallback onSubmit;
   final VoidCallback onBack;
+  final VoidCallback onRequestLoginLink;
   final bool loading;
   final String? error;
 
@@ -259,6 +310,7 @@ class _PasswordStep extends StatelessWidget {
     required this.onToggleObscure,
     required this.onSubmit,
     required this.onBack,
+    required this.onRequestLoginLink,
     required this.loading,
     required this.error,
   });
@@ -270,78 +322,90 @@ class _PasswordStep extends StatelessWidget {
       child: AutofillGroup(
         child: FocusTraversalGroup(
           policy: OrderedTraversalPolicy(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'welcome back!',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'pop in your password to get in',
-                style: TextStyle(color: Colors.grey[700]),
-              ),
-              const SizedBox(height: 32),
-              FocusTraversalOrder(
-                order: const NumericFocusOrder(1),
-                child: TextFormField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  autofillHints: const [AutofillHints.password],
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscure ? Icons.visibility_off : Icons.visibility,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'welcome back!',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'pop in your password to get in',
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 32),
+                FocusTraversalOrder(
+                  order: const NumericFocusOrder(1),
+                  child: TextFormField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    autofillHints: const [AutofillHints.password],
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscure ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        tooltip: obscure ? 'Show password' : 'Hide password',
+                        onPressed: onToggleObscure,
                       ),
-                      tooltip: obscure ? 'Show password' : 'Hide password',
-                      onPressed: onToggleObscure,
+                    ),
+                    obscureText: obscure,
+                    enableInteractiveSelection: true,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => loading ? null : onSubmit(),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
+                  ),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
-                  obscureText: obscure,
-                  enableInteractiveSelection: true,
-                  enableSuggestions: false,
-                  autocorrect: false,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => loading ? null : onSubmit(),
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                ],
+                const SizedBox(height: 24),
+                FocusTraversalOrder(
+                  order: const NumericFocusOrder(2),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: loading ? null : onSubmit,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: loading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text(
+                              'log in',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                    ),
+                  ),
                 ),
-              ),
-              if (error != null) ...[
                 const SizedBox(height: 16),
-                Text(
-                  error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                TextButton(
+                  onPressed: loading ? null : onRequestLoginLink,
+                  child: const Text('lost your login link? request a new one'),
+                ),
+                TextButton(
+                  onPressed: onBack,
+                  child: const Text('← use a different number'),
                 ),
               ],
-              const SizedBox(height: 24),
-              FocusTraversalOrder(
-                order: const NumericFocusOrder(2),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: loading ? null : onSubmit,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('log in', style: TextStyle(fontSize: 16)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: onBack,
-                child: const Text('← use a different number'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
