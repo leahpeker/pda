@@ -472,12 +472,14 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       title: Text(title),
       contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
       clipBehavior: Clip.none,
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: dialogWidth,
-          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+      content: SizedBox(
+        width: dialogWidth,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+          ),
+          child: _buildFormBody(dateFmt),
         ),
-        child: _buildFormBody(dateFmt),
       ),
       actions: [
         TextButton(
