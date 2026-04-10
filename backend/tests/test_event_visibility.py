@@ -176,19 +176,21 @@ class TestInviteOnlyVisibility:
         ids = [e["id"] for e in response.json()]
         assert str(event.id) in ids
 
-    def test_get_event_404_for_non_invited(self, api_client, test_user):
+    def test_get_event_403_for_non_invited(self, api_client, test_user):
         creator = self._make_user("+12025550206", "Creator6")
         event = self._make_invite_only_event(creator)
         response = api_client.get(
             f"/api/community/events/{event.id}/", **self._auth_headers(test_user)
         )
-        assert response.status_code == 404
+        assert response.status_code == 403
+        assert response.json()["detail"] == "This event is invite only."
 
-    def test_get_event_404_for_anonymous(self, api_client, test_user):
+    def test_get_event_403_for_anonymous(self, api_client, test_user):
         creator = self._make_user("+12025550207", "Creator7")
         event = self._make_invite_only_event(creator)
         response = api_client.get(f"/api/community/events/{event.id}/")
-        assert response.status_code == 404
+        assert response.status_code == 403
+        assert response.json()["detail"] == "This event is invite only."
 
     def test_get_event_200_for_invited_user(self, api_client, test_user):
         creator = self._make_user("+12025550208", "Creator8")

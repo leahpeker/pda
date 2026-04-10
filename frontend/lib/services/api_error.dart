@@ -27,6 +27,9 @@ sealed class ApiError {
     final detail = data is Map ? data['detail'] as String? : null;
 
     if (statusCode == 401) return const InvalidCredentials();
+    if (statusCode == 403)
+      return ForbiddenError(detail ?? "you don't have access");
+    if (statusCode == 404) return const NotFoundError();
     if (statusCode == 409 && detail == 'already_invited') {
       return const AlreadyInvited();
     }
@@ -90,6 +93,22 @@ class ServerError extends ApiError {
 
   @override
   String get message => 'Server error — please try again later.';
+}
+
+class ForbiddenError extends ApiError {
+  const ForbiddenError(this.detail);
+
+  final String detail;
+
+  @override
+  String get message => detail;
+}
+
+class NotFoundError extends ApiError {
+  const NotFoundError();
+
+  @override
+  String get message => 'not found';
 }
 
 class UnknownError extends ApiError {

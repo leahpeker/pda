@@ -128,7 +128,11 @@ def list_events(request):
     )
 
 
-@router.get("/events/{event_id}/", response={200: EventOut, 404: ErrorOut}, auth=_optional_jwt)
+@router.get(
+    "/events/{event_id}/",
+    response={200: EventOut, 403: ErrorOut, 404: ErrorOut},
+    auth=_optional_jwt,
+)
 def get_event(request, event_id: UUID):
     try:
         event = (
@@ -149,7 +153,7 @@ def get_event(request, event_id: UUID):
         co_host_ids = {str(c.id) for c in event.co_hosts.all()}
         invited_user_ids = {str(u.id) for u in event.invited_users.all()}
         if not _can_see_invite_only(auth_user, co_host_ids, invited_user_ids, event.created_by_id):
-            return Status(404, ErrorOut(detail="Event not found."))
+            return Status(403, ErrorOut(detail="This event is invite only."))
     return Status(200, _event_out(event, request.auth))
 
 
