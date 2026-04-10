@@ -22,13 +22,38 @@ void main() {
       expect(find.textContaining('what happened'), findsOneWidget);
     });
 
-    testWidgets('shows metadata section with current route', (tester) async {
+    testWidgets('does not show metadata chips to user', (tester) async {
+      await tester.pumpWidget(
+        _app(FeedbackForm(currentRoute: '/donate', onClose: () {})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Chip), findsNothing);
+      expect(find.textContaining('/donate'), findsNothing);
+    });
+
+    testWidgets('title field has maxLength 200', (tester) async {
       await tester.pumpWidget(
         _app(FeedbackForm(currentRoute: '/calendar', onClose: () {})),
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('/calendar'), findsOneWidget);
+      final titleField = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .first;
+      expect(titleField.maxLength, 200);
+    });
+
+    testWidgets('description field has maxLength 10000', (tester) async {
+      await tester.pumpWidget(
+        _app(FeedbackForm(currentRoute: '/calendar', onClose: () {})),
+      );
+      await tester.pumpAndSettle();
+
+      final descField = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .elementAt(1);
+      expect(descField.maxLength, 10000);
     });
 
     testWidgets('calls onClose when cancel is tapped', (tester) async {

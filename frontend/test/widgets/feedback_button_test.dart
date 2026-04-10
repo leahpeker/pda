@@ -54,6 +54,29 @@ void main() {
     });
   });
 
+  testWidgets('form adjusts position when keyboard is visible', (tester) async {
+    // Simulate keyboard by setting viewInsets
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
+          home: const MediaQuery(
+            data: MediaQueryData(viewInsets: EdgeInsets.only(bottom: 300)),
+            child: Scaffold(body: FeedbackButton(currentRoute: '/calendar')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Open the form
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    // The form should still be visible (not hidden behind keyboard)
+    expect(find.textContaining('report a bug'), findsOneWidget);
+  });
+
   test('enableFeedback defaults to false', () {
     // Compile-time const — in test builds without --dart-define, should be false
     expect(enableFeedback, isFalse);

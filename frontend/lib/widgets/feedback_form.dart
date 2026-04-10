@@ -161,8 +161,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
                     ]),
                     textInputAction: TextInputAction.newline,
                   ),
-                  const SizedBox(height: 16),
-                  _MetadataSection(route: widget.currentRoute),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -192,32 +190,6 @@ class _FeedbackFormState extends ConsumerState<FeedbackForm> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _MetadataSection extends StatelessWidget {
-  final String route;
-
-  const _MetadataSection({required this.route});
-
-  @override
-  Widget build(BuildContext context) {
-    final chips = <String>[if (route.isNotEmpty) route];
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
-      children: chips
-          .map(
-            (label) => Chip(
-              label: Text(label, style: const TextStyle(fontSize: 12)),
-              visualDensity: VisualDensity.compact,
-            ),
-          )
-          .toList(),
     );
   }
 }
