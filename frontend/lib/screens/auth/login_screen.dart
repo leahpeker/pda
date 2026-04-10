@@ -285,6 +285,11 @@ class _PhoneStep extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => context.go('/join'),
+              child: const Text('not a member yet? request to join'),
+            ),
           ],
         ),
       ),
@@ -400,7 +405,9 @@ class _PasswordStep extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: loading ? null : onRequestLoginLink,
-                  child: const Text('forgot your password? request a magic login link'),
+                  child: const Text(
+                    'forgot your password? request a magic login link',
+                  ),
                 ),
                 TextButton(
                   onPressed: onBack,

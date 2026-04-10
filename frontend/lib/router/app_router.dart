@@ -95,6 +95,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/events/manage' ||
           loc == '/events/mine' ||
           loc == '/settings' ||
+          loc == '/profile' ||
           loc == '/volunteer' ||
           loc == '/admin' ||
           loc == '/admin/join-form' ||
