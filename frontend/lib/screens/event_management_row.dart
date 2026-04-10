@@ -284,7 +284,7 @@ class _HostsLine extends StatelessWidget {
 
     if (names.isEmpty) return const SizedBox.shrink();
 
-    final c = color ?? Colors.grey;
+    final c = color ?? Theme.of(context).colorScheme.onSurfaceVariant;
 
     return Row(
       children: [
