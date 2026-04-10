@@ -220,9 +220,19 @@ class _SingleSuccessView extends StatelessWidget {
       children: [
         Text('${phoneNumber ?? 'member'} added 🌱'),
         const SizedBox(height: 16),
-        FilledButton(
-          onPressed: () => _handleTap(context, phoneNumber, message),
-          child: const Text('send magic link'),
+        FilledButton.icon(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: url));
+            showSnackBar(context, 'link copied ✓');
+          },
+          icon: const Icon(Icons.copy, size: 16),
+          label: const Text('copy link'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () => _handleSend(context, phoneNumber, message),
+          icon: const Icon(Icons.send, size: 16),
+          label: const Text('send message'),
         ),
         const SizedBox(height: 8),
         Text(
@@ -233,7 +243,7 @@ class _SingleSuccessView extends StatelessWidget {
     );
   }
 
-  Future<void> _handleTap(
+  Future<void> _handleSend(
     BuildContext context,
     String? phoneNumber,
     String message,
@@ -245,12 +255,12 @@ class _SingleSuccessView extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: message));
         showSnackBar(
           context,
-          "couldn't open texting app — link copied instead",
+          "couldn't open texting app — message copied instead",
         );
       }
     } else {
       Clipboard.setData(ClipboardData(text: message));
-      showSnackBar(context, 'link copied ✓');
+      showSnackBar(context, 'message copied ✓');
     }
   }
 }

@@ -400,7 +400,7 @@ class _PasswordStep extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: loading ? null : onRequestLoginLink,
-                  child: const Text('lost your login link? request a new one'),
+                  child: const Text('forgot your password? request a magic login link'),
                 ),
                 TextButton(
                   onPressed: onBack,

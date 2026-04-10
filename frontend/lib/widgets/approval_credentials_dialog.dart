@@ -36,7 +36,9 @@ class ApprovalCredentialsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (body != null) ...[Text(body!), const SizedBox(height: 16)],
-          _SendLinkButton(url: url, phoneNumber: phone),
+          _CopyLinkButton(url: url),
+          const SizedBox(height: 8),
+          _SendMessageButton(url: url, phoneNumber: phone),
           const SizedBox(height: 8),
           Text(
             'link expires in 7 days',
@@ -54,8 +56,26 @@ class ApprovalCredentialsDialog extends StatelessWidget {
   }
 }
 
-class _SendLinkButton extends StatelessWidget {
-  const _SendLinkButton({required this.url, this.phoneNumber});
+class _CopyLinkButton extends StatelessWidget {
+  const _CopyLinkButton({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: () {
+        Clipboard.setData(ClipboardData(text: url));
+        showSnackBar(context, 'link copied ✓');
+      },
+      icon: const Icon(Icons.copy, size: 16),
+      label: const Text('copy link'),
+    );
+  }
+}
+
+class _SendMessageButton extends StatelessWidget {
+  const _SendMessageButton({required this.url, this.phoneNumber});
 
   final String url;
   final String? phoneNumber;
@@ -75,20 +95,21 @@ class _SendLinkButton extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: _message));
         showSnackBar(
           context,
-          "couldn't open texting app — link copied instead",
+          "couldn't open texting app — message copied instead",
         );
       }
     } else {
       Clipboard.setData(ClipboardData(text: _message));
-      showSnackBar(context, 'link copied ✓');
+      showSnackBar(context, 'message copied ✓');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton(
+    return OutlinedButton.icon(
       onPressed: () => _handleTap(context),
-      child: const Text('send magic link'),
+      icon: const Icon(Icons.send, size: 16),
+      label: const Text('send message'),
     );
   }
 }
