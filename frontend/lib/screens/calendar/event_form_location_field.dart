@@ -73,14 +73,12 @@ class _EventFormLocationFieldState extends State<EventFormLocationField> {
         ? '$housenumber $street'
         : null;
     // Show business name as primary; fall back to street address.
-    final name =
-        placeName.isNotEmpty ? placeName : (streetAddress ?? '');
+    final name = placeName.isNotEmpty ? placeName : (streetAddress ?? '');
     // Subtitle: street address when business name is title, else city.
     final subtitle = (placeName.isNotEmpty && streetAddress != null)
         ? streetAddress
         : city;
-    final cityLabel =
-        subtitle != null && subtitle != name ? subtitle : null;
+    final cityLabel = subtitle != null && subtitle != name ? subtitle : null;
     final addressParts = <String>[
       if (placeName.isNotEmpty) placeName,
       if (streetAddress != null && streetAddress != placeName) streetAddress,
