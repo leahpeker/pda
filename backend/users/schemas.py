@@ -1,7 +1,8 @@
 from typing import Annotated
 
+from community._field_limits import FieldLimit
 from config.media_proxy import media_path
-from pydantic import BaseModel, BeforeValidator, EmailStr
+from pydantic import BaseModel, BeforeValidator, EmailStr, Field
 
 from users.models import User
 
@@ -16,8 +17,8 @@ OptionalEmail = Annotated[EmailStr | None, BeforeValidator(_empty_str_to_none)]
 
 
 class LoginIn(BaseModel):
-    phone_number: str
-    password: str
+    phone_number: str = Field(max_length=FieldLimit.PHONE)
+    password: str = Field(max_length=FieldLimit.PASSWORD)
 
 
 class TokenOut(BaseModel):
@@ -26,7 +27,7 @@ class TokenOut(BaseModel):
 
 
 class RefreshIn(BaseModel):
-    refresh: str
+    refresh: str = Field(max_length=500)
 
 
 class AccessOut(BaseModel):
@@ -84,8 +85,8 @@ class MemberProfileOut(BaseModel):
 
 
 class UserCreateIn(BaseModel):
-    phone_number: str
-    display_name: str = ""
+    phone_number: str = Field(max_length=FieldLimit.PHONE)
+    display_name: str = Field(default="", max_length=FieldLimit.DISPLAY_NAME)
     email: OptionalEmail = None
     role_id: str | None = None
 
@@ -116,14 +117,14 @@ class BulkUserCreateOut(BaseModel):
 
 
 class UserPatchIn(BaseModel):
-    phone_number: str | None = None
-    display_name: str | None = None
+    phone_number: str | None = Field(default=None, max_length=FieldLimit.PHONE)
+    display_name: str | None = Field(default=None, max_length=FieldLimit.DISPLAY_NAME)
     email: OptionalEmail = None
     is_paused: bool | None = None
 
 
 class MePatchIn(BaseModel):
-    display_name: str | None = None
+    display_name: str | None = Field(default=None, max_length=FieldLimit.DISPLAY_NAME)
     email: OptionalEmail = None
     needs_onboarding: bool | None = None
     show_phone: bool | None = None
@@ -131,8 +132,8 @@ class MePatchIn(BaseModel):
 
 
 class ChangePasswordIn(BaseModel):
-    current_password: str
-    new_password: str
+    current_password: str = Field(max_length=FieldLimit.PASSWORD)
+    new_password: str = Field(max_length=FieldLimit.PASSWORD)
 
 
 class UserRolesIn(BaseModel):
@@ -145,12 +146,12 @@ class ResetPasswordOut(BaseModel):
 
 
 class RoleIn(BaseModel):
-    name: str
+    name: str = Field(max_length=FieldLimit.ROLE_NAME)
     permissions: list[str] = []
 
 
 class RolePatchIn(BaseModel):
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=FieldLimit.ROLE_NAME)
     permissions: list[str] | None = None
 
 
@@ -159,8 +160,8 @@ class ErrorOut(BaseModel):
 
 
 class OnboardingIn(BaseModel):
-    new_password: str
-    display_name: str | None = None
+    new_password: str = Field(max_length=FieldLimit.PASSWORD)
+    display_name: str | None = Field(default=None, max_length=FieldLimit.DISPLAY_NAME)
     email: OptionalEmail = None
 
 

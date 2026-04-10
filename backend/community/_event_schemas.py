@@ -2,8 +2,9 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from community._field_limits import FieldLimit
 from community.models import EventType, InvitePermission, PageVisibility
 
 
@@ -84,56 +85,58 @@ class EventOut(BaseModel):
 
 
 class RSVPIn(BaseModel):
-    status: str
+    status: str = Field(max_length=FieldLimit.CHOICE)
     has_plus_one: bool = False
 
 
 class EventIn(BaseModel):
-    title: str
-    description: str = ""
+    title: str = Field(max_length=FieldLimit.TITLE)
+    description: str = Field(default="", max_length=FieldLimit.DESCRIPTION)
     start_datetime: datetime
     end_datetime: datetime | None = None
-    location: str = ""
+    location: str = Field(default="", max_length=FieldLimit.SHORT_TEXT)
     latitude: float | None = None
     longitude: float | None = None
-    whatsapp_link: str = ""
-    partiful_link: str = ""
-    other_link: str = ""
-    price: str = ""
-    venmo_link: str = ""
-    cashapp_link: str = ""
-    zelle_info: str = ""
+    whatsapp_link: str = Field(default="", max_length=FieldLimit.URL)
+    partiful_link: str = Field(default="", max_length=FieldLimit.URL)
+    other_link: str = Field(default="", max_length=FieldLimit.URL)
+    price: str = Field(default="", max_length=FieldLimit.SHORT_TEXT)
+    venmo_link: str = Field(default="", max_length=FieldLimit.PAYMENT_HANDLE)
+    cashapp_link: str = Field(default="", max_length=FieldLimit.PAYMENT_HANDLE)
+    zelle_info: str = Field(default="", max_length=FieldLimit.SHORT_TEXT)
     rsvp_enabled: bool = False
     datetime_tbd: bool = False
     allow_plus_ones: bool = False
-    event_type: str = EventType.COMMUNITY
-    visibility: str = PageVisibility.PUBLIC
-    invite_permission: str = InvitePermission.ALL_MEMBERS
+    event_type: str = Field(default=EventType.COMMUNITY, max_length=FieldLimit.CHOICE)
+    visibility: str = Field(default=PageVisibility.PUBLIC, max_length=FieldLimit.CHOICE)
+    invite_permission: str = Field(
+        default=InvitePermission.ALL_MEMBERS, max_length=FieldLimit.CHOICE
+    )
     co_host_ids: list[str] = []
     invited_user_ids: list[str] = []
 
 
 class EventPatchIn(BaseModel):
-    title: str | None = None
-    description: str | None = None
+    title: str | None = Field(default=None, max_length=FieldLimit.TITLE)
+    description: str | None = Field(default=None, max_length=FieldLimit.DESCRIPTION)
     start_datetime: datetime | None = None
     end_datetime: datetime | None = None
-    location: str | None = None
+    location: str | None = Field(default=None, max_length=FieldLimit.SHORT_TEXT)
     latitude: float | None = None
     longitude: float | None = None
-    whatsapp_link: str | None = None
-    partiful_link: str | None = None
-    other_link: str | None = None
-    price: str | None = None
-    venmo_link: str | None = None
-    cashapp_link: str | None = None
-    zelle_info: str | None = None
+    whatsapp_link: str | None = Field(default=None, max_length=FieldLimit.URL)
+    partiful_link: str | None = Field(default=None, max_length=FieldLimit.URL)
+    other_link: str | None = Field(default=None, max_length=FieldLimit.URL)
+    price: str | None = Field(default=None, max_length=FieldLimit.SHORT_TEXT)
+    venmo_link: str | None = Field(default=None, max_length=FieldLimit.PAYMENT_HANDLE)
+    cashapp_link: str | None = Field(default=None, max_length=FieldLimit.PAYMENT_HANDLE)
+    zelle_info: str | None = Field(default=None, max_length=FieldLimit.SHORT_TEXT)
     rsvp_enabled: bool | None = None
     datetime_tbd: bool | None = None
     allow_plus_ones: bool | None = None
-    event_type: str | None = None
-    visibility: str | None = None
-    invite_permission: str | None = None
+    event_type: str | None = Field(default=None, max_length=FieldLimit.CHOICE)
+    visibility: str | None = Field(default=None, max_length=FieldLimit.CHOICE)
+    invite_permission: str | None = Field(default=None, max_length=FieldLimit.CHOICE)
     co_host_ids: list[str] | None = None
     invited_user_ids: list[str] | None = None
 
