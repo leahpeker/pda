@@ -61,14 +61,26 @@ class _EventFormLocationFieldState extends State<EventFormLocationField> {
             final street = props['street'] as String?;
             final placeName = props['name'] as String? ?? '';
             final city = props['city'] as String?;
-            // Prefer street address over place name when available.
-            final name = (housenumber != null && street != null)
+            final streetAddress = (housenumber != null && street != null)
                 ? '$housenumber $street'
-                : placeName;
-            final cityLabel = city != null && city != name ? city : null;
+                : null;
+            // Show business name as primary; fall back to street address.
+            final name = placeName.isNotEmpty
+                ? placeName
+                : (streetAddress ?? '');
+            // Subtitle: street address when business name is title, else city.
+            final subtitle = (placeName.isNotEmpty && streetAddress != null)
+                ? streetAddress
+                : city;
+            final cityLabel = subtitle != null && subtitle != name
+                ? subtitle
+                : null;
             final addressParts = <String>[
-              if (name.isNotEmpty) name,
-              if (cityLabel != null) cityLabel,
+              if (placeName.isNotEmpty) placeName,
+              if (streetAddress != null && streetAddress != placeName)
+                streetAddress,
+              if (city != null && city != placeName && city != streetAddress)
+                city,
             ];
             return EventPhotonResult(
               name: name,

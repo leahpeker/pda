@@ -26,17 +26,20 @@ sealed class ApiError {
     final data = response?.data;
     final detail = data is Map ? data['detail'] as String? : null;
 
-    if (statusCode == 401) return const InvalidCredentials();
-    if (statusCode == 409 && detail == 'already_invited') {
-      return const AlreadyInvited();
-    }
-    if (statusCode == 400 || statusCode == 422) {
-      return ValidationError(
+    return switch (statusCode) {
+      401 => const InvalidCredentials(),
+      403 => ForbiddenError(detail ?? "you don't have access"),
+      404 => const NotFoundError(),
+      409 when detail == 'already_invited' => const AlreadyInvited(),
+      429 => RateLimited(
+        detail ?? "you're doing that too fast — try again in a bit",
+      ),
+      400 || 422 => ValidationError(
         detail ?? 'Invalid request. Please check your input.',
-      );
-    }
-    if (statusCode != null && statusCode >= 500) return const ServerError();
-    return const UnknownError();
+      ),
+      _ when statusCode != null && statusCode >= 500 => const ServerError(),
+      _ => const UnknownError(),
+    };
   }
 }
 
@@ -63,6 +66,15 @@ class ValidationError extends ApiError {
   String get message => detail;
 }
 
+class RateLimited extends ApiError {
+  const RateLimited(this.detail);
+
+  final String detail;
+
+  @override
+  String get message => detail;
+}
+
 class NetworkError extends ApiError {
   const NetworkError();
 
@@ -76,6 +88,22 @@ class ServerError extends ApiError {
 
   @override
   String get message => 'Server error — please try again later.';
+}
+
+class ForbiddenError extends ApiError {
+  const ForbiddenError(this.detail);
+
+  final String detail;
+
+  @override
+  String get message => detail;
+}
+
+class NotFoundError extends ApiError {
+  const NotFoundError();
+
+  @override
+  String get message => 'not found';
 }
 
 class UnknownError extends ApiError {

@@ -6,6 +6,7 @@ from uuid import UUID
 
 from config.audit import audit_log
 from config.media_proxy import media_path
+from config.ratelimit import rate_limit
 from django.db.models import Q
 from django.utils import timezone
 from ninja import File, Router
@@ -127,7 +128,11 @@ def list_events(request):
     )
 
 
-@router.get("/events/{event_id}/", response={200: EventOut, 404: ErrorOut}, auth=_optional_jwt)
+@router.get(
+    "/events/{event_id}/",
+    response={200: EventOut, 403: ErrorOut, 404: ErrorOut},
+    auth=_optional_jwt,
+)
 def get_event(request, event_id: UUID):
     try:
         event = (
@@ -148,11 +153,16 @@ def get_event(request, event_id: UUID):
         co_host_ids = {str(c.id) for c in event.co_hosts.all()}
         invited_user_ids = {str(u.id) for u in event.invited_users.all()}
         if not _can_see_invite_only(auth_user, co_host_ids, invited_user_ids, event.created_by_id):
-            return Status(404, ErrorOut(detail="Event not found."))
+            return Status(403, ErrorOut(detail="This event is invite only."))
     return Status(200, _event_out(event, request.auth))
 
 
-@router.post("/events/", response={201: EventOut, 400: ErrorOut, 403: ErrorOut}, auth=JWTAuth())
+@router.post(
+    "/events/",
+    response={201: EventOut, 400: ErrorOut, 403: ErrorOut, 429: ErrorOut},
+    auth=JWTAuth(),
+)
+@rate_limit(key_func=lambda r: str(r.auth.pk), rate="10/d")
 def create_event(request, payload: EventIn):
     # Any authenticated member can create community events.
     # Official events require tag_official_event permission.
@@ -338,9 +348,10 @@ def delete_event(request, event_id: UUID):
 
 @router.post(
     "/events/{event_id}/photo/",
-    response={200: EventOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
+    response={200: EventOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut, 429: ErrorOut},
     auth=JWTAuth(),
 )
+@rate_limit(key_func=lambda r: str(r.auth.pk), rate="20/h")
 def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...)):  # ty: ignore[call-non-callable]
     if photo.content_type not in _ALLOWED_IMAGE_TYPES:
         return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
@@ -410,9 +421,10 @@ def delete_event_photo(request, event_id: UUID):
 
 @router.post(
     "/events/{event_id}/rsvp/",
-    response={200: EventOut, 400: ErrorOut, 404: ErrorOut},
+    response={200: EventOut, 400: ErrorOut, 404: ErrorOut, 429: ErrorOut},
     auth=JWTAuth(),
 )
+@rate_limit(key_func=lambda r: str(r.auth.pk), rate="30/m")
 def upsert_rsvp(request, event_id: UUID, payload: RSVPIn):
     try:
         event = (

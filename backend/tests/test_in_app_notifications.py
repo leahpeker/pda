@@ -354,7 +354,7 @@ class TestCanSeeInvited:
             content_type="application/json",
             **_auth_headers(another_user),
         )
-        assert response.status_code == 404
+        assert response.status_code == 403
 
 
 # ─── Join Request Notification Tests ─────────────────────────────────────────
