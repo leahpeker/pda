@@ -223,7 +223,7 @@ class _BuilderBodyState extends ConsumerState<_BuilderBody> {
                       final link = Uri.base
                           .replace(
                             path: '/surveys/${widget.survey.slug}',
-                            query: '',
+                            query: null,
                           )
                           .toString();
                       shareUrl(link, subject: widget.survey.title);

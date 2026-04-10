@@ -226,7 +226,7 @@ class EventDetailContent extends ConsumerWidget {
                 icon: AppIcons.share,
                 onPressed: () {
                   final link = Uri.base
-                      .replace(path: '/events/${liveEvent.id}', query: '')
+                      .replace(path: '/events/${liveEvent.id}', query: null)
                       .toString();
                   shareUrl(link, subject: liveEvent.title);
                 },
