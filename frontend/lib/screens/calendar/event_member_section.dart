@@ -49,11 +49,13 @@ class EventSectionCard extends StatelessWidget {
 class EventMemberSection extends ConsumerWidget {
   final Event event;
   final String location;
+  final VoidCallback? onCancelled;
 
   const EventMemberSection({
     super.key,
     required this.event,
     required this.location,
+    this.onCancelled,
   });
 
   @override
@@ -253,7 +255,7 @@ class EventMemberSection extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 12),
-          EventAdminActions(event: event),
+          EventAdminActions(event: event, onCancelled: onCancelled),
         ],
       );
     }

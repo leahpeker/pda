@@ -37,7 +37,10 @@ void _showSidePanel(BuildContext context, Event event) {
         child: SizedBox(
           width: 420,
           height: double.infinity,
-          child: EventDetailContent(event: event),
+          child: EventDetailContent(
+            event: event,
+            onCancelled: () => Navigator.of(ctx).pop(),
+          ),
         ),
       ),
     ),
@@ -81,12 +84,14 @@ class EventDetailContent extends ConsumerWidget {
   final Event event;
   final ScrollController? scrollController;
   final bool fullPage;
+  final VoidCallback? onCancelled;
 
   const EventDetailContent({
     super.key,
     required this.event,
     this.scrollController,
     this.fullPage = false,
+    this.onCancelled,
   });
 
   @override
@@ -296,7 +301,11 @@ class EventDetailContent extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 12),
-          EventMemberSection(event: liveEvent, location: liveEvent.location),
+          EventMemberSection(
+            event: liveEvent,
+            location: liveEvent.location,
+            onCancelled: onCancelled,
+          ),
         ],
       ),
     );

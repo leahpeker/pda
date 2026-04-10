@@ -19,8 +19,9 @@ final _log = Logger('EventLoginGate');
 /// login/join prompt for unauthenticated visitors.
 class EventAdminActions extends ConsumerStatefulWidget {
   final Event event;
+  final VoidCallback? onCancelled;
 
-  const EventAdminActions({super.key, required this.event});
+  const EventAdminActions({super.key, required this.event, this.onCancelled});
 
   @override
   ConsumerState<EventAdminActions> createState() => _EventAdminActionsState();
@@ -62,7 +63,10 @@ class _EventAdminActionsState extends ConsumerState<EventAdminActions> {
       ref.invalidate(cancelledEventsProvider);
       ref.invalidate(eventDetailProvider(widget.event.id));
       _log.info('cancelled event ${widget.event.id}');
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        showSnackBar(context, 'event cancelled');
+        widget.onCancelled?.call();
+      }
     } catch (e, st) {
       _log.warning('failed to cancel event', e, st);
       if (mounted) {

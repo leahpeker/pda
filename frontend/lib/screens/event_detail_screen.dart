@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
 import 'package:pda/services/api_error.dart';
@@ -27,7 +28,12 @@ class EventDetailScreen extends ConsumerWidget {
           };
           return Center(child: Text(message));
         },
-        data: (event) => EventDetailContent(event: event, fullPage: true),
+        data: (event) => EventDetailContent(
+          event: event,
+          fullPage: true,
+          onCancelled: () =>
+              context.canPop() ? context.pop() : context.go('/events/mine'),
+        ),
       ),
     );
   }
