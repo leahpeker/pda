@@ -7,6 +7,7 @@ import 'package:pda/providers/event_provider.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/config/constants.dart';
 import 'rsvp_guest_list.dart';
+import 'rsvp_toggle_button.dart';
 
 final _log = Logger('RSVP');
 
@@ -99,63 +100,99 @@ class _RSVPSectionState extends ConsumerState<RSVPSection> {
     required String? myRsvp,
     required ColorScheme cs,
     required bool enabled,
+    required bool atCapacity,
   }) {
+    final String goingLabel;
+    final IconData goingIcon;
+    final VoidCallback goingTap;
+
+    if (myRsvp == RsvpStatus.waitlisted) {
+      goingLabel = 'leave waitlist';
+      goingIcon = Icons.hourglass_empty_outlined;
+      goingTap = _removeRsvp;
+    } else if (atCapacity && myRsvp != RsvpStatus.attending) {
+      goingLabel = 'join waitlist';
+      goingIcon = Icons.hourglass_empty_outlined;
+      goingTap = () => _setRsvp(RsvpStatus.attending);
+    } else if (myRsvp == RsvpStatus.attending) {
+      goingLabel = "i'm going";
+      goingIcon = Icons.sentiment_very_satisfied_outlined;
+      goingTap = _removeRsvp;
+    } else {
+      goingLabel = "i'm going";
+      goingIcon = Icons.sentiment_very_satisfied_outlined;
+      goingTap = () => _setRsvp(RsvpStatus.attending);
+    }
+
     return Opacity(
       opacity: _loading ? 0.5 : 1.0,
       child: Row(
         spacing: 8,
         children: [
           Expanded(
-            child: _RsvpToggleButton(
-              label: "i'm going",
-              icon: Icons.sentiment_very_satisfied_outlined,
+            child: RsvpToggleButton(
+              label: goingLabel,
+              icon: goingIcon,
               activeColor: cs.primary,
               isActive: myRsvp == RsvpStatus.attending,
               enabled: enabled,
-              onTap: () => myRsvp == RsvpStatus.attending
-                  ? _removeRsvp()
-                  : _setRsvp(RsvpStatus.attending),
+              onTap: goingTap,
             ),
           ),
-          Expanded(
-            child: _RsvpToggleButton(
-              label: 'maybe',
-              icon: Icons.sentiment_neutral_outlined,
-              activeColor: cs.tertiary,
-              isActive: myRsvp == RsvpStatus.maybe,
-              enabled: enabled,
-              onTap: () => myRsvp == RsvpStatus.maybe
-                  ? _removeRsvp()
-                  : _confirmAndSetRsvp(RsvpStatus.maybe, 'maybe'),
+          if (myRsvp != RsvpStatus.waitlisted) ...[
+            Expanded(
+              child: RsvpToggleButton(
+                label: 'maybe',
+                icon: Icons.sentiment_neutral_outlined,
+                activeColor: cs.tertiary,
+                isActive: myRsvp == RsvpStatus.maybe,
+                enabled: enabled,
+                onTap: () => myRsvp == RsvpStatus.maybe
+                    ? _removeRsvp()
+                    : _confirmAndSetRsvp(RsvpStatus.maybe, 'maybe'),
+              ),
             ),
-          ),
-          Expanded(
-            child: _RsvpToggleButton(
-              label: "can't make it",
-              icon: Icons.sentiment_dissatisfied_outlined,
-              activeColor: cs.error,
-              isActive: myRsvp == RsvpStatus.cantGo,
-              enabled: enabled,
-              onTap: () => myRsvp == RsvpStatus.cantGo
-                  ? _removeRsvp()
-                  : _confirmAndSetRsvp(RsvpStatus.cantGo, "can't make it"),
+            Expanded(
+              child: RsvpToggleButton(
+                label: "can't make it",
+                icon: Icons.sentiment_dissatisfied_outlined,
+                activeColor: cs.error,
+                isActive: myRsvp == RsvpStatus.cantGo,
+                enabled: enabled,
+                onTap: () => myRsvp == RsvpStatus.cantGo
+                    ? _removeRsvp()
+                    : _confirmAndSetRsvp(RsvpStatus.cantGo, "can't make it"),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  String _buildSummary(List guests) {
-    final attendingCount = guests
-        .where((g) => g.status == RsvpStatus.attending)
-        .fold(0, (sum, g) => sum + 1 + (g.hasPlusOne ? 1 : 0));
-    final maybeCount = guests
+  String _buildSummary(Event event) {
+    final attendingCount = event.attendingCount > 0
+        ? event.attendingCount
+        : event.guests
+              .where((g) => g.status == RsvpStatus.attending)
+              .fold(0, (sum, g) => sum + 1 + (g.hasPlusOne ? 1 : 0));
+    final maybeCount = event.guests
         .where((g) => g.status == RsvpStatus.maybe)
         .fold(0, (sum, g) => sum + 1 + (g.hasPlusOne ? 1 : 0));
+    final waitlistedCount = event.waitlistedCount > 0
+        ? event.waitlistedCount
+        : event.guests.where((g) => g.status == RsvpStatus.waitlisted).length;
+
+    final goingPart = event.maxAttendees != null
+        ? '$attendingCount / ${event.maxAttendees} going'
+        : attendingCount > 0
+        ? '$attendingCount going'
+        : null;
+
     final parts = [
-      if (attendingCount > 0) '$attendingCount going',
+      if (goingPart != null) goingPart,
       if (maybeCount > 0) '$maybeCount maybe',
+      if (waitlistedCount > 0) '$waitlistedCount waitlisted',
     ];
     return parts.join(' · ');
   }
@@ -184,34 +221,79 @@ class _RSVPSectionState extends ConsumerState<RSVPSection> {
     );
   }
 
+  Widget? _buildStatusBanner({
+    required bool isCancelled,
+    required bool isPastForUser,
+    required ColorScheme cs,
+  }) {
+    if (isCancelled) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(
+          'this event has been cancelled',
+          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+        ),
+      );
+    }
+    if (isPastForUser) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(
+          'rsvps are closed for past events',
+          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+        ),
+      );
+    }
+    return null;
+  }
+
+  bool _isCoHost(user, Event event) {
+    if (user == null) return false;
+    return event.coHostIds.contains(user.id) || event.createdById == user.id;
+  }
+
+  void _syncPlusOneFromGuests(List<EventGuest> guests, String? userId) {
+    if (userId == null || _loading) return;
+    final myGuest = guests.where((g) => g.userId == userId).firstOrNull;
+    if (myGuest != null && myGuest.hasPlusOne != _bringingPlusOne) {
+      _bringingPlusOne = myGuest.hasPlusOne;
+    }
+  }
+
+  bool _showPlusOne(Event event, String? myRsvp) {
+    if (!event.allowPlusOnes) return false;
+    if (myRsvp == RsvpStatus.waitlisted) return false;
+    return myRsvp == RsvpStatus.attending || myRsvp == RsvpStatus.maybe;
+  }
+
+  bool _atCapacity(Event event) {
+    if (event.maxAttendees == null) return false;
+    return event.attendingCount >= event.maxAttendees!;
+  }
+
+  bool _hasGuests(Event event) {
+    return event.guests.isNotEmpty || event.invitedUserNames.isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final liveEvent =
         ref.watch(eventDetailProvider(widget.event.id)).value ?? widget.event;
     final myRsvp = liveEvent.myRsvp;
-    final guests = liveEvent.guests;
-
     final currentUser = ref.watch(authProvider).value;
-    final isCoHost =
-        currentUser != null &&
-        (liveEvent.coHostIds.contains(currentUser.id) ||
-            liveEvent.createdById == currentUser.id);
+    final isCoHost = _isCoHost(currentUser, liveEvent);
 
-    // Sync +1 state from server data.
-    final myGuest = currentUser == null
-        ? null
-        : guests.where((g) => g.userId == currentUser.id).firstOrNull;
-    if (myGuest != null &&
-        myGuest.hasPlusOne != _bringingPlusOne &&
-        !_loading) {
-      _bringingPlusOne = myGuest.hasPlusOne;
-    }
+    _syncPlusOneFromGuests(liveEvent.guests, currentUser?.id);
 
-    final summary = _buildSummary(guests);
     final isPastForUser = liveEvent.isPast && !isCoHost;
     final isCancelled = liveEvent.status == EventStatus.cancelled;
-    final rsvpDisabled = !_loading && !isPastForUser && !isCancelled;
+    final summary = _buildSummary(liveEvent);
+    final statusBanner = _buildStatusBanner(
+      isCancelled: isCancelled,
+      isPastForUser: isPastForUser,
+      cs: cs,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -229,32 +311,29 @@ class _RSVPSectionState extends ConsumerState<RSVPSection> {
               textAlign: TextAlign.center,
             ),
           ),
-        if (isCancelled)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'this event has been cancelled',
-              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-            ),
-          )
-        else if (isPastForUser)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'rsvps are closed for past events',
-              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-            ),
+        if (statusBanner != null) statusBanner,
+        _buildToggleButtons(
+          myRsvp: myRsvp,
+          cs: cs,
+          enabled: !_loading && !isPastForUser && !isCancelled,
+          atCapacity: _atCapacity(liveEvent),
+        ),
+        if (myRsvp == RsvpStatus.waitlisted) ...[
+          const SizedBox(height: 10),
+          Text(
+            "you're on the waitlist — we'll let you know if a spot opens",
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            textAlign: TextAlign.center,
           ),
-        _buildToggleButtons(myRsvp: myRsvp, cs: cs, enabled: rsvpDisabled),
-        if (liveEvent.allowPlusOnes &&
-            (myRsvp == RsvpStatus.attending || myRsvp == RsvpStatus.maybe)) ...[
+        ],
+        if (_showPlusOne(liveEvent, myRsvp)) ...[
           const SizedBox(height: 12),
           _buildPlusOneButton(myRsvp!),
         ],
-        if (guests.isNotEmpty || liveEvent.invitedUserNames.isNotEmpty) ...[
+        if (_hasGuests(liveEvent)) ...[
           const SizedBox(height: 16),
           RsvpGuestList(
-            guests: guests,
+            guests: liveEvent.guests,
             invitedUserIds: liveEvent.invitedUserIds,
             invitedUserNames: liveEvent.invitedUserNames,
             invitedUserPhotoUrls: liveEvent.invitedUserPhotoUrls,
@@ -262,77 +341,6 @@ class _RSVPSectionState extends ConsumerState<RSVPSection> {
           ),
         ],
       ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Toggle button
-// ---------------------------------------------------------------------------
-
-class _RsvpToggleButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color activeColor;
-  final bool isActive;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  const _RsvpToggleButton({
-    required this.label,
-    required this.icon,
-    required this.activeColor,
-    required this.isActive,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Semantics(
-      button: true,
-      label: 'rsvp $label${isActive ? ", selected" : ""}',
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(24),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive
-                ? activeColor.withValues(alpha: 0.15)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isActive ? activeColor : cs.outlineVariant,
-              width: isActive ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isActive ? activeColor : cs.onSurfaceVariant,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                  color: isActive ? activeColor : cs.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

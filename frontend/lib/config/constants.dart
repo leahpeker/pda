@@ -12,6 +12,7 @@ abstract class RsvpStatus {
   static const attending = 'attending';
   static const maybe = 'maybe';
   static const cantGo = 'cant_go';
+  static const waitlisted = 'waitlisted';
 }
 
 abstract class Permission {

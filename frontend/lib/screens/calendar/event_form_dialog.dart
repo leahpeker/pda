@@ -57,6 +57,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   late DateTime? _end;
   late bool _rsvpEnabled;
   late bool _allowPlusOnes;
+  int? _maxAttendees;
   late bool _datetimeTbd;
   late String _visibilityChoice;
   late String _invitePermission;
@@ -101,6 +102,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
       _end = e.endDatetime?.toLocal();
       _rsvpEnabled = e.rsvpEnabled;
       _allowPlusOnes = e.allowPlusOnes;
+      _maxAttendees = e.maxAttendees;
       _datetimeTbd = e.datetimeTbd;
       _visibilityChoice = fieldsToVisibilityChoice(e.visibility, e.eventType);
       _invitePermission = e.invitePermission;
@@ -203,6 +205,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
           'end_datetime': _end?.toUtc().toIso8601String(),
           'rsvp_enabled': _rsvpEnabled,
           'allow_plus_ones': _allowPlusOnes,
+          'max_attendees': _maxAttendees,
           'datetime_tbd': _datetimeTbd || _datetimePollOptions.isNotEmpty,
           'event_type': eventType,
           'visibility': visibility,
@@ -399,6 +402,7 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
             EventFormSettingsSection(
               rsvpEnabled: _rsvpEnabled,
               allowPlusOnes: _allowPlusOnes,
+              maxAttendees: _maxAttendees,
               visibilityChoice: _visibilityChoice,
               partifulLinkText: _partifulLink.text,
               invitePermission: _invitePermission,
@@ -408,6 +412,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               }),
               onAllowPlusOnesChanged: (val) =>
                   setState(() => _allowPlusOnes = val),
+              onMaxAttendeesChanged: (val) =>
+                  setState(() => _maxAttendees = val),
               onVisibilityChoiceChanged: (val) =>
                   setState(() => _visibilityChoice = val),
               onInvitePermissionChanged: (val) =>

@@ -56,6 +56,7 @@ class RSVPStatus(models.TextChoices):
     ATTENDING = "attending", "Attending"
     MAYBE = "maybe", "Maybe"
     CANT_GO = "cant_go", "Can't go"
+    WAITLISTED = "waitlisted", "Waitlisted"
 
 
 class PollAvailability:

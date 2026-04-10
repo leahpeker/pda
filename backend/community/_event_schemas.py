@@ -41,6 +41,9 @@ class EventListOut(BaseModel):
     co_host_names: list[str] = []
     datetime_tbd: bool = False
     allow_plus_ones: bool = False
+    max_attendees: int | None = None
+    attending_count: int = 0
+    waitlisted_count: int = 0
     is_past: bool = False
     status: str = "active"
 
@@ -75,6 +78,9 @@ class EventOut(BaseModel):
     photo_url: str = ""
     datetime_tbd: bool = False
     allow_plus_ones: bool = False
+    max_attendees: int | None = None
+    attending_count: int = 0
+    waitlisted_count: int = 0
     survey_slugs: list[str] = []
     datetime_poll_slug: str | None = None
     has_poll: bool = False
@@ -109,6 +115,7 @@ class EventIn(BaseModel):
     rsvp_enabled: bool = False
     datetime_tbd: bool = False
     allow_plus_ones: bool = False
+    max_attendees: int | None = None
     event_type: str = Field(default=EventType.COMMUNITY, max_length=FieldLimit.CHOICE)
     visibility: str = Field(default=PageVisibility.PUBLIC, max_length=FieldLimit.CHOICE)
     invite_permission: str = Field(
@@ -136,6 +143,7 @@ class EventPatchIn(BaseModel):
     rsvp_enabled: bool | None = None
     datetime_tbd: bool | None = None
     allow_plus_ones: bool | None = None
+    max_attendees: int | None = None
     event_type: str | None = Field(default=None, max_length=FieldLimit.CHOICE)
     visibility: str | None = Field(default=None, max_length=FieldLimit.CHOICE)
     invite_permission: str | None = Field(default=None, max_length=FieldLimit.CHOICE)

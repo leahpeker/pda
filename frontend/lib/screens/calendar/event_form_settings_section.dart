@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/config/constants.dart';
 import 'package:pda/providers/auth_provider.dart';
@@ -9,10 +10,12 @@ class EventFormSettingsSection extends ConsumerWidget {
   final String partifulLinkText;
   final String invitePermission;
   final bool allowPlusOnes;
+  final int? maxAttendees;
   final ValueChanged<bool> onRsvpChanged;
   final ValueChanged<bool> onAllowPlusOnesChanged;
   final ValueChanged<String> onVisibilityChoiceChanged;
   final ValueChanged<String> onInvitePermissionChanged;
+  final ValueChanged<int?> onMaxAttendeesChanged;
 
   const EventFormSettingsSection({
     super.key,
@@ -21,10 +24,12 @@ class EventFormSettingsSection extends ConsumerWidget {
     required this.visibilityChoice,
     required this.partifulLinkText,
     required this.invitePermission,
+    required this.maxAttendees,
     required this.onRsvpChanged,
     required this.onAllowPlusOnesChanged,
     required this.onVisibilityChoiceChanged,
     required this.onInvitePermissionChanged,
+    required this.onMaxAttendeesChanged,
   });
 
   @override
@@ -87,6 +92,11 @@ class EventFormSettingsSection extends ConsumerWidget {
                           : InvitePermission.coHostsOnly,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  _MaxAttendeesField(
+                    value: maxAttendees,
+                    onChanged: onMaxAttendeesChanged,
+                  ),
                 ],
               ],
             ),
@@ -130,6 +140,53 @@ class EventFormSettingsSection extends ConsumerWidget {
             'anyone can find this event — only pda members get the full details like location and links',
         }, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface)),
       ],
+    );
+  }
+}
+
+class _MaxAttendeesField extends StatefulWidget {
+  final int? value;
+  final ValueChanged<int?> onChanged;
+
+  const _MaxAttendeesField({required this.value, required this.onChanged});
+
+  @override
+  State<_MaxAttendeesField> createState() => _MaxAttendeesFieldState();
+}
+
+class _MaxAttendeesFieldState extends State<_MaxAttendeesField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.value != null ? widget.value.toString() : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: _controller,
+      decoration: const InputDecoration(
+        labelText: 'max attendees',
+        helperText: 'leave empty for no limit',
+        counterText: '',
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      maxLength: 5,
+      onChanged: (val) {
+        final parsed = int.tryParse(val);
+        widget.onChanged(parsed);
+      },
     );
   }
 }

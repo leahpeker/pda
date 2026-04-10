@@ -4,6 +4,7 @@ from ninja import Router
 
 from community._calendar import router as calendar_router
 from community._docs import router as docs_router
+from community._event_actions import router as event_actions_router
 
 # Re-export symbols imported directly in tests
 from community._event_helpers import (  # noqa: F401
@@ -35,6 +36,7 @@ router.add_router("", join_requests_router)
 router.add_router("", feedback_router)
 router.add_router("", events_router)
 router.add_router("", event_rsvps_router)
+router.add_router("", event_actions_router)
 router.add_router("", calendar_router)
 router.add_router("", whatsapp_router)
 router.add_router("", polls_router)

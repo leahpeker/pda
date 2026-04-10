@@ -39,6 +39,8 @@ class _RsvpGuestListState extends State<RsvpGuestList> {
     if (_currentGuests().isEmpty && _invitedGuests().isEmpty) return;
     if (_selected == _kInvited && !widget.showInvited) {
       _selected = _defaultTab();
+    } else if (_selected == _kWaitlisted && _tabCount(_kWaitlisted) == 0) {
+      _selected = _defaultTab();
     } else if (_tabCount(_selected) == 0) {
       _selected = _defaultTab();
     }
@@ -47,12 +49,14 @@ class _RsvpGuestListState extends State<RsvpGuestList> {
   static const _kGoing = RsvpStatus.attending;
   static const _kMaybe = RsvpStatus.maybe;
   static const _kCantGo = RsvpStatus.cantGo;
+  static const _kWaitlisted = RsvpStatus.waitlisted;
   static const _kInvited = 'invited';
 
   String _defaultTab() {
     if (_tabCount(_kGoing) > 0) return _kGoing;
     if (_tabCount(_kMaybe) > 0) return _kMaybe;
     if (_tabCount(_kCantGo) > 0) return _kCantGo;
+    if (_tabCount(_kWaitlisted) > 0) return _kWaitlisted;
     if (widget.showInvited && widget.invitedUserNames.isNotEmpty) {
       return _kInvited;
     }
@@ -88,10 +92,12 @@ class _RsvpGuestListState extends State<RsvpGuestList> {
 
   @override
   Widget build(BuildContext context) {
+    final waitlistedCount = _tabCount(_kWaitlisted);
     final tabs = [
       (_kGoing, 'going'),
       (_kMaybe, 'maybe'),
       (_kCantGo, "can't"),
+      if (waitlistedCount > 0) (_kWaitlisted, 'waitlist'),
       if (widget.showInvited) (_kInvited, 'invited'),
     ];
 

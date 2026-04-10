@@ -1,7 +1,6 @@
-"""Events CRUD and event photo endpoints."""
+"""Events CRUD endpoints."""
 
 import logging
-import time
 from uuid import UUID
 
 from config.audit import audit_log
@@ -9,8 +8,7 @@ from config.media_proxy import media_path
 from config.ratelimit import rate_limit
 from django.db.models import Q
 from django.utils import timezone
-from ninja import File, Router
-from ninja.files import UploadedFile
+from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
 from notifications.service import (
@@ -21,14 +19,14 @@ from users.models import User as UserModel
 from users.permissions import PermissionKey
 
 from community._event_helpers import (
+    _attending_headcount,
     _can_see_invite_only,
     _event_out,
     _update_co_hosts,
     _update_invited_users,
+    _waitlisted_count,
 )
 from community._event_schemas import (
-    _ALLOWED_IMAGE_TYPES,
-    _MAX_EVENT_PHOTO_SIZE,
     EventIn,
     EventListOut,
     EventOut,
@@ -106,12 +104,12 @@ def _build_events_queryset(status: str, auth_user, is_authed):
     """Build the events queryset for list_events based on status and auth state."""
     if status == EventStatus.CANCELLED:
         return (
-            Event.objects.prefetch_related("co_hosts", "invited_users")
+            Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps")
             .filter(status=EventStatus.CANCELLED)
             .filter(Q(created_by=auth_user) | Q(co_hosts=auth_user))
             .distinct()
         )
-    qs = Event.objects.prefetch_related("co_hosts", "invited_users").exclude(
+    qs = Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps").exclude(
         status=EventStatus.CANCELLED
     )
     if not is_authed:
@@ -172,6 +170,9 @@ def list_events(request, status: str = EventStatus.ACTIVE):
                 created_by_id=str(e.created_by_id) if e.created_by_id else None,
                 datetime_tbd=e.datetime_tbd,
                 allow_plus_ones=e.allow_plus_ones,
+                max_attendees=e.max_attendees,
+                attending_count=_attending_headcount(e),
+                waitlisted_count=_waitlisted_count(e),
                 co_host_ids=[str(c.id) for c in e.co_hosts.all()],
                 co_host_names=[c.display_name or c.phone_number for c in e.co_hosts.all()],
                 is_past=e.is_past,
@@ -260,6 +261,7 @@ def create_event(request, payload: EventIn):
         rsvp_enabled=payload.rsvp_enabled,
         datetime_tbd=payload.datetime_tbd,
         allow_plus_ones=payload.allow_plus_ones,
+        max_attendees=payload.max_attendees,
         event_type=payload.event_type,
         visibility=payload.visibility,
         invite_permission=payload.invite_permission,
@@ -372,124 +374,3 @@ def delete_event(request, event_id: UUID):
         details={"title": event.title},
     )
     return Status(204, None)
-
-
-@router.post(
-    "/events/{event_id}/photo/",
-    response={200: EventOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut, 429: ErrorOut},
-    auth=JWTAuth(),
-)
-@rate_limit(key_func=lambda r: str(r.auth.pk), rate="20/h")
-def upload_event_photo(request, event_id: UUID, photo: UploadedFile = File(...)):  # ty: ignore[call-non-callable]
-    if photo.content_type not in _ALLOWED_IMAGE_TYPES:
-        return Status(400, ErrorOut(detail="File must be a JPEG, PNG, WebP, or GIF image."))
-    if photo.size and photo.size > _MAX_EVENT_PHOTO_SIZE:
-        return Status(400, ErrorOut(detail="Photo must be under 10 MB."))
-    try:
-        event = Event.objects.get(id=event_id)
-    except Event.DoesNotExist:
-        return Status(404, ErrorOut(detail="Event not found."))
-    is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
-    is_creator = event.created_by_id == request.auth.pk
-    is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
-    if not is_manager and not is_creator and not is_cohost:
-        audit_log(
-            logging.WARNING,
-            "permission_denied",
-            request,
-            target_type="event",
-            target_id=str(event_id),
-            details={"endpoint": "upload_event_photo"},
-        )
-        return Status(403, ErrorOut(detail="Permission denied."))
-    if event.is_cancelled:
-        return Status(400, ErrorOut(detail="Cancelled events cannot be edited."))
-    if event.photo:
-        event.photo.delete(save=False)
-    name = photo.name or ""
-    ext = name.rsplit(".", 1)[-1] if "." in name else "jpg"
-    ts = int(time.time())
-    event.photo.save(f"{event_id}_{ts}.{ext}", photo, save=True)
-    audit_log(
-        logging.INFO, "event_photo_uploaded", request, target_type="event", target_id=str(event_id)
-    )
-    return Status(200, _event_out(event, request.auth))
-
-
-@router.delete(
-    "/events/{event_id}/photo/",
-    response={200: EventOut, 403: ErrorOut, 404: ErrorOut},
-    auth=JWTAuth(),
-)
-def delete_event_photo(request, event_id: UUID):
-    try:
-        event = Event.objects.get(id=event_id)
-    except Event.DoesNotExist:
-        return Status(404, ErrorOut(detail="Event not found."))
-    is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
-    is_creator = event.created_by_id == request.auth.pk
-    is_cohost = event.co_hosts.filter(pk=request.auth.pk).exists()
-    if not is_manager and not is_creator and not is_cohost:
-        audit_log(
-            logging.WARNING,
-            "permission_denied",
-            request,
-            target_type="event",
-            target_id=str(event_id),
-            details={"endpoint": "delete_event_photo"},
-        )
-        return Status(403, ErrorOut(detail="Permission denied."))
-    if event.is_cancelled:
-        return Status(400, ErrorOut(detail="Cancelled events cannot be edited."))
-    if event.photo:
-        event.photo.delete(save=False)
-        event.photo = ""
-        event.save(update_fields=["photo"])
-    audit_log(
-        logging.INFO, "event_photo_deleted", request, target_type="event", target_id=str(event_id)
-    )
-    return Status(200, _event_out(event, request.auth))
-
-
-@router.post(
-    "/events/{event_id}/uncancel/",
-    response={200: EventOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
-    auth=JWTAuth(),
-)
-def uncancel_event(request, event_id: UUID):
-    try:
-        event = (
-            Event.objects.select_related("created_by")
-            .prefetch_related("co_hosts", "invited_users", "rsvps__user")
-            .get(id=event_id)
-        )
-    except Event.DoesNotExist:
-        return Status(404, ErrorOut(detail="Event not found."))
-
-    is_manager = request.auth.has_permission(PermissionKey.MANAGE_EVENTS)
-    is_creator = event.created_by_id == request.auth.pk
-    if not is_manager and not is_creator:
-        audit_log(
-            logging.WARNING,
-            "permission_denied",
-            request,
-            target_type="event",
-            target_id=str(event_id),
-            details={"endpoint": "uncancel_event"},
-        )
-        return Status(403, ErrorOut(detail="Permission denied."))
-
-    if not event.is_cancelled:
-        return Status(400, ErrorOut(detail="Event is not cancelled."))
-
-    event.status = EventStatus.ACTIVE
-    event.save(update_fields=["status"])
-    audit_log(
-        logging.INFO,
-        "event_uncancelled",
-        request,
-        target_type="event",
-        target_id=str(event_id),
-        details={"title": event.title},
-    )
-    return Status(200, _event_out(event, request.auth))

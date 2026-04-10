@@ -10,7 +10,7 @@ from users.permissions import PermissionKey
 
 from community._event_schemas import EventOut, RSVPGuestOut
 from community._shared import _authenticated_user, _members_only
-from community.models import Event, PageVisibility, SurveyQuestionType
+from community.models import Event, EventRSVP, PageVisibility, RSVPStatus, SurveyQuestionType
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -48,6 +48,61 @@ def _find_my_rsvp(rsvps, user) -> str | None:
         if r.user_id == user.pk:
             return r.status
     return None
+
+
+def _attending_headcount(event: Event) -> int:
+    """Count attending spots from prefetched RSVPs (each attendee + their +1)."""
+    return sum(
+        1 + (1 if r.has_plus_one else 0)
+        for r in event.rsvps.all()
+        if r.status == RSVPStatus.ATTENDING
+    )
+
+
+def _attending_headcount_db(event: Event, exclude_user=None) -> int:
+    """Count attending spots via DB query (use inside select_for_update transactions)."""
+    from django.db.models import Case, IntegerField, Sum, Value, When
+
+    qs = EventRSVP.objects.filter(event=event, status=RSVPStatus.ATTENDING)
+    if exclude_user is not None:
+        qs = qs.exclude(user=exclude_user)
+    result = qs.aggregate(
+        total=Sum(
+            Case(
+                When(has_plus_one=True, then=Value(2)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        )
+    )
+    return result["total"] or 0
+
+
+def _waitlisted_count(event: Event) -> int:
+    """Count waitlisted RSVPs from prefetched data."""
+    return sum(1 for r in event.rsvps.all() if r.status == RSVPStatus.WAITLISTED)
+
+
+def promote_from_waitlist(event: Event) -> None:
+    """Promote oldest waitlisted users to attending (FIFO by created_at).
+
+    Must be called inside a transaction.atomic() block with the event row locked.
+    """
+    if event.max_attendees is None:
+        return
+    while True:
+        headcount = _attending_headcount_db(event)
+        if headcount >= event.max_attendees:
+            break
+        oldest = (
+            EventRSVP.objects.filter(event=event, status=RSVPStatus.WAITLISTED)
+            .order_by("created_at")
+            .first()
+        )
+        if not oldest:
+            break
+        oldest.status = RSVPStatus.ATTENDING
+        oldest.save(update_fields=["status", "updated_at"])
 
 
 def _can_see_invited(
@@ -139,6 +194,9 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         rsvp_enabled=_members_only(event.rsvp_enabled, False, is_authed),
         datetime_tbd=event.datetime_tbd,
         allow_plus_ones=event.allow_plus_ones,
+        max_attendees=event.max_attendees,
+        attending_count=_attending_headcount(event),
+        waitlisted_count=_waitlisted_count(event),
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
         created_by_name=_get_creator_name(creator),
         created_by_photo_url=media_path(creator.profile_photo) if creator else "",

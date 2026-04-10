@@ -40,6 +40,7 @@ class Event(models.Model):
     rsvp_enabled = models.BooleanField(default=False)
     datetime_tbd = models.BooleanField(default=False)
     allow_plus_ones = models.BooleanField(default=False)
+    max_attendees = models.PositiveIntegerField(null=True, blank=True)
     photo = models.ImageField(upload_to="event_photos/", blank=True)
     event_type = models.CharField(
         max_length=20,
@@ -109,6 +110,7 @@ class EventRSVP(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="event_rsvps")
     status = models.CharField(max_length=20, choices=RSVPStatus.choices)
     has_plus_one = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
