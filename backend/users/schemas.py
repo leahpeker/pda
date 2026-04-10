@@ -52,6 +52,7 @@ class UserOut(BaseModel):
     show_phone: bool = True
     show_email: bool = True
     is_paused: bool = False
+    login_link_requested: bool = False
     roles: list[RoleOut]
 
     @classmethod
@@ -67,6 +68,7 @@ class UserOut(BaseModel):
             show_phone=user.show_phone,
             show_email=user.show_email,
             is_paused=user.is_paused,
+            login_link_requested=user.login_link_requested,
             roles=[
                 RoleOut(
                     id=str(r.id), name=r.name, is_default=r.is_default, permissions=r.permissions
@@ -82,6 +84,7 @@ class MemberProfileOut(BaseModel):
     phone_number: str
     email: str = ""
     profile_photo_url: str = ""
+    login_link_requested: bool = False
 
 
 class UserCreateIn(BaseModel):

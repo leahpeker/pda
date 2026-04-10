@@ -31,6 +31,7 @@ abstract class User with _$User {
     @Default(true) bool showPhone,
     @Default(true) bool showEmail,
     @Default(false) bool isPaused,
+    @Default(false) bool loginLinkRequested,
     @Default([]) List<Role> roles,
   }) = _User;
 

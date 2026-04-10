@@ -13,6 +13,7 @@ from ninja_jwt.tokens import RefreshToken
 
 from users._password_validation import validate_password
 from users.models import MagicLoginToken, User
+from users.permissions import PermissionKey
 from users.schemas import (
     AccessOut,
     ChangePasswordIn,
@@ -207,6 +208,7 @@ def get_member_profile(request, user_id: str):
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="Member not found."))
     is_own_profile = str(request.auth.pk) == user_id
+    can_manage_users = request.auth.has_permission(PermissionKey.MANAGE_USERS)
     return Status(
         200,
         MemberProfileOut(
@@ -215,6 +217,7 @@ def get_member_profile(request, user_id: str):
             phone_number=user.phone_number if (user.show_phone or is_own_profile) else "",
             email=(user.email or "") if (user.show_email or is_own_profile) else "",
             profile_photo_url=media_path(user.profile_photo),
+            login_link_requested=user.login_link_requested if can_manage_users else False,
         ),
     )
 

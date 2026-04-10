@@ -100,7 +100,7 @@ class _ProfileBody extends ConsumerWidget {
               ),
             ),
           ),
-        if (canManageUsers) ...[
+        if (canManageUsers && data['login_link_requested'] == true) ...[
           const SizedBox(height: 32),
           _MagicLinkButton(userId: userId, phoneNumber: phone),
         ],
@@ -128,6 +128,7 @@ class _MagicLinkButtonState extends ConsumerState<_MagicLinkButton> {
       final notifier = ref.read(userManagementProvider.notifier);
       final token = await notifier.generateMagicLink(widget.userId);
       _log.info('generated magic link for user ${widget.userId}');
+      ref.invalidate(_memberProfileProvider(widget.userId));
       if (!mounted) return;
       showDialog<void>(
         context: context,

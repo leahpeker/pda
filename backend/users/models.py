@@ -37,6 +37,7 @@ class User(AbstractUser):
     show_phone = models.BooleanField(default=True)
     show_email = models.BooleanField(default=True)
     is_paused = models.BooleanField(default=False)
+    login_link_requested = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Remove inherited AbstractUser fields

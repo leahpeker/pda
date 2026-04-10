@@ -152,12 +152,13 @@ class MemberCard extends ConsumerWidget {
                           isOwnAccount,
                         ),
                       ),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.link_outlined, size: 16),
-                      label: const Text('magic link'),
-                      onPressed: () =>
-                          _handleGenerateMagicLink(context, notifier),
-                    ),
+                    if (user.loginLinkRequested)
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.link_outlined, size: 16),
+                        label: const Text('magic link'),
+                        onPressed: () =>
+                            _handleGenerateMagicLink(context, notifier),
+                      ),
                     if (canManageUsers && !isOwnAccount)
                       OutlinedButton.icon(
                         icon: Icon(

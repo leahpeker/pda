@@ -366,6 +366,8 @@ def request_login_link(request, payload: RequestLoginLinkIn):
         ).exists()
         if not recent_token_exists:
             _create_magic_token(user)
+            user.login_link_requested = True
+            user.save(update_fields=["login_link_requested"])
             try:
                 create_magic_link_request_notifications(user)
             except Exception:

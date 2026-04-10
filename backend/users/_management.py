@@ -9,6 +9,7 @@ from django.db import models as dj_models
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
+from notifications.models import Notification, NotificationType
 
 from users._helpers import (
     _create_magic_token,
@@ -396,7 +397,13 @@ def generate_magic_link(request, user_id: str):
         return Status(404, ErrorOut(detail="User not found."))
     user.set_unusable_password()
     user.needs_onboarding = True
-    user.save(update_fields=["password", "needs_onboarding"])
+    user.login_link_requested = False
+    user.save(update_fields=["password", "needs_onboarding", "login_link_requested"])
+    Notification.objects.filter(
+        notification_type=NotificationType.MAGIC_LINK_REQUEST,
+        related_user=user,
+        is_read=False,
+    ).update(is_read=True)
     magic_token = _create_magic_token(user)
     audit_log(
         logging.INFO,
@@ -439,7 +446,13 @@ def reset_password(request, user_id: str):
         return Status(404, ErrorOut(detail="User not found."))
     user.set_unusable_password()
     user.needs_onboarding = True
-    user.save()
+    user.login_link_requested = False
+    user.save(update_fields=["password", "needs_onboarding", "login_link_requested"])
+    Notification.objects.filter(
+        notification_type=NotificationType.MAGIC_LINK_REQUEST,
+        related_user=user,
+        is_read=False,
+    ).update(is_read=True)
     magic_token = _create_magic_token(user)
     audit_log(
         logging.WARNING,
