@@ -81,6 +81,7 @@ abstract class FieldType {
 abstract class PollAvailability {
   static const yes = 'yes';
   static const maybe = 'maybe';
+  static const no = 'no';
 }
 
 abstract class RoleName {

@@ -50,6 +50,14 @@ class PollOptionResult extends StatelessWidget {
                 color: theme.colorScheme.secondary,
                 onTap: option.maybeVoters.isNotEmpty ? onVotersTap : null,
               ),
+              const SizedBox(width: 16),
+              PollCountBucket(
+                icon: Icons.cancel_outlined,
+                count: option.noCount,
+                voters: option.noVoters.take(3).toList(),
+                color: theme.colorScheme.error,
+                onTap: option.noVoters.isNotEmpty ? onVotersTap : null,
+              ),
             ],
           ),
         ],
@@ -189,6 +197,16 @@ class PollOptionRow extends StatelessWidget {
                 count: option.maybeCount,
                 onTap: isEditing
                     ? () => onSetAvailability?.call(PollAvailability.maybe)
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              AvailabilityChip(
+                label: PollAvailability.no,
+                icon: Icons.cancel_outlined,
+                isActive: availability == PollAvailability.no,
+                count: option.noCount,
+                onTap: isEditing
+                    ? () => onSetAvailability?.call(PollAvailability.no)
                     : null,
               ),
             ],

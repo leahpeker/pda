@@ -8,8 +8,10 @@ class EventPollOption {
   final int displayOrder;
   final int yesCount;
   final int maybeCount;
+  final int noCount;
   final List<PollVoter> yesVoters;
   final List<PollVoter> maybeVoters;
+  final List<PollVoter> noVoters;
 
   const EventPollOption({
     required this.id,
@@ -17,13 +19,15 @@ class EventPollOption {
     required this.displayOrder,
     required this.yesCount,
     required this.maybeCount,
+    this.noCount = 0,
     this.yesVoters = const [],
     this.maybeVoters = const [],
+    this.noVoters = const [],
   });
 
-  int get totalCount => yesCount + maybeCount;
+  int get totalCount => yesCount + maybeCount + noCount;
 
-  List<PollVoter> get allVoters => [...yesVoters, ...maybeVoters];
+  List<PollVoter> get allVoters => [...yesVoters, ...maybeVoters, ...noVoters];
 
   factory EventPollOption.fromJson(Map<String, dynamic> json) {
     return EventPollOption(
@@ -32,6 +36,7 @@ class EventPollOption {
       displayOrder: json['display_order'] as int,
       yesCount: json['yes_count'] as int,
       maybeCount: json['maybe_count'] as int,
+      noCount: (json['no_count'] as int?) ?? 0,
       yesVoters:
           (json['yes_voters'] as List<dynamic>?)
               ?.map((e) => PollVoter.fromJson(e as Map<String, dynamic>))
@@ -39,6 +44,11 @@ class EventPollOption {
           [],
       maybeVoters:
           (json['maybe_voters'] as List<dynamic>?)
+              ?.map((e) => PollVoter.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      noVoters:
+          (json['no_voters'] as List<dynamic>?)
               ?.map((e) => PollVoter.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],

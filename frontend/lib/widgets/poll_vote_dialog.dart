@@ -80,7 +80,7 @@ class _PollVoteDialogState extends ConsumerState<PollVoteDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'for each option, mark yes or maybe',
+              'for each option, mark yes, maybe, or no',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
