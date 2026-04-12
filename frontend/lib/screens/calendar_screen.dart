@@ -140,6 +140,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final events = _typeFilter == null
         ? allEvents
         : allEvents.where((e) => e.eventType == _typeFilter).toList();
+    final user = ref.watch(authProvider).value;
+    final startOnMonday = user?.weekStart == 'monday';
     switch (_view) {
       case _CalendarView.month:
         return MonthView(
@@ -147,6 +149,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           selectedDate: _selectedDate,
           onDateChanged: _onDateChanged,
           onToday: _goToToday,
+          startOnMonday: startOnMonday,
           onDayTapped: (date) {
             setState(() {
               _selectedDate = date;

@@ -12,6 +12,7 @@ class MonthView extends StatefulWidget {
   final VoidCallback onToday;
   final ValueChanged<DateTime> onDayTapped;
   final ValueChanged<DateTime>? onDayLongPressed;
+  final bool startOnMonday;
 
   const MonthView({
     super.key,
@@ -21,6 +22,7 @@ class MonthView extends StatefulWidget {
     required this.onToday,
     required this.onDayTapped,
     this.onDayLongPressed,
+    this.startOnMonday = false,
   });
 
   @override
@@ -30,7 +32,7 @@ class MonthView extends StatefulWidget {
 class _MonthViewState extends State<MonthView> {
   late DateTime _focusedMonth;
 
-  static const List<String> _dayHeaders = [
+  static const List<String> _sundayHeaders = [
     'sun',
     'mon',
     'tue',
@@ -38,6 +40,15 @@ class _MonthViewState extends State<MonthView> {
     'thu',
     'fri',
     'sat',
+  ];
+  static const List<String> _mondayHeaders = [
+    'mon',
+    'tue',
+    'wed',
+    'thu',
+    'fri',
+    'sat',
+    'sun',
   ];
 
   static const int _maxEventRows = 10;
@@ -84,8 +95,12 @@ class _MonthViewState extends State<MonthView> {
       0,
     );
 
-    final leadingDays = firstOfMonth.weekday % 7;
-    final trailingDays = 6 - (lastOfMonth.weekday % 7);
+    final leadingDays = widget.startOnMonday
+        ? (firstOfMonth.weekday - 1) % 7
+        : firstOfMonth.weekday % 7;
+    final trailingDays = widget.startOnMonday
+        ? 6 - ((lastOfMonth.weekday - 1) % 7)
+        : 6 - (lastOfMonth.weekday % 7);
 
     final days = <DateTime>[];
     for (var i = leadingDays; i > 0; i--) {
@@ -169,7 +184,7 @@ class _MonthViewState extends State<MonthView> {
       color: Theme.of(context).colorScheme.onSurfaceVariant,
     );
     return Row(
-      children: _dayHeaders
+      children: (widget.startOnMonday ? _mondayHeaders : _sundayHeaders)
           .map(
             (h) => Expanded(
               child: Center(
