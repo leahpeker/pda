@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pda/config/constants.dart';
 import 'package:pda/models/event.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/providers/auth_provider.dart';
@@ -107,20 +106,12 @@ class _GuestAuthNotifier extends AuthNotifier {
 
 class _UserAuthNotifier extends AuthNotifier {
   final String userId;
-  final List<String> permissions;
 
-  _UserAuthNotifier({required this.userId, this.permissions = const []});
+  _UserAuthNotifier({required this.userId});
 
   @override
-  Future<User?> build() async => User(
-    id: userId,
-    phoneNumber: '+12025551234',
-    displayName: 'Test User',
-    roles: [
-      if (permissions.isNotEmpty)
-        Role(id: 'r-1', name: 'custom', permissions: permissions),
-    ],
-  );
+  Future<User?> build() async =>
+      User(id: userId, phoneNumber: '+12025551234', displayName: 'Test User');
 
   @override
   Future<void> logout() async {}
