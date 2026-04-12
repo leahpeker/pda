@@ -43,7 +43,7 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
     final dt = await showDateTimePicker(
       context: context,
       initialDateTime: now,
-      firstDate: DateTime(now.year - 1),
+      firstDate: now,
       lastDate: DateTime(now.year + 2),
     );
     if (dt == null || !mounted) return;
@@ -94,7 +94,7 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
     final dt = await showDateTimePicker(
       context: context,
       initialDateTime: option.datetime.toLocal(),
-      firstDate: DateTime(now.year - 1),
+      firstDate: now,
       lastDate: DateTime(now.year + 2),
     );
     if (dt == null || !mounted) return;
