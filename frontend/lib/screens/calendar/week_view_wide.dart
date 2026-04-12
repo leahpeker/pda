@@ -5,7 +5,6 @@ import 'package:pda/utils/time_format.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/placement_types.dart';
 import 'package:pda/screens/calendar/week_placement_calculator.dart';
-import 'package:pda/config/constants.dart';
 
 class WideWeekGrid extends StatelessWidget {
   final List<DateTime> days;
@@ -394,16 +393,6 @@ class _WideEventChip extends StatelessWidget {
                       color: colors.$2,
                     ),
                   ),
-                  if (p.event.visibility == PageVisibility.membersOnly)
-                    TextSpan(
-                      text: ' 🔒',
-                      style: TextStyle(fontSize: 11, color: colors.$2),
-                    ),
-                  if (p.event.eventType == EventType.official)
-                    TextSpan(
-                      text: ' ✦',
-                      style: TextStyle(fontSize: 11, color: colors.$2),
-                    ),
                   TextSpan(
                     text: '  $subLabel',
                     style: TextStyle(fontSize: 11, color: colors.$2),

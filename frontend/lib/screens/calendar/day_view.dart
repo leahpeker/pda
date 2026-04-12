@@ -5,7 +5,6 @@ import 'package:pda/screens/calendar/calendar_nav_row.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_panel.dart';
-import 'package:pda/config/constants.dart';
 
 class DayView extends StatefulWidget {
   final List<Event> events;
@@ -237,35 +236,6 @@ class _DayEventCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (event.visibility == PageVisibility.membersOnly) ...[
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.lock_outline,
-                      size: 14,
-                      color: fgColor.withValues(alpha: 0.7),
-                    ),
-                  ],
-                  if (event.eventType == EventType.official) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: fgColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'official',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: fgColor,
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
               const SizedBox(height: 4),

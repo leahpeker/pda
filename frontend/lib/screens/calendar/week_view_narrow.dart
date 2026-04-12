@@ -4,7 +4,6 @@ import 'package:pda/models/event.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/placement_types.dart';
-import 'package:pda/config/constants.dart';
 
 class NarrowWeekGrid extends StatelessWidget {
   final List<DateTime> days;
@@ -277,17 +276,12 @@ class NarrowEventChip extends StatelessWidget {
   const NarrowEventChip({super.key, required this.event, required this.onTap});
 
   String _buildLabel() {
-    final lockSuffix = event.visibility == PageVisibility.membersOnly
-        ? ' 🔒'
-        : '';
-    final officialSuffix = event.eventType == EventType.official ? ' ✦' : '';
-    final suffix = '$lockSuffix$officialSuffix';
     final dateFmt = DateFormat('MMM d');
     final start = event.startDatetime.toLocal();
     final end = event.endDatetime?.toLocal();
 
     if (end == null) {
-      return '${event.title}$suffix \u00b7 ${formatTime(start)}';
+      return '${event.title} \u00b7 ${formatTime(start)}';
     }
 
     final sameDay =
@@ -296,10 +290,10 @@ class NarrowEventChip extends StatelessWidget {
         start.day == end.day;
 
     if (sameDay) {
-      return '${event.title}$suffix \u00b7 ${formatTime(start)} \u2013 ${formatTime(end)}';
+      return '${event.title} \u00b7 ${formatTime(start)} \u2013 ${formatTime(end)}';
     }
 
-    return '${event.title}$suffix \u00b7 ${dateFmt.format(start).toLowerCase()} \u2013 ${dateFmt.format(end).toLowerCase()}';
+    return '${event.title} \u00b7 ${dateFmt.format(start).toLowerCase()} \u2013 ${dateFmt.format(end).toLowerCase()}';
   }
 
   @override
