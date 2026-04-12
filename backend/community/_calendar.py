@@ -96,6 +96,25 @@ def calendar_feed(request, token: str = ""):
     return response
 
 
+@router.get("/events/{event_id}/ics/", auth=None)
+def single_event_ics(request, event_id: str):
+    try:
+        event = Event.objects.get(id=event_id)
+    except Event.DoesNotExist:
+        return HttpResponse("Event not found.", status=404, content_type="text/plain")
+
+    import icalendar
+
+    cal = icalendar.Calendar()
+    cal.add("prodid", "-//PDA//PDA Calendar//EN")
+    cal.add("version", "2.0")
+    cal.add_component(_build_vevent(event))
+
+    response = HttpResponse(cal.to_ical(), content_type="text/calendar")
+    response["Content-Disposition"] = f'inline; filename="{event.title}.ics"'
+    return response
+
+
 def _build_vevent(event):
     import icalendar
 
