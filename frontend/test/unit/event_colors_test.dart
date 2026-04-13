@@ -5,34 +5,52 @@ import 'package:pda/screens/calendar/event_colors.dart';
 
 void main() {
   group('eventColors', () {
-    test('returns blue tones for official events in light mode', () {
-      final (bg, fg) = eventColors(EventType.official, Brightness.light);
-      expect(bg, const Color(0xFFD0E8FF));
-      expect(fg, const Color(0xFF1A3A5C));
+    test('all four visibility choices produce distinct light colors', () {
+      final colors = <Color>{};
+      for (final choice in [
+        (EventType.official, PageVisibility.public_),
+        (EventType.community, PageVisibility.public_),
+        (EventType.community, PageVisibility.membersOnly),
+        (EventType.community, PageVisibility.inviteOnly),
+      ]) {
+        final (bg, _) = eventColors(choice.$1, choice.$2, Brightness.light);
+        colors.add(bg);
+      }
+      expect(colors.length, 4);
     });
 
-    test('returns green tones for community events in light mode', () {
-      final (bg, fg) = eventColors(EventType.community, Brightness.light);
-      expect(bg, const Color(0xFFD4F0D4));
-      expect(fg, const Color(0xFF1A3D1A));
+    test('all four visibility choices produce distinct dark colors', () {
+      final colors = <Color>{};
+      for (final choice in [
+        (EventType.official, PageVisibility.public_),
+        (EventType.community, PageVisibility.public_),
+        (EventType.community, PageVisibility.membersOnly),
+        (EventType.community, PageVisibility.inviteOnly),
+      ]) {
+        final (bg, _) = eventColors(choice.$1, choice.$2, Brightness.dark);
+        colors.add(bg);
+      }
+      expect(colors.length, 4);
     });
 
-    test('returns blue tones for official events in dark mode', () {
-      final (bg, fg) = eventColors(EventType.official, Brightness.dark);
-      expect(bg, const Color(0xFF1A3050));
-      expect(fg, const Color(0xFFB0D4FF));
+    test('light mode has lighter backgrounds', () {
+      final (bg, _) = eventColors(
+        EventType.official,
+        PageVisibility.public_,
+        Brightness.light,
+      );
+      final hsl = HSLColor.fromColor(bg);
+      expect(hsl.lightness, greaterThan(0.7));
     });
 
-    test('returns green tones for community events in dark mode', () {
-      final (bg, fg) = eventColors(EventType.community, Brightness.dark);
-      expect(bg, const Color(0xFF1A3020));
-      expect(fg, const Color(0xFFA8E0A8));
-    });
-
-    test('official and community have different colors', () {
-      final official = eventColors(EventType.official, Brightness.light);
-      final community = eventColors(EventType.community, Brightness.light);
-      expect(official.$1, isNot(equals(community.$1)));
+    test('dark mode has darker backgrounds', () {
+      final (bg, _) = eventColors(
+        EventType.official,
+        PageVisibility.public_,
+        Brightness.dark,
+      );
+      final hsl = HSLColor.fromColor(bg);
+      expect(hsl.lightness, lessThan(0.3));
     });
   });
 }

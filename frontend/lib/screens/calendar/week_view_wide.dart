@@ -334,7 +334,11 @@ class _WideEventChip extends StatelessWidget {
     final left = p.startCol * colWidth;
     final width = (p.endCol - p.startCol + 1) * colWidth;
     final top = p.row * (chipHeight + chipSpacing);
-    final colors = eventColors(p.event.eventType, Theme.of(context).brightness);
+    final colors = eventColors(
+      p.event.eventType,
+      p.event.visibility,
+      Theme.of(context).brightness,
+    );
 
     final continuesFromPrev =
         p.startCol == 0 &&

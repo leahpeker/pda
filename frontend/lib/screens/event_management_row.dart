@@ -112,7 +112,11 @@ class EventManagementRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dateFmt = DateFormat('EEE, MMM d');
 
-    final (bg, fg) = eventColors(event.eventType, Theme.of(context).brightness);
+    final (bg, fg) = eventColors(
+      event.eventType,
+      event.visibility,
+      Theme.of(context).brightness,
+    );
 
     return Card(
       elevation: 0,
