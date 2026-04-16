@@ -9,6 +9,7 @@ import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
 import 'package:pda/widgets/approval_credentials_dialog.dart';
+import 'package:pda/widgets/edit_bio_dialog.dart';
 import 'package:pda/widgets/profile_avatar.dart';
 
 final _log = Logger('MemberProfile');
@@ -127,7 +128,7 @@ class _BioSection extends ConsumerWidget {
   Future<void> _showEditDialog(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<String>(
       context: context,
-      builder: (_) => _EditBioDialog(initialValue: bio),
+      builder: (_) => EditBioDialog(initialValue: bio),
     );
     if (result == null || !context.mounted) return;
     try {
@@ -219,74 +220,6 @@ class _BioSection extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _EditBioDialog extends StatefulWidget {
-  final String initialValue;
-
-  const _EditBioDialog({required this.initialValue});
-
-  @override
-  State<_EditBioDialog> createState() => _EditBioDialogState();
-}
-
-class _EditBioDialogState extends State<_EditBioDialog> {
-  late final TextEditingController _controller;
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('edit bio'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _controller,
-          autofocus: true,
-          maxLength: FieldLimit.bio,
-          maxLines: 5,
-          keyboardType: TextInputType.multiline,
-          textInputAction: TextInputAction.newline,
-          decoration: const InputDecoration(
-            labelText: 'Bio',
-            alignLabelWithHint: true,
-          ),
-          validator: (v) {
-            if (v != null && v.trim().length > FieldLimit.bio) {
-              return 'Max ${FieldLimit.bio} characters';
-            }
-            return null;
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.of(context).pop(_controller.text.trim());
-            }
-          },
-          child: const Text('save'),
-        ),
-      ],
     );
   }
 }

@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:pda/providers/auth_provider.dart';
+import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
 import 'package:pda/widgets/app_scaffold.dart';
+import 'package:pda/widgets/edit_bio_dialog.dart';
 import 'package:pda/widgets/profile_avatar.dart';
+
+final _log = Logger('Profile');
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -35,6 +40,8 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            _BioTile(bio: user.bio),
             const SizedBox(height: 24),
             _InfoTile(
               icon: Icons.phone_outlined,
@@ -226,6 +233,105 @@ class _ProfileButton extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BioTile extends ConsumerWidget {
+  final String bio;
+
+  const _BioTile({required this.bio});
+
+  Future<void> _showEditDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => EditBioDialog(initialValue: bio),
+    );
+    if (result == null || !context.mounted) return;
+    try {
+      await ref.read(authProvider.notifier).updateProfile(bio: result);
+      _log.info('bio updated');
+      if (context.mounted) showSnackBar(context, 'bio updated ✓');
+    } catch (e, st) {
+      _log.warning('failed to update bio', e, st);
+      if (context.mounted) {
+        showErrorSnackBar(context, ApiError.from(e).message);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    if (bio.isEmpty) {
+      return Semantics(
+        button: true,
+        label: 'add your bio',
+        child: InkWell(
+          onTap: () => _showEditDialog(context, ref),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.edit_note_outlined,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  'add your bio',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(
+              Icons.person_outline,
+              size: 20,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: Text(bio, style: const TextStyle(fontSize: 15))),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 16),
+            tooltip: 'edit bio',
+            onPressed: () => _showEditDialog(context, ref),
+          ),
+        ],
       ),
     );
   }
