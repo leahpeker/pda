@@ -66,11 +66,13 @@ class _EventFormLinksAndCostSectionState
     }
     final normalized = widget.normalizeUrl(val.trim());
     final uri = Uri.tryParse(normalized);
-    if (uri == null || !uri.hasAuthority) return 'Enter a valid URL';
-    final host = uri.host;
-    final isWhatsApp =
-        host.contains('whatsapp.com') || host == 'wa.me' || host == 'whats.app';
-    if (!isWhatsApp) return 'Must be a WhatsApp link';
+    if (uri == null || !uri.hasAuthority) return 'enter a valid URL';
+    final host = uri.host.replaceFirst(RegExp(r'^www\.'), '');
+    const validHosts = {'chat.whatsapp.com', 'wa.me', 'whats.app'};
+    if (!validHosts.contains(host)) return 'must be a WhatsApp group link';
+    if (uri.pathSegments.isEmpty || uri.path.replaceAll('/', '').isEmpty) {
+      return 'link must point to a specific group, not just whatsapp.com';
+    }
     return null;
   }
 
@@ -81,9 +83,12 @@ class _EventFormLinksAndCostSectionState
     }
     final normalized = widget.normalizeUrl(val.trim());
     final uri = Uri.tryParse(normalized);
-    if (uri == null || !uri.hasAuthority) return 'Enter a valid URL';
+    if (uri == null || !uri.hasAuthority) return 'enter a valid URL';
     if (!uri.host.contains('partiful.com')) {
-      return 'Must be a Partiful link (partiful.com/...)';
+      return 'must be a Partiful link (partiful.com/...)';
+    }
+    if (uri.pathSegments.isEmpty || uri.path.replaceAll('/', '').isEmpty) {
+      return 'link must point to a specific event, not just partiful.com';
     }
     return null;
   }
@@ -138,7 +143,7 @@ class _EventFormLinksAndCostSectionState
               maxLength: FieldLimit.url,
               keyboardType: TextInputType.url,
               validator: v.all([
-                v.optionalUrl(httpsOnly: true),
+                v.optionalUrl(httpsOnly: true, requirePath: true),
                 v.maxLength(FieldLimit.url),
               ]),
             ),

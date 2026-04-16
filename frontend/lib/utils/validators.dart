@@ -78,16 +78,20 @@ Validator optionalEmail() {
   };
 }
 
-/// Optional URL: skips if empty, validates scheme + authority if provided.
+/// Optional URL: skips if empty, validates scheme + authority + non-bare path if provided.
 /// Pass [httpsOnly] to reject non-https URLs.
-Validator optionalUrl({bool httpsOnly = false}) {
+/// Pass [requirePath] to reject bare domains (no meaningful path).
+Validator optionalUrl({bool httpsOnly = false, bool requirePath = false}) {
   return (v) {
     if (v == null || v.trim().isEmpty) return null;
     final s = v.trim();
     final normalized = s.startsWith('http') ? s : 'https://$s';
     final uri = Uri.tryParse(normalized);
-    if (uri == null || !uri.hasAuthority) return 'Enter a valid URL';
+    if (uri == null || !uri.hasAuthority) return 'enter a valid URL';
     if (httpsOnly && uri.scheme != 'https') return 'URL must use https';
+    if (requirePath && uri.path.replaceAll('/', '').isEmpty) {
+      return 'link must point to a specific page, not just the domain';
+    }
     return null;
   };
 }

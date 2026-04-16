@@ -1,11 +1,81 @@
 """Pydantic schemas for event endpoints."""
 
 from datetime import datetime
+from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from community._field_limits import FieldLimit
 from community.models import EventType, InvitePermission, PageVisibility
+
+
+def _require_path(url: str, domain_hint: str) -> str:
+    """Validate that a URL has a non-trivial path (not bare domain).
+
+    Returns the (possibly https-prefixed) URL, or raises ValueError.
+    """
+    if not url:
+        return url
+    normalized = url if url.startswith(("http://", "https://")) else f"https://{url}"
+    try:
+        parsed = urlparse(normalized)
+    except ValueError:
+        raise ValueError("enter a valid URL")
+    if not parsed.netloc:
+        raise ValueError("enter a valid URL")
+    path = parsed.path.rstrip("/")
+    if not path:
+        raise ValueError(f"link must point to a specific page, not just {domain_hint}")
+    return url
+
+
+def _normalize_url(url: str) -> str:
+    return url if url.startswith(("http://", "https://")) else f"https://{url}"
+
+
+def _strip_www(host: str) -> str:
+    return host.removeprefix("www.")
+
+
+def _validate_whatsapp_url(url: str) -> str:
+    known_hosts = {"chat.whatsapp.com", "wa.me", "whats.app"}
+    if not url:
+        return url
+    try:
+        parsed = urlparse(_normalize_url(url))
+    except ValueError:
+        raise ValueError("enter a valid URL")
+    host = _strip_www(parsed.netloc.lower())
+    if host not in known_hosts:
+        raise ValueError("must be a WhatsApp link (chat.whatsapp.com, wa.me, or whats.app)")
+    return _require_path(url, "whatsapp.com")
+
+
+def _validate_partiful_url(url: str) -> str:
+    if not url:
+        return url
+    try:
+        parsed = urlparse(_normalize_url(url))
+    except ValueError:
+        raise ValueError("enter a valid URL")
+    host = _strip_www(parsed.netloc.lower())
+    if "partiful.com" not in host:
+        raise ValueError("must be a Partiful link (partiful.com/...)")
+    return _require_path(url, "partiful.com")
+
+
+def _validate_generic_url(url: str) -> str:
+    if not url:
+        return url
+    try:
+        parsed = urlparse(_normalize_url(url))
+    except ValueError:
+        raise ValueError("enter a valid URL")
+    if not parsed.netloc:
+        raise ValueError("enter a valid URL")
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("URL must use http or https")
+    return _require_path(url, parsed.netloc)
 
 
 class RSVPGuestOut(BaseModel):
@@ -130,6 +200,21 @@ class EventIn(BaseModel):
     co_host_ids: list[str] = []
     invited_user_ids: list[str] = []
 
+    @field_validator("whatsapp_link", mode="before")
+    @classmethod
+    def validate_whatsapp(cls, v: str) -> str:
+        return _validate_whatsapp_url(v or "")
+
+    @field_validator("partiful_link", mode="before")
+    @classmethod
+    def validate_partiful(cls, v: str) -> str:
+        return _validate_partiful_url(v or "")
+
+    @field_validator("other_link", mode="before")
+    @classmethod
+    def validate_other(cls, v: str) -> str:
+        return _validate_generic_url(v or "")
+
 
 class EventPatchIn(BaseModel):
     title: str | None = Field(default=None, max_length=FieldLimit.TITLE)
@@ -157,6 +242,27 @@ class EventPatchIn(BaseModel):
     invited_user_ids: list[str] | None = None
     status: str | None = Field(default=None, max_length=FieldLimit.CHOICE)
     notify_attendees: bool | None = None
+
+    @field_validator("whatsapp_link", mode="before")
+    @classmethod
+    def validate_whatsapp(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        return _validate_whatsapp_url(v)
+
+    @field_validator("partiful_link", mode="before")
+    @classmethod
+    def validate_partiful(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        return _validate_partiful_url(v)
+
+    @field_validator("other_link", mode="before")
+    @classmethod
+    def validate_other(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        return _validate_generic_url(v)
 
 
 _MAX_EVENT_PHOTO_SIZE = 10 * 1024 * 1024  # 10 MB
