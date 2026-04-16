@@ -9,6 +9,12 @@ abstract class EventStatus {
   static const deleted = 'deleted';
 }
 
+abstract class EventFlagStatus {
+  static const pending = 'pending';
+  static const dismissed = 'dismissed';
+  static const actioned = 'actioned';
+}
+
 abstract class RsvpStatus {
   static const attending = 'attending';
   static const maybe = 'maybe';
@@ -95,6 +101,7 @@ abstract class NotificationType {
   static const cohostAdded = 'cohost_added';
   static const magicLinkRequest = 'magic_link_request';
   static const waitlistPromoted = 'waitlist_promoted';
+  static const eventFlagged = 'event_flagged';
 }
 
 abstract class InvitePermission {

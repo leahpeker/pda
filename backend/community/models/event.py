@@ -7,6 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from community.models.choices import (
+    EventFlagStatus,
     EventStatus,
     EventType,
     InvitePermission,
@@ -126,3 +127,33 @@ class EventRSVP(models.Model):
 
     def __str__(self):
         return f"{self.user.display_name or self.user.phone_number} → {self.event.title}: {self.status}"
+
+
+class EventFlag(models.Model):
+    if TYPE_CHECKING:
+        event_id: uuid.UUID
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="flags")
+    flagged_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="event_flags",
+    )
+    reason = models.TextField(max_length=500)
+    status = models.CharField(
+        max_length=20,
+        choices=EventFlagStatus.choices,
+        default=EventFlagStatus.PENDING,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        app_label = "community"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["event", "flagged_by"], name="unique_event_flag"),
+        ]
+
+    def __str__(self):
+        return f"Flag on '{self.event.title}' by {self.flagged_by}"

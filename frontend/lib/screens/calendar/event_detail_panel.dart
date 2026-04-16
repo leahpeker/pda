@@ -6,12 +6,14 @@ import 'package:pda/models/event.dart';
 import 'package:pda/utils/time_format.dart';
 import 'package:pda/utils/app_icons.dart';
 import 'package:pda/utils/share.dart';
+import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/event_provider.dart';
 import 'package:pda/widgets/embedded_event_poll.dart';
 import 'package:pda/config/constants.dart';
 import 'package:pda/screens/calendar/event_colors.dart';
 import 'package:pda/screens/calendar/event_detail_widgets.dart';
 import 'package:pda/screens/calendar/event_member_section.dart';
+import 'package:pda/screens/calendar/flag_event_dialog.dart';
 export 'event_form_dialog.dart'
     show EventFormDialog, EventFormResult, showEventForm;
 
@@ -101,6 +103,7 @@ class EventDetailContent extends ConsumerWidget {
     // endpoint. Falls back to the list-level event while loading.
     final detailAsync = ref.watch(eventDetailProvider(event.id));
     final liveEvent = detailAsync.value ?? event;
+    final user = ref.watch(authProvider).value;
 
     final start = liveEvent.startDatetime.toLocal();
     final end = liveEvent.endDatetime?.toLocal();
@@ -193,6 +196,17 @@ class EventDetailContent extends ConsumerWidget {
                   shareUrl(link);
                 },
               ),
+              if (_canFlagEvent(user, liveEvent)) ...[
+                const SizedBox(width: 4),
+                EventActionChip(
+                  tooltip: 'flag event',
+                  icon: AppIcons.flag,
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => FlagEventDialog(eventId: liveEvent.id),
+                  ),
+                ),
+              ],
               if (!fullPage) ...[
                 const SizedBox(width: 4),
                 EventActionChip(
@@ -283,6 +297,13 @@ class _EventPhoto extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _canFlagEvent(dynamic user, Event event) {
+  if (user == null) return false;
+  if (event.createdById == user.id) return false;
+  if (event.coHostIds.contains(user.id)) return false;
+  return true;
 }
 
 class _VisibilityBadge extends StatelessWidget {

@@ -10,6 +10,7 @@ class NotificationType(models.TextChoices):
     COHOST_ADDED = "cohost_added", "Co-host Added"
     MAGIC_LINK_REQUEST = "magic_link_request", "Magic Link Request"
     WAITLIST_PROMOTED = "waitlist_promoted", "Waitlist Promoted"
+    EVENT_FLAGGED = "event_flagged", "Event Flagged"
 
 
 class Notification(models.Model):

@@ -4,6 +4,7 @@ All existing ``from community.models import X`` imports continue to work unchang
 """
 
 from community.models.choices import (
+    EventFlagStatus,
     EventStatus,
     EventType,
     InvitePermission,
@@ -23,7 +24,7 @@ from community.models.content import (
     WhatsAppConfig,
 )
 from community.models.document import DocFolder, Document
-from community.models.event import Event, EventRSVP
+from community.models.event import Event, EventFlag, EventRSVP
 from community.models.join_form import JoinFormQuestion, JoinRequest
 from community.models.poll import EventPoll, PollOption, PollVote
 from community.models.survey import (
@@ -35,6 +36,7 @@ from community.models.survey import (
 
 __all__ = [
     # choices
+    "EventFlagStatus",
     "EventStatus",
     "EventType",
     "InvitePermission",
@@ -56,6 +58,7 @@ __all__ = [
     "Document",
     # event
     "Event",
+    "EventFlag",
     "EventRSVP",
     # join form
     "JoinFormQuestion",

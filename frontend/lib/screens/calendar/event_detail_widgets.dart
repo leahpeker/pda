@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pda/config/api_config.dart';
+import 'package:pda/models/event.dart';
+import 'package:pda/utils/app_icons.dart';
 import 'package:pda/utils/file_download.dart';
 import 'package:pda/utils/ics_generator.dart';
 import 'package:pda/utils/launcher.dart';
-import 'package:pda/utils/app_icons.dart';
-import 'package:pda/models/event.dart';
 
 class EventDetailHostChip extends StatelessWidget {
   final ({String id, String name, String photoUrl}) host;

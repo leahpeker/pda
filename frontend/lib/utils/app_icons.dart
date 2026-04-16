@@ -15,4 +15,6 @@ abstract final class AppIcons {
   static const close = Icons.close;
   static const search = Icons.search;
   static const copy = Icons.content_copy_outlined;
+  static const flag = Icons.flag_outlined;
+  static const flagFilled = Icons.flag;
 }

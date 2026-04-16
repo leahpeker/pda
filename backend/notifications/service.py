@@ -75,6 +75,33 @@ def create_join_request_notifications(display_name: str) -> None:
     _notify_users(str(user.pk) for user in recipients)
 
 
+def create_event_flag_notifications(event: Event, flagger: User) -> None:
+    from django.db.models import Q
+    from users.models import User as UserModel
+    from users.permissions import PermissionKey
+
+    from notifications.models import Notification, NotificationType
+
+    flagger_name = flagger.display_name or flagger.phone_number
+    recipients = UserModel.objects.filter(
+        Q(roles__name="admin", roles__is_default=True)
+        | Q(roles__permissions__contains=PermissionKey.MANAGE_EVENTS)
+    ).distinct()
+
+    Notification.objects.bulk_create(
+        [
+            Notification(
+                recipient=user,
+                notification_type=NotificationType.EVENT_FLAGGED,
+                event=event,
+                message=f"{flagger_name} flagged '{event.title}'",
+            )
+            for user in recipients
+        ]
+    )
+    _notify_users(str(user.pk) for user in recipients)
+
+
 def create_magic_link_request_notifications(user: User) -> None:
     from django.db.models import Q
     from users.models import User as UserModel

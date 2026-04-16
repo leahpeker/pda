@@ -46,6 +46,8 @@ import 'package:pda/screens/whatsapp_config_screen.dart'
 import 'package:pda/screens/profile_screen.dart' deferred as profile_screen;
 import 'package:pda/screens/member_profile_screen.dart'
     deferred as member_profile_screen;
+import 'package:pda/screens/flagged_events_screen.dart'
+    deferred as flagged_events_screen;
 
 final _log = Logger('Router');
 
@@ -98,6 +100,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/profile' ||
           loc == '/volunteer' ||
           loc == '/admin' ||
+          loc == '/admin/flagged-events' ||
           loc == '/admin/join-form' ||
           loc == '/admin/whatsapp' ||
           loc.startsWith('/admin/surveys') ||
@@ -137,6 +140,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (loc == '/admin' && !user.hasAnyAdminPermission) {
           _log.warning(
             'permission denied: $loc requires admin permission — redirecting',
+          );
+          return '/calendar';
+        }
+        if (loc == '/admin/flagged-events' &&
+            !user.hasPermission(Permission.manageEvents)) {
+          _log.warning(
+            'permission denied: $loc requires manage_events — redirecting',
           );
           return '/calendar';
         }
@@ -301,6 +311,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => DeferredScreen(
           loader: admin_screen.loadLibrary,
           builder: () => admin_screen.AdminScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/flagged-events',
+        name: 'flagged-events',
+        caseSensitive: false,
+        builder: (_, __) => DeferredScreen(
+          loader: flagged_events_screen.loadLibrary,
+          builder: () => flagged_events_screen.FlaggedEventsScreen(),
         ),
       ),
       GoRoute(

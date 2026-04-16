@@ -11,7 +11,7 @@ class AdminScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).value;
-    final cards = _buildCards(context, user);
+    final cards = _visibleCards(context, user);
 
     return AppScaffold(
       child: SingleChildScrollView(
@@ -36,57 +36,83 @@ class AdminScreen extends ConsumerWidget {
   }
 }
 
-List<Widget> _buildCards(BuildContext context, dynamic user) {
+typedef _CardDef = ({
+  String permission,
+  IconData icon,
+  String title,
+  String subtitle,
+  String route,
+});
+
+const _cardDefs = <_CardDef>[
+  (
+    permission: Permission.manageEvents,
+    icon: Icons.event_available_outlined,
+    title: 'manage events',
+    subtitle: 'create, edit, and manage events',
+    route: '/events/manage',
+  ),
+  (
+    permission: Permission.manageEvents,
+    icon: Icons.flag_outlined,
+    title: 'flagged events',
+    subtitle: 'review events flagged by members',
+    route: '/admin/flagged-events',
+  ),
+  (
+    permission: Permission.manageUsers,
+    icon: Icons.groups_outlined,
+    title: 'members',
+    subtitle: 'view and manage member accounts',
+    route: '/members',
+  ),
+  (
+    permission: Permission.approveJoinRequests,
+    icon: Icons.person_search_outlined,
+    title: 'join requests',
+    subtitle: 'review pending membership requests',
+    route: '/join-requests',
+  ),
+  (
+    permission: Permission.editJoinQuestions,
+    icon: Icons.dynamic_form_outlined,
+    title: 'join form',
+    subtitle: 'configure join request form questions',
+    route: '/admin/join-form',
+  ),
+  (
+    permission: Permission.manageSurveys,
+    icon: Icons.poll_outlined,
+    title: 'surveys',
+    subtitle: 'create and manage feedback surveys',
+    route: '/admin/surveys',
+  ),
+  (
+    permission: Permission.manageDocs,
+    icon: Icons.library_books_outlined,
+    title: 'documents',
+    subtitle: 'create and manage shared docs',
+    route: '/docs',
+  ),
+  (
+    permission: Permission.manageWhatsapp,
+    icon: Icons.chat_outlined,
+    title: 'whatsapp bot',
+    subtitle: 'configure bot connection and group',
+    route: '/admin/whatsapp',
+  ),
+];
+
+List<Widget> _visibleCards(BuildContext context, dynamic user) {
   return [
-    if (user?.hasPermission(Permission.manageEvents) ?? false)
-      _AdminCard(
-        icon: Icons.event_available_outlined,
-        title: 'manage events',
-        subtitle: 'create, edit, and manage events',
-        onTap: () => context.go('/events/manage'),
-      ),
-    if (user?.hasPermission(Permission.manageUsers) ?? false)
-      _AdminCard(
-        icon: Icons.groups_outlined,
-        title: 'members',
-        subtitle: 'view and manage member accounts',
-        onTap: () => context.go('/members'),
-      ),
-    if (user?.hasPermission(Permission.approveJoinRequests) ?? false)
-      _AdminCard(
-        icon: Icons.person_search_outlined,
-        title: 'join requests',
-        subtitle: 'review pending membership requests',
-        onTap: () => context.go('/join-requests'),
-      ),
-    if (user?.hasPermission(Permission.editJoinQuestions) ?? false)
-      _AdminCard(
-        icon: Icons.dynamic_form_outlined,
-        title: 'join form',
-        subtitle: 'configure join request form questions',
-        onTap: () => context.go('/admin/join-form'),
-      ),
-    if (user?.hasPermission(Permission.manageSurveys) ?? false)
-      _AdminCard(
-        icon: Icons.poll_outlined,
-        title: 'surveys',
-        subtitle: 'create and manage feedback surveys',
-        onTap: () => context.go('/admin/surveys'),
-      ),
-    if (user?.hasPermission(Permission.manageDocs) ?? false)
-      _AdminCard(
-        icon: Icons.library_books_outlined,
-        title: 'documents',
-        subtitle: 'create and manage shared docs',
-        onTap: () => context.go('/docs'),
-      ),
-    if (user?.hasPermission(Permission.manageWhatsapp) ?? false)
-      _AdminCard(
-        icon: Icons.chat_outlined,
-        title: 'whatsapp bot',
-        subtitle: 'configure bot connection and group',
-        onTap: () => context.go('/admin/whatsapp'),
-      ),
+    for (final def in _cardDefs)
+      if (user?.hasPermission(def.permission) ?? false)
+        _AdminCard(
+          icon: def.icon,
+          title: def.title,
+          subtitle: def.subtitle,
+          onTap: () => context.go(def.route),
+        ),
   ];
 }
 

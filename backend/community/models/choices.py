@@ -20,6 +20,12 @@ class EventStatus(models.TextChoices):
     DELETED = "deleted", "Deleted"
 
 
+class EventFlagStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    DISMISSED = "dismissed", "Dismissed"
+    ACTIONED = "actioned", "Actioned"
+
+
 class JoinRequestStatus(models.TextChoices):
     PENDING = "pending", "Pending"
     APPROVED = "approved", "Approved"
