@@ -207,7 +207,7 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
               _optionTile(
                 label: formatPollOption(option.datetime),
                 trailing: '${option.totalCount}',
-                onTap: _busy ? null : () => _updateOption(option),
+                onEdit: _busy ? null : () => _updateOption(option),
                 onRemove: options.length > 2 && !_busy
                     ? () => _removeOption(option: option)
                     : null,
@@ -221,7 +221,7 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
   Widget _optionTile({
     required String label,
     String? trailing,
-    VoidCallback? onTap,
+    VoidCallback? onEdit,
     VoidCallback? onRemove,
   }) {
     final theme = Theme.of(context);
@@ -229,20 +229,7 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
       children: [
         const Icon(Icons.access_time_outlined, size: 16),
         const SizedBox(width: 8),
-        Expanded(
-          child: onTap != null
-              ? Semantics(
-                  button: true,
-                  label: 'edit time: $label',
-                  child: InkWell(
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    onTap: onTap,
-                    child: Text(label),
-                  ),
-                )
-              : Text(label),
-        ),
+        Expanded(child: Text(label)),
         if (trailing != null)
           Padding(
             padding: const EdgeInsets.only(right: 4),
@@ -253,13 +240,19 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
               ),
             ),
           ),
+        if (onEdit != null)
+          IconButton(
+            tooltip: 'edit time',
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            onPressed: onEdit,
+          ),
         if (onRemove != null)
           IconButton(
             tooltip: 'remove option',
             icon: const Icon(Icons.close, size: 18),
             onPressed: onRemove,
           )
-        else
+        else if (onEdit == null)
           const SizedBox(width: 48),
       ],
     );
