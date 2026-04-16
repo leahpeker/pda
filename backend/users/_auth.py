@@ -145,6 +145,9 @@ def _apply_me_patch(user, payload: MePatchIn):
     if payload.email is not None:
         user.email = payload.email
         changed.append("email")
+    if payload.bio is not None:
+        user.bio = payload.bio.strip()
+        changed.append("bio")
     if payload.needs_onboarding is not None:
         user.needs_onboarding = payload.needs_onboarding
         changed.append("needs_onboarding")
@@ -236,6 +239,7 @@ def get_member_profile(request, user_id: str):
             display_name=user.display_name,
             phone_number=user.phone_number if (user.show_phone or is_own_profile) else "",
             email=(user.email or "") if (user.show_email or is_own_profile) else "",
+            bio=user.bio or "",
             profile_photo_url=media_path(user.profile_photo),
             login_link_requested=user.login_link_requested if can_manage_users else False,
         ),

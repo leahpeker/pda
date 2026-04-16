@@ -25,6 +25,7 @@ abstract class User with _$User {
     required String phoneNumber,
     @Default('') String displayName,
     @Default('') String email,
+    @Default('') String bio,
     @Default(false) bool isSuperuser,
     @Default(false) bool needsOnboarding,
     @Default('') String profilePhotoUrl,

@@ -97,6 +97,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
   Future<void> updateProfile({
     String? displayName,
     String? email,
+    String? bio,
     bool? showPhone,
     bool? showEmail,
     String? weekStart,
@@ -105,6 +106,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
     final data = <String, dynamic>{};
     if (displayName != null) data['display_name'] = displayName;
     if (email != null) data['email'] = email;
+    if (bio != null) data['bio'] = bio;
     if (showPhone != null) data['show_phone'] = showPhone;
     if (showEmail != null) data['show_email'] = showEmail;
     if (weekStart != null) data['week_start'] = weekStart;

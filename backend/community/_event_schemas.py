@@ -37,8 +37,11 @@ class EventListOut(BaseModel):
     cashapp_link: str = ""
     zelle_info: str = ""
     created_by_id: str | None = None
+    created_by_name: str | None = None
+    created_by_photo_url: str = ""
     co_host_ids: list[str] = []
     co_host_names: list[str] = []
+    co_host_photo_urls: list[str] = []
     datetime_tbd: bool = False
     has_poll: bool = False
     allow_plus_ones: bool = False

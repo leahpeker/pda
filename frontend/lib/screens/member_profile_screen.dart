@@ -55,8 +55,10 @@ class _ProfileBody extends ConsumerWidget {
     final phone = (data['phone_number'] as String?) ?? '';
     final email = (data['email'] as String?) ?? '';
     final photoUrl = (data['profile_photo_url'] as String?) ?? '';
+    final bio = (data['bio'] as String?) ?? '';
 
     final user = ref.watch(authProvider).value;
+    final isOwnProfile = user?.id == userId;
     final canManageUsers = user?.hasPermission(Permission.manageUsers) ?? false;
 
     return ListView(
@@ -72,7 +74,9 @@ class _ProfileBody extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
+        _BioSection(bio: bio, isOwnProfile: isOwnProfile, userId: userId),
+        const SizedBox(height: 16),
         if (phone.isNotEmpty)
           _InfoTile(
             icon: Icons.phone_outlined,
@@ -104,6 +108,184 @@ class _ProfileBody extends ConsumerWidget {
           const SizedBox(height: 32),
           _MagicLinkButton(userId: userId, phoneNumber: phone),
         ],
+      ],
+    );
+  }
+}
+
+class _BioSection extends ConsumerWidget {
+  final String bio;
+  final bool isOwnProfile;
+  final String userId;
+
+  const _BioSection({
+    required this.bio,
+    required this.isOwnProfile,
+    required this.userId,
+  });
+
+  Future<void> _showEditDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => _EditBioDialog(initialValue: bio),
+    );
+    if (result == null || !context.mounted) return;
+    try {
+      await ref.read(authProvider.notifier).updateProfile(bio: result);
+      ref.invalidate(_memberProfileProvider(userId));
+      _log.info('bio updated');
+    } catch (e, st) {
+      _log.warning('failed to update bio', e, st);
+      if (context.mounted) {
+        showErrorSnackBar(context, ApiError.from(e).message);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    if (bio.isEmpty && !isOwnProfile) return const SizedBox.shrink();
+
+    if (bio.isEmpty && isOwnProfile) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: InkWell(
+          onTap: () => _showEditDialog(context, ref),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.edit_note_outlined,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  'add your bio',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.15),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.person_outline,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(child: Text(bio, style: const TextStyle(fontSize: 15))),
+            if (isOwnProfile)
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 16),
+                tooltip: 'edit bio',
+                onPressed: () => _showEditDialog(context, ref),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EditBioDialog extends StatefulWidget {
+  final String initialValue;
+
+  const _EditBioDialog({required this.initialValue});
+
+  @override
+  State<_EditBioDialog> createState() => _EditBioDialogState();
+}
+
+class _EditBioDialogState extends State<_EditBioDialog> {
+  late final TextEditingController _controller;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('edit bio'),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _controller,
+          autofocus: true,
+          maxLength: FieldLimit.bio,
+          maxLines: 5,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+          decoration: const InputDecoration(
+            labelText: 'Bio',
+            alignLabelWithHint: true,
+          ),
+          validator: (v) {
+            if (v != null && v.trim().length > FieldLimit.bio) {
+              return 'Max ${FieldLimit.bio} characters';
+            }
+            return null;
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              Navigator.of(context).pop(_controller.text.trim());
+            }
+          },
+          child: const Text('save'),
+        ),
       ],
     );
   }

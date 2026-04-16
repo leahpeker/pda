@@ -46,6 +46,7 @@ class UserOut(BaseModel):
     phone_number: str
     display_name: str
     email: str = ""
+    bio: str = ""
     is_superuser: bool = False
     needs_onboarding: bool = False
     profile_photo_url: str = ""
@@ -63,6 +64,7 @@ class UserOut(BaseModel):
             phone_number=user.phone_number,
             display_name=user.display_name,
             email=user.email or "",
+            bio=user.bio or "",
             is_superuser=user.is_superuser,
             needs_onboarding=user.needs_onboarding,
             profile_photo_url=media_path(user.profile_photo),
@@ -85,6 +87,7 @@ class MemberProfileOut(BaseModel):
     display_name: str
     phone_number: str
     email: str = ""
+    bio: str = ""
     profile_photo_url: str = ""
     login_link_requested: bool = False
 
@@ -131,6 +134,7 @@ class UserPatchIn(BaseModel):
 class MePatchIn(BaseModel):
     display_name: str | None = Field(default=None, max_length=FieldLimit.DISPLAY_NAME)
     email: OptionalEmail = None
+    bio: str | None = Field(default=None, max_length=FieldLimit.BIO)
     needs_onboarding: bool | None = None
     show_phone: bool | None = None
     show_email: bool | None = None

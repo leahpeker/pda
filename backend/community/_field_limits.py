@@ -20,3 +20,4 @@ class FieldLimit:
     CHOICE = 20
     BOT_SECRET = 256
     PAYMENT_HANDLE = 100
+    BIO = 500

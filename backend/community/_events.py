@@ -22,6 +22,7 @@ from community._event_helpers import (
     _attending_headcount,
     _can_see_invite_only,
     _event_out,
+    _get_creator_name,
     _has_attendees,
     _update_co_hosts,
     _update_invited_users,
@@ -105,13 +106,16 @@ def _build_events_queryset(status: str, auth_user, is_authed):
     """Build the events queryset for list_events based on status and auth state."""
     if status == EventStatus.CANCELLED:
         return (
-            Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps", "poll")
+            Event.objects.select_related("created_by")
+            .prefetch_related("co_hosts", "invited_users", "rsvps", "poll")
             .filter(status=EventStatus.CANCELLED)
             .filter(Q(created_by=auth_user) | Q(co_hosts=auth_user))
             .distinct()
         )
-    qs = Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps", "poll").filter(
-        status=EventStatus.ACTIVE
+    qs = (
+        Event.objects.select_related("created_by")
+        .prefetch_related("co_hosts", "invited_users", "rsvps", "poll")
+        .filter(status=EventStatus.ACTIVE)
     )
     if not is_authed:
         qs = qs.filter(Q(visibility=PageVisibility.PUBLIC) | Q(event_type=EventType.OFFICIAL))
@@ -169,6 +173,9 @@ def list_events(request, status: str = EventStatus.ACTIVE):
                 cashapp_link=_members_only(e.cashapp_link, "", is_authed),
                 zelle_info=_members_only(e.zelle_info, "", is_authed),
                 created_by_id=str(e.created_by_id) if e.created_by_id else None,
+                created_by_name=_get_creator_name(e.created_by),
+                created_by_photo_url=media_path(e.created_by.profile_photo) if e.created_by else "",
+                co_host_photo_urls=[media_path(c.profile_photo) for c in e.co_hosts.all()],
                 datetime_tbd=e.datetime_tbd,
                 has_poll=hasattr(e, "poll"),
                 allow_plus_ones=e.allow_plus_ones,

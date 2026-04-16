@@ -119,6 +119,7 @@ abstract class FieldLimit {
   static const choice = 20;
   static const botSecret = 256;
   static const paymentHandle = 100;
+  static const bio = 500;
 }
 
 abstract class EventDetailLabel {
