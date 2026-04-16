@@ -35,7 +35,9 @@ class _EventAdminActionsState extends ConsumerState<EventAdminActions> {
   bool _loading = false;
 
   bool get _hasAttendees =>
-      widget.event.invitedCount > 0 || widget.event.attendingCount > 0;
+      widget.event.invitedCount > 0 ||
+      widget.event.attendingCount > 0 ||
+      (widget.event.hasPoll && widget.event.datetimeTbd);
 
   Future<void> _cancel() async {
     final result = await showCancelEventDialog(context, widget.event);
@@ -152,8 +154,8 @@ class _EventAdminActionsState extends ConsumerState<EventAdminActions> {
     final isCancelled = widget.event.status == EventStatus.cancelled;
 
     // Past events: edit + delete only (can't cancel something already done)
-    // Upcoming with no attendees: edit + delete only
-    // Upcoming with attendees: edit + cancel
+    // Upcoming with no attendees/poll: edit + delete only
+    // Upcoming with attendees or active poll: edit + cancel
     // Cancelled: uncancel (creator/manager only) + delete
     Widget buttons;
     if (isCancelled) {
