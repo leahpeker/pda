@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pda/models/event_poll.dart';
 import 'package:pda/providers/event_poll_provider.dart';
 import 'package:pda/screens/calendar/event_form_models.dart';
+import 'package:pda/services/api_error.dart';
 import 'package:pda/widgets/date_time_picker_dialog.dart';
 import 'package:pda/widgets/poll_widgets.dart';
 
@@ -52,11 +53,11 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
       setState(() => _adding = true);
       try {
         await addPollOption(ref: ref, eventId: widget.eventId!, datetime: dt);
-      } catch (_) {
+      } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('couldn\'t add option — try again')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(ApiError.from(e).message)));
         }
       } finally {
         if (mounted) setState(() => _adding = false);
@@ -76,12 +77,9 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
         );
       } catch (e) {
         if (mounted) {
-          final msg = e.toString().contains('at least 2')
-              ? 'a poll needs at least 2 options'
-              : 'couldn\'t remove option — try again';
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(msg)));
+          ).showSnackBar(SnackBar(content: Text(ApiError.from(e).message)));
         }
       }
     } else if (localIndex != null) {
@@ -119,11 +117,11 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
         optionId: option.id,
         datetime: dt,
       );
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('couldn\'t update option — try again')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(ApiError.from(e).message)));
       }
     } finally {
       if (mounted) setState(() => _updating = false);

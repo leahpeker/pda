@@ -378,7 +378,7 @@ def add_poll_option(request, event_id: UUID, payload: PollOptionIn):
     try:
         PollOption.objects.create(poll=poll, datetime=payload.datetime, display_order=next_order)
     except Exception:
-        return Status(400, ErrorOut(detail="That datetime option already exists in this poll."))
+        return Status(400, ErrorOut(detail="that time is already an option in this poll"))
     audit_log(
         logging.INFO,
         "poll_option_added",
@@ -412,7 +412,7 @@ def update_poll_option(request, event_id: UUID, payload: PollOptionIn, option_id
         option.datetime = payload.datetime
         option.save(update_fields=["datetime"])
     except Exception:
-        return Status(400, ErrorOut(detail="That datetime option already exists in this poll."))
+        return Status(400, ErrorOut(detail="that time is already an option in this poll"))
     audit_log(
         logging.INFO,
         "poll_option_updated",
