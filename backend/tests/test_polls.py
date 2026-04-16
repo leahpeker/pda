@@ -72,8 +72,8 @@ class TestCreatePoll:
         poll_event.refresh_from_db()
         assert poll_event.datetime_tbd is True
 
-    def test_create_poll_requires_two_options(self, api_client, auth_headers, poll_event):
-        payload = {"options": ["2026-09-01T18:00:00Z"]}
+    def test_create_poll_requires_at_least_one_option(self, api_client, auth_headers, poll_event):
+        payload = {"options": []}
         response = api_client.post(
             f"/api/community/events/{poll_event.id}/poll/",
             data=json.dumps(payload),
@@ -81,6 +81,16 @@ class TestCreatePoll:
             **auth_headers,
         )
         assert response.status_code == 400
+
+    def test_create_poll_with_one_option_succeeds(self, api_client, auth_headers, poll_event):
+        payload = {"options": ["2026-09-01T18:00:00Z"]}
+        response = api_client.post(
+            f"/api/community/events/{poll_event.id}/poll/",
+            data=json.dumps(payload),
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert response.status_code == 201
 
     def test_create_poll_duplicate_fails(
         self, api_client, auth_headers, poll_with_options, poll_event

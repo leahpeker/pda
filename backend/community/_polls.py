@@ -125,8 +125,8 @@ def create_event_poll(request, event_id: UUID, payload: EventPollIn):
         return Status(400, ErrorOut(detail="Cancelled events cannot be edited."))
     if hasattr(event, "poll"):
         return Status(400, ErrorOut(detail="This event already has a poll."))
-    if len(payload.options) < 2:
-        return Status(400, ErrorOut(detail="A poll requires at least 2 options."))
+    if len(payload.options) < 1:
+        return Status(400, ErrorOut(detail="A poll requires at least 1 option."))
     with transaction.atomic():
         poll = EventPoll.objects.create(event=event, created_by=request.auth)
         for i, dt in enumerate(payload.options):

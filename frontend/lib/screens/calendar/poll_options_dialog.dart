@@ -167,15 +167,13 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
             child: const Text('cancel'),
           ),
         FilledButton(
-          onPressed: _isLive || _localOptions.length >= 2
-              ? () {
-                  if (_isLive) {
-                    Navigator.of(context).pop();
-                  } else {
-                    Navigator.of(context).pop(_localOptions);
-                  }
-                }
-              : null,
+          onPressed: () {
+            if (_isLive) {
+              Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pop(_localOptions);
+            }
+          },
           child: const Text('done'),
         ),
       ],
