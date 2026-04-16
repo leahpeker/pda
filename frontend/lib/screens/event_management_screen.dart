@@ -245,6 +245,14 @@ class _EventManagementBodyState extends ConsumerState<_EventManagementBody> {
                           )
                         : null,
                   ),
+                  maxLength: 100,
+                  buildCounter:
+                      (
+                        _, {
+                        required currentLength,
+                        required isFocused,
+                        maxLength,
+                      }) => null,
                   onChanged: (v) => setState(() => _query = v),
                 ),
               ),

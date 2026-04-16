@@ -145,6 +145,14 @@ class _InviteModalState extends ConsumerState<InviteModal> {
                         )
                       : null,
                 ),
+                maxLength: 100,
+                buildCounter:
+                    (
+                      _, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => null,
                 onChanged: _search,
               ),
               const SizedBox(height: 8),

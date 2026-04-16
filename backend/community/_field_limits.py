@@ -10,7 +10,7 @@ class FieldLimit:
     DESCRIPTION = 2000
     CONTENT = 50000
     CONTENT_HTML = 100000  # HTML is more verbose than Delta JSON
-    URL = 500
+    URL = 200
     DISPLAY_NAME = 64
     PHONE = 20
     PASSWORD = 128

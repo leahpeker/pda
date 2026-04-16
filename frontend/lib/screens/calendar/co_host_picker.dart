@@ -136,6 +136,10 @@ class _CoHostPickerState extends ConsumerState<CoHostPicker> {
                   )
                 : null,
           ),
+          maxLength: 100,
+          buildCounter:
+              (_, {required currentLength, required isFocused, maxLength}) =>
+                  null,
           onChanged: _search,
         ),
         if (_results.isNotEmpty) ...[

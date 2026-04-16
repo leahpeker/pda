@@ -6,6 +6,7 @@ abstract class EventType {
 abstract class EventStatus {
   static const active = 'active';
   static const cancelled = 'cancelled';
+  static const deleted = 'deleted';
 }
 
 abstract class RsvpStatus {
@@ -107,7 +108,7 @@ abstract class FieldLimit {
   static const shortText = 300;
   static const description = 2000;
   static const content = 50000;
-  static const url = 500;
+  static const url = 200;
   static const displayName = 64;
   static const phone = 20;
   static const password = 128;
