@@ -40,6 +40,7 @@ class EventListOut(BaseModel):
     co_host_ids: list[str] = []
     co_host_names: list[str] = []
     datetime_tbd: bool = False
+    has_poll: bool = False
     allow_plus_ones: bool = False
     max_attendees: int | None = None
     attending_count: int = 0

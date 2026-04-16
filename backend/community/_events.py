@@ -105,12 +105,12 @@ def _build_events_queryset(status: str, auth_user, is_authed):
     """Build the events queryset for list_events based on status and auth state."""
     if status == EventStatus.CANCELLED:
         return (
-            Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps")
+            Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps", "poll")
             .filter(status=EventStatus.CANCELLED)
             .filter(Q(created_by=auth_user) | Q(co_hosts=auth_user))
             .distinct()
         )
-    qs = Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps").filter(
+    qs = Event.objects.prefetch_related("co_hosts", "invited_users", "rsvps", "poll").filter(
         status=EventStatus.ACTIVE
     )
     if not is_authed:
@@ -170,6 +170,7 @@ def list_events(request, status: str = EventStatus.ACTIVE):
                 zelle_info=_members_only(e.zelle_info, "", is_authed),
                 created_by_id=str(e.created_by_id) if e.created_by_id else None,
                 datetime_tbd=e.datetime_tbd,
+                has_poll=hasattr(e, "poll"),
                 allow_plus_ones=e.allow_plus_ones,
                 max_attendees=e.max_attendees,
                 attending_count=_attending_headcount(e),
