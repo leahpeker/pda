@@ -39,7 +39,7 @@ final unreadCountProvider = StreamProvider<int>((ref) async* {
   void schedulePoll() {
     final interval = (sseClient?.isConnected ?? false)
         ? const Duration(minutes: 5)
-        : const Duration(seconds: 60);
+        : const Duration(seconds: 30);
     pollTimer = Timer(interval, () {
       if (!trigger.isClosed && !isTabHidden()) trigger.add(null);
       schedulePoll();
