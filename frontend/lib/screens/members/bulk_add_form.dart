@@ -28,6 +28,10 @@ class BulkAddForm extends StatelessWidget {
         TextField(
           controller: controller,
           maxLines: 8,
+          maxLength: 50000,
+          buildCounter:
+              (_, {required currentLength, required isFocused, maxLength}) =>
+                  null,
           onChanged: (_) => onChanged(),
           decoration: const InputDecoration(
             hintText: '+12125551234\n+13105559876\n…',

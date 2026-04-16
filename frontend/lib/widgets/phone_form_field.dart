@@ -54,6 +54,9 @@ class PhoneFormField extends StatelessWidget {
         helperText: helperText,
         helperMaxLines: 2,
       ),
+      maxLength: 12,
+      buildCounter:
+          (_, {required currentLength, required isFocused, maxLength}) => null,
       keyboardType: TextInputType.phone,
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted,

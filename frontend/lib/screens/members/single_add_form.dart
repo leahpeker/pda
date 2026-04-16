@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pda/config/constants.dart';
 import 'package:pda/models/user.dart';
 import 'package:pda/utils/validators.dart' as v;
 import 'package:pda/widgets/phone_form_field.dart';
@@ -56,6 +57,7 @@ class _SingleAddFormState extends State<SingleAddForm> {
             decoration: const InputDecoration(
               labelText: 'Display name (optional)',
             ),
+            maxLength: FieldLimit.displayName,
             validator: v.optionalDisplayName(),
             onChanged: widget.onDisplayNameChanged,
           ),

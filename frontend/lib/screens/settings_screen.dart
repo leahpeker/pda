@@ -6,6 +6,7 @@ import 'package:pda/models/user.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/providers/calendar_provider.dart'
     show calendarTokenProvider;
+import 'package:pda/config/constants.dart';
 import 'package:pda/screens/settings_dialogs.dart';
 import 'package:pda/screens/settings_profile_avatar.dart';
 import 'package:pda/services/api_error.dart';
@@ -187,6 +188,7 @@ class SettingsScreen extends ConsumerWidget {
         label: 'Display name',
         initialValue: current ?? '',
         keyboardType: TextInputType.name,
+        maxLength: FieldLimit.displayName,
         validator: v.displayName(),
       ),
     );
@@ -217,6 +219,7 @@ class SettingsScreen extends ConsumerWidget {
         label: 'Email address',
         initialValue: current ?? '',
         keyboardType: TextInputType.emailAddress,
+        maxLength: FieldLimit.shortText,
         validator: v.optionalEmail(),
       ),
     );

@@ -216,6 +216,10 @@ class _GuestAddEventDialogState extends ConsumerState<GuestAddEventDialog> {
           controller: _passwordController,
           decoration: const InputDecoration(labelText: 'Password'),
           obscureText: true,
+          maxLength: FieldLimit.password,
+          buildCounter:
+              (_, {required currentLength, required isFocused, maxLength}) =>
+                  null,
           autofillHints: const [AutofillHints.password],
           validator: v.all([v.required(), v.maxLength(FieldLimit.password)]),
           onFieldSubmitted: (_) => _loading ? null : _login(),

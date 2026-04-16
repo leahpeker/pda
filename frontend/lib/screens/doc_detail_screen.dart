@@ -84,6 +84,7 @@ class _DocDetailScreenState extends ConsumerState<DocDetailScreen>
                             border: InputBorder.none,
                             hintText: 'document title',
                           ),
+                          maxLength: FieldLimit.title,
                         )
                       else
                         Padding(

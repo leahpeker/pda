@@ -136,6 +136,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                           hintText: 'e.g. Alex R',
                           helperText: 'at least first name + last initial',
                         ),
+                        maxLength: FieldLimit.displayName,
                         validator: v.displayName(),
                       ),
                     ),

@@ -17,6 +17,7 @@ class SettingsEditFieldDialog extends StatefulWidget {
   final String initialValue;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+  final int? maxLength;
 
   const SettingsEditFieldDialog({
     super.key,
@@ -25,6 +26,7 @@ class SettingsEditFieldDialog extends StatefulWidget {
     required this.initialValue,
     this.keyboardType = TextInputType.text,
     this.validator,
+    this.maxLength,
   });
 
   @override
@@ -60,6 +62,7 @@ class _SettingsEditFieldDialogState extends State<SettingsEditFieldDialog> {
           autofocus: true,
           textInputAction: TextInputAction.done,
           decoration: InputDecoration(labelText: widget.label),
+          maxLength: widget.maxLength,
           validator: widget.validator,
           onFieldSubmitted: (_) {
             if (_formKey.currentState!.validate()) {
@@ -196,6 +199,14 @@ class _SettingsChangePasswordDialogState
               controller: _confirmCtrl,
               focusNode: _confirmFocus,
               obscureText: true,
+              maxLength: 128,
+              buildCounter:
+                  (
+                    _, {
+                    required currentLength,
+                    required isFocused,
+                    maxLength,
+                  }) => null,
               textInputAction: TextInputAction.done,
               decoration: const InputDecoration(
                 labelText: 'Confirm new password',

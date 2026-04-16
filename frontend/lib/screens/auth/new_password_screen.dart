@@ -129,6 +129,14 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                             ),
                           ),
                         ),
+                        maxLength: 128,
+                        buildCounter:
+                            (
+                              _, {
+                              required currentLength,
+                              required isFocused,
+                              maxLength,
+                            }) => null,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _saving ? null : _save(),
                         validator: (v) => v != _newPwCtrl.text

@@ -67,12 +67,16 @@ class SurveyQuestionField extends StatelessWidget {
       ),
       FieldType.number => TextFormField(
         decoration: InputDecoration(labelText: label),
+        maxLength: FieldLimit.shortText,
         keyboardType: TextInputType.number,
         validator: (v) {
           final base = _validate(v);
           if (base != null) return base;
           if (v != null && v.isNotEmpty) {
             if (double.tryParse(v) == null) return 'Must be a number';
+            if (v.length > FieldLimit.shortText) {
+              return 'Must be ${FieldLimit.shortText} characters or fewer';
+            }
           }
           return null;
         },

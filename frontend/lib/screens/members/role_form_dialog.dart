@@ -66,6 +66,7 @@ class _RoleFormDialogState extends State<RoleFormDialog> {
                     controller: _name,
                     textInputAction: TextInputAction.done,
                     decoration: const InputDecoration(labelText: 'Role name *'),
+                    maxLength: FieldLimit.roleName,
                     validator: v.roleName(),
                     onFieldSubmitted: (_) {
                       if (!_formKey.currentState!.validate()) return;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:pda/config/constants.dart';
 import 'package:pda/providers/auth_provider.dart';
 import 'package:pda/services/api_error.dart';
 import 'package:pda/utils/snackbar.dart';
@@ -101,6 +102,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         decoration: const InputDecoration(
                           labelText: 'what should we call you?',
                         ),
+                        maxLength: FieldLimit.displayName,
                         textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
                         validator: v.displayName(),
@@ -112,6 +114,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         decoration: const InputDecoration(
                           labelText: 'email (optional)',
                         ),
+                        maxLength: FieldLimit.shortText,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) => _newPwFocusNode.requestFocus(),
@@ -166,6 +169,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             ),
                           ),
                         ),
+                        maxLength: FieldLimit.password,
+                        buildCounter:
+                            (
+                              _, {
+                              required currentLength,
+                              required isFocused,
+                              maxLength,
+                            }) => null,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _saving ? null : _save(),
                         validator: (v) => v != _newPwCtrl.text
