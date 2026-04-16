@@ -52,6 +52,87 @@ void main() {
       expect(result!.day, equals(20));
     });
 
+    testWidgets('clamps time when date selection makes current time invalid', (
+      tester,
+    ) async {
+      // firstDate = today at 3:00 PM (15:00)
+      final firstDate = DateTime(2024, 6, 15, 15, 0);
+      // Start on a future date with time 1:00 PM (valid for that date)
+      final initial = DateTime(2024, 6, 20, 13, 0);
+      DateTime? result;
+
+      await tester.pumpWidget(
+        _app(
+          DateTimePicker(
+            initialDateTime: initial,
+            firstDate: firstDate,
+            onDateTimeChanged: (dt) => result = dt,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap today (the 15th) — this makes 1:00 PM invalid (before 3:00 PM)
+      await tester.tap(find.text('15'));
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      // Must be clamped to at least firstDate
+      expect(result!.isBefore(firstDate), isFalse);
+      expect(result!.day, equals(15));
+    });
+
+    testWidgets('no clamping when selected date is after firstDate day', (
+      tester,
+    ) async {
+      final firstDate = DateTime(2024, 6, 15, 23, 0);
+      final initial = DateTime(2024, 6, 20, 1, 0); // future date, early time
+      DateTime? result;
+
+      await tester.pumpWidget(
+        _app(
+          DateTimePicker(
+            initialDateTime: initial,
+            firstDate: firstDate,
+            onDateTimeChanged: (dt) => result = dt,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap the 25th — a date beyond firstDate, so early time is fine
+      await tester.tap(find.text('25'));
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      // Time should be preserved as-is (1:00 AM on the 25th is not before firstDate)
+      expect(result!.day, equals(25));
+      expect(result!.hour, equals(1));
+    });
+
+    testWidgets('no clamping when firstDate is null', (tester) async {
+      final initial = DateTime(2024, 6, 15, 14, 30);
+      DateTime? result;
+
+      await tester.pumpWidget(
+        _app(
+          DateTimePicker(
+            initialDateTime: initial,
+            onDateTimeChanged: (dt) => result = dt,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('10'));
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      // Time preserved, no clamping
+      expect(result!.hour, equals(14));
+      expect(result!.minute, equals(30));
+    });
+
     testWidgets(
       'didUpdateWidget syncs controllers when initialDateTime changes',
       (tester) async {

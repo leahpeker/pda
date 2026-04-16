@@ -71,6 +71,34 @@ class _DateTimePickerState extends State<DateTimePicker> {
 
   int get _periodIndex => _current.hour < 12 ? 0 : 1;
 
+  /// If [_current] is before [widget.firstDate], clamp forward and sync wheels.
+  void _clampToFirstDate() {
+    final first = widget.firstDate;
+    if (first == null || !_current.isBefore(first)) return;
+    final rawMinute =
+        (first.minute / widget.minuteInterval).ceil() * widget.minuteInterval;
+    if (rawMinute >= 60) {
+      _current = DateTime(
+        first.year,
+        first.month,
+        first.day,
+        first.hour + 1,
+        0,
+      );
+    } else {
+      _current = DateTime(
+        first.year,
+        first.month,
+        first.day,
+        first.hour,
+        rawMinute,
+      );
+    }
+    _hourController.jumpToItem(_hourIndex);
+    _minuteController.jumpToItem(_minuteIndex);
+    _periodController.jumpToItem(_periodIndex);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -108,6 +136,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
         _current.hour,
         _current.minute,
       );
+      _clampToFirstDate();
     });
     widget.onDateTimeChanged(_current);
   }
@@ -128,6 +157,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
         hour24,
         minuteVal,
       );
+      _clampToFirstDate();
     });
     widget.onDateTimeChanged(_current);
   }
