@@ -133,8 +133,6 @@ def me(request):
 
 def _apply_me_patch(user, payload: MePatchIn):
     """Apply MePatchIn fields to user. Returns (changed_fields, error_response)."""
-    from users.models import WeekStart
-
     changed = []
     if payload.display_name is not None:
         name_error = validate_display_name(payload.display_name)
@@ -158,13 +156,6 @@ def _apply_me_patch(user, payload: MePatchIn):
         user.show_email = payload.show_email
         changed.append("show_email")
     if payload.week_start is not None:
-        if payload.week_start not in WeekStart.VALID:
-            return None, Status(
-                400,
-                ErrorOut(
-                    detail=f'Invalid week_start "{payload.week_start}" — must be "sunday" or "monday".'
-                ),
-            )
         user.week_start = payload.week_start
         changed.append("week_start")
     return changed, None

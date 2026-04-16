@@ -263,13 +263,12 @@ class TestWaitlistPromotionNotification:
 
         api_client.delete(f"/api/community/events/{capped_event.id}/rsvp/", **headers1)
 
-        notif = Notification.objects.filter(
+        notif = Notification.objects.get(
             recipient=user3,
             notification_type=NotificationType.WAITLIST_PROMOTED,
             event=capped_event,
         )
-        assert notif.exists()
-        assert capped_event.title in notif.first().message
+        assert capped_event.title in notif.message
 
     def test_no_notification_when_no_waitlisted(self, api_client, capped_event, headers1, headers2):
         """No notification created when a spot frees but nobody is waitlisted."""

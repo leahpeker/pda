@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from community._field_limits import FieldLimit
 from config.media_proxy import media_path
@@ -138,7 +138,7 @@ class MePatchIn(BaseModel):
     needs_onboarding: bool | None = None
     show_phone: bool | None = None
     show_email: bool | None = None
-    week_start: str | None = None
+    week_start: Literal["sunday", "monday"] | None = None
 
 
 class ChangePasswordIn(BaseModel):
