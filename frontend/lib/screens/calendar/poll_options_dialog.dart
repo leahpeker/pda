@@ -264,9 +264,7 @@ class _PollOptionsDialogState extends ConsumerState<PollOptionsDialog> {
             tooltip: 'remove option',
             icon: const Icon(Icons.close, size: 18),
             onPressed: onRemove,
-          )
-        else if (onEdit == null)
-          const SizedBox(width: 48),
+          ),
       ],
     );
   }
