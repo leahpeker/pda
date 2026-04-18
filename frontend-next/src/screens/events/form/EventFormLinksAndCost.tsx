@@ -1,4 +1,6 @@
-// Links + cost sections.
+// Links + cost section bodies. Each is rendered inside its own
+// CollapsibleCard by the parent form. Kept in one file so the small
+// per-section components stay co-located with their related logic.
 
 import type { EventFormValues } from '@/api/eventWrites';
 import { TextField } from '@/components/ui/TextField';
@@ -9,10 +11,9 @@ interface Props {
   errors: Partial<Record<keyof EventFormValues, string>>;
 }
 
-export function EventFormLinksAndCost({ values, onChange, errors }: Props) {
+export function EventFormLinks({ values, onChange, errors }: Props) {
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">links</h2>
+    <div className="flex flex-col gap-4">
       <TextField
         label="whatsapp group"
         value={values.whatsappLink}
@@ -43,8 +44,13 @@ export function EventFormLinksAndCost({ values, onChange, errors }: Props) {
         maxLength={200}
         error={errors.otherLink}
       />
+    </div>
+  );
+}
 
-      <h2 className="mt-4 text-xs font-medium tracking-wide text-neutral-500 uppercase">cost</h2>
+export function EventFormMoney({ values, onChange }: Props) {
+  return (
+    <div className="flex flex-col gap-4">
       <TextField
         label="price"
         value={values.price}
@@ -81,6 +87,6 @@ export function EventFormLinksAndCost({ values, onChange, errors }: Props) {
         placeholder="email or phone"
         maxLength={300}
       />
-    </section>
+    </div>
   );
 }

@@ -1,11 +1,12 @@
-// Photo upload for an existing event. The create flow can't upload a photo
-// until the event exists (backend endpoint is scoped by :id), so the form
-// chains create → upload when a photo is staged before save.
+// Hero cover photo for the event form. The whole banner is one big button —
+// tap anywhere to pick. Crop happens via the shared ImageCropDialog (16:9).
+// On create the cropped blob is staged and uploaded after the event POST
+// returns an id; on edit it uploads immediately.
 
 import { useRef, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
-import { Button } from '@/components/ui/Button';
+import { cn } from '@/utils/cn';
 
 const ALLOWED_MIME = [
   'image/jpeg',
@@ -36,6 +37,12 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
       ? `${photoUrl}?v=${encodeURIComponent(photoUpdatedAt)}`
       : photoUrl
     : '';
+  const hasPhoto = Boolean(displayUrl);
+  const locked = (disabled ?? false) || busy;
+
+  function open() {
+    if (!locked) inputRef.current?.click();
+  }
 
   function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     setError(null);
@@ -66,8 +73,9 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
     }
   }
 
-  async function handleDelete() {
-    if (!onDelete) return;
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!onDelete || locked) return;
     setBusy(true);
     try {
       await onDelete();
@@ -77,50 +85,67 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
   }
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">photo</h2>
-      {displayUrl ? (
-        <img
-          src={displayUrl}
-          alt=""
-          className="aspect-video w-full max-w-md rounded-lg object-cover"
-        />
-      ) : (
-        <div className="flex aspect-video w-full max-w-md items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-xs text-neutral-500">
-          no photo yet
-        </div>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ALLOWED_MIME.join(',')}
-          onChange={onPick}
-          className="hidden"
-          aria-label="choose event photo"
-        />
-        <Button
-          variant="secondary"
-          disabled={(disabled ?? false) || busy}
-          onClick={() => inputRef.current?.click()}
-        >
-          {displayUrl ? 'replace photo' : 'add photo'}
-        </Button>
-        {displayUrl && onDelete ? (
-          <Button
-            variant="ghost"
-            disabled={(disabled ?? false) || busy}
-            onClick={() => void handleDelete()}
+    <div className="flex flex-col gap-2">
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ALLOWED_MIME.join(',')}
+        onChange={onPick}
+        className="hidden"
+        aria-label="choose event photo"
+      />
+
+      <button
+        type="button"
+        onClick={open}
+        disabled={locked}
+        aria-label={hasPhoto ? 'change cover photo' : 'add a cover photo'}
+        className={cn(
+          'group relative -mx-4 aspect-video w-[calc(100%+2rem)] overflow-hidden sm:mx-0 sm:w-full sm:rounded-[var(--radius-md)]',
+          'focus-visible:ring-brand-300 focus-visible:ring-2 focus-visible:outline-none',
+          hasPhoto ? 'bg-neutral-200' : 'border-brand-200 bg-brand-50 border-2 border-dashed',
+          locked && 'cursor-not-allowed opacity-60',
+        )}
+      >
+        {hasPhoto ? (
+          <>
+            <img src={displayUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/40 via-transparent to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-neutral-800">
+                change photo
+              </span>
+            </div>
+          </>
+        ) : (
+          <span className="text-brand-700 absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <span aria-hidden="true" className="text-3xl">
+              📸
+            </span>
+            <span className="text-sm font-medium">add a cover photo</span>
+            <span className="text-brand-600/80 text-xs">tap to pick — 16:9 works best</span>
+          </span>
+        )}
+      </button>
+
+      {hasPhoto && onDelete ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={(e) => void handleDelete(e)}
+            disabled={locked}
+            className="text-xs text-neutral-500 underline decoration-dotted hover:text-red-600 disabled:cursor-not-allowed"
           >
-            remove
-          </Button>
-        ) : null}
-      </div>
+            remove photo
+          </button>
+        </div>
+      ) : null}
+
       {error ? (
         <p role="alert" className="text-xs text-red-600">
           {error}
         </p>
       ) : null}
+
       {file ? (
         <ImageCropDialog
           file={file}
@@ -133,7 +158,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
           onCrop={handleCrop}
         />
       ) : null}
-    </section>
+    </div>
   );
 }
 
