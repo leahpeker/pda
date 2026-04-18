@@ -1,7 +1,9 @@
 .PHONY: help install run test lint lint-check format typecheck lint-file typecheck-file check migrate \
         createsuperuser seed db-start db-stop ci dev build-dev complexity \
         frontend-install frontend-run frontend-run-html frontend-build frontend-codegen frontend-lint \
-        frontend-format frontend-test frontend-fix frontend-complexity
+        frontend-format frontend-test frontend-fix frontend-complexity \
+        frontend-next-install frontend-next-run frontend-next-build frontend-next-lint \
+        frontend-next-format frontend-next-test frontend-next-typecheck frontend-next-types
 
 help:
 	@echo "Backend commands:"
@@ -117,6 +119,31 @@ frontend-test:
 
 frontend-complexity:
 	dart pub global activate dart_code_metrics 2>/dev/null; dart pub global run dart_code_metrics:metrics analyze frontend/lib/ --disable-sunset-warning --set-exit-on-violation-level=warning
+
+# Frontend-next (Vite + React migration target — lives alongside Flutter until cutover)
+frontend-next-install:
+	cd frontend-next && pnpm install
+
+frontend-next-run:
+	cd frontend-next && pnpm dev
+
+frontend-next-build:
+	cd frontend-next && pnpm build
+
+frontend-next-lint:
+	cd frontend-next && pnpm lint && pnpm format:check
+
+frontend-next-format:
+	cd frontend-next && pnpm format
+
+frontend-next-test:
+	cd frontend-next && pnpm test
+
+frontend-next-typecheck:
+	cd frontend-next && pnpm typecheck
+
+frontend-next-types:
+	cd frontend-next && pnpm types:api
 
 # CI (run before every commit)
 ci: lint check test typecheck complexity frontend-lint frontend-test frontend-complexity
