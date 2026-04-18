@@ -20,7 +20,7 @@ export interface User {
   needsOnboarding: boolean;
   showPhone: boolean;
   showEmail: boolean;
-  weekStart: number;
+  weekStart: 'sunday' | 'monday';
   profilePhotoUrl: string;
   photoUpdatedAt: string | null;
   roles: Role[];

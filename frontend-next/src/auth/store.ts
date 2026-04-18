@@ -30,6 +30,9 @@ interface AuthState {
     email?: string | undefined;
   }) => Promise<void>;
   changePassword: (current: string, next: string) => Promise<void>;
+  updateProfile: (patch: authApi.ProfileUpdate) => Promise<void>;
+  uploadProfilePhoto: (file: File) => Promise<void>;
+  deleteProfilePhoto: () => Promise<void>;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
   // Invoked by axios when a refresh fails — synchronous, no await.
@@ -80,6 +83,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   async changePassword(current, next) {
     await authApi.changePassword(current, next);
+  },
+
+  async updateProfile(patch) {
+    const user = await authApi.updateProfile(patch);
+    set({ user });
+  },
+
+  async uploadProfilePhoto(file) {
+    const user = await authApi.uploadProfilePhoto(file);
+    set({ user });
+  },
+
+  async deleteProfilePhoto() {
+    const user = await authApi.deleteProfilePhoto();
+    set({ user });
   },
 
   async refreshUser() {

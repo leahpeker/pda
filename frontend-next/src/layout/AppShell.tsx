@@ -5,11 +5,10 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store';
 import { Nav } from './Nav';
-import { Button } from '@/components/ui/Button';
+import { NotificationBell } from './NotificationBell';
 
 export function AppShell() {
   const isAuthed = useAuthStore((s) => s.status === 'authed');
-  const logout = useAuthStore((s) => s.logout);
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">
@@ -19,11 +18,9 @@ export function AppShell() {
             pda
           </Link>
           <Nav />
-          <div>
+          <div className="flex items-center gap-1">
             {isAuthed ? (
-              <Button variant="ghost" onClick={() => void logout()}>
-                log out
-              </Button>
+              <NotificationBell />
             ) : (
               <Link
                 to="/login"

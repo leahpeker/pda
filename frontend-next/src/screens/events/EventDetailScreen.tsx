@@ -5,6 +5,7 @@ import type { Event } from '@/models/event';
 import { EventStatus, EventType, EventVisibility } from '@/models/event';
 import { formatEventDateTime } from '@/utils/datetime';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
+import { EventMemberSection } from './EventMemberSection';
 
 export default function EventDetailScreen() {
   const { id } = useParams<{ id: string }>();
@@ -41,7 +42,7 @@ export default function EventDetailScreen() {
         </section>
       ) : null}
 
-      {isAuthed ? <MemberSectionStub /> : <LoginOrJoinSection />}
+      {isAuthed ? <EventMemberSection event={event} /> : <LoginOrJoinSection />}
     </ContentContainer>
   );
 }
@@ -100,15 +101,6 @@ function LoginOrJoinSection() {
           request to join
         </Link>
       </div>
-    </section>
-  );
-}
-
-function MemberSectionStub() {
-  // Phase 3 fills this in: hosts, location, links, cost, invite, rsvp, admin.
-  return (
-    <section className="mt-8 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-4 text-xs text-neutral-500">
-      member-only details (hosts, location, rsvp, etc.) will render here in phase 3
     </section>
   );
 }

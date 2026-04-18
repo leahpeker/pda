@@ -24,7 +24,7 @@ interface WireUser {
   needs_onboarding: boolean;
   show_phone?: boolean;
   show_email?: boolean;
-  week_start?: number;
+  week_start?: 'sunday' | 'monday';
   profile_photo_url?: string;
   photo_updated_at?: string | null;
   roles: WireRole[];
@@ -62,7 +62,7 @@ function mapUser(u: WireUser): User {
     needsOnboarding: u.needs_onboarding,
     showPhone: u.show_phone ?? false,
     showEmail: u.show_email ?? false,
-    weekStart: u.week_start ?? 0,
+    weekStart: u.week_start ?? 'sunday',
     profilePhotoUrl: u.profile_photo_url ?? '',
     photoUpdatedAt: u.photo_updated_at ?? null,
     roles: u.roles.map(mapRole),
@@ -140,4 +140,40 @@ export async function changePassword(currentPassword: string, newPassword: strin
     current_password: currentPassword,
     new_password: newPassword,
   });
+}
+
+export interface ProfileUpdate {
+  displayName?: string;
+  email?: string;
+  bio?: string;
+  showPhone?: boolean;
+  showEmail?: boolean;
+  weekStart?: 'sunday' | 'monday';
+}
+
+export async function updateProfile(patch: ProfileUpdate): Promise<User> {
+  // Omit undefined so PATCH doesn't clobber fields that weren't explicitly set.
+  const body: Record<string, unknown> = {};
+  if (patch.displayName !== undefined) body.display_name = patch.displayName;
+  if (patch.email !== undefined) body.email = patch.email;
+  if (patch.bio !== undefined) body.bio = patch.bio;
+  if (patch.showPhone !== undefined) body.show_phone = patch.showPhone;
+  if (patch.showEmail !== undefined) body.show_email = patch.showEmail;
+  if (patch.weekStart !== undefined) body.week_start = patch.weekStart;
+  const { data } = await apiClient.patch<WireUser>('/api/auth/me/', body);
+  return mapUser(data);
+}
+
+export async function uploadProfilePhoto(file: File): Promise<User> {
+  const formData = new FormData();
+  formData.append('photo', file, file.name);
+  const { data } = await apiClient.post<WireUser>('/api/auth/me/photo/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return mapUser(data);
+}
+
+export async function deleteProfilePhoto(): Promise<User> {
+  const { data } = await apiClient.delete<WireUser>('/api/auth/me/photo/');
+  return mapUser(data);
 }

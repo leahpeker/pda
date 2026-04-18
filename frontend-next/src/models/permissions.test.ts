@@ -19,21 +19,26 @@ describe('hasPermission', () => {
   });
 
   it('default-admin role grants everything', () => {
-    const u = user({ roles: [{ isDefault: true, permissions: [] }] });
+    const u = user({ roles: [{ name: 'admin', isDefault: true, permissions: [] }] });
     expect(hasPermission(u, Permission.ManageUsers)).toBe(true);
     expect(hasPermission(u, Permission.EditFaq)).toBe(true);
   });
 
   it('specific permission in role', () => {
     const u = user({
-      roles: [{ isDefault: false, permissions: [Permission.ManageEvents] }],
+      roles: [{ name: 'custom', isDefault: false, permissions: [Permission.ManageEvents] }],
     });
     expect(hasPermission(u, Permission.ManageEvents)).toBe(true);
     expect(hasPermission(u, Permission.ManageUsers)).toBe(false);
   });
 
   it('denies when role lacks permission', () => {
-    const u = user({ roles: [{ isDefault: false, permissions: [] }] });
+    const u = user({ roles: [{ name: 'custom', isDefault: false, permissions: [] }] });
+    expect(hasPermission(u, Permission.ManageUsers)).toBe(false);
+  });
+
+  it('isDefault without name=admin does not grant blanket access', () => {
+    const u = user({ roles: [{ name: 'member', isDefault: true, permissions: [] }] });
     expect(hasPermission(u, Permission.ManageUsers)).toBe(false);
   });
 });
@@ -46,14 +51,14 @@ describe('hasAnyAdminPermission', () => {
 
   it('any admin permission in the set returns true', () => {
     const u = user({
-      roles: [{ isDefault: false, permissions: [Permission.ApproveJoinRequests] }],
+      roles: [{ name: 'custom', isDefault: false, permissions: [Permission.ApproveJoinRequests] }],
     });
     expect(hasAnyAdminPermission(u)).toBe(true);
   });
 
   it('non-admin permission alone does not qualify', () => {
     const u = user({
-      roles: [{ isDefault: false, permissions: [Permission.EditFaq] }],
+      roles: [{ name: 'custom', isDefault: false, permissions: [Permission.EditFaq] }],
     });
     expect(hasAnyAdminPermission(u)).toBe(false);
   });

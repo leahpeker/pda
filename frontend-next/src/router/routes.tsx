@@ -21,10 +21,16 @@ const Faq = lazy(() => import('@/screens/public/FaqScreen'));
 const Donate = lazy(() => import('@/screens/public/DonateScreen'));
 const Install = lazy(() => import('@/screens/public/InstallAppScreen'));
 const Guidelines = lazy(() => import('@/screens/public/GuidelinesScreen'));
+const Volunteer = lazy(() => import('@/screens/public/VolunteerScreen'));
 const Join = lazy(() => import('@/screens/public/JoinScreen'));
 const JoinSuccess = lazy(() => import('@/screens/public/JoinSuccessScreen'));
 const Calendar = lazy(() => import('@/screens/calendar/CalendarScreen'));
 const EventDetail = lazy(() => import('@/screens/events/EventDetailScreen'));
+const Profile = lazy(() => import('@/screens/profile/ProfileScreen'));
+const Settings = lazy(() => import('@/screens/settings/SettingsScreen'));
+const Docs = lazy(() => import('@/screens/docs/DocsScreen'));
+const DocDetail = lazy(() => import('@/screens/docs/DocDetailScreen'));
+const Survey = lazy(() => import('@/screens/surveys/SurveyScreen'));
 const Stub = lazy(() => import('@/screens/NotImplemented'));
 
 export const router = createBrowserRouter([
@@ -52,7 +58,7 @@ export const router = createBrowserRouter([
           { path: '/calendar', element: el(<Calendar />) },
           { path: '/events/:id', element: el(<EventDetail />) },
           { path: '/events/add', element: el(<Stub />) },
-          { path: '/surveys/:slug', element: el(<Stub />) },
+          { path: '/surveys/:slug', element: el(<Survey />) },
           { path: '/donate', element: el(<Donate />) },
           { path: '/install', element: el(<Install />) },
           { path: '/faq', element: el(<Faq />) },
@@ -62,11 +68,11 @@ export const router = createBrowserRouter([
             element: <RequireAuth />,
             children: [
               { path: '/guidelines', element: el(<Guidelines />) },
-              { path: '/settings', element: el(<Stub />) },
-              { path: '/profile', element: el(<Stub />) },
-              { path: '/volunteer', element: el(<Stub />) },
-              { path: '/docs', element: el(<Stub />) },
-              { path: '/docs/:id', element: el(<Stub />) },
+              { path: '/settings', element: el(<Settings />) },
+              { path: '/profile', element: el(<Profile />) },
+              { path: '/volunteer', element: el(<Volunteer />) },
+              { path: '/docs', element: el(<Docs />) },
+              { path: '/docs/:id', element: el(<DocDetail />) },
               { path: '/events/mine', element: el(<Stub />) },
             ],
           },

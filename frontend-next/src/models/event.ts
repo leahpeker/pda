@@ -24,10 +24,19 @@ export const InvitePermission = {
   CoHostsOnly: 'co_hosts_only',
 } as const;
 
+// Accepted input statuses for POST /rsvp/.
+// `waitlisted` is server-assigned only (when an `attending` request comes in
+// over capacity). See backend _event_rsvps.py _coerce_status.
 export const RsvpStatus = {
   Attending: 'attending',
+  Maybe: 'maybe',
+  CantGo: 'cant_go',
+} as const;
+
+// Statuses the server may return on a guest's `status` field.
+export const RsvpServerStatus = {
+  ...RsvpStatus,
   Waitlisted: 'waitlisted',
-  Declined: 'declined',
 } as const;
 
 export interface EventGuest {

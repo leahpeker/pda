@@ -27,7 +27,7 @@ function toBigCalEvent(e: PdaEvent): BigCalEvent {
 export default function CalendarScreen() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const weekStartsOn: 0 | 1 = user?.weekStart === 1 ? 1 : 0;
+  const weekStartsOn: 0 | 1 = user?.weekStart === 'monday' ? 1 : 0;
   const localizer = useMemo(() => makeLocalizer(weekStartsOn), [weekStartsOn]);
 
   const { data: events = [], isPending, isError, refetch } = useEvents();
