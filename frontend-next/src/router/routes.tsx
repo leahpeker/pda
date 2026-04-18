@@ -8,6 +8,7 @@
 import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { AuthBoot, OnboardingGate, RequireAuth, RequirePermission } from '@/auth/guards';
+import { AppShell } from '@/layout/AppShell';
 import { Permission } from '@/models/permissions';
 import { lazyEl as el } from './lazyRoute';
 
@@ -15,6 +16,15 @@ const Login = lazy(() => import('@/screens/auth/LoginScreen'));
 const Onboarding = lazy(() => import('@/screens/auth/OnboardingScreen'));
 const NewPassword = lazy(() => import('@/screens/auth/NewPasswordScreen'));
 const MagicLogin = lazy(() => import('@/screens/auth/MagicLoginScreen'));
+const Home = lazy(() => import('@/screens/public/HomeScreen'));
+const Faq = lazy(() => import('@/screens/public/FaqScreen'));
+const Donate = lazy(() => import('@/screens/public/DonateScreen'));
+const Install = lazy(() => import('@/screens/public/InstallAppScreen'));
+const Guidelines = lazy(() => import('@/screens/public/GuidelinesScreen'));
+const Join = lazy(() => import('@/screens/public/JoinScreen'));
+const JoinSuccess = lazy(() => import('@/screens/public/JoinSuccessScreen'));
+const Calendar = lazy(() => import('@/screens/calendar/CalendarScreen'));
+const EventDetail = lazy(() => import('@/screens/events/EventDetailScreen'));
 const Stub = lazy(() => import('@/screens/NotImplemented'));
 
 export const router = createBrowserRouter([
@@ -25,74 +35,82 @@ export const router = createBrowserRouter([
       </AuthBoot>
     ),
     children: [
-      // ---- public ----
-      { path: '/', element: el(<Stub />) },
+      // Auth screens render edge-to-edge (no AppShell).
       { path: '/login', element: el(<Login />) },
       { path: '/magic-login/:token', element: el(<MagicLogin />) },
       { path: '/onboarding', element: el(<Onboarding />) },
       { path: '/new-password', element: el(<NewPassword />) },
-      { path: '/join', element: el(<Stub />) },
-      { path: '/join/success', element: el(<Stub />) },
-      { path: '/calendar', element: el(<Stub />) },
-      { path: '/events/:id', element: el(<Stub />) },
-      { path: '/events/add', element: el(<Stub />) },
-      { path: '/surveys/:slug', element: el(<Stub />) },
-      { path: '/donate', element: el(<Stub />) },
-      { path: '/install', element: el(<Stub />) },
-      { path: '/faq', element: el(<Stub />) },
 
-      // ---- authed ----
+      // Everything else uses the shared shell (nav + outlet).
       {
-        element: <RequireAuth />,
+        element: <AppShell />,
         children: [
-          { path: '/guidelines', element: el(<Stub />) },
-          { path: '/settings', element: el(<Stub />) },
-          { path: '/profile', element: el(<Stub />) },
-          { path: '/volunteer', element: el(<Stub />) },
-          { path: '/docs', element: el(<Stub />) },
-          { path: '/docs/:id', element: el(<Stub />) },
-          { path: '/events/mine', element: el(<Stub />) },
-        ],
-      },
+          // ---- public ----
+          { path: '/', element: el(<Home />) },
+          { path: '/join', element: el(<Join />) },
+          { path: '/join/success', element: el(<JoinSuccess />) },
+          { path: '/calendar', element: el(<Calendar />) },
+          { path: '/events/:id', element: el(<EventDetail />) },
+          { path: '/events/add', element: el(<Stub />) },
+          { path: '/surveys/:slug', element: el(<Stub />) },
+          { path: '/donate', element: el(<Donate />) },
+          { path: '/install', element: el(<Install />) },
+          { path: '/faq', element: el(<Faq />) },
 
-      // ---- permissioned ----
-      {
-        element: <RequirePermission perm={Permission.ManageUsers} />,
-        children: [
-          { path: '/members', element: el(<Stub />) },
-          { path: '/members/:id', element: el(<Stub />) },
-        ],
-      },
-      {
-        element: <RequirePermission perm={Permission.ApproveJoinRequests} />,
-        children: [{ path: '/join-requests', element: el(<Stub />) }],
-      },
-      {
-        element: <RequirePermission perm={Permission.ManageEvents} />,
-        children: [
-          { path: '/events/manage', element: el(<Stub />) },
-          { path: '/admin/flagged-events', element: el(<Stub />) },
-        ],
-      },
-      {
-        element: <RequirePermission perm={Permission.ManageWhatsapp} />,
-        children: [{ path: '/admin/whatsapp', element: el(<Stub />) }],
-      },
-      {
-        element: <RequirePermission perm={Permission.EditJoinQuestions} />,
-        children: [{ path: '/admin/join-form', element: el(<Stub />) }],
-      },
-      {
-        element: <RequirePermission perm={Permission.ManageSurveys} />,
-        children: [
-          { path: '/admin/surveys', element: el(<Stub />) },
-          { path: '/admin/surveys/:id', element: el(<Stub />) },
-          { path: '/admin/surveys/:id/responses', element: el(<Stub />) },
-        ],
-      },
+          // ---- authed ----
+          {
+            element: <RequireAuth />,
+            children: [
+              { path: '/guidelines', element: el(<Guidelines />) },
+              { path: '/settings', element: el(<Stub />) },
+              { path: '/profile', element: el(<Stub />) },
+              { path: '/volunteer', element: el(<Stub />) },
+              { path: '/docs', element: el(<Stub />) },
+              { path: '/docs/:id', element: el(<Stub />) },
+              { path: '/events/mine', element: el(<Stub />) },
+            ],
+          },
 
-      // ---- catch-all ----
-      { path: '*', element: el(<Stub />) },
+          // ---- permissioned ----
+          {
+            element: <RequirePermission perm={Permission.ManageUsers} />,
+            children: [
+              { path: '/members', element: el(<Stub />) },
+              { path: '/members/:id', element: el(<Stub />) },
+            ],
+          },
+          {
+            element: <RequirePermission perm={Permission.ApproveJoinRequests} />,
+            children: [{ path: '/join-requests', element: el(<Stub />) }],
+          },
+          {
+            element: <RequirePermission perm={Permission.ManageEvents} />,
+            children: [
+              { path: '/events/manage', element: el(<Stub />) },
+              { path: '/admin/flagged-events', element: el(<Stub />) },
+            ],
+          },
+          {
+            element: <RequirePermission perm={Permission.ManageWhatsapp} />,
+            children: [{ path: '/admin/whatsapp', element: el(<Stub />) }],
+          },
+          {
+            element: <RequirePermission perm={Permission.EditJoinQuestions} />,
+            children: [{ path: '/admin/join-form', element: el(<Stub />) }],
+          },
+          {
+            element: <RequirePermission perm={Permission.ManageSurveys} />,
+            children: [
+              { path: '/admin/surveys', element: el(<Stub />) },
+              { path: '/admin/surveys/:id', element: el(<Stub />) },
+              { path: '/admin/surveys/:id/responses', element: el(<Stub />) },
+            ],
+          },
+
+          // ---- catch-all ----
+          { path: '*', element: el(<Stub />) },
+        ],
+      },
     ],
   },
 ]);

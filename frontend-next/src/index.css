@@ -17,3 +17,41 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Calendar event styling. Uses the color-blind-friendly palette from
+   .claude/rules/color-blind-friendly.md: blue, teal, amber, lavender. Every
+   category is also marked with a left-border weight/style difference so it
+   survives total color-blindness. */
+.pda-evt {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border-inline-start-width: 3px;
+  border-inline-start-style: solid;
+}
+.pda-evt-community {
+  background: #cce8e4;
+  color: #0a3c34;
+  border-inline-start-color: #0a3c34;
+}
+.pda-evt-official {
+  background: #d0e8ff;
+  color: #0b2a4a;
+  border-inline-start-color: #0b2a4a;
+}
+.pda-evt-members {
+  background: #ffe0b2;
+  color: #4a2808;
+  border-inline-start-color: #4a2808;
+}
+.pda-evt-invite {
+  background: #e0d0f0;
+  color: #2a104a;
+  border-inline-start-color: #2a104a;
+}
+.pda-evt-cancelled {
+  background: #f3f4f6;
+  color: #6b7280;
+  text-decoration: line-through;
+  border-inline-start-color: #9ca3af;
+}
