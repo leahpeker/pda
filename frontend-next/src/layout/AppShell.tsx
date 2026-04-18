@@ -1,23 +1,35 @@
-// App chrome: sticky top bar + outlet. Replaces Flutter's AppScaffold. Kept
-// deliberately simple — specific screens (calendar side-panel, modals, full-
-// bleed detail) can opt out by rendering their own layout above the outlet.
+// App chrome — mobile-first layout matching the Flutter AppScaffold:
+// sticky header with logo-triggered menu tray, a bottom nav with three
+// destinations, and a centered content outlet in between. No responsive
+// branching — one code path from phone to 4K.
 
+import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store';
-import { Nav } from './Nav';
+import { BottomNav } from './BottomNav';
 import { NotificationBell } from './NotificationBell';
+import { PdaMenuSheet } from './PdaMenuSheet';
 
 export function AppShell() {
   const isAuthed = useAuthStore((s) => s.status === 'authed');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">
       <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="text-base font-medium tracking-tight">
+          <button
+            type="button"
+            aria-label="open menu"
+            aria-expanded={menuOpen}
+            aria-controls="pda-menu-sheet"
+            onClick={() => {
+              setMenuOpen(true);
+            }}
+            className="text-base font-medium tracking-tight text-neutral-900 hover:text-neutral-700"
+          >
             pda
-          </Link>
-          <Nav />
+          </button>
           <div className="flex items-center gap-1">
             {isAuthed ? (
               <NotificationBell />
@@ -32,9 +44,22 @@ export function AppShell() {
           </div>
         </div>
       </header>
-      <div className="flex-1">
+
+      {/* Pad the bottom so the fixed BottomNav (h-14 + iOS safe area) doesn't
+          cover the end of the scroll. Header already eats its own space. */}
+      <div className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
         <Outlet />
       </div>
+
+      <div id="pda-menu-sheet">
+        <PdaMenuSheet
+          open={menuOpen}
+          onClose={() => {
+            setMenuOpen(false);
+          }}
+        />
+      </div>
+      <BottomNav />
     </div>
   );
 }
