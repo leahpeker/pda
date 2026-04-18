@@ -33,6 +33,18 @@ const Settings = lazy(() => import('@/screens/settings/SettingsScreen'));
 const Docs = lazy(() => import('@/screens/docs/DocsScreen'));
 const DocDetail = lazy(() => import('@/screens/docs/DocDetailScreen'));
 const Survey = lazy(() => import('@/screens/surveys/SurveyScreen'));
+
+// Admin screens
+const AdminHub = lazy(() => import('@/screens/admin/AdminHubScreen'));
+const JoinRequestsAdmin = lazy(() => import('@/screens/admin/JoinRequestsScreen'));
+const EventManagement = lazy(() => import('@/screens/admin/EventManagementScreen'));
+const FlaggedEvents = lazy(() => import('@/screens/admin/FlaggedEventsScreen'));
+const WhatsappConfig = lazy(() => import('@/screens/admin/WhatsappConfigScreen'));
+const JoinFormAdmin = lazy(() => import('@/screens/admin/JoinFormAdminScreen'));
+const SurveyAdminList = lazy(() => import('@/screens/admin/SurveyAdminListScreen'));
+const SurveyBuilder = lazy(() => import('@/screens/admin/SurveyBuilderScreen'));
+const SurveyResponses = lazy(() => import('@/screens/admin/SurveyResponsesScreen'));
+
 const Stub = lazy(() => import('@/screens/NotImplemented'));
 
 export const router = createBrowserRouter([
@@ -83,9 +95,19 @@ export const router = createBrowserRouter([
             ],
           },
 
+          // ---- admin hub: any authed user can visit; the hub itself shows
+          //      only the tiles their permissions allow.
+          {
+            element: <RequireAuth />,
+            children: [{ path: '/admin', element: el(<AdminHub />) }],
+          },
+
           // ---- permissioned ----
           {
             element: <RequirePermission perm={Permission.ManageUsers} />,
+            // Members/roles admin is the one Phase 4b screen still deferred —
+            // needs the /api/auth/roles/ endpoints which were out of scope for
+            // this commit.
             children: [
               { path: '/members', element: el(<Stub />) },
               { path: '/members/:id', element: el(<Stub />) },
@@ -93,29 +115,29 @@ export const router = createBrowserRouter([
           },
           {
             element: <RequirePermission perm={Permission.ApproveJoinRequests} />,
-            children: [{ path: '/join-requests', element: el(<Stub />) }],
+            children: [{ path: '/join-requests', element: el(<JoinRequestsAdmin />) }],
           },
           {
             element: <RequirePermission perm={Permission.ManageEvents} />,
             children: [
-              { path: '/events/manage', element: el(<Stub />) },
-              { path: '/admin/flagged-events', element: el(<Stub />) },
+              { path: '/events/manage', element: el(<EventManagement />) },
+              { path: '/admin/flagged-events', element: el(<FlaggedEvents />) },
             ],
           },
           {
             element: <RequirePermission perm={Permission.ManageWhatsapp} />,
-            children: [{ path: '/admin/whatsapp', element: el(<Stub />) }],
+            children: [{ path: '/admin/whatsapp', element: el(<WhatsappConfig />) }],
           },
           {
             element: <RequirePermission perm={Permission.EditJoinQuestions} />,
-            children: [{ path: '/admin/join-form', element: el(<Stub />) }],
+            children: [{ path: '/admin/join-form', element: el(<JoinFormAdmin />) }],
           },
           {
             element: <RequirePermission perm={Permission.ManageSurveys} />,
             children: [
-              { path: '/admin/surveys', element: el(<Stub />) },
-              { path: '/admin/surveys/:id', element: el(<Stub />) },
-              { path: '/admin/surveys/:id/responses', element: el(<Stub />) },
+              { path: '/admin/surveys', element: el(<SurveyAdminList />) },
+              { path: '/admin/surveys/:id', element: el(<SurveyBuilder />) },
+              { path: '/admin/surveys/:id/responses', element: el(<SurveyResponses />) },
             ],
           },
 
