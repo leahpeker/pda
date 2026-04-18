@@ -1,5 +1,5 @@
 .PHONY: help install run test lint lint-check format typecheck lint-file typecheck-file check migrate \
-        createsuperuser seed db-start db-stop ci dev build-dev complexity \
+        createsuperuser seed db-start db-stop ci dev dev-next build-dev build-dev-next complexity \
         frontend-install frontend-run frontend-run-html frontend-build frontend-codegen frontend-lint \
         frontend-format frontend-test frontend-fix frontend-complexity \
         frontend-next-install frontend-next-run frontend-next-build frontend-next-lint \
@@ -33,7 +33,9 @@ help:
 	@echo ""
 	@echo "Workflow commands:"
 	@echo "  make build-dev        Install deps, codegen, migrate, then run dev"
+	@echo "  make build-dev-next   Install deps, migrate, then run Django + Vite concurrently"
 	@echo "  make dev              Run Django + Flutter concurrently"
+	@echo "  make dev-next         Run Django + Vite concurrently (migration target)"
 	@echo "  make ci               Run all pre-commit checks (lint, check, test, typecheck, complexity, frontend-lint, frontend-test, frontend-complexity)"
 
 # Backend
@@ -151,7 +153,14 @@ ci: lint check test typecheck complexity frontend-lint frontend-test frontend-co
 # Install deps, codegen, migrate, then run dev
 build-dev: install frontend-codegen migrate dev
 
+# Install deps + migrate, then run Django + Vite concurrently (migration target)
+build-dev-next: install frontend-next-install migrate dev-next
+
 # Dev (concurrent backend + frontend)
 dev:
 	./dev.sh
+
+# Dev-next (concurrent backend + Vite frontend)
+dev-next:
+	./dev-next.sh
 
