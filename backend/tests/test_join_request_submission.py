@@ -291,6 +291,29 @@ class TestJoinRequestSubmission:
         )
         assert not JoinRequest.objects.filter(phone_number="+12025551298").exists()
 
+    def test_archived_user_can_resubmit_join_request(self, api_client, why_join_id):
+        from community.models import JoinRequest
+        from django.utils import timezone
+        from users.models import User
+
+        archived = User.objects.create_user(phone_number="+12025551297", password="pass")
+        archived.archived_at = timezone.now()
+        archived.save(update_fields=["archived_at"])
+
+        response = api_client.post(
+            "/api/community/join-request/",
+            {
+                "display_name": "Coming Back",
+                "phone_number": "+12025551297",
+                "answers": {why_join_id: "i want to return"},
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["previously_archived"] is True
+        assert JoinRequest.objects.filter(phone_number="+12025551297").exists()
+
     def test_submit_notification_failure_does_not_block(self, api_client, why_join_id, monkeypatch):
         def _fail(*args, **kwargs):
             raise RuntimeError("notification service down")

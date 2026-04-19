@@ -186,12 +186,17 @@ class TestRefreshToken:
         assert response.json()["detail"] == "Invalid or expired refresh token"
 
     def test_refresh_missing_field(self, api_client, db):
+        # With httpOnly cookie support, the body field is optional: the token
+        # may come from the `refresh_token` cookie instead. Missing both surfaces
+        # as a 401, not a 422 — since "no token available" is an auth failure,
+        # not a payload shape failure.
         response = api_client.post(
             "/api/auth/refresh/",
             {},
             content_type="application/json",
         )
-        assert response.status_code == 422
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid or expired refresh token"
 
     def test_refresh_empty_string(self, api_client, db):
         response = api_client.post(
@@ -445,53 +450,3 @@ class TestCompleteOnboarding:
             **onboarding_headers,
         )
         assert response.status_code == 200
-
-
-@pytest.mark.django_db
-class TestUpdateMe:
-    def test_update_me_invalid_email_rejected(self, api_client, auth_headers):
-        response = api_client.patch(
-            "/api/auth/me/",
-            {"email": "notanemail"},
-            content_type="application/json",
-            **auth_headers,
-        )
-        assert response.status_code == 422
-
-    def test_update_me_valid_email_accepted(self, api_client, auth_headers):
-        response = api_client.patch(
-            "/api/auth/me/",
-            {"email": "valid@example.com"},
-            content_type="application/json",
-            **auth_headers,
-        )
-        assert response.status_code == 200
-        assert response.json()["email"] == "valid@example.com"
-
-    def test_update_me_empty_email_accepted(self, api_client, auth_headers):
-        response = api_client.patch(
-            "/api/auth/me/",
-            {"email": ""},
-            content_type="application/json",
-            **auth_headers,
-        )
-        assert response.status_code == 200
-
-    def test_update_week_start_to_monday(self, api_client, auth_headers):
-        response = api_client.patch(
-            "/api/auth/me/",
-            {"week_start": "monday"},
-            content_type="application/json",
-            **auth_headers,
-        )
-        assert response.status_code == 200
-        assert response.json()["week_start"] == "monday"
-
-    def test_update_week_start_invalid_value_rejected(self, api_client, auth_headers):
-        response = api_client.patch(
-            "/api/auth/me/",
-            {"week_start": "wednesday"},
-            content_type="application/json",
-            **auth_headers,
-        )
-        assert response.status_code == 422

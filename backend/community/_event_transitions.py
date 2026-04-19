@@ -91,7 +91,7 @@ def _set_event_participants(
 
 def _publish_draft(request, event: Event) -> str | None:
     """DRAFT → ACTIVE. Re-validates dates, fires invitee notifications, audit logs."""
-    if not event.datetime_tbd and event.start_datetime < timezone.now():
+    if not event.datetime_tbd and event.start_datetime and event.start_datetime < timezone.now():
         return "Start date must be in the future to publish."
     event.status = EventStatus.ACTIVE
     event.save(update_fields=["status"])
@@ -112,14 +112,18 @@ def _publish_draft(request, event: Event) -> str | None:
 def _apply_status_transition(request, event: Event, new_status: str, notify: bool) -> str | None:
     """Validate and apply a status transition. Returns an error message or None on success."""
     current = event.status
+    if current == new_status:
+        return None
     if current == EventStatus.DRAFT and new_status == EventStatus.ACTIVE:
         return _publish_draft(request, event)
-    if current == EventStatus.DRAFT and new_status == EventStatus.DELETED:
+    if new_status == EventStatus.DELETED and current in (
+        EventStatus.DRAFT,
+        EventStatus.ACTIVE,
+        EventStatus.CANCELLED,
+    ):
         return _delete_event(request, event)
     if current == EventStatus.ACTIVE and new_status == EventStatus.CANCELLED:
         return _cancel_event(request, event, notify)
-    if current in (EventStatus.ACTIVE, EventStatus.CANCELLED) and new_status == EventStatus.DELETED:
-        return _delete_event(request, event)
     if current == EventStatus.CANCELLED and new_status == EventStatus.ACTIVE:
         _uncancel_event(request, event)
         return None

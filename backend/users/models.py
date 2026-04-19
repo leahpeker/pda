@@ -45,6 +45,7 @@ class User(AbstractUser):
     show_phone = models.BooleanField(default=True)
     show_email = models.BooleanField(default=True)
     is_paused = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(null=True, blank=True, db_index=True)
     login_link_requested = models.BooleanField(default=False)
     week_start = models.CharField(
         max_length=10, choices=WeekStart.CHOICES, default=WeekStart.SUNDAY

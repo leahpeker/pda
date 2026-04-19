@@ -3,7 +3,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from community._field_limits import FieldLimit
 from community.models import EventStatus, EventType, InvitePermission, PageVisibility
@@ -12,7 +12,7 @@ from community.models import EventStatus, EventType, InvitePermission, PageVisib
 def _require_path(url: str, domain_hint: str) -> str:
     """Validate that a URL has a non-trivial path (not bare domain).
 
-    Returns the (possibly https-prefixed) URL, or raises ValueError.
+    Returns the normalized https:// URL, or raises ValueError.
     """
     if not url:
         return url
@@ -26,7 +26,7 @@ def _require_path(url: str, domain_hint: str) -> str:
     path = parsed.path.rstrip("/")
     if not path:
         raise ValueError(f"link must point to a specific page, not just {domain_hint}")
-    return url
+    return normalized
 
 
 def _normalize_url(url: str) -> str:
@@ -65,17 +65,21 @@ def _validate_partiful_url(url: str) -> str:
 
 
 def _validate_generic_url(url: str) -> str:
+    # Accepts either a bare domain (fast.com) or a full URL and normalizes to
+    # a full https:// URL on the way in. We don't require a path — "other_link"
+    # is commonly used for landing pages and flyers.
     if not url:
         return url
+    normalized = _normalize_url(url)
     try:
-        parsed = urlparse(_normalize_url(url))
+        parsed = urlparse(normalized)
     except ValueError:
         raise ValueError("enter a valid URL")
-    if not parsed.netloc:
+    if not parsed.netloc or "." not in parsed.netloc:
         raise ValueError("enter a valid URL")
     if parsed.scheme not in ("http", "https"):
         raise ValueError("URL must use http or https")
-    return _require_path(url, parsed.netloc)
+    return normalized
 
 
 class RSVPGuestOut(BaseModel):
@@ -91,7 +95,7 @@ class EventListOut(BaseModel):
     id: str
     title: str
     description: str
-    start_datetime: datetime
+    start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str
     latitude: float | None = None
@@ -127,7 +131,7 @@ class EventOut(BaseModel):
     id: str
     title: str
     description: str
-    start_datetime: datetime
+    start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str
     latitude: float | None = None
@@ -176,7 +180,7 @@ class RSVPIn(BaseModel):
 class EventIn(BaseModel):
     title: str = Field(max_length=FieldLimit.TITLE)
     description: str = Field(default="", max_length=FieldLimit.DESCRIPTION)
-    start_datetime: datetime
+    start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str = Field(default="", max_length=FieldLimit.SHORT_TEXT)
     latitude: float | None = None
@@ -200,6 +204,12 @@ class EventIn(BaseModel):
     co_host_ids: list[str] = []
     invited_user_ids: list[str] = []
     status: str = Field(default=EventStatus.ACTIVE, max_length=FieldLimit.CHOICE)
+
+    @model_validator(mode="after")
+    def require_start_datetime_unless_tbd(self) -> "EventIn":
+        if not self.datetime_tbd and self.start_datetime is None:
+            raise ValueError("start_datetime is required when datetime_tbd is false")
+        return self
 
     @field_validator("whatsapp_link", mode="before")
     @classmethod

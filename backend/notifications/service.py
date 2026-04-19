@@ -160,7 +160,11 @@ def create_event_cancellation_notifications(event: Event, canceller: User) -> No
 
     canceller_id = str(canceller.pk)
     invited_ids = {str(u.pk) for u in event.invited_users.all()}
-    rsvp_ids = {str(r.user_id) for r in event.rsvps.all() if r.status == RSVPStatus.ATTENDING}
+    rsvp_ids = {
+        str(r.user_id)
+        for r in event.rsvps.all()
+        if r.status in (RSVPStatus.ATTENDING, RSVPStatus.MAYBE)
+    }
     recipient_ids = list((invited_ids | rsvp_ids) - {canceller_id})
     if not recipient_ids:
         return

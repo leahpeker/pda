@@ -137,6 +137,67 @@ class TestCancelEvent:
             notification_type=NotificationType.EVENT_CANCELLED,
         ).exists()
 
+    def test_cancel_notifies_all_rsvpd_and_invited_users(
+        self, api_client, manage_events_headers, manage_events_user, upcoming_event_with_rsvp
+    ):
+        """
+        Every attending RSVPer and every invited user should receive a cancellation
+        notification. The canceller themselves must be excluded even if they'd RSVP'd.
+        """
+        from community.models import EventRSVP, RSVPStatus
+        from notifications.models import Notification, NotificationType
+        from users.models import User
+
+        attendee_two = User.objects.create_user(
+            phone_number="+12025550102", password="pass123", display_name="Attendee Two"
+        )
+        invitee_only = User.objects.create_user(
+            phone_number="+12025550103", password="pass123", display_name="Invitee Only"
+        )
+        maybe_rsvper = User.objects.create_user(
+            phone_number="+12025550104", password="pass123", display_name="Maybe Rsvper"
+        )
+        no_rsvper = User.objects.create_user(
+            phone_number="+12025550105", password="pass123", display_name="No Rsvper"
+        )
+        EventRSVP.objects.create(
+            event=upcoming_event_with_rsvp, user=attendee_two, status=RSVPStatus.ATTENDING
+        )
+        EventRSVP.objects.create(
+            event=upcoming_event_with_rsvp, user=maybe_rsvper, status=RSVPStatus.MAYBE
+        )
+        EventRSVP.objects.create(
+            event=upcoming_event_with_rsvp, user=no_rsvper, status=RSVPStatus.CANT_GO
+        )
+        upcoming_event_with_rsvp.invited_users.add(invitee_only)
+        # The canceller also RSVP'd — they should still not get their own notification.
+        EventRSVP.objects.create(
+            event=upcoming_event_with_rsvp,
+            user=manage_events_user,
+            status=RSVPStatus.ATTENDING,
+        )
+
+        response = _patch_status(
+            api_client,
+            manage_events_headers,
+            upcoming_event_with_rsvp.id,
+            "cancelled",
+            notify_attendees=True,
+        )
+        assert response.status_code == 200
+
+        recipients = set(
+            Notification.objects.filter(
+                event=upcoming_event_with_rsvp,
+                notification_type=NotificationType.EVENT_CANCELLED,
+            ).values_list("recipient_id", flat=True)
+        )
+        assert attendee_two.id in recipients
+        assert invitee_only.id in recipients
+        assert maybe_rsvper.id in recipients
+        assert manage_events_user.id not in recipients
+        assert no_rsvper.id not in recipients
+
     def test_cancel_without_notify_no_notifications(
         self, api_client, manage_events_headers, upcoming_event_with_rsvp, test_user
     ):
@@ -234,14 +295,13 @@ class TestUncancel:
         response = _patch_status(api_client, auth_headers, upcoming_event_with_rsvp.id, "active")
         assert response.status_code == 403
 
-    def test_uncancel_active_event_returns_400(
+    def test_uncancel_active_event_is_noop(
         self, api_client, manage_events_headers, upcoming_event_no_attendees
     ):
         response = _patch_status(
             api_client, manage_events_headers, upcoming_event_no_attendees.id, "active"
         )
-        assert response.status_code == 400
-        assert "invalid" in response.json()["detail"].lower()
+        assert response.status_code == 200
 
 
 @pytest.mark.django_db

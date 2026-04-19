@@ -245,6 +245,56 @@ class TestJoinRequestManagement:
         ids = [r["id"] for r in response.json()]
         assert str(sample_join_request.id) in ids
 
+    def test_list_flags_previously_archived(self, api_client, vettor_headers, db):
+        from community.models import JoinRequest
+        from django.utils import timezone
+        from users.models import User
+
+        archived = User.objects.create_user(
+            phone_number="+12025550150", display_name="Comeback Kid"
+        )
+        archived.archived_at = timezone.now()
+        archived.save(update_fields=["archived_at"])
+        jr = JoinRequest.objects.create(
+            display_name="Comeback Kid",
+            phone_number="+12025550150",
+            status=JoinRequestStatus.PENDING,
+        )
+
+        response = api_client.get("/api/community/join-requests/", **vettor_headers)
+        assert response.status_code == 200
+        items = {r["id"]: r for r in response.json()}
+        assert items[str(jr.id)]["previously_archived"] is True
+
+    def test_approve_archived_user_unarchives_and_issues_magic_link(
+        self, api_client, vettor_headers, db
+    ):
+        from community.models import JoinRequest
+        from django.utils import timezone
+        from users.models import User
+
+        archived = User.objects.create_user(phone_number="+12025550151", display_name="Phoenix")
+        archived.archived_at = timezone.now()
+        archived.needs_onboarding = False
+        archived.save(update_fields=["archived_at", "needs_onboarding"])
+
+        jr = JoinRequest.objects.create(
+            display_name="Phoenix",
+            phone_number="+12025550151",
+            status=JoinRequestStatus.PENDING,
+        )
+        response = api_client.patch(
+            f"/api/community/join-requests/{jr.id}/",
+            {"status": JoinRequestStatus.APPROVED},
+            content_type="application/json",
+            **vettor_headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["magic_link_token"] is not None
+        archived.refresh_from_db()
+        assert archived.archived_at is None
+        assert archived.needs_onboarding is True
+
     def test_list_keeps_pending_and_rejected_unaffected(self, api_client, vettor_headers, db):
         from community.models import JoinRequest
         from users.models import User
