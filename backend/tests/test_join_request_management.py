@@ -246,9 +246,8 @@ class TestJoinRequestManagement:
         assert str(sample_join_request.id) in ids
 
     def test_list_flags_previously_archived(self, api_client, vettor_headers, db):
-        from django.utils import timezone
-
         from community.models import JoinRequest
+        from django.utils import timezone
         from users.models import User
 
         archived = User.objects.create_user(
@@ -270,14 +269,11 @@ class TestJoinRequestManagement:
     def test_approve_archived_user_unarchives_and_issues_magic_link(
         self, api_client, vettor_headers, db
     ):
-        from django.utils import timezone
-
         from community.models import JoinRequest
+        from django.utils import timezone
         from users.models import User
 
-        archived = User.objects.create_user(
-            phone_number="+12025550151", display_name="Phoenix"
-        )
+        archived = User.objects.create_user(phone_number="+12025550151", display_name="Phoenix")
         archived.archived_at = timezone.now()
         archived.needs_onboarding = False
         archived.save(update_fields=["archived_at", "needs_onboarding"])

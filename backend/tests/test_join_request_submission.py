@@ -292,9 +292,8 @@ class TestJoinRequestSubmission:
         assert not JoinRequest.objects.filter(phone_number="+12025551298").exists()
 
     def test_archived_user_can_resubmit_join_request(self, api_client, why_join_id):
-        from django.utils import timezone
-
         from community.models import JoinRequest
+        from django.utils import timezone
         from users.models import User
 
         archived = User.objects.create_user(phone_number="+12025551297", password="pass")
