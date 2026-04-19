@@ -77,7 +77,7 @@ const BASE_EVENT: Event = {
   rsvpEnabled: false,
   allowPlusOnes: false,
   maxAttendees: null,
-  attendingCount: 0,
+  attendingCount: 3,
   waitlistedCount: 0,
   invitedCount: 0,
   datetimeTbd: false,
@@ -123,7 +123,7 @@ beforeEach(() => {
 });
 
 describe('EventAdminActions', () => {
-  it('creator sees edit and cancel (no delete) for active upcoming event', () => {
+  it('creator sees edit and cancel (no delete) for active upcoming event with attendees', () => {
     const creator = makeUser(CREATOR_ID);
     useAuthStore.setState({ status: 'authed', user: creator, accessToken: 'tok' });
 
@@ -131,8 +131,21 @@ describe('EventAdminActions', () => {
 
     expect(screen.getByRole('button', { name: /^edit$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel event/i })).toBeInTheDocument();
-    // Delete is gated to draft/cancelled events; active events must be cancelled first.
+    // With attendees, the event must be cancelled before it can be deleted.
     expect(screen.queryByRole('button', { name: /^delete$/i })).not.toBeInTheDocument();
+  });
+
+  // With no one RSVP'd, skip the cancel-then-delete two-step: show delete outright.
+  it('creator sees delete (no cancel) for active upcoming event with no attendees', () => {
+    const creator = makeUser(CREATOR_ID);
+    useAuthStore.setState({ status: 'authed', user: creator, accessToken: 'tok' });
+
+    const emptyEvent: Event = { ...BASE_EVENT, attendingCount: 0 };
+    renderActions(emptyEvent);
+
+    expect(screen.getByRole('button', { name: /^edit$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^delete$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /cancel event/i })).not.toBeInTheDocument();
   });
 
   it('creator sees delete for draft event', () => {
@@ -194,13 +207,39 @@ describe('EventAdminActions', () => {
     expect(screen.queryByRole('button', { name: /^delete$/i })).not.toBeInTheDocument();
   });
 
-  // Flutter had attendees-count logic on the delete button (see
-  // docs/flutter-test-migration.md). React gates delete on status only
-  // (draft/cancelled). Covered by "creator sees delete for draft event".
-  it.todo('creator sees delete for upcoming event with no attendees (Flutter parity)');
+  // Flutter gated delete on attendees count. React gates it on status
+  // (draft/cancelled) and ignores attendees. This locks that behavior in:
+  // a draft event with attendees still shows delete.
+  it('creator sees delete for draft event regardless of attendees count', () => {
+    const creator = makeUser(CREATOR_ID);
+    useAuthStore.setState({ status: 'authed', user: creator, accessToken: 'tok' });
 
-  // Flutter hid edit on past events. React has no past-event branch —
-  // edit visibility is role-based only. Covered by the cancelled-event test
-  // which asserts delete shows without edit being gated.
-  it.todo('creator sees only delete (no edit) for past event (Flutter parity)');
+    const draftWithAttendees: Event = {
+      ...BASE_EVENT,
+      status: EventStatus.Draft,
+      attendingCount: 5,
+    };
+    renderActions(draftWithAttendees);
+
+    expect(screen.getByRole('button', { name: /^delete$/i })).toBeInTheDocument();
+  });
+
+  // Past events can't be edited (would change historical record). Delete is
+  // still allowed on cancelled past events; cancel button hidden since it's
+  // already cancelled.
+  it('creator sees only delete (no edit) for a past cancelled event', () => {
+    const creator = makeUser(CREATOR_ID);
+    useAuthStore.setState({ status: 'authed', user: creator, accessToken: 'tok' });
+
+    const pastCancelled: Event = {
+      ...BASE_EVENT,
+      isPast: true,
+      status: EventStatus.Cancelled,
+    };
+    renderActions(pastCancelled);
+
+    expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^delete$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /cancel event/i })).not.toBeInTheDocument();
+  });
 });

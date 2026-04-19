@@ -59,7 +59,11 @@ function AdminActionRow({
 
   const isCancelled = event.status === EventStatus.Cancelled;
   const isDraft = event.status === EventStatus.Draft;
-  const canDelete = (isCreator || canManage) && (isDraft || isCancelled);
+  const hasNoAttendees = event.attendingCount === 0;
+  const canDelete =
+    (isCreator || canManage) && (isDraft || isCancelled || hasNoAttendees);
+  const showCancel = !isCancelled && !isDraft && !hasNoAttendees;
+  const canEditEvent = !event.isPast;
 
   async function onCancel() {
     setCancelError(null);
@@ -93,9 +97,11 @@ function AdminActionRow({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={() => void navigate(`/events/${event.id}/edit`)}>
-          edit
-        </Button>
+        {canEditEvent ? (
+          <Button variant="secondary" onClick={() => void navigate(`/events/${event.id}/edit`)}>
+            edit
+          </Button>
+        ) : null}
         {isDraft ? (
           <Button
             onClick={() => {
@@ -106,7 +112,7 @@ function AdminActionRow({
             {update.isPending ? 'publishing…' : 'publish'}
           </Button>
         ) : null}
-        {!isCancelled && !isDraft ? (
+        {showCancel ? (
           <Button
             variant="secondary"
             onClick={() => {
