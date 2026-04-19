@@ -377,6 +377,80 @@ class TestDeleteUser:
         )
         assert response.status_code == 403
 
+    def test_delete_user_soft_archives(self, api_client, manage_users_headers, other_user):
+        from users.models import User
+
+        response = api_client.delete(
+            f"/api/auth/users/{other_user.pk}/",
+            **manage_users_headers,
+        )
+        assert response.status_code == 204
+        refreshed = User.objects.get(pk=other_user.pk)
+        assert refreshed.archived_at is not None
+
+    def test_delete_user_already_archived_returns_400(
+        self, api_client, manage_users_headers, other_user
+    ):
+        from django.utils import timezone
+
+        other_user.archived_at = timezone.now()
+        other_user.save(update_fields=["archived_at"])
+
+        response = api_client.delete(
+            f"/api/auth/users/{other_user.pk}/",
+            **manage_users_headers,
+        )
+        assert response.status_code == 400
+        assert response.json()["detail"] == "User is already archived."
+
+    def test_archived_user_excluded_from_list(self, api_client, manage_users_headers, other_user):
+        from django.utils import timezone
+
+        other_user.archived_at = timezone.now()
+        other_user.save(update_fields=["archived_at"])
+
+        response = api_client.get("/api/auth/users/", **manage_users_headers)
+        assert response.status_code == 200
+        ids = [u["id"] for u in response.json()]
+        assert str(other_user.pk) not in ids
+
+    def test_archived_user_excluded_from_search(self, api_client, manage_users_headers, other_user):
+        from django.utils import timezone
+
+        other_user.archived_at = timezone.now()
+        other_user.save(update_fields=["archived_at"])
+
+        response = api_client.get("/api/auth/users/search/?q=Other", **manage_users_headers)
+        assert response.status_code == 200
+        ids = [u["id"] for u in response.json()]
+        assert str(other_user.pk) not in ids
+
+    def test_archived_user_cannot_login(self, api_client, other_user):
+        from django.utils import timezone
+
+        other_user.archived_at = timezone.now()
+        other_user.save(update_fields=["archived_at"])
+
+        response = api_client.post(
+            "/api/auth/login/",
+            {"phone_number": other_user.phone_number, "password": "otherpass123"},
+            content_type="application/json",
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"] == "this account is no longer active"
+
+    def test_archived_user_cannot_magic_login(self, api_client, other_user):
+        from django.utils import timezone
+        from users.models import MagicLoginToken
+
+        magic = MagicLoginToken.create_for_user(other_user)
+        other_user.archived_at = timezone.now()
+        other_user.save(update_fields=["archived_at"])
+
+        response = api_client.get(f"/api/auth/magic-login/{magic.token}/")
+        assert response.status_code == 403
+        assert response.json()["detail"] == "this account is no longer active"
+
 
 # ---------------------------------------------------------------------------
 # TestResetPassword

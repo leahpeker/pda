@@ -61,6 +61,11 @@ def login(request, payload: LoginIn, response: HttpResponse):
         )
         return Status(401, ErrorOut(detail="Invalid credentials"))
     user = User.objects.get(pk=auth_user.pk)
+    if user.archived_at is not None:
+        audit_log(
+            logging.WARNING, "login_archived", request, target_type="user", target_id=str(user.pk)
+        )
+        return Status(403, ErrorOut(detail="this account is no longer active"))
     if user.is_paused:
         audit_log(
             logging.WARNING, "login_paused", request, target_type="user", target_id=str(user.pk)
@@ -95,6 +100,15 @@ def magic_login(request, token: str, response: HttpResponse):
             details={"reason": "used_or_expired"},
         )
         return Status(400, ErrorOut(detail="This login link has already been used or has expired."))
+    if magic.user.archived_at is not None:
+        audit_log(
+            logging.WARNING,
+            "magic_login_archived",
+            request,
+            target_type="user",
+            target_id=str(magic.user.pk),
+        )
+        return Status(403, ErrorOut(detail="this account is no longer active"))
     if magic.user.is_paused:
         audit_log(
             logging.WARNING,
@@ -243,7 +257,9 @@ def delete_photo(request):
 )
 def get_member_profile(request, user_id: str):
     try:
-        user = User.objects.get(pk=user_id, is_active=True, is_paused=False)
+        user = User.objects.get(
+            pk=user_id, is_active=True, is_paused=False, archived_at__isnull=True
+        )
     except User.DoesNotExist:
         return Status(404, ErrorOut(detail="Member not found."))
     is_own_profile = str(request.auth.pk) == user_id

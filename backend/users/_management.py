@@ -6,6 +6,7 @@ import re
 from community._shared import validate_display_name
 from config.audit import audit_log
 from django.db import models as dj_models
+from django.utils import timezone
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
@@ -166,7 +167,9 @@ def bulk_create_users(request, payload: BulkUserCreateIn):
 
 @router.get("/users/search/", response={200: list[UserSearchOut]}, auth=JWTAuth())
 def search_users(request, q: str = ""):
-    qs = User.objects.filter(is_active=True, is_paused=False).exclude(pk=request.auth.pk)
+    qs = User.objects.filter(is_active=True, is_paused=False, archived_at__isnull=True).exclude(
+        pk=request.auth.pk
+    )
     q = q.strip()
     if q:
         digits = re.sub(r"\D", "", q)
@@ -202,7 +205,11 @@ def list_users(request):
             details={"endpoint": "list_users", "required_permission": PermissionKey.MANAGE_USERS},
         )
         return Status(403, ErrorOut(detail="Permission denied."))
-    users = User.objects.prefetch_related("roles").order_by("phone_number")
+    users = (
+        User.objects.filter(archived_at__isnull=True)
+        .prefetch_related("roles")
+        .order_by("phone_number")
+    )
     return Status(200, [UserOut.from_user(u) for u in users])
 
 
@@ -312,11 +319,14 @@ def delete_user(request, user_id: str):
         return Status(400, ErrorOut(detail="You cannot delete your own account."))
     if _is_last_admin(user):
         return Status(400, ErrorOut(detail="Cannot delete the last admin."))
+    if user.archived_at is not None:
+        return Status(400, ErrorOut(detail="User is already archived."))
     display_name = user.display_name
-    user.delete()
+    user.archived_at = timezone.now()
+    user.save(update_fields=["archived_at"])
     audit_log(
         logging.WARNING,
-        "user_deleted",
+        "user_archived",
         request,
         target_type="user",
         target_id=user_id,
