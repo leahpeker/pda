@@ -116,12 +116,14 @@ def _apply_status_transition(request, event: Event, new_status: str, notify: boo
         return None
     if current == EventStatus.DRAFT and new_status == EventStatus.ACTIVE:
         return _publish_draft(request, event)
-    if current == EventStatus.DRAFT and new_status == EventStatus.DELETED:
+    if new_status == EventStatus.DELETED and current in (
+        EventStatus.DRAFT,
+        EventStatus.ACTIVE,
+        EventStatus.CANCELLED,
+    ):
         return _delete_event(request, event)
     if current == EventStatus.ACTIVE and new_status == EventStatus.CANCELLED:
         return _cancel_event(request, event, notify)
-    if current in (EventStatus.ACTIVE, EventStatus.CANCELLED) and new_status == EventStatus.DELETED:
-        return _delete_event(request, event)
     if current == EventStatus.CANCELLED and new_status == EventStatus.ACTIVE:
         _uncancel_event(request, event)
         return None

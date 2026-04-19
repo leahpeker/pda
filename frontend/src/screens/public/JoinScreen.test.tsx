@@ -27,7 +27,7 @@ const emptyQuestionsResult = {
   isPending: false,
   isError: false,
   data: [],
-} as ReturnType<typeof useJoinQuestions>;
+} as unknown as ReturnType<typeof useJoinQuestions>;
 
 const defaultSubmitResult = {
   isPending: false,

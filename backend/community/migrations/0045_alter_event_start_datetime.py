@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('community', '0044_communityguidelines_content_pm_document_content_pm_and_more'),
+        ("community", "0044_communityguidelines_content_pm_document_content_pm_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='event',
-            name='start_datetime',
+            model_name="event",
+            name="start_datetime",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

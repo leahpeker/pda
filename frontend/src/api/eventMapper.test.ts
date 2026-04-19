@@ -16,14 +16,14 @@ describe('mapEvent', () => {
     expect(result.id).toBe('abc-123');
     expect(result.title).toBe('Vegan Potluck');
     expect(result.startDatetime).toBeInstanceOf(Date);
-    expect(result.startDatetime.getUTCHours()).toBe(18);
+    expect(result.startDatetime!.getUTCHours()).toBe(18);
   });
 
   it('converts ISO start_datetime to Date', () => {
     const result = mapEvent(wireEvent({ start_datetime: '2026-01-05T09:05:03Z' }));
-    expect(result.startDatetime.getUTCFullYear()).toBe(2026);
-    expect(result.startDatetime.getUTCMonth()).toBe(0);
-    expect(result.startDatetime.getUTCDate()).toBe(5);
+    expect(result.startDatetime!.getUTCFullYear()).toBe(2026);
+    expect(result.startDatetime!.getUTCMonth()).toBe(0);
+    expect(result.startDatetime!.getUTCDate()).toBe(5);
   });
 
   it('converts end_datetime to Date when present', () => {
@@ -130,7 +130,7 @@ describe('mapEvent', () => {
       }),
     );
     expect(result.guests).toHaveLength(1);
-    const guest = result.guests[0];
+    const guest = result.guests[0]!;
     expect(guest.userId).toBe('u1');
     expect(guest.name).toBe('Alice');
     expect(guest.status).toBe('attending');
@@ -145,7 +145,7 @@ describe('mapEvent', () => {
         guests: [{ user_id: 'u2', name: 'Bob', status: 'maybe' }],
       }),
     );
-    const guest = result.guests[0];
+    const guest = result.guests[0]!;
     expect(guest.phone).toBeNull();
     expect(guest.photoUrl).toBe('');
     expect(guest.hasPlusOne).toBe(false);

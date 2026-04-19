@@ -61,21 +61,21 @@ beforeEach(() => {
   vi.clearAllMocks();
 
   // Safe defaults — overridden per test as needed
-  mockUseUnreadCount.mockReturnValue({ data: 0 } as ReturnType<typeof useUnreadCount>);
-  mockUseNotifications.mockReturnValue({ isPending: false, data: [] } as ReturnType<
+  mockUseUnreadCount.mockReturnValue({ data: 0 } as unknown as ReturnType<typeof useUnreadCount>);
+  mockUseNotifications.mockReturnValue({ isPending: false, data: [] } as unknown as ReturnType<
     typeof useNotifications
   >);
   mockUseMarkNotificationRead.mockReturnValue(
-    makeMutation() as ReturnType<typeof useMarkNotificationRead>,
+    makeMutation() as unknown as ReturnType<typeof useMarkNotificationRead>,
   );
   mockUseMarkAllNotificationsRead.mockReturnValue(
-    makeMutation() as ReturnType<typeof useMarkAllNotificationsRead>,
+    makeMutation() as unknown as ReturnType<typeof useMarkAllNotificationsRead>,
   );
 });
 
 describe('NotificationBell', () => {
   it('shows badge when unread count is greater than zero', () => {
-    mockUseUnreadCount.mockReturnValue({ data: 3 } as ReturnType<typeof useUnreadCount>);
+    mockUseUnreadCount.mockReturnValue({ data: 3 } as unknown as ReturnType<typeof useUnreadCount>);
     renderBell();
 
     const bellButton = screen.getByRole('button', { name: /notifications \(3 unread\)/i });
@@ -85,7 +85,7 @@ describe('NotificationBell', () => {
   });
 
   it('badge is not visible when unread count is zero', () => {
-    mockUseUnreadCount.mockReturnValue({ data: 0 } as ReturnType<typeof useUnreadCount>);
+    mockUseUnreadCount.mockReturnValue({ data: 0 } as unknown as ReturnType<typeof useUnreadCount>);
     renderBell();
 
     // Button exists but has no unread annotation in label
@@ -106,7 +106,7 @@ describe('NotificationBell', () => {
 
   it('shows empty state message when notification list is empty', async () => {
     const user = userEvent.setup();
-    mockUseNotifications.mockReturnValue({ isPending: false, data: [] } as ReturnType<
+    mockUseNotifications.mockReturnValue({ isPending: false, data: [] } as unknown as ReturnType<
       typeof useNotifications
     >);
     renderBell();
@@ -118,7 +118,7 @@ describe('NotificationBell', () => {
 
   it('shows mark-all-as-read button when panel is open and there are notifications', async () => {
     const user = userEvent.setup();
-    mockUseUnreadCount.mockReturnValue({ data: 2 } as ReturnType<typeof useUnreadCount>);
+    mockUseUnreadCount.mockReturnValue({ data: 2 } as unknown as ReturnType<typeof useUnreadCount>);
     mockUseNotifications.mockReturnValue({
       isPending: false,
       data: [
@@ -145,7 +145,7 @@ describe('NotificationBell', () => {
 
   it('tapping an event_invite notification navigates to /events/:id', async () => {
     const user = userEvent.setup();
-    mockUseUnreadCount.mockReturnValue({ data: 1 } as ReturnType<typeof useUnreadCount>);
+    mockUseUnreadCount.mockReturnValue({ data: 1 } as unknown as ReturnType<typeof useUnreadCount>);
     mockUseNotifications.mockReturnValue({
       isPending: false,
       data: [
@@ -159,27 +159,19 @@ describe('NotificationBell', () => {
           createdAt: '2024-01-01T00:00:00Z',
         },
       ],
-    } as ReturnType<typeof useNotifications>);
+    } as unknown as ReturnType<typeof useNotifications>);
     mockUseMarkNotificationRead.mockReturnValue(
-      makeMutation({ mutateAsync: vi.fn().mockResolvedValue(undefined) }) as ReturnType<
+      makeMutation({ mutateAsync: vi.fn().mockResolvedValue(undefined) }) as unknown as ReturnType<
         typeof useMarkNotificationRead
       >,
     );
 
     // We need to capture navigation — render with a route display
     const qc = makeQc();
-    let locationDisplay = '';
     render(
       <QueryClientProvider client={qc}>
         <MemoryRouter initialEntries={['/']}>
           <NotificationBell />
-          {/* Use a simple component to track location changes */}
-          <span
-            data-testid="pathname"
-            ref={(el) => {
-              if (el) locationDisplay = el.textContent ?? '';
-            }}
-          />
         </MemoryRouter>
       </QueryClientProvider>,
     );

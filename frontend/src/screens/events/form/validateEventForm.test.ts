@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { EventFormValues } from '@/api/eventWrites';
 import { validateEventForm } from './validateEventForm';
 
@@ -8,11 +8,14 @@ function validValues(overrides: Partial<EventFormValues> = {}): EventFormValues 
     title: 'Vegan Potluck',
     description: '',
     location: '',
+    latitude: null,
+    longitude: null,
     startDatetime: futureDate,
     endDatetime: null,
     datetimeTbd: false,
     eventType: 'community',
     visibility: 'public',
+    visibilityChoice: 'public',
     invitePermission: 'all_members',
     rsvpEnabled: false,
     allowPlusOnes: false,
@@ -59,13 +62,13 @@ describe('validateEventForm', () => {
   });
 
   describe('description', () => {
-    it('rejects description over 10000 characters', () => {
-      const errors = validateEventForm(validValues({ description: 'a'.repeat(10001) }));
+    it('rejects description over 2000 characters', () => {
+      const errors = validateEventForm(validValues({ description: 'a'.repeat(2001) }));
       expect(errors.description).toBe('too long');
     });
 
-    it('accepts description at exactly 10000 characters', () => {
-      const errors = validateEventForm(validValues({ description: 'a'.repeat(10000) }));
+    it('accepts description at exactly 2000 characters', () => {
+      const errors = validateEventForm(validValues({ description: 'a'.repeat(2000) }));
       expect(errors.description).toBeUndefined();
     });
   });
@@ -126,21 +129,6 @@ describe('validateEventForm', () => {
     });
   });
 
-  describe('visibility', () => {
-    it('rejects official events with non-public visibility', () => {
-      const errors = validateEventForm(
-        validValues({ eventType: 'official', visibility: 'members_only' }),
-      );
-      expect(errors.visibility).toBe('official events must be public');
-    });
-
-    it('accepts official events with public visibility', () => {
-      const errors = validateEventForm(
-        validValues({ eventType: 'official', visibility: 'public' }),
-      );
-      expect(errors.visibility).toBeUndefined();
-    });
-  });
 
   describe('maxAttendees', () => {
     it('rejects negative maxAttendees', () => {

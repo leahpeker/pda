@@ -53,7 +53,7 @@ beforeEach(() => {
     isPending: false,
     isError: false,
     refetch: vi.fn(),
-  } as ReturnType<typeof useEvents>);
+  } as unknown as ReturnType<typeof useEvents>);
 });
 
 describe('CalendarScreen', () => {
@@ -71,10 +71,10 @@ describe('CalendarScreen', () => {
     expect(screen.getByRole('radio', { name: /^list$/i })).toBeInTheDocument();
   });
 
-  it('renders the calendar heading', () => {
+  it('renders the calendar view', () => {
     renderCalendar();
 
-    expect(screen.getByRole('heading', { name: /^calendar$/i })).toBeInTheDocument();
+    expect(screen.getByTestId('rbc-calendar')).toBeInTheDocument();
   });
 
   it('shows loading indicator while events are pending', () => {
@@ -96,7 +96,7 @@ describe('CalendarScreen', () => {
       isPending: false,
       isError: true,
       refetch: vi.fn(),
-    } as ReturnType<typeof useEvents>);
+    } as unknown as ReturnType<typeof useEvents>);
 
     renderCalendar();
 

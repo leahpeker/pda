@@ -19,7 +19,7 @@ describe('formatEventDateTime', () => {
   it('returns start string only when end is null', () => {
     const start = new Date('2026-04-15T18:00:00');
     const result = formatEventDateTime(start, null);
-    expect(result).toMatch(/Apr 15/);
+    expect(result).toMatch(/apr 15/);
     expect(result).not.toContain('→');
     expect(result).not.toContain('–');
   });
@@ -32,7 +32,7 @@ describe('formatEventDateTime', () => {
     expect(result).not.toContain('→');
     // End portion is just time, not a full date
     const parts = result.split('–');
-    expect(parts[1].trim()).toMatch(/^\d+:\d{2} [AP]M$/);
+    expect(parts[1]!.trim()).toMatch(/^\d+:\d{2} [ap]m$/);
   });
 
   it('uses arrow and full date for multi-day events', () => {
@@ -42,8 +42,8 @@ describe('formatEventDateTime', () => {
     expect(result).toContain('→');
     expect(result).not.toContain('–');
     const parts = result.split('→');
-    expect(parts[0]).toMatch(/Apr 15/);
-    expect(parts[1]).toMatch(/Apr 16/);
+    expect(parts[0]).toMatch(/apr 15/);
+    expect(parts[1]).toMatch(/apr 16/);
   });
 });
 

@@ -12,7 +12,6 @@ import {
   InvitePermission,
 } from '@/models/event';
 import type { User } from '@/models/user';
-import { Permission } from '@/models/permissions';
 
 // Mock network-touching dependencies
 vi.mock('@/api/eventWrites', () => ({
