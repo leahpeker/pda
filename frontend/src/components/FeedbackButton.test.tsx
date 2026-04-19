@@ -184,4 +184,22 @@ describe('FeedbackButton', () => {
     expect(screen.getByRole('dialog', { name: /send feedback/i })).toBeInTheDocument();
     expect(toastSuccessMock).not.toHaveBeenCalled();
   });
+
+  it('does not display route, user-agent, or other metadata in the open form', async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(window.navigator, 'userAgent', {
+      value: 'jsdom-metadata-probe',
+      configurable: true,
+    });
+    renderButton('/events/mine');
+    await user.click(screen.getByRole('button', { name: /send feedback/i }));
+
+    const dialog = screen.getByRole('dialog', { name: /send feedback/i });
+    // Metadata is collected silently — it should never be rendered in the UI.
+    expect(dialog).not.toHaveTextContent('/events/mine');
+    expect(dialog).not.toHaveTextContent('jsdom-metadata-probe');
+    expect(dialog).not.toHaveTextContent('+12125551234');
+    expect(dialog).not.toHaveTextContent(/user[\s-]?agent/i);
+    expect(dialog).not.toHaveTextContent(/route/i);
+  });
 });
