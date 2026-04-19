@@ -115,13 +115,15 @@ class TestOtherLinkValidation:
         resp = self._post(api_client, manage_events_headers, "https://example.com/some/page")
         assert resp.status_code == 201
 
-    def test_bare_domain_rejected(self, api_client, manage_events_headers):
+    def test_bare_domain_accepted(self, api_client, manage_events_headers):
         resp = self._post(api_client, manage_events_headers, "https://example.com/")
-        assert resp.status_code == 422
+        assert resp.status_code == 201
+        assert resp.json()["other_link"] == "https://example.com/"
 
-    def test_bare_domain_no_scheme_rejected(self, api_client, manage_events_headers):
+    def test_bare_domain_no_scheme_accepted_and_normalized(self, api_client, manage_events_headers):
         resp = self._post(api_client, manage_events_headers, "example.com")
-        assert resp.status_code == 422
+        assert resp.status_code == 201
+        assert resp.json()["other_link"] == "https://example.com"
 
     def test_empty_other_link_accepted(self, api_client, manage_events_headers):
         resp = self._post(api_client, manage_events_headers, "")

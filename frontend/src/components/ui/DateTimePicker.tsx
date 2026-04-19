@@ -63,7 +63,7 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
     ? (() => {
         const d = new Date(value);
         if (isNaN(d.getTime())) return '';
-        return format(d, 'EEEE, MMMM d · h:mm a').toLowerCase();
+        return format(d, 'EEEE, MMMM d · h:mmaaa').toLowerCase();
       })()
     : '';
 

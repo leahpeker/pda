@@ -89,7 +89,7 @@ export function EventFormBasics({
               }}
               className="self-start"
             >
-              propose dates (let members vote)
+              poll for dates
             </Button>
           ) : null}
 
@@ -154,7 +154,7 @@ export function EventFormBasics({
           onChange(patch);
         }}
         maxLength={300}
-        placeholder="address, neighborhood, or 'dm for details'"
+        placeholder="search an address or place"
         error={errors.location}
       />
     </div>

@@ -5,6 +5,7 @@ import type { Event } from '@/models/event';
 import { EventStatus, EventType, EventVisibility } from '@/models/event';
 import { formatEventDateTime } from '@/utils/datetime';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
+import { EventActions } from './EventActions';
 import { EventMemberSection } from './EventMemberSection';
 import { EventPollCard } from './poll/EventPollCard';
 
@@ -33,6 +34,7 @@ export default function EventDetailScreen() {
       </div>
 
       <WhenLine event={event} />
+      <EventActions event={event} />
       <EventPollCard event={event} />
 
       {event.description ? (
@@ -49,14 +51,9 @@ export default function EventDetailScreen() {
 
 // Hides the normal datetime line while a poll is active (no start time yet).
 // Once finalized the backend sets startDatetime; we're back to normal.
-// For a no-poll event, EventPollCard owns the "tbd + propose dates" line
-// for hosts, so we suppress the plain "tbd" to avoid showing it twice.
 function WhenLine({ event }: { event: Event }) {
-  const user = useAuthStore((s) => s.user);
   const pollActive = event.hasPoll && !event.startDatetime;
-  const isHost = !!user && (user.id === event.createdById || event.coHostIds.includes(user.id));
-  const hostWillProposeDates = !event.hasPoll && !event.startDatetime && isHost;
-  if (pollActive || hostWillProposeDates) return null;
+  if (pollActive) return null;
   return (
     <p className="text-sm text-foreground-secondary">
       {event.startDatetime

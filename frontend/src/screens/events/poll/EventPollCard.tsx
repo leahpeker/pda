@@ -11,7 +11,6 @@ import { useAuthStore } from '@/auth/store';
 import { Button } from '@/components/ui/Button';
 import type { Event } from '@/models/event';
 import { hasPermission, Permission } from '@/models/permissions';
-import { PollCreateDialog } from './PollCreateDialog';
 import { PollFinalizeDialog } from './PollFinalizeDialog';
 import { PollManageDialog } from './PollManageDialog';
 import { PollOptionStrip } from './PollOptionStrip';
@@ -28,37 +27,13 @@ export function EventPollCard({ event }: Props) {
 
   const { data: poll, isPending, isError } = useEventPoll(event.id, event.hasPoll);
 
-  const [createOpen, setCreateOpen] = useState(false);
   const [respondOpen, setRespondOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
 
-  // No poll yet — host gets the "propose dates" CTA, everyone else gets
-  // whatever the parent chose to render (typically "date & time tbd").
+  // No poll — the form owns poll creation; the detail screen just falls back
+  // to the parent's "date & time tbd" line.
   if (!event.hasPoll) {
-    if (canManage) {
-      return (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-foreground-secondary">date & time tbd</p>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setCreateOpen(true);
-            }}
-            className="self-start"
-          >
-            propose dates
-          </Button>
-          <PollCreateDialog
-            open={createOpen}
-            onClose={() => {
-              setCreateOpen(false);
-            }}
-            eventId={event.id}
-          />
-        </div>
-      );
-    }
     return null;
   }
 

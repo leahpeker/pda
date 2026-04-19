@@ -38,13 +38,12 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
   };
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'going', label: `going (${String(counts.going)})` },
-    { key: 'maybe', label: `maybe (${String(counts.maybe)})` },
-    { key: 'cant', label: `can't (${String(counts.cant)})` },
+    { key: 'going', label: 'going' },
+    { key: 'maybe', label: 'maybe' },
+    { key: 'cant', label: "can't go" },
   ];
-  if (counts.waitlist > 0)
-    tabs.push({ key: 'waitlist', label: `waitlist (${String(counts.waitlist)})` });
-  if (canSeeInvited) tabs.push({ key: 'invited', label: `invited (${String(counts.invited)})` });
+  if (counts.waitlist > 0) tabs.push({ key: 'waitlist', label: 'waitlist' });
+  if (canSeeInvited) tabs.push({ key: 'invited', label: 'invited' });
 
   const defaultTab = tabs.find((t) => counts[t.key] > 0)?.key ?? 'going';
   const [active, setActive] = useState<Tab>(defaultTab);
@@ -56,7 +55,11 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
 
   return (
     <div>
-      <div role="tablist" aria-label="guest status" className="mb-2 flex flex-wrap gap-1">
+      <div
+        role="tablist"
+        aria-label="guest status"
+        className="mb-2 flex w-full rounded-full border border-border-strong bg-surface p-1"
+      >
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -67,13 +70,14 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
               setActive(t.key);
             }}
             className={cn(
-              'rounded-full px-3 py-1 text-xs transition-colors',
+              'inline-flex flex-1 flex-col items-center justify-center whitespace-nowrap rounded-full px-2 py-1 text-sm leading-tight transition-colors',
               active === t.key
                 ? 'bg-brand-600 text-brand-on'
-                : 'bg-surface-dim text-foreground-secondary hover:bg-surface-raised',
+                : 'text-foreground-secondary hover:bg-surface-dim',
             )}
           >
-            {t.label}
+            <span>{t.label}</span>
+            <span className="text-xs opacity-80">{counts[t.key]}</span>
           </button>
         ))}
       </div>

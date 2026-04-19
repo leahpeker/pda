@@ -97,7 +97,7 @@ function PollCreateDialogBody({ onClose, eventId, onBuffer, initialOptions }: Pr
   const submitting = createPoll.isPending;
 
   return (
-    <Dialog open onClose={close} title="propose dates">
+    <Dialog open onClose={close} title="poll for dates">
       <div className="flex flex-col gap-3">
         <p className="text-sm text-foreground-secondary">
           add a few times — members vote yes / maybe / no on each

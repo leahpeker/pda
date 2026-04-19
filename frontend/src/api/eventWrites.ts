@@ -11,6 +11,12 @@ import { useAuthStore } from '@/auth/store';
 import { eventKeys } from './events';
 import { mapEvent, type WireEvent } from './eventMapper';
 import type { Event } from '@/models/event';
+import {
+  fromCashAppUrl,
+  fromVenmoUrl,
+  toCashAppUrl,
+  toVenmoUrl,
+} from '@/utils/paymentHandle';
 
 export type EventStatus = 'active' | 'draft' | 'cancelled';
 
@@ -83,8 +89,8 @@ function toWireBody(values: EventFormValues): WireBody {
     partiful_link: values.partifulLink,
     other_link: values.otherLink,
     price: values.price,
-    venmo_link: values.venmoLink,
-    cashapp_link: values.cashappLink,
+    venmo_link: toVenmoUrl(values.venmoLink),
+    cashapp_link: toCashAppUrl(values.cashappLink),
     zelle_info: values.zelleInfo,
     co_host_ids: values.coHostIds,
     invited_user_ids: values.invitedUserIds,
@@ -247,8 +253,8 @@ export function eventToFormValues(e: Event): EventFormValues {
     partifulLink: e.partifulLink,
     otherLink: e.otherLink,
     price: e.price,
-    venmoLink: e.venmoLink,
-    cashappLink: e.cashappLink,
+    venmoLink: fromVenmoUrl(e.venmoLink),
+    cashappLink: fromCashAppUrl(e.cashappLink),
     zelleInfo: e.zelleInfo,
     coHostIds: e.coHostIds,
     invitedUserIds: e.invitedUserIds,

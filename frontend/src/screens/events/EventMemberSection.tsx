@@ -37,12 +37,12 @@ export function EventMemberSection({ event }: Props) {
       <LocationSection event={event} />
       <LinksSection event={event} />
       <CostSection event={event} />
-      {canInvite ? <InviteSection event={event} /> : null}
       {showRsvp ? (
         <Card label="rsvp">
           <RsvpSection event={event} canSeeInvited={canSeeInvited} />
         </Card>
       ) : null}
+      {canInvite ? <InviteSection event={event} /> : null}
       <EventAdminActions event={event} />
       <ReportEventButton eventId={event.id} />
     </div>
@@ -104,16 +104,19 @@ function HostSection({ event }: { event: Event }) {
     <Card label={label}>
       <div className="flex flex-wrap gap-2">
         {hosts.map((h) => (
-          <HostChip key={h.id} name={h.name} photoUrl={h.photoUrl} />
+          <HostChip key={h.id} id={h.id} name={h.name} photoUrl={h.photoUrl} />
         ))}
       </div>
     </Card>
   );
 }
 
-function HostChip({ name, photoUrl }: { name: string; photoUrl: string }) {
+function HostChip({ id, name, photoUrl }: { id: string; name: string; photoUrl: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-surface-dim px-2 py-1 text-sm">
+    <Link
+      to={`/members/${id}`}
+      className="inline-flex items-center gap-2 rounded-full bg-surface-dim px-2 py-1 text-sm hover:bg-surface-dim/70"
+    >
       {photoUrl ? (
         <img src={photoUrl} alt="" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
       ) : (
@@ -125,7 +128,7 @@ function HostChip({ name, photoUrl }: { name: string; photoUrl: string }) {
         </span>
       )}
       {name}
-    </span>
+    </Link>
   );
 }
 
@@ -140,7 +143,7 @@ function LocationSection({ event }: { event: Event }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`open ${event.location} in maps`}
-        className="text-sm text-foreground hover:underline"
+        className="text-brand-700 text-sm hover:underline"
       >
         {primary}
       </a>
@@ -150,9 +153,13 @@ function LocationSection({ event }: { event: Event }) {
 
 function LinksSection({ event }: { event: Event }) {
   const links: { label: string; url: string }[] = [];
-  if (event.whatsappLink) links.push({ label: 'whatsapp group', url: event.whatsappLink });
-  if (event.partifulLink) links.push({ label: 'partiful', url: event.partifulLink });
-  if (event.otherLink) links.push({ label: event.otherLink, url: event.otherLink });
+  if (event.whatsappLink) {
+    links.push({ label: 'whatsapp group', url: ensureHttps(event.whatsappLink) });
+  }
+  if (event.partifulLink) links.push({ label: 'partiful', url: ensureHttps(event.partifulLink) });
+  if (event.otherLink) {
+    links.push({ label: prettyUrl(event.otherLink), url: ensureHttps(event.otherLink) });
+  }
   const feedbackSurveys = event.surveySlugs.filter((s) => s !== event.datetimePollSlug);
 
   if (links.length === 0 && feedbackSurveys.length === 0) return null;
@@ -165,7 +172,7 @@ function LinksSection({ event }: { event: Event }) {
               href={l.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-foreground hover:underline"
+              className="text-brand-700 hover:text-brand-900"
             >
               {l.label}
             </a>
@@ -173,7 +180,7 @@ function LinksSection({ event }: { event: Event }) {
         ))}
         {feedbackSurveys.map((slug) => (
           <li key={slug}>
-            <Link to={`/surveys/${slug}`} className="text-foreground hover:underline">
+            <Link to={`/surveys/${slug}`} className="text-brand-700 hover:text-brand-900">
               give feedback
             </Link>
           </li>
@@ -184,10 +191,10 @@ function LinksSection({ event }: { event: Event }) {
 }
 
 function CostSection({ event }: { event: Event }) {
-  const items: { label: string; value?: string; url?: string }[] = [];
-  if (event.price) items.push({ label: event.price });
-  if (event.venmoLink) items.push({ label: 'venmo', url: event.venmoLink });
-  if (event.cashappLink) items.push({ label: 'cash app', url: event.cashappLink });
+  const items: { label: string; url?: string }[] = [];
+  if (event.price) items.push({ label: formatPrice(event.price) });
+  if (event.venmoLink) items.push({ label: 'venmo', url: ensureHttps(event.venmoLink) });
+  if (event.cashappLink) items.push({ label: 'cashapp', url: ensureHttps(event.cashappLink) });
   if (event.zelleInfo) items.push({ label: `zelle: ${event.zelleInfo}` });
   if (items.length === 0) return null;
   return (
@@ -200,7 +207,7 @@ function CostSection({ event }: { event: Event }) {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:underline"
+                className="text-brand-700 hover:text-brand-900"
               >
                 {item.label}
               </a>
@@ -212,6 +219,17 @@ function CostSection({ event }: { event: Event }) {
       </ul>
     </Card>
   );
+}
+
+// "free" stays bare. Anything that starts with a digit gets "$" prepended
+// unless the user already typed one. Anything else (e.g. "sliding scale")
+// passes through as-written.
+function formatPrice(price: string): string {
+  const trimmed = price.trim();
+  if (!trimmed) return trimmed;
+  if (/^\$/.test(trimmed)) return trimmed;
+  if (/^\d/.test(trimmed)) return `$${trimmed}`;
+  return trimmed;
 }
 
 function InviteSection({ event }: { event: Event }) {
@@ -235,4 +253,17 @@ function InviteSection({ event }: { event: Event }) {
       />
     </Card>
   );
+}
+
+function ensureHttps(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+// Strip scheme + optional www. and trailing slash for display. `href` should
+// still get the full URL (via ensureHttps).
+function prettyUrl(url: string): string {
+  return url
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/$/, '');
 }
