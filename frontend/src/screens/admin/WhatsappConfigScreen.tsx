@@ -54,7 +54,7 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
   return (
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">whatsapp config</h1>
-      <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">bot connection settings</p>
+      <p className="mb-6 text-sm text-foreground-tertiary">bot connection settings</p>
 
       <WhatsappSetupInstructions />
 
@@ -96,7 +96,7 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
         />
 
         {error ? (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
         ) : null}
@@ -114,7 +114,7 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
 
 function StatusDot({ state }: { state: 'connected' | 'offline' | 'checking' }) {
   const color =
-    state === 'connected' ? 'bg-green-500' : state === 'offline' ? 'bg-red-500' : 'bg-neutral-300 dark:bg-neutral-600';
+    state === 'connected' ? 'bg-green-500' : state === 'offline' ? 'bg-red-500' : 'bg-toggle-off';
   return <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${color}`} />;
 }
 

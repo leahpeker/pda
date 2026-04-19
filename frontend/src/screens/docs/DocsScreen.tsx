@@ -37,7 +37,7 @@ function FolderView({ folder, depth }: { folder: DocFolder; depth: number }) {
     <section>
       <Heading
         className={
-          depth === 0 ? 'text-lg font-medium' : 'mt-3 text-sm font-medium text-neutral-600 dark:text-neutral-400'
+          depth === 0 ? 'text-lg font-medium' : 'mt-3 text-sm font-medium text-foreground-tertiary'
         }
       >
         {folder.name}

@@ -53,7 +53,7 @@ export default function NewPasswordScreen() {
           hint="at least 8 characters, one letter, one number"
         />
         {serverError ? (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          <p role="alert" className="text-sm text-destructive">
             {serverError}
           </p>
         ) : null}

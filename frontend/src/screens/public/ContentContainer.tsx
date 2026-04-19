@@ -18,7 +18,7 @@ export function ContentLoading({ label = 'loading…' }: { label?: string }) {
 export function ContentError({ message }: { message: string }) {
   return (
     <ContentContainer>
-      <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+      <p role="alert" className="text-sm text-destructive">
         {message}
       </p>
     </ContentContainer>

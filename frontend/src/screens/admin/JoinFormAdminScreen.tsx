@@ -43,7 +43,7 @@ export default function JoinFormAdminScreen() {
           add question
         </Button>
       </header>
-      <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-6 text-sm text-foreground-tertiary">
         questions shown to applicants on /join. name + phone are always included.
       </p>
 

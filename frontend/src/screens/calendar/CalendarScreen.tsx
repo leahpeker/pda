@@ -91,7 +91,7 @@ export default function CalendarScreen() {
       </header>
 
       {isError ? (
-        <div className="mb-4 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+        <div className="mb-4 rounded-md border border-destructive bg-destructive-subtle px-3 py-2 text-sm text-destructive">
           couldn't load events —{' '}
           <button
             type="button"
@@ -195,7 +195,7 @@ function DayToolbar({ date, onNavigate }: DayToolbarProps) {
           onClick={() => {
             onNavigate(addDays(date, -1));
           }}
-          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 dark:text-neutral-400 hover:bg-surface-dim"
+          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
         >
           ‹
         </button>
@@ -208,7 +208,7 @@ function DayToolbar({ date, onNavigate }: DayToolbarProps) {
           onClick={() => {
             onNavigate(addDays(date, 1));
           }}
-          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 dark:text-neutral-400 hover:bg-surface-dim"
+          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
         >
           ›
         </button>
@@ -235,7 +235,7 @@ function NarrowWeekToolbar({ date, weekStartsOn, onNavigate }: NarrowWeekToolbar
           onClick={() => {
             onNavigate(addDays(date, -7));
           }}
-          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 dark:text-neutral-400 hover:bg-surface-dim"
+          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
         >
           ‹
         </button>
@@ -248,7 +248,7 @@ function NarrowWeekToolbar({ date, weekStartsOn, onNavigate }: NarrowWeekToolbar
           onClick={() => {
             onNavigate(addDays(date, 7));
           }}
-          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 dark:text-neutral-400 hover:bg-surface-dim"
+          className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
         >
           ›
         </button>

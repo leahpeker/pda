@@ -53,13 +53,13 @@ export default function SurveyBuilderScreen() {
         <div className="flex gap-2">
           <Link
             to={`/surveys/${currentSurvey.slug}`}
-            className="inline-flex h-10 items-center rounded-md px-4 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
+            className="inline-flex h-10 items-center rounded-md px-4 text-sm text-foreground-secondary hover:bg-surface-dim"
           >
             preview
           </Link>
           <Link
             to={`/admin/surveys/${surveyId}/responses`}
-            className="inline-flex h-10 items-center rounded-md px-4 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
+            className="inline-flex h-10 items-center rounded-md px-4 text-sm text-foreground-secondary hover:bg-surface-dim"
           >
             responses
           </Link>
@@ -75,7 +75,7 @@ export default function SurveyBuilderScreen() {
       </header>
 
       {currentSurvey.pollResult ? (
-        <div className="mb-6 rounded-md bg-surface-dim px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300">
+        <div className="mb-6 rounded-md bg-surface-dim px-3 py-2 text-sm text-foreground-secondary">
           this poll has been finalized — the survey is locked
         </div>
       ) : null}

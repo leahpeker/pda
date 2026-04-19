@@ -52,7 +52,7 @@ export default function FlaggedEventsScreen() {
                 'rounded-full px-3 py-1 text-xs transition-colors',
                 active
                   ? 'bg-accent text-accent-foreground'
-                  : 'bg-surface-dim text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700',
+                  : 'bg-surface-dim text-foreground-secondary hover:bg-surface-raised',
               )}
             >
               {f.label}
@@ -62,7 +62,7 @@ export default function FlaggedEventsScreen() {
       </div>
 
       {error ? (
-        <p role="alert" className="mb-3 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mb-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
@@ -143,10 +143,10 @@ function FlagRow({
 function StatusBadge({ status }: { status: FlagStatus }) {
   const tone =
     status === 'actioned'
-      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+      ? 'bg-success-subtle text-success'
       : status === 'dismissed'
-        ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
-        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300';
+        ? 'bg-surface-raised text-foreground-secondary'
+        : 'bg-warning-subtle text-warning';
   return <span className={cn('rounded-full px-2 py-0.5 text-xs', tone)}>{status}</span>;
 }
 

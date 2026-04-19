@@ -42,7 +42,7 @@ export function PhoneField({
           'aria-label': label,
           className: cn(
             'h-10 w-full rounded-md border border-border-strong bg-surface px-3 text-sm transition-colors outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200',
-            error && 'border-red-500 dark:border-red-400 focus:border-red-500 focus:ring-red-100',
+            error && 'border-destructive-border focus:border-red-500 focus:ring-red-100',
           ),
         }}
         countrySelectProps={{
@@ -55,7 +55,7 @@ export function PhoneField({
         )}
       />
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs text-red-600 dark:text-red-400">
+        <p id={`${inputId}-error`} className="text-xs text-destructive">
           {error}
         </p>
       ) : hint ? (

@@ -30,7 +30,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
         aria-describedby={error ? `${inputId}-error` : undefined}
         className={cn(
           'h-10 rounded-md border border-border-strong bg-surface px-3 text-sm transition-colors outline-none focus:border-neutral-500 focus:ring-2 focus:ring-border',
-          error && 'border-red-500 dark:border-red-400 focus:border-red-500 focus:ring-red-100',
+          error && 'border-destructive-border focus:border-red-500 focus:ring-red-100',
           className,
         )}
         {...rest}
@@ -47,7 +47,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
         ))}
       </select>
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs text-red-600 dark:text-red-400">
+        <p id={`${inputId}-error`} className="text-xs text-destructive">
           {error}
         </p>
       ) : null}

@@ -92,7 +92,7 @@ export function RichEditorToolbar({ editor }: Props) {
 }
 
 function Divider() {
-  return <span aria-hidden="true" className="mx-1 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />;
+  return <span aria-hidden="true" className="mx-1 h-5 w-px bg-surface-raised" />;
 }
 
 function ToolButton({
@@ -114,7 +114,7 @@ function ToolButton({
       onClick={onClick}
       className={cn(
         'h-8 rounded px-2 text-sm transition-colors hover:bg-surface-dim',
-        active && 'bg-neutral-200 dark:bg-neutral-700 text-foreground',
+        active && 'bg-surface-raised text-foreground',
       )}
     >
       {children}

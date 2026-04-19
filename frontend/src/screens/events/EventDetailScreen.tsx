@@ -31,7 +31,7 @@ export default function EventDetailScreen() {
         <VisibilityBadge event={event} />
       </div>
 
-      <p className="text-sm text-neutral-700 dark:text-neutral-300">
+      <p className="text-sm text-foreground-secondary">
         {event.startDatetime
           ? formatEventDateTime(event.startDatetime, event.endDatetime, event.datetimeTbd)
           : 'date & time tbd'}
@@ -73,10 +73,10 @@ function Badge({
   children: React.ReactNode;
 }) {
   const tones = {
-    neutral: 'bg-surface-dim text-neutral-700 dark:text-neutral-300',
-    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300',
-    amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300',
-    lavender: 'bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-300',
+    neutral: 'bg-surface-dim text-foreground-secondary',
+    blue: 'bg-info-subtle text-info',
+    amber: 'bg-warning-subtle text-warning',
+    lavender: 'bg-highlight-subtle text-highlight',
   };
   return <span className={`rounded-full px-2 py-0.5 text-xs ${tones[tone]}`}>{children}</span>;
 }
@@ -86,19 +86,19 @@ function LoginOrJoinSection() {
   return (
     <section className="mt-8 rounded-lg border border-border bg-surface p-6">
       <h2 className="mb-2 text-base font-medium">want to see more?</h2>
-      <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-4 text-sm text-foreground-tertiary">
         location, rsvp, and organizer details are shown once you sign in
       </p>
       <div className="flex flex-wrap gap-3">
         <Link
           to="/login"
-          className="inline-flex h-10 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-neutral-800 dark:hover:bg-neutral-200"
+          className="inline-flex h-10 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent/80"
         >
           sign in
         </Link>
         <Link
           to="/join"
-          className="inline-flex h-10 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-background"
+          className="inline-flex h-10 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-foreground-secondary hover:bg-background"
         >
           request to join
         </Link>

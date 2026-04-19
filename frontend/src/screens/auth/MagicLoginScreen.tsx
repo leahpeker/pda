@@ -36,7 +36,7 @@ export default function MagicLoginScreen() {
   if (state === 'error') {
     return (
       <AuthLayout title="link expired" subtitle="this login link didn't work">
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-foreground-tertiary">
           ask an organizer to send a new one, or{' '}
           <a href="/login" className="underline">
             sign in with your password

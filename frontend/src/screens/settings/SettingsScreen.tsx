@@ -196,7 +196,7 @@ function Toggle({
       <span
         className={cn(
           'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors',
-          checked ? 'bg-brand-600' : 'bg-neutral-300 dark:bg-neutral-600',
+          checked ? 'bg-brand-600' : 'bg-toggle-off',
         )}
       >
         <input
@@ -330,7 +330,7 @@ function SegmentedControl<T>({
               key={String(opt.value)}
               className={cn(
                 'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
-                active ? 'bg-accent text-accent-foreground' : 'text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim',
+                active ? 'bg-accent text-accent-foreground' : 'text-foreground-secondary hover:bg-surface-dim',
               )}
             >
               <input

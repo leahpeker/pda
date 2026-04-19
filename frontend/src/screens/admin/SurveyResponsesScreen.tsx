@@ -30,7 +30,7 @@ export default function SurveyResponsesScreen() {
         </div>
         <Link
           to={`/admin/surveys/${surveyId}`}
-          className="inline-flex h-10 items-center rounded-md px-4 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
+          className="inline-flex h-10 items-center rounded-md px-4 text-sm text-foreground-secondary hover:bg-surface-dim"
         >
           ← back to editor
         </Link>

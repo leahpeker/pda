@@ -9,7 +9,7 @@ export default function NotImplemented() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-2 p-8">
       <h1 className="text-2xl font-medium">coming soon 🌿</h1>
       <p className="text-sm text-muted">this screen is part of a later migration phase</p>
-      <code className="rounded bg-surface-dim px-2 py-1 text-xs text-neutral-600 dark:text-neutral-400">{pathname}</code>
+      <code className="rounded bg-surface-dim px-2 py-1 text-xs text-foreground-tertiary">{pathname}</code>
     </main>
   );
 }

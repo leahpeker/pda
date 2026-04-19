@@ -38,7 +38,7 @@ export function ApprovalCredentialsDialog({
 
   return (
     <Dialog open={open} onClose={onClose} title={`welcome ${displayName}`}>
-      <p className="text-sm text-neutral-700 dark:text-neutral-300">
+      <p className="text-sm text-foreground-secondary">
         share this one-time login link with {phoneNumber}. it won't be shown again.
       </p>
       <div className="mt-3 overflow-x-auto rounded-md bg-surface-dim px-3 py-2 font-mono text-xs break-all">

@@ -10,14 +10,14 @@ export default function EventEditScreen() {
   if (isPending) return <ContentLoading />;
   if (isError) return <ContentError message="couldn't load this event — try refreshing" />;
   return (
-    <main className="bg-brand-50 dark:bg-brand-900/30 min-h-full">
+    <main className="bg-brand-50 min-h-full">
       <div className="mx-auto max-w-3xl px-4 py-6 md:py-10">
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-2xl font-medium tracking-tight text-foreground">edit event</h1>
           <button
             type="button"
             onClick={() => void navigate(-1)}
-            className="text-sm text-muted hover:text-neutral-700 dark:hover:text-neutral-300"
+            className="text-sm text-muted hover:text-foreground-secondary"
           >
             cancel
           </button>

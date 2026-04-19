@@ -264,7 +264,7 @@ export function EventForm({ existing }: Props) {
         </p>
       ) : null}
 
-<div className="fixed inset-x-0 bottom-0 z-50 flex flex-row gap-2 border-t border-brand-100 dark:border-brand-800 bg-brand-50/95 dark:bg-brand-900/95 px-4 py-3 backdrop-blur sm:static sm:z-auto sm:mx-0 sm:justify-end sm:border-0 sm:bg-transparent dark:sm:bg-transparent sm:p-0 sm:pt-2 sm:backdrop-blur-none">
+<div className="fixed inset-x-0 bottom-0 z-50 flex flex-row gap-2 border-t border-brand-100 bg-brand-50/95 px-4 py-3 backdrop-blur sm:static sm:z-auto sm:mx-0 sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-2 sm:backdrop-blur-none">
         {!existing || isDraft ? (
           <Button
             variant="secondary"

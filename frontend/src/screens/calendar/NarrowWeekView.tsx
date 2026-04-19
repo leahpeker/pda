@@ -77,7 +77,7 @@ function DayRow({ day, isLast, isToday, events, onSelectEvent }: DayRowProps) {
         <div
           className={cn(
             'flex flex-col items-center justify-center rounded-md px-1.5 py-1 text-center leading-tight',
-            isToday ? 'bg-accent text-accent-foreground' : 'text-neutral-700 dark:text-neutral-300',
+            isToday ? 'bg-accent text-accent-foreground' : 'text-foreground-secondary',
           )}
         >
           <span className={cn('text-xs', isToday ? 'text-accent-foreground' : 'text-muted')}>

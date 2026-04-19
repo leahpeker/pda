@@ -115,7 +115,7 @@ function AdminActionRow({
         }}
         title="cancel event"
       >
-        <p className="text-sm text-neutral-700 dark:text-neutral-300">
+        <p className="text-sm text-foreground-secondary">
           mark this event as cancelled? attendees will see a cancelled badge — you can't un-cancel
           from the React app yet.
         </p>
@@ -153,7 +153,7 @@ function AdminActionRow({
         }}
         title="delete event"
       >
-        <p className="text-sm text-neutral-700 dark:text-neutral-300">
+        <p className="text-sm text-foreground-secondary">
           this permanently deletes the event and all rsvps. This cannot be undone.
         </p>
         {deleteError ? (

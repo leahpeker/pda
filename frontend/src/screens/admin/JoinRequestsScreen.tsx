@@ -74,7 +74,7 @@ export default function JoinRequestsScreen() {
                 key={f.value}
                 className={cn(
                   'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
-                  active ? 'bg-brand-600 text-white' : 'text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim',
+                  active ? 'bg-brand-600 text-white' : 'text-foreground-secondary hover:bg-surface-dim',
                 )}
               >
                 <input
@@ -95,7 +95,7 @@ export default function JoinRequestsScreen() {
       </div>
 
       {error ? (
-        <p role="alert" className="mb-3 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mb-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
@@ -195,10 +195,10 @@ function JoinRequestCard({
 function StatusBadge({ status }: { status: JoinRequestStatus }) {
   const tone =
     status === 'approved'
-      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+      ? 'bg-success-subtle text-success'
       : status === 'rejected'
-        ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
-        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300';
+        ? 'bg-surface-raised text-foreground-secondary'
+        : 'bg-warning-subtle text-warning';
   return <span className={cn('rounded-full px-2 py-0.5 text-xs', tone)}>{status}</span>;
 }
 

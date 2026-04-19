@@ -43,8 +43,8 @@ export function CollapsibleCard({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-[var(--radius-md)] border bg-surface shadow-sm dark:shadow-neutral-950/20 transition-colors',
-        isOpen ? 'border-brand-200 dark:border-brand-700' : 'border-brand-100 dark:border-brand-800 hover:border-brand-200 dark:hover:border-brand-700',
+        'overflow-hidden rounded-[var(--radius-md)] border bg-surface shadow-(--shadow-sm) transition-colors',
+        isOpen ? 'border-brand-200' : 'border-brand-100 hover:border-brand-200',
       )}
     >
       <button
@@ -54,7 +54,7 @@ export function CollapsibleCard({
         onClick={() => {
           if (!forceOpen) setOpen((v) => !v);
         }}
-        className="focus-visible:ring-brand-200 hover:bg-brand-50/50 dark:hover:bg-brand-900/30 flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="focus-visible:ring-brand-200 hover:bg-brand-50/50 flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
         <span className="flex items-center gap-2">
           {emoji ? (
@@ -66,11 +66,11 @@ export function CollapsibleCard({
         </span>
         <span className="flex items-center gap-2">
           {error ? (
-            <span className="rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-400">
+            <span className="rounded-full bg-destructive-subtle px-2 py-0.5 text-xs font-medium text-destructive">
               {error}
             </span>
           ) : !isOpen && summary ? (
-            <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-800 dark:text-brand-300 rounded-full px-2 py-0.5 text-xs font-medium">
+            <span className="bg-brand-100 text-brand-800 rounded-full px-2 py-0.5 text-xs font-medium">
               {summary}
             </span>
           ) : null}
@@ -82,7 +82,7 @@ export function CollapsibleCard({
         role="region"
         aria-labelledby={undefined}
         hidden={!isOpen}
-        className="border-brand-100 dark:border-brand-800 border-t px-4 py-4"
+        className="border-brand-100 border-t px-4 py-4"
       >
         {children}
       </div>

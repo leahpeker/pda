@@ -15,7 +15,7 @@ interface Props {
 
 export function EventFormBasics({ values, onChange, errors }: Props) {
   return (
-    <div className="flex flex-col gap-4 rounded-[var(--radius-md)] border border-brand-100 dark:border-brand-800 bg-surface p-4 shadow-sm dark:shadow-neutral-950/20">
+    <div className="flex flex-col gap-4 rounded-[var(--radius-md)] border border-brand-100 bg-surface p-4 shadow-(--shadow-sm)">
       <TextField
         label="title"
         value={values.title}

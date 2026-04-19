@@ -252,7 +252,7 @@ function StarRating({
               }}
               className={cn(
                 'text-2xl transition-colors disabled:cursor-not-allowed',
-                filled ? 'text-amber-500' : 'text-neutral-300 dark:text-neutral-600',
+                filled ? 'text-amber-500' : 'text-toggle-off',
               )}
             >
               ★
@@ -318,7 +318,7 @@ function DatetimePoll({
                     'rounded-full px-3 py-1 text-xs transition-colors',
                     current === a
                       ? 'bg-accent text-accent-foreground'
-                      : 'bg-surface-dim text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700',
+                      : 'bg-surface-dim text-foreground-secondary hover:bg-surface-raised',
                   )}
                 >
                   {a}

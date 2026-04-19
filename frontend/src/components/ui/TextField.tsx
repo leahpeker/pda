@@ -27,7 +27,7 @@ export const TextField = forwardRef<HTMLInputElement, Props>(function TextField(
           aria-describedby={describedBy}
           className={cn(
             'focus:border-brand-500 focus:ring-brand-200 h-10 w-full rounded-md border border-border-strong bg-surface px-3 text-sm transition-colors outline-none focus:ring-2',
-            error && 'border-red-500 dark:border-red-400 focus:border-red-500 focus:ring-red-100',
+            error && 'border-destructive-border focus:border-red-500 focus:ring-red-100',
             rightAdornment && 'pr-10',
             className,
           )}
@@ -38,7 +38,7 @@ export const TextField = forwardRef<HTMLInputElement, Props>(function TextField(
         ) : null}
       </div>
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs text-red-600 dark:text-red-400">
+        <p id={`${inputId}-error`} className="text-xs text-destructive">
           {error}
         </p>
       ) : hint ? (

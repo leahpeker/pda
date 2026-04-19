@@ -119,7 +119,7 @@ function HostChip({ name, photoUrl }: { name: string; photoUrl: string }) {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-600 text-xs text-neutral-700 dark:text-neutral-300"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-toggle-off text-xs text-foreground-secondary"
         >
           {name.slice(0, 1).toUpperCase()}
         </span>

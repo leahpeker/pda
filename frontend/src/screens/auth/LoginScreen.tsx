@@ -62,7 +62,7 @@ export default function LoginScreen() {
   if (step === 'pending') {
     return (
       <AuthLayout title="under review" subtitle="your join request is in the queue">
-        <p className="text-sm text-neutral-700 dark:text-neutral-300">
+        <p className="text-sm text-foreground-secondary">
           thanks for your patience — someone will reach out once your request has been reviewed.
         </p>
         <button
@@ -100,7 +100,7 @@ export default function LoginScreen() {
       {invited ? (
         <div
           role="status"
-          className="mb-4 rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm text-emerald-900 dark:text-emerald-200"
+          className="mb-4 rounded-md border border-positive-border bg-positive-subtle p-3 text-sm text-positive"
         >
           you've been invited — sign in to get started.
         </div>
@@ -182,7 +182,7 @@ function PasswordStep({
       {invited ? (
         <div
           role="status"
-          className="mb-4 rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm text-emerald-900 dark:text-emerald-200"
+          className="mb-4 rounded-md border border-positive-border bg-positive-subtle p-3 text-sm text-positive"
         >
           you've been invited — sign in to get started.
         </div>

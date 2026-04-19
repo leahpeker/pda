@@ -38,7 +38,7 @@ export default function InstallAppScreen() {
   return (
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">install the app</h1>
-      <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-6 text-sm text-foreground-tertiary">
         add pda to your home screen for a native-app feel
       </p>
 

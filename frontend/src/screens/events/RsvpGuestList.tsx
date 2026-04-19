@@ -70,7 +70,7 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
               'rounded-full px-3 py-1 text-xs transition-colors',
               active === t.key
                 ? 'bg-accent text-accent-foreground'
-                : 'bg-surface-dim text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700',
+                : 'bg-surface-dim text-foreground-secondary hover:bg-surface-raised',
             )}
           >
             {t.label}
@@ -106,7 +106,7 @@ function GuestChip({ guest }: { guest: EventGuest }) {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-600 text-[10px] text-neutral-700 dark:text-neutral-300"
+          className="flex h-5 w-5 items-center justify-center rounded-full bg-toggle-off text-[10px] text-foreground-secondary"
         >
           {guest.name.slice(0, 1).toUpperCase()}
         </span>

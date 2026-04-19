@@ -103,7 +103,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
         className={cn(
           'group relative aspect-video w-full overflow-hidden rounded-[var(--radius-md)]',
           'focus-visible:ring-brand-300 focus-visible:ring-2 focus-visible:outline-none',
-          hasPhoto ? 'bg-neutral-200 dark:bg-neutral-700' : 'border-brand-200 dark:border-brand-700 bg-brand-50 dark:bg-brand-900/30 border-2 border-dashed',
+          hasPhoto ? 'bg-surface-raised' : 'border-brand-200 bg-brand-50 border-2 border-dashed',
           locked && 'cursor-not-allowed opacity-60',
         )}
       >
@@ -117,7 +117,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
             </div>
           </>
         ) : (
-          <span className="text-brand-700 dark:text-brand-300 absolute inset-0 flex flex-col items-center justify-center gap-2">
+          <span className="text-brand-700 absolute inset-0 flex flex-col items-center justify-center gap-2">
             <span aria-hidden="true" className="text-3xl">
               📸
             </span>
@@ -133,7 +133,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
             type="button"
             onClick={(e) => void handleDelete(e)}
             disabled={locked}
-            className="text-xs text-muted underline decoration-dotted hover:text-red-600 dark:hover:text-red-400 disabled:cursor-not-allowed"
+            className="text-xs text-muted underline decoration-dotted hover:text-destructive disabled:cursor-not-allowed"
           >
             remove photo
           </button>
@@ -141,7 +141,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
       ) : null}
 
       {error ? (
-        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
+        <p role="alert" className="text-xs text-destructive">
           {error}
         </p>
       ) : null}

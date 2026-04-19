@@ -90,14 +90,14 @@ function SurveyRow({
         <span
           className={cn(
             'rounded-full px-2 py-0.5 text-xs',
-            survey.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300',
+            survey.isActive ? 'bg-success-subtle text-success' : 'bg-surface-raised text-foreground-secondary',
           )}
         >
           {survey.isActive ? 'active' : 'closed'}
         </span>
         <Link
           to={`/admin/surveys/${survey.id}/responses`}
-          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
+          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-foreground-secondary hover:bg-surface-dim"
         >
           responses
         </Link>
@@ -195,7 +195,7 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
           <span>one response per user</span>
         </label>
         {error ? (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
         ) : null}

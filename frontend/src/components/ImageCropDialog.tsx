@@ -69,7 +69,7 @@ export function ImageCropDialog({
           />
         </div>
         <label className="flex items-center gap-3 text-sm">
-          <span className="w-12 text-neutral-600 dark:text-neutral-400">zoom</span>
+          <span className="w-12 text-foreground-tertiary">zoom</span>
           <input
             type="range"
             min={1}

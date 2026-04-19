@@ -59,11 +59,11 @@ export function NotificationBell() {
         }}
         aria-label={count > 0 ? `notifications (${display} unread)` : 'notifications'}
         aria-expanded={open}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground-secondary hover:bg-surface-dim"
       >
         <BellIcon />
         {count > 0 ? (
-          <span className="absolute end-1 top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 dark:bg-red-500 px-1 text-[10px] font-medium text-white">
+          <span className="absolute end-1 top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-white">
             {display}
           </span>
         ) : null}
@@ -82,7 +82,7 @@ export function NotificationBell() {
           <div
             role="dialog"
             aria-label="notifications"
-            className="absolute end-0 top-10 z-20 w-80 overflow-hidden rounded-lg border border-border bg-surface shadow-lg dark:shadow-neutral-950/30"
+            className="absolute end-0 top-10 z-20 w-80 overflow-hidden rounded-lg border border-border bg-surface shadow-(--shadow-lg)"
           >
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <span className="text-sm font-medium">notifications</span>
@@ -150,11 +150,11 @@ function NotificationRow({
       onClick={onClick}
       className={cn(
         'flex w-full items-start gap-2 px-3 py-2 text-start hover:bg-background',
-        !n.isRead && 'bg-blue-50 dark:bg-blue-950/30',
+        !n.isRead && 'bg-info-subtle',
       )}
     >
       {!n.isRead ? (
-        <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600 dark:bg-blue-500" />
+        <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-info" />
       ) : (
         <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0" />
       )}

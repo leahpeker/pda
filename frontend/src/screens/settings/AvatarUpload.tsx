@@ -63,7 +63,7 @@ export function AvatarUpload() {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-active text-xl text-neutral-600 dark:text-neutral-400"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-active text-xl text-foreground-tertiary"
         >
           {initials}
         </span>

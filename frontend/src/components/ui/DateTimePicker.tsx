@@ -86,7 +86,7 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
           display
             ? 'border-brand-200 bg-brand-50 text-brand-900 font-medium'
             : 'border-border-strong bg-surface text-muted-foreground',
-          error && 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+          error && 'border-destructive bg-destructive-subtle text-destructive',
           disabled && 'bg-surface-dim text-muted-foreground',
         ].join(' ')}
       >
@@ -94,7 +94,7 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 rounded-[var(--radius-md)] border border-brand-100 dark:border-brand-800 bg-surface p-3 shadow-lg dark:shadow-neutral-950/30">
+        <div className="absolute z-50 mt-2 rounded-[var(--radius-md)] border border-brand-100 bg-surface p-3 shadow-(--shadow-lg)">
           <DayPicker
             mode="single"
             selected={selectedDate}
@@ -129,7 +129,7 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
       )}
 
       {error ? (
-        <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-xs text-destructive">{error}</p>
       ) : null}
     </div>
   );

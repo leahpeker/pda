@@ -135,7 +135,7 @@ export function LocationField({
           className={[
             'h-10 w-full rounded-md border bg-surface px-3 text-sm transition-colors outline-none focus:ring-2',
             'border-border-strong focus:border-brand-500 focus:ring-brand-200',
-            error && 'border-red-500 dark:border-red-400 focus:border-red-500 focus:ring-red-100',
+            error && 'border-destructive-border focus:border-red-500 focus:ring-red-100',
             disabled && 'bg-surface-dim text-muted-foreground',
           ]
             .filter(Boolean)
@@ -149,7 +149,7 @@ export function LocationField({
       </div>
 
       {open && results.length > 0 && (
-        <ul className="absolute top-full left-0 right-0 z-50 mt-1 max-h-56 overflow-auto rounded-[var(--radius-md)] border border-border bg-surface shadow-lg dark:shadow-neutral-950/30">
+        <ul className="absolute top-full left-0 right-0 z-50 mt-1 max-h-56 overflow-auto rounded-[var(--radius-md)] border border-border bg-surface shadow-(--shadow-lg)">
           {results.map((r, i) => (
             <li key={`${String(r.lat)},${String(r.lon)}-${String(i)}`}>
               <button
@@ -170,7 +170,7 @@ export function LocationField({
         </ul>
       )}
 
-      {error ? <p className="text-xs text-red-600 dark:text-red-400">{error}</p> : null}
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

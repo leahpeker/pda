@@ -121,7 +121,7 @@ export function PdaMenuSheet({ open, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => void onLogout()}
-                className="flex w-full items-center px-5 py-3 text-start text-base text-neutral-700 dark:text-neutral-300 hover:bg-background"
+                className="flex w-full items-center px-5 py-3 text-start text-base text-foreground-secondary hover:bg-background"
               >
                 log out
               </button>

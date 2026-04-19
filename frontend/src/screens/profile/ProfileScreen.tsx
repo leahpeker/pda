@@ -40,7 +40,7 @@ export default function ProfileScreen() {
         ) : (
           <span
             aria-hidden="true"
-            className="flex h-28 w-28 items-center justify-center rounded-full bg-surface-active text-3xl text-neutral-600 dark:text-neutral-400"
+            className="flex h-28 w-28 items-center justify-center rounded-full bg-surface-active text-3xl text-foreground-tertiary"
           >
             {initials}
           </span>
@@ -114,7 +114,7 @@ function ContactLine({ value, visible }: { value: string; visible: boolean }) {
         className={cn(
           'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
           visible
-            ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300'
+            ? 'bg-brand-50 text-brand-700'
             : 'bg-surface-dim text-muted',
         )}
       >
