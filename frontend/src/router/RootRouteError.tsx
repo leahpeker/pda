@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { isRouteErrorResponse, useLocation, useNavigate, useRouteError } from 'react-router-dom';
 import { reportError } from '@/utils/errorReporter';
 import { Button } from '@/components/ui/Button';
+import { isChunkLoadError } from './lazyRoute';
+
+const CHUNK_RELOAD_FLAG = 'chunk-error-reload-attempted';
 
 export function RootRouteError() {
   const error = useRouteError();
@@ -9,6 +12,16 @@ export function RootRouteError() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // A chunk-load error at this point almost always means the tab is
+    // holding a stale index.html after a deploy. Reload once to pick up
+    // the fresh asset manifest; the sessionStorage flag prevents a loop
+    // if something else (cdn outage, offline) is actually broken.
+    if (isChunkLoadError(error) && sessionStorage.getItem(CHUNK_RELOAD_FLAG) !== '1') {
+      sessionStorage.setItem(CHUNK_RELOAD_FLAG, '1');
+      window.location.reload();
+      return;
+    }
+
     const err =
       error instanceof Error
         ? error

@@ -5,51 +5,50 @@
 //
 // All screens are lazy-loaded (React.lazy) — 1:1 replacement for DeferredScreen.
 
-import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { AuthBoot, OnboardingGate, RequireAuth, RequirePermission } from '@/auth/guards';
 import { AppShell } from '@/layout/AppShell';
 import { Permission } from '@/models/permissions';
-import { lazyEl as el } from './lazyRoute';
+import { lazyEl as el, lazyWithRetry } from './lazyRoute';
 import { RootRouteError } from './RootRouteError';
 
-const Login = lazy(() => import('@/screens/auth/LoginScreen'));
-const Onboarding = lazy(() => import('@/screens/auth/OnboardingScreen'));
-const NewPassword = lazy(() => import('@/screens/auth/NewPasswordScreen'));
-const MagicLogin = lazy(() => import('@/screens/auth/MagicLoginScreen'));
-const Home = lazy(() => import('@/screens/public/HomeScreen'));
-const Faq = lazy(() => import('@/screens/public/FaqScreen'));
-const Donate = lazy(() => import('@/screens/public/DonateScreen'));
-const Install = lazy(() => import('@/screens/public/InstallAppScreen'));
-const Guidelines = lazy(() => import('@/screens/public/GuidelinesScreen'));
-const Volunteer = lazy(() => import('@/screens/public/VolunteerScreen'));
-const Join = lazy(() => import('@/screens/public/JoinScreen'));
-const JoinSuccess = lazy(() => import('@/screens/public/JoinSuccessScreen'));
-const Calendar = lazy(() => import('@/screens/calendar/CalendarScreen'));
-const EventDetail = lazy(() => import('@/screens/events/EventDetailScreen'));
-const EventCreate = lazy(() => import('@/screens/events/EventCreateScreen'));
-const EventEdit = lazy(() => import('@/screens/events/EventEditScreen'));
-const MyEvents = lazy(() => import('@/screens/events/MyEventsScreen'));
-const Profile = lazy(() => import('@/screens/profile/ProfileScreen'));
-const Settings = lazy(() => import('@/screens/settings/SettingsScreen'));
-const Docs = lazy(() => import('@/screens/docs/DocsScreen'));
-const DocDetail = lazy(() => import('@/screens/docs/DocDetailScreen'));
-const Survey = lazy(() => import('@/screens/surveys/SurveyScreen'));
+const Login = lazyWithRetry(() => import('@/screens/auth/LoginScreen'));
+const Onboarding = lazyWithRetry(() => import('@/screens/auth/OnboardingScreen'));
+const NewPassword = lazyWithRetry(() => import('@/screens/auth/NewPasswordScreen'));
+const MagicLogin = lazyWithRetry(() => import('@/screens/auth/MagicLoginScreen'));
+const Home = lazyWithRetry(() => import('@/screens/public/HomeScreen'));
+const Faq = lazyWithRetry(() => import('@/screens/public/FaqScreen'));
+const Donate = lazyWithRetry(() => import('@/screens/public/DonateScreen'));
+const Install = lazyWithRetry(() => import('@/screens/public/InstallAppScreen'));
+const Guidelines = lazyWithRetry(() => import('@/screens/public/GuidelinesScreen'));
+const Volunteer = lazyWithRetry(() => import('@/screens/public/VolunteerScreen'));
+const Join = lazyWithRetry(() => import('@/screens/public/JoinScreen'));
+const JoinSuccess = lazyWithRetry(() => import('@/screens/public/JoinSuccessScreen'));
+const Calendar = lazyWithRetry(() => import('@/screens/calendar/CalendarScreen'));
+const EventDetail = lazyWithRetry(() => import('@/screens/events/EventDetailScreen'));
+const EventCreate = lazyWithRetry(() => import('@/screens/events/EventCreateScreen'));
+const EventEdit = lazyWithRetry(() => import('@/screens/events/EventEditScreen'));
+const MyEvents = lazyWithRetry(() => import('@/screens/events/MyEventsScreen'));
+const Profile = lazyWithRetry(() => import('@/screens/profile/ProfileScreen'));
+const Settings = lazyWithRetry(() => import('@/screens/settings/SettingsScreen'));
+const Docs = lazyWithRetry(() => import('@/screens/docs/DocsScreen'));
+const DocDetail = lazyWithRetry(() => import('@/screens/docs/DocDetailScreen'));
+const Survey = lazyWithRetry(() => import('@/screens/surveys/SurveyScreen'));
 
 // Admin screens
-const AdminHub = lazy(() => import('@/screens/admin/AdminHubScreen'));
-const JoinRequestsAdmin = lazy(() => import('@/screens/admin/JoinRequestsScreen'));
-const EventManagement = lazy(() => import('@/screens/admin/EventManagementScreen'));
-const FlaggedEvents = lazy(() => import('@/screens/admin/FlaggedEventsScreen'));
-const WhatsappConfig = lazy(() => import('@/screens/admin/WhatsappConfigScreen'));
-const JoinFormAdmin = lazy(() => import('@/screens/admin/JoinFormAdminScreen'));
-const SurveyAdminList = lazy(() => import('@/screens/admin/SurveyAdminListScreen'));
-const SurveyBuilder = lazy(() => import('@/screens/admin/SurveyBuilderScreen'));
-const SurveyResponses = lazy(() => import('@/screens/admin/SurveyResponsesScreen'));
-const Members = lazy(() => import('@/screens/admin/MembersScreen'));
-const MemberDetail = lazy(() => import('@/screens/admin/MemberDetailScreen'));
+const AdminHub = lazyWithRetry(() => import('@/screens/admin/AdminHubScreen'));
+const JoinRequestsAdmin = lazyWithRetry(() => import('@/screens/admin/JoinRequestsScreen'));
+const EventManagement = lazyWithRetry(() => import('@/screens/admin/EventManagementScreen'));
+const FlaggedEvents = lazyWithRetry(() => import('@/screens/admin/FlaggedEventsScreen'));
+const WhatsappConfig = lazyWithRetry(() => import('@/screens/admin/WhatsappConfigScreen'));
+const JoinFormAdmin = lazyWithRetry(() => import('@/screens/admin/JoinFormAdminScreen'));
+const SurveyAdminList = lazyWithRetry(() => import('@/screens/admin/SurveyAdminListScreen'));
+const SurveyBuilder = lazyWithRetry(() => import('@/screens/admin/SurveyBuilderScreen'));
+const SurveyResponses = lazyWithRetry(() => import('@/screens/admin/SurveyResponsesScreen'));
+const Members = lazyWithRetry(() => import('@/screens/admin/MembersScreen'));
+const MemberDetail = lazyWithRetry(() => import('@/screens/admin/MemberDetailScreen'));
 
-const Stub = lazy(() => import('@/screens/NotImplemented'));
+const Stub = lazyWithRetry(() => import('@/screens/NotImplemented'));
 
 export const router = createBrowserRouter([
   {
