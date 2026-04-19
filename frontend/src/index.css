@@ -268,32 +268,52 @@ body {
   box-shadow: 0 0 0 2px var(--color-brand-600);
 }
 
-/* Outer frame — soft border + rounded corners to match Flutter's month frame. */
-.rbc-month-view,
-.rbc-time-view {
+/* ── react-big-calendar overrides ──────────────────────────────────────
+   rbc CSS is imported in CalendarScreen.tsx AFTER index.css, so we use
+   doubled selectors for specificity to guarantee our theme wins.        */
+
+/* Outer frame — soft border + rounded corners. */
+.rbc-month-view.rbc-month-view,
+.rbc-time-view.rbc-time-view {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-surface);
 }
-/* Internal dividers soften to 60% opacity. */
-.rbc-month-row + .rbc-month-row,
-.rbc-day-bg + .rbc-day-bg,
-.rbc-header + .rbc-header,
-.rbc-timeslot-group {
-  border-color: color-mix(in srgb, var(--color-border) 60%, transparent);
+/* All internal borders — cells, rows, headers. */
+.rbc-month-view .rbc-month-row + .rbc-month-row {
+  border-top: 1px solid var(--color-border);
 }
-/* Weekday headers: lowercase, medium weight, softer color. */
-.rbc-header {
+.rbc-month-view .rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid var(--color-border);
+}
+.rbc-month-view .rbc-header + .rbc-header {
+  border-left: 1px solid var(--color-border);
+}
+.rbc-time-view .rbc-timeslot-group {
+  border-color: var(--color-border);
+}
+/* Weekday headers: lowercase, medium weight, themed color. */
+.rbc-month-view .rbc-header,
+.rbc-time-view .rbc-header {
   padding: 6px 4px;
   font-weight: 500;
-  color: var(--color-muted);
+  color: var(--color-muted-foreground);
   text-transform: none;
   font-size: 0.8125rem;
   border-bottom: 1px solid var(--color-border);
+  background: transparent;
+}
+/* Date numbers — themed color. */
+.rbc-month-view .rbc-date-cell {
+  color: var(--color-foreground);
+}
+.rbc-month-view .rbc-date-cell a {
+  color: inherit;
 }
 /* Today cell: swap rbc's pale yellow for brand-50. */
-.rbc-today {
+.rbc-month-view .rbc-today,
+.rbc-time-view .rbc-today {
   background: var(--color-brand-50);
 }
 /* Today's date number becomes a filled brand pill. */
@@ -308,19 +328,15 @@ body {
   justify-content: center;
   text-decoration: none;
 }
-/* Off-range days: very subtle wash on the cell; date numerals match the
-   in-range number color so they read the same (only the cell shading
-   distinguishes them). */
-.rbc-off-range-bg {
-  background: color-mix(in srgb, var(--color-foreground) 1.2%, transparent);
+/* Off-range days: very subtle wash — barely visible in both themes. */
+.rbc-month-view .rbc-off-range-bg {
+  background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
 }
-.rbc-off-range {
-  color: inherit;
+.rbc-month-view .rbc-off-range {
+  color: var(--color-muted-foreground);
   opacity: 1;
 }
-/* "n more" link tinted green, not bold, not clipped. rbc's stylesheet
-   imports later in CalendarScreen.tsx so we bump specificity with the
-   .rbc-month-view ancestor to win over their defaults (bold + blue). */
+/* "n more" link tinted green. */
 .rbc-month-view .rbc-show-more,
 .rbc-month-view .rbc-show-more:hover,
 .rbc-month-view .rbc-show-more:focus {
@@ -336,12 +352,7 @@ body {
   color: var(--color-brand-800);
   text-decoration: underline;
 }
-
-/* Compress every .rbc-event in the month grid — including the dummy rbc
-   renders during measurement (which has no .pda-evt class). rbc divides
-   .rbc-month-row height by this chip's height to decide how many events
-   fit per day before spilling to "+n more", so the dummy and the real
-   chips must be the same size for the math to be honest. */
+/* Compress event chips in month grid. */
 .rbc-month-view .rbc-event {
   padding: 1px 4px;
   font-size: 0.6875rem;
@@ -352,9 +363,13 @@ body {
 .rbc-month-view .rbc-row-segment {
   padding: 1px 2px;
 }
-/* No min-height on .rbc-month-view. The Calendar container uses
-   calc(100dvh - chrome) so it fills the viewport exactly, and
-   .rbc-month-row's flex:1 0 0 divides that evenly across 6 weeks. */
+/* Time view slots. */
+.rbc-time-view .rbc-time-slot {
+  border-top-color: var(--color-border);
+}
+.rbc-time-view .rbc-time-gutter {
+  color: var(--color-muted-foreground);
+}
 
 /* react-day-picker theme — lowercase, brand colors, matching radii/font. */
 .rdp-root {
