@@ -22,6 +22,8 @@ make install          # Install dependencies (uv sync + pnpm install)
 make run              # Run Django dev server on localhost:8000
 make test             # Run pytest (verbose)
 make agent-test       # Run pytest (quiet; same suite)
+make test-since       # Run pytest subset from git diff vs TEST_BASE / @{upstream} / origin/main
+make agent-test-since # Same as test-since with quiet pytest flags
 make lint             # Run ruff (lint + format; verbose)
 make agent-lint       # Same as lint with minimal ruff output
 make typecheck        # Run ty type checker

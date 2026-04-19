@@ -1,9 +1,9 @@
-.PHONY: help install run test lint lint-check format typecheck lint-file typecheck-file check migrate \
+.PHONY: help install run test test-since lint lint-check format typecheck lint-file typecheck-file check migrate \
         createsuperuser seed db-start db-stop ci agent-ci dev complexity \
         frontend-install frontend-run frontend-build frontend-lint \
         frontend-format frontend-test frontend-typecheck frontend-types \
         parallel-frontend parallel-agent-frontend \
-        agent-lint agent-check agent-test agent-typecheck agent-complexity \
+        agent-lint agent-check agent-test agent-test-since agent-typecheck agent-complexity \
         agent-frontend-lint agent-frontend-test agent-frontend-typecheck
 
 help:
@@ -11,6 +11,7 @@ help:
 	@echo "  make install          Install dependencies (uv sync + pnpm install)"
 	@echo "  make run              Run Django dev server (localhost:8000)"
 	@echo "  make test             Run pytest suite"
+	@echo "  make test-since       Run pytest subset from git diff vs upstream (TEST_BASE= ref)"
 	@echo "  make lint             Run ruff (lint + format)"
 	@echo "  make typecheck        Run ty type checker"
 	@echo "  make check            Run Django system checks"
@@ -35,6 +36,7 @@ help:
 	@echo "  make dev              Run Django + Vite concurrently (default)"
 	@echo "  make ci               Run all pre-commit checks"
 	@echo "  make agent-ci         Same as ci with minimal output (for agents / logs)"
+	@echo "  make agent-test-since Quiet test-since (same selection rules)"
 
 # Backend + Frontend
 install:
@@ -46,6 +48,19 @@ run:
 
 test:
 	cd backend && uv run python -m pytest tests/ -v
+
+# Tests likely affected by backend changes since merge-base(HEAD, TEST_BASE or @{upstream} or origin/main).
+test-since:
+	@affected=$$(uv run python "$(CURDIR)/scripts/list_affected_tests.py"); \
+	if [ "$$affected" = "__FULL__" ]; then \
+		echo "list_affected_tests: running full suite"; \
+		cd backend && uv run python -m pytest tests/ -v; \
+	elif [ -z "$$affected" ]; then \
+		echo "No affected backend tests inferred; skipping pytest."; \
+	else \
+		echo "Running affected tests:"; echo "$$affected"; \
+		cd backend && uv run python -m pytest $$(echo "$$affected" | tr '\n' ' ') -v; \
+	fi
 
 lint:
 	cd backend && uv run ruff check --fix . && uv run ruff format .
@@ -131,6 +146,18 @@ agent-check:
 agent-test:
 	cd backend && uv run python -m pytest tests/ \
 		-o addopts="--strict-markers -n auto --tb=line --reuse-db" -q --disable-warnings
+
+agent-test-since:
+	@affected=$$(uv run python "$(CURDIR)/scripts/list_affected_tests.py"); \
+	if [ "$$affected" = "__FULL__" ]; then \
+		cd backend && uv run python -m pytest tests/ \
+			-o addopts="--strict-markers -n auto --tb=line --reuse-db" -q --disable-warnings; \
+	elif [ -z "$$affected" ]; then \
+		echo "No affected backend tests inferred; skipping pytest."; \
+	else \
+		cd backend && uv run python -m pytest $$(echo "$$affected" | tr '\n' ' ') \
+			-o addopts="--strict-markers -n auto --tb=line --reuse-db" -q --disable-warnings; \
+	fi
 
 agent-typecheck:
 	cd backend && uv run ty check -qq .
