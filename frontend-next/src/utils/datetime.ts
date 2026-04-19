@@ -3,14 +3,14 @@
 
 import { format, isSameDay } from 'date-fns';
 
-export function formatEventDateTime(start: Date, end: Date | null, datetimeTbd = false): string {
-  if (datetimeTbd) return 'date & time tbd';
-  const startStr = format(start, 'EEE MMM d, h:mm a');
+export function formatEventDateTime(start: Date | null, end: Date | null, datetimeTbd = false): string {
+  if (datetimeTbd || !start) return 'date & time tbd';
+  const startStr = format(start, 'EEE MMM d, h:mm a').toLowerCase();
   if (!end) return startStr;
   if (isSameDay(start, end)) {
-    return `${startStr} – ${format(end, 'h:mm a')}`;
+    return `${startStr} – ${format(end, 'h:mm a').toLowerCase()}`;
   }
-  return `${startStr} → ${format(end, 'EEE MMM d, h:mm a')}`;
+  return `${startStr} → ${format(end, 'EEE MMM d, h:mm a').toLowerCase()}`;
 }
 
 export function formatDayHeader(date: Date): string {

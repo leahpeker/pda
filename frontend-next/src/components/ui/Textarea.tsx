@@ -25,7 +25,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, Props>(function Textarea
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={cn(
-          'rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200',
+          'focus:border-brand-500 focus:ring-brand-200 min-h-[80px] w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors outline-none focus:ring-2',
           error && 'border-red-500 focus:border-red-500 focus:ring-red-100',
           className,
         )}

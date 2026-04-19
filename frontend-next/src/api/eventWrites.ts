@@ -14,15 +14,36 @@ import type { Event } from '@/models/event';
 
 export type EventStatus = 'active' | 'draft' | 'cancelled';
 
+export type VisibilityChoice = 'official' | 'public' | 'members_only' | 'invite_only';
+
+export function visibilityChoiceToFields(choice: VisibilityChoice): {
+  visibility: EventFormValues['visibility'];
+  eventType: EventFormValues['eventType'];
+} {
+  if (choice === 'official') return { visibility: 'public', eventType: 'official' };
+  return { visibility: choice, eventType: 'community' };
+}
+
+export function fieldsToVisibilityChoice(
+  visibility: EventFormValues['visibility'],
+  eventType: EventFormValues['eventType'],
+): VisibilityChoice {
+  if (eventType === 'official') return 'official';
+  return visibility as VisibilityChoice;
+}
+
 export interface EventFormValues {
   title: string;
   description: string;
   location: string;
-  startDatetime: string; // ISO
+  latitude: number | null;
+  longitude: number | null;
+  startDatetime: string | null; // null when datetimeTbd
   endDatetime: string | null;
   datetimeTbd: boolean;
   eventType: 'community' | 'official';
   visibility: 'public' | 'members_only' | 'invite_only';
+  visibilityChoice: VisibilityChoice;
   invitePermission: 'all_members' | 'co_hosts_only';
   rsvpEnabled: boolean;
   allowPlusOnes: boolean;
@@ -42,15 +63,18 @@ export interface EventFormValues {
 type WireBody = Record<string, unknown>;
 
 function toWireBody(values: EventFormValues): WireBody {
+  const { visibility, eventType } = visibilityChoiceToFields(values.visibilityChoice);
   return {
     title: values.title,
     description: values.description,
     location: values.location,
+    latitude: values.latitude,
+    longitude: values.longitude,
     start_datetime: values.startDatetime,
     end_datetime: values.endDatetime,
     datetime_tbd: values.datetimeTbd,
-    event_type: values.eventType,
-    visibility: values.visibility,
+    event_type: eventType,
+    visibility,
     invite_permission: values.invitePermission,
     rsvp_enabled: values.rsvpEnabled,
     allow_plus_ones: values.allowPlusOnes,
@@ -155,8 +179,16 @@ export function extractEventError(err: unknown): string {
     if (err.response?.status === 429) {
       return "you've hit the daily event-creation limit — try again tomorrow";
     }
-    const detail = (err.response?.data as { detail?: string } | undefined)?.detail;
-    if (detail) return detail;
+    const data = err.response?.data as Record<string, unknown> | undefined;
+    if (data) {
+      // Django Ninja returns { detail: [{ type, loc, msg, ctx }, ...] }
+      // for validation errors.
+      if (typeof data.detail === 'string') return data.detail;
+      if (Array.isArray(data.detail)) {
+        const msgs = (data.detail as { msg?: string }[]).map((e) => e.msg).filter(Boolean);
+        if (msgs.length > 0) return msgs.join(', ');
+      }
+    }
   }
   return "couldn't save the event — try again";
 }
@@ -166,14 +198,17 @@ export function emptyEventFormValues(): EventFormValues {
     title: '',
     description: '',
     location: '',
-    startDatetime: '',
+    latitude: null,
+    longitude: null,
+    startDatetime: null,
     endDatetime: null,
     datetimeTbd: false,
     eventType: 'community',
     visibility: 'members_only',
+    visibilityChoice: 'members_only',
     invitePermission: 'all_members',
     rsvpEnabled: true,
-    allowPlusOnes: false,
+    allowPlusOnes: true,
     maxAttendees: null,
     whatsappLink: '',
     partifulLink: '',
@@ -193,11 +228,17 @@ export function eventToFormValues(e: Event): EventFormValues {
     title: e.title,
     description: e.description,
     location: e.location,
-    startDatetime: e.startDatetime.toISOString(),
+    latitude: e.latitude,
+    longitude: e.longitude,
+    startDatetime: e.startDatetime ? e.startDatetime.toISOString() : null,
     endDatetime: e.endDatetime ? e.endDatetime.toISOString() : null,
     datetimeTbd: e.datetimeTbd,
     eventType: e.eventType as 'community' | 'official',
     visibility: e.visibility as 'public' | 'members_only' | 'invite_only',
+    visibilityChoice: fieldsToVisibilityChoice(
+      e.visibility as 'public' | 'members_only' | 'invite_only',
+      e.eventType as 'community' | 'official',
+    ),
     invitePermission: e.invitePermission as 'all_members' | 'co_hosts_only',
     rsvpEnabled: e.rsvpEnabled,
     allowPlusOnes: e.allowPlusOnes,

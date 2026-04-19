@@ -3,7 +3,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from community._field_limits import FieldLimit
 from community.models import EventStatus, EventType, InvitePermission, PageVisibility
@@ -91,7 +91,7 @@ class EventListOut(BaseModel):
     id: str
     title: str
     description: str
-    start_datetime: datetime
+    start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str
     latitude: float | None = None
@@ -127,7 +127,7 @@ class EventOut(BaseModel):
     id: str
     title: str
     description: str
-    start_datetime: datetime
+    start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str
     latitude: float | None = None
@@ -176,7 +176,7 @@ class RSVPIn(BaseModel):
 class EventIn(BaseModel):
     title: str = Field(max_length=FieldLimit.TITLE)
     description: str = Field(default="", max_length=FieldLimit.DESCRIPTION)
-    start_datetime: datetime
+    start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     location: str = Field(default="", max_length=FieldLimit.SHORT_TEXT)
     latitude: float | None = None
@@ -200,6 +200,12 @@ class EventIn(BaseModel):
     co_host_ids: list[str] = []
     invited_user_ids: list[str] = []
     status: str = Field(default=EventStatus.ACTIVE, max_length=FieldLimit.CHOICE)
+
+    @model_validator(mode="after")
+    def require_start_datetime_unless_tbd(self) -> "EventIn":
+        if not self.datetime_tbd and self.start_datetime is None:
+            raise ValueError("start_datetime is required when datetime_tbd is false")
+        return self
 
     @field_validator("whatsapp_link", mode="before")
     @classmethod

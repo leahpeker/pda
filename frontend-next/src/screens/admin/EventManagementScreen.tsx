@@ -41,7 +41,7 @@ function sortEvents(events: readonly Event[], sort: Sort): Event[] {
   const copy = [...events];
   switch (sort) {
     case 'date':
-      copy.sort((a, b) => a.startDatetime.getTime() - b.startDatetime.getTime());
+      copy.sort((a, b) => (a.startDatetime?.getTime() ?? 0) - (b.startDatetime?.getTime() ?? 0));
       return copy;
     case 'title':
       copy.sort((a, b) => a.title.localeCompare(b.title));
@@ -158,7 +158,7 @@ function EventRow({ event }: { event: Event }) {
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-neutral-800">{event.title}</p>
         <p className="truncate text-xs text-neutral-500">
-          {event.datetimeTbd ? 'tbd' : format(event.startDatetime, 'EEE MMM d, h:mm a')}
+          {event.datetimeTbd || !event.startDatetime ? 'tbd' : format(event.startDatetime, 'EEE MMM d, h:mm a').toLowerCase()}
           {event.location ? ` · ${event.location}` : ''}
         </p>
       </div>

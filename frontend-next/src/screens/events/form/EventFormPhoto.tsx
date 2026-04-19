@@ -101,7 +101,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
         disabled={locked}
         aria-label={hasPhoto ? 'change cover photo' : 'add a cover photo'}
         className={cn(
-          'group relative -mx-4 aspect-video w-[calc(100%+2rem)] overflow-hidden sm:mx-0 sm:w-full sm:rounded-[var(--radius-md)]',
+          'group relative aspect-video w-full overflow-hidden rounded-[var(--radius-md)]',
           'focus-visible:ring-brand-300 focus-visible:ring-2 focus-visible:outline-none',
           hasPhoto ? 'bg-neutral-200' : 'border-brand-200 bg-brand-50 border-2 border-dashed',
           locked && 'cursor-not-allowed opacity-60',

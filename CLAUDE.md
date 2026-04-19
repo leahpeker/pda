@@ -116,6 +116,10 @@ frontend/
 
 References: `~/.claude/rules/standards-django-ninja.md`, `standards-flutter-riverpod.md`, `standards-django-flutter-integration.md`
 
+### frontend-next text casing
+- All user-facing text in the frontend-next app must be **lowercase only** — labels, headings, buttons, placeholders, toasts, error messages, date formatting, etc.
+- Use `.toLowerCase()` on any dynamic/format-driven strings (e.g. `date-fns` output).
+
 # Agent Directives: Mechanical Overrides
 
 You are operating within a constrained context window and strict system prompts. To produce production-grade code, you MUST adhere to these overrides:

@@ -112,7 +112,7 @@ function LocationSection({ event }: { event: Event }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`open ${event.location} in maps`}
-        className="text-sm text-neutral-900 underline"
+        className="text-sm text-neutral-900 hover:underline"
       >
         {primary}
       </a>
@@ -137,7 +137,7 @@ function LinksSection({ event }: { event: Event }) {
               href={l.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-neutral-900 underline"
+              className="text-neutral-900 hover:underline"
             >
               {l.label}
             </a>
@@ -145,7 +145,7 @@ function LinksSection({ event }: { event: Event }) {
         ))}
         {feedbackSurveys.map((slug) => (
           <li key={slug}>
-            <Link to={`/surveys/${slug}`} className="text-neutral-900 underline">
+            <Link to={`/surveys/${slug}`} className="text-neutral-900 hover:underline">
               give feedback
             </Link>
           </li>
@@ -172,7 +172,7 @@ function CostSection({ event }: { event: Event }) {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-neutral-900 underline"
+                className="text-neutral-900 hover:underline"
               >
                 {item.label}
               </a>

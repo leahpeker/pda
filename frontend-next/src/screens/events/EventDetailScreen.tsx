@@ -32,7 +32,9 @@ export default function EventDetailScreen() {
       </div>
 
       <p className="text-sm text-neutral-700">
-        {formatEventDateTime(event.startDatetime, event.endDatetime, event.datetimeTbd)}
+        {event.startDatetime
+          ? formatEventDateTime(event.startDatetime, event.endDatetime, event.datetimeTbd)
+          : 'date & time tbd'}
       </p>
 
       {event.description ? (

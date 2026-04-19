@@ -234,14 +234,13 @@ class TestUncancel:
         response = _patch_status(api_client, auth_headers, upcoming_event_with_rsvp.id, "active")
         assert response.status_code == 403
 
-    def test_uncancel_active_event_returns_400(
+    def test_uncancel_active_event_is_noop(
         self, api_client, manage_events_headers, upcoming_event_no_attendees
     ):
         response = _patch_status(
             api_client, manage_events_headers, upcoming_event_no_attendees.id, "active"
         )
-        assert response.status_code == 400
-        assert "invalid" in response.json()["detail"].lower()
+        assert response.status_code == 200
 
 
 @pytest.mark.django_db

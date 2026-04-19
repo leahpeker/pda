@@ -76,7 +76,7 @@ def calendar_feed(request, token: str = ""):
 
     cutoff = timezone.now() - timedelta(days=30)
     events = (
-        Event.objects.filter(start_datetime__gte=cutoff)
+        Event.objects.filter(start_datetime__gte=cutoff, datetime_tbd=False)
         .exclude(status=EventStatus.CANCELLED)
         .select_related("created_by")
         .prefetch_related("co_hosts", "invited_users")
@@ -121,11 +121,12 @@ def _build_vevent(event):
     vevent = icalendar.Event()
     vevent.add("uid", f"{event.id}@pda")
     vevent.add("dtstamp", timezone.now())
-    vevent.add("dtstart", event.start_datetime)
-    vevent.add(
-        "dtend",
-        event.end_datetime or event.start_datetime + timedelta(hours=2),
-    )
+    if event.start_datetime:
+        vevent.add("dtstart", event.start_datetime)
+        vevent.add(
+            "dtend",
+            event.end_datetime or event.start_datetime + timedelta(hours=2),
+        )
     vevent.add("summary", event.title)
     desc = _event_ics_description(event)
     if desc:

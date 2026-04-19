@@ -59,6 +59,7 @@ export function EventFormMoney({ values, onChange }: Props) {
         }}
         placeholder="$20 sliding scale"
         maxLength={300}
+        hint="only for covering costs (food, supplies, etc)"
       />
       <TextField
         label="venmo"

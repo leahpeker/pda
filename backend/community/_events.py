@@ -61,6 +61,10 @@ def _validate_event_datetimes(
     start, end, datetime_tbd: bool, *, check_past: bool = True
 ) -> str | None:
     """Return an error message if datetime fields are invalid, else None."""
+    if start is None:
+        if not datetime_tbd:
+            return "start_datetime is required when datetime_tbd is false."
+        return None
     if end is not None and end <= start:
         return "end_datetime must be after start_datetime."
     if check_past and not datetime_tbd and start < timezone.now():

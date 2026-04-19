@@ -16,7 +16,7 @@ export interface WireEvent {
   id: string;
   title: string;
   description?: string;
-  start_datetime: string;
+  start_datetime?: string | null;
   end_datetime?: string | null;
 
   location?: string;
@@ -81,7 +81,7 @@ export function mapEvent(e: WireEvent): Event {
     id: e.id,
     title: e.title,
     description: e.description ?? '',
-    startDatetime: new Date(e.start_datetime),
+    startDatetime: e.start_datetime ? new Date(e.start_datetime) : null,
     endDatetime: e.end_datetime ? new Date(e.end_datetime) : null,
 
     location: e.location ?? '',

@@ -26,7 +26,7 @@ class Event(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True, max_length=2000)
-    start_datetime = models.DateTimeField()
+    start_datetime = models.DateTimeField(null=True, blank=True)
     end_datetime = models.DateTimeField(null=True, blank=True)
     location = models.CharField(max_length=300, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -95,6 +95,8 @@ class Event(models.Model):
     @property
     def is_past(self) -> bool:
         cutoff = self.end_datetime or self.start_datetime
+        if cutoff is None:
+            return True
         return cutoff < timezone.now()
 
     @property
@@ -110,7 +112,8 @@ class Event(models.Model):
         return self.status == EventStatus.DELETED
 
     def __str__(self):
-        return f"{self.title} — {self.start_datetime:%Y-%m-%d %H:%M}"
+        dt = self.start_datetime
+        return f"{self.title} — {dt:%Y-%m-%d %H:%M}" if dt else f"{self.title} — TBD"
 
 
 class EventRSVP(models.Model):

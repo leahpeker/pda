@@ -406,8 +406,9 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
               decoration: const InputDecoration(
                 labelText: 'tell us more',
                 alignLabelWithHint: true,
+                border: OutlineInputBorder(),
               ),
-              maxLines: 3,
+              maxLines: 4,
               maxLength: FieldLimit.description,
               textCapitalization: TextCapitalization.sentences,
               validator: v.maxLength(FieldLimit.description),
@@ -469,8 +470,8 @@ class _EventFormDialogState extends ConsumerState<EventFormDialog> {
   @override
   Widget build(BuildContext context) {
     String dateFmt(DateTime d) =>
-        DateFormat('EEE, MMM d, y').format(d).toLowerCase();
-    final title = _isEdit ? 'edit event' : 'new event \u{1F331}';
+        DateFormat('EEE, MMM d').format(d).toLowerCase();
+    final title = _isEdit ? 'edit event' : 'new event';
 
     if (widget.fullScreen) {
       return Scaffold(

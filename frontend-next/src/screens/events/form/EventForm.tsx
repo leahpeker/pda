@@ -32,6 +32,7 @@ import { EventFormBasics } from './EventFormBasics';
 import { EventFormDetails } from './EventFormDetails';
 import { EventFormLinks, EventFormMoney } from './EventFormLinksAndCost';
 import { EventFormPhoto } from './EventFormPhoto';
+import { EventFormRsvp } from './EventFormRsvp';
 import { validateEventForm } from './validateEventForm';
 
 interface Props {
@@ -44,11 +45,14 @@ interface Props {
 const DETAILS_FIELDS: readonly (keyof EventFormValues)[] = [
   'description',
   'visibility',
+  'visibilityChoice',
   'eventType',
+  'invitePermission',
+];
+const RSVP_FIELDS: readonly (keyof EventFormValues)[] = [
   'rsvpEnabled',
   'allowPlusOnes',
   'maxAttendees',
-  'invitePermission',
 ];
 const LINK_FIELDS: readonly (keyof EventFormValues)[] = [
   'whatsappLink',
@@ -121,7 +125,7 @@ export function EventForm({ existing }: Props) {
     try {
       if (existing) {
         await update.mutateAsync(merged);
-        if (nextStatus === 'draft') toast.success('saved draft 🌱');
+        if (nextStatus === 'draft') toast.success('saved draft');
         void navigate(`/events/${existing.id}`);
         return;
       }
@@ -133,7 +137,7 @@ export function EventForm({ existing }: Props) {
           // Event saved; only the photo failed. Let the user retry from edit.
         }
       }
-      if (nextStatus === 'draft') toast.success('saved draft 🌱');
+      if (nextStatus === 'draft') toast.success('saved draft');
       void navigate(`/events/${created.id}`);
     } catch (err) {
       setServerError(extractEventError(err));
@@ -188,7 +192,6 @@ export function EventForm({ existing }: Props) {
 
       <CollapsibleCard
         title="details"
-        emoji="🌱"
         summary={detailsFilled ? 'filled in' : undefined}
         error={hasAnyError(errors, DETAILS_FIELDS) ? 'needs attention' : undefined}
         forceOpen={hasAnyError(errors, DETAILS_FIELDS)}
@@ -202,8 +205,16 @@ export function EventForm({ existing }: Props) {
       </CollapsibleCard>
 
       <CollapsibleCard
+        title="rsvp"
+        summary={values.rsvpEnabled ? 'enabled' : undefined}
+        error={hasAnyError(errors, RSVP_FIELDS) ? 'needs attention' : undefined}
+        forceOpen={hasAnyError(errors, RSVP_FIELDS)}
+      >
+        <EventFormRsvp values={values} onChange={patch} errors={errors} />
+      </CollapsibleCard>
+
+      <CollapsibleCard
         title="links"
-        emoji="🔗"
         summary={
           linkCount > 0 ? `${String(linkCount)} link${linkCount === 1 ? '' : 's'}` : undefined
         }
@@ -213,13 +224,12 @@ export function EventForm({ existing }: Props) {
         <EventFormLinks values={values} onChange={patch} errors={errors} />
       </CollapsibleCard>
 
-      <CollapsibleCard title="money" emoji="💸" summary={moneyFilled ? 'added' : undefined}>
+      <CollapsibleCard title="money" summary={moneyFilled ? 'added' : undefined}>
         <EventFormMoney values={values} onChange={patch} errors={errors} />
       </CollapsibleCard>
 
       <CollapsibleCard
         title="hosts & invites"
-        emoji="👥"
         summary={
           hostsCount > 0
             ? `${String(hostsCount)} ${hostsCount === 1 ? 'person' : 'people'}`
@@ -254,19 +264,20 @@ export function EventForm({ existing }: Props) {
         </p>
       ) : null}
 
-      <div className="border-brand-100 bg-brand-50/95 sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:flex-row sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-2">
+<div className="fixed inset-x-0 bottom-0 z-50 flex flex-row gap-2 border-t border-brand-100 bg-brand-50/95 px-4 py-3 backdrop-blur sm:static sm:z-auto sm:mx-0 sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-2 sm:backdrop-blur-none">
         {!existing || isDraft ? (
           <Button
             variant="secondary"
             onClick={() => void submit('draft')}
             disabled={saving}
             type="button"
+            className="flex-1"
           >
             save draft
           </Button>
         ) : null}
-        <Button type="submit" disabled={saving}>
-          {saving ? 'saving…' : existing ? 'save' : 'publish'}
+        <Button type="submit" disabled={saving} className="flex-1">
+          {saving ? 'saving…' : !existing || isDraft ? 'publish' : 'save'}
         </Button>
       </div>
     </form>

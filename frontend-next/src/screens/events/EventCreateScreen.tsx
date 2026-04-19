@@ -1,10 +1,21 @@
+import { useNavigate } from 'react-router-dom';
 import { EventForm } from './form/EventForm';
 
 export default function EventCreateScreen() {
+  const navigate = useNavigate();
   return (
     <main className="bg-brand-50 min-h-full">
       <div className="mx-auto max-w-3xl px-4 py-6 md:py-10">
-        <h1 className="mb-5 text-2xl font-medium tracking-tight text-neutral-900">new event 🌱</h1>
+        <div className="mb-5 flex items-center justify-between">
+          <h1 className="text-2xl font-medium tracking-tight text-neutral-900">new event</h1>
+          <button
+            type="button"
+            onClick={() => void navigate(-1)}
+            className="text-sm text-neutral-500 hover:text-neutral-700"
+          >
+            cancel
+          </button>
+        </div>
         <EventForm />
       </div>
     </main>

@@ -11,7 +11,7 @@ export function validateEventForm(values: EventFormValues): Errors {
   if (!values.title.trim()) errors.title = 'required';
   else if (values.title.length > 200) errors.title = 'under 200 chars';
 
-  if (values.description.length > 10000) errors.description = 'too long';
+  if (values.description.length > 2000) errors.description = 'too long';
   if (values.location.length > 300) errors.location = 'under 300 chars';
 
   if (!values.datetimeTbd && values.status !== 'draft') {
@@ -24,9 +24,6 @@ export function validateEventForm(values: EventFormValues): Errors {
     if (new Date(values.endDatetime) <= new Date(values.startDatetime)) {
       errors.endDatetime = 'end must be after start';
     }
-  }
-  if (values.eventType === 'official' && values.visibility !== 'public') {
-    errors.visibility = 'official events must be public';
   }
 
   if (
