@@ -106,7 +106,7 @@ export default function CalendarScreen() {
       ) : null}
 
       <div
-        className="flex flex-col bg-surface p-1"
+        className="flex flex-col p-1"
         style={{ height: 'calc(100dvh - 14rem)' }}
       >
         {useNarrowWeek ? (
