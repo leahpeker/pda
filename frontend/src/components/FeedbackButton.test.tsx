@@ -6,10 +6,9 @@ import { useAuthStore } from '@/auth/store';
 import type { User } from '@/models/user';
 
 const submitFeedbackMock = vi.fn();
-const useSubmitFeedbackMock = vi.fn();
 
 vi.mock('@/api/feedback', () => ({
-  useSubmitFeedback: () => useSubmitFeedbackMock(),
+  useSubmitFeedback: vi.fn(),
 }));
 
 const toastSuccessMock = vi.fn();
@@ -25,7 +24,10 @@ vi.mock('sonner', () => ({
   },
 }));
 
+import { useSubmitFeedback } from '@/api/feedback';
 import { FeedbackButton } from './FeedbackButton';
+
+const mockedUseSubmitFeedback = vi.mocked(useSubmitFeedback);
 
 function makeUser(overrides: Partial<User> = {}): User {
   return {
@@ -59,10 +61,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   useAuthStore.setState({ status: 'authed', user: makeUser(), accessToken: 'tok' });
   submitFeedbackMock.mockResolvedValue({ html_url: 'https://example.com/1' });
-  useSubmitFeedbackMock.mockReturnValue({
+  mockedUseSubmitFeedback.mockReturnValue({
     mutateAsync: submitFeedbackMock,
     isPending: false,
-  });
+  } as unknown as ReturnType<typeof useSubmitFeedback>);
 });
 
 describe('FeedbackButton', () => {

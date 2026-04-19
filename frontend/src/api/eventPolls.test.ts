@@ -91,10 +91,11 @@ describe('mapEventPoll', () => {
     expect(poll.eventId).toBe('evt-1');
     expect(poll.isActive).toBe(true);
     expect(poll.options).toHaveLength(2);
-    expect(poll.options[0].datetime).toBeInstanceOf(Date);
-    expect(poll.options[0].datetime.toISOString()).toBe('2026-05-01T18:00:00.000Z');
-    expect(poll.options[0].yesCount).toBe(2);
-    expect(poll.options[0].yesVoters[0]).toEqual({
+    const firstOption = poll.options[0]!;
+    expect(firstOption.datetime).toBeInstanceOf(Date);
+    expect(firstOption.datetime.toISOString()).toBe('2026-05-01T18:00:00.000Z');
+    expect(firstOption.yesCount).toBe(2);
+    expect(firstOption.yesVoters[0]).toEqual({
       userId: 'u-1',
       name: 'Alice',
       photoUrl: 'a.jpg',
@@ -180,13 +181,15 @@ describe('useVotePoll', () => {
 
     const { result } = renderHook(() => useVotePoll('evt-1'), { wrapper: Wrapper });
 
-    void result.current.mutate({ 'opt-a': VoteChoice.Yes });
+    result.current.mutate({ 'opt-a': VoteChoice.Yes });
 
     await waitFor(() => {
       const cached = qc.getQueryData(key) as ReturnType<typeof mapEventPoll> | undefined;
-      expect(cached?.options[0].yesCount).toBe(3);
-      expect(cached?.options[0].yesVoters.some((v) => v.userId === 'u-me')).toBe(true);
-      expect(cached?.myVotes['opt-a']).toBe(VoteChoice.Yes);
+      expect(cached).toBeDefined();
+      const opt0 = cached!.options[0]!;
+      expect(opt0.yesCount).toBe(3);
+      expect(opt0.yesVoters.some((v) => v.userId === 'u-me')).toBe(true);
+      expect(cached!.myVotes['opt-a']).toBe(VoteChoice.Yes);
     });
 
     resolvePost?.({ data: wirePoll({ my_votes: { 'opt-a': VoteChoice.Yes } }) });
@@ -207,9 +210,10 @@ describe('useVotePoll', () => {
       result.current.mutateAsync({ 'opt-a': VoteChoice.Yes }),
     ).rejects.toThrow('network fail');
 
-    const rolledBack = qc.getQueryData(key) as ReturnType<typeof mapEventPoll>;
-    expect(rolledBack.options[0].yesCount).toBe(2);
-    expect(rolledBack.options[0].yesVoters.some((v) => v.userId === 'u-me')).toBe(false);
+    const rolledBack: ReturnType<typeof mapEventPoll> = qc.getQueryData(key)!;
+    const rolledOpt0 = rolledBack.options[0]!;
+    expect(rolledOpt0.yesCount).toBe(2);
+    expect(rolledOpt0.yesVoters.some((v) => v.userId === 'u-me')).toBe(false);
     expect(rolledBack.myVotes).toEqual({});
   });
 
@@ -248,14 +252,16 @@ describe('useVotePoll', () => {
 
     const { result } = renderHook(() => useVotePoll('evt-1'), { wrapper: Wrapper });
 
-    void result.current.mutate({ 'opt-a': VoteChoice.Yes });
+    result.current.mutate({ 'opt-a': VoteChoice.Yes });
 
     await waitFor(() => {
       const cached = qc.getQueryData(key) as ReturnType<typeof mapEventPoll> | undefined;
-      expect(cached?.options[0].yesCount).toBe(1);
-      expect(cached?.options[0].maybeCount).toBe(0);
-      expect(cached?.options[0].maybeVoters).toHaveLength(0);
-      expect(cached?.options[0].yesVoters[0].userId).toBe('u-me');
+      expect(cached).toBeDefined();
+      const opt0 = cached!.options[0]!;
+      expect(opt0.yesCount).toBe(1);
+      expect(opt0.maybeCount).toBe(0);
+      expect(opt0.maybeVoters).toHaveLength(0);
+      expect(opt0.yesVoters[0]!.userId).toBe('u-me');
     });
 
     resolvePost?.({ data: wirePoll() });
