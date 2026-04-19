@@ -272,12 +272,26 @@ function DyslexiaToggle({
   return (
     <label className="flex items-center justify-between gap-3">
       <span className="text-sm text-neutral-800">dyslexia-friendly font</span>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="h-5 w-10 cursor-pointer appearance-none rounded-full bg-neutral-300 transition-colors checked:bg-neutral-900"
-      />
+      <span
+        className={cn(
+          'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors',
+          checked ? 'bg-brand-600' : 'bg-neutral-300',
+        )}
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          className="sr-only"
+        />
+        <span
+          aria-hidden="true"
+          className={cn(
+            'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
+            checked ? 'translate-x-5' : 'translate-x-0.5',
+          )}
+        />
+      </span>
     </label>
   );
 }
