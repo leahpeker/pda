@@ -24,7 +24,7 @@ export function NarrowWeekView({ date, weekStartsOn, events, onSelectEvent }: Pr
   return (
     <ul
       aria-label="week"
-      className="flex h-full flex-col overflow-hidden rounded-md border border-neutral-200/80 bg-white"
+      className="flex h-full flex-col overflow-hidden rounded-md border border-border/80 bg-surface"
     >
       {days.map((day, idx) => (
         <DayRow
@@ -70,17 +70,17 @@ function DayRow({ day, isLast, isToday, events, onSelectEvent }: DayRowProps) {
       aria-label={`${weekdayLabel} ${dayNumber}`}
       className={cn(
         'flex min-h-0 flex-1 items-stretch',
-        !isLast && 'border-b border-neutral-200/60',
+        !isLast && 'border-b border-border/60',
       )}
     >
-      <div className="flex w-14 shrink-0 items-center justify-center border-r border-neutral-200/60 px-1 py-2">
+      <div className="flex w-14 shrink-0 items-center justify-center border-r border-border/60 px-1 py-2">
         <div
           className={cn(
             'flex flex-col items-center justify-center rounded-md px-1.5 py-1 text-center leading-tight',
-            isToday ? 'bg-brand-600 text-white' : 'text-neutral-700',
+            isToday ? 'bg-accent text-accent-foreground' : 'text-neutral-700 dark:text-neutral-300',
           )}
         >
-          <span className={cn('text-xs', isToday ? 'text-white' : 'text-neutral-500')}>
+          <span className={cn('text-xs', isToday ? 'text-accent-foreground' : 'text-muted')}>
             {weekdayLabel}
           </span>
           <span className="text-base font-medium">{dayNumber}</span>

@@ -10,7 +10,7 @@ export function ContentContainer({ children }: { children: ReactNode }) {
 export function ContentLoading({ label = 'loading…' }: { label?: string }) {
   return (
     <ContentContainer>
-      <p className="text-sm text-neutral-500">{label}</p>
+      <p className="text-sm text-muted">{label}</p>
     </ContentContainer>
   );
 }
@@ -18,7 +18,7 @@ export function ContentLoading({ label = 'loading…' }: { label?: string }) {
 export function ContentError({ message }: { message: string }) {
   return (
     <ContentContainer>
-      <p role="alert" className="text-sm text-red-600">
+      <p role="alert" className="text-sm text-red-600 dark:text-red-400">
         {message}
       </p>
     </ContentContainer>

@@ -44,7 +44,7 @@ export default function SurveyAdminListScreen() {
       </header>
 
       {data.length === 0 ? (
-        <p className="text-sm text-neutral-500">nothing yet</p>
+        <p className="text-sm text-muted">nothing yet</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {data.map((s) => (
@@ -73,15 +73,15 @@ function SurveyRow({
   onDelete: (s: SurveySummary) => void;
 }) {
   return (
-    <article className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3">
+    <article className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3">
       <div className="min-w-0">
         <Link
           to={`/admin/surveys/${survey.id}`}
-          className="truncate text-sm font-medium text-neutral-900 underline"
+          className="truncate text-sm font-medium text-foreground underline"
         >
           {survey.title}
         </Link>
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-muted">
           /{survey.slug} · {survey.visibility} · {String(survey.responseCount)} responses ·{' '}
           {format(new Date(survey.createdAt), 'MMM d, yyyy')}
         </p>
@@ -90,14 +90,14 @@ function SurveyRow({
         <span
           className={cn(
             'rounded-full px-2 py-0.5 text-xs',
-            survey.isActive ? 'bg-green-100 text-green-800' : 'bg-neutral-200 text-neutral-700',
+            survey.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300',
           )}
         >
           {survey.isActive ? 'active' : 'closed'}
         </span>
         <Link
           to={`/admin/surveys/${survey.id}/responses`}
-          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-neutral-700 hover:bg-neutral-100"
+          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
         >
           responses
         </Link>
@@ -195,7 +195,7 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
           <span>one response per user</span>
         </label>
         {error ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {error}
           </p>
         ) : null}

@@ -137,7 +137,7 @@ function SurveyQuestionDialogBody({ surveyId, open, onClose, existing }: Props) 
           <span>required</span>
         </label>
         {error ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {error}
           </p>
         ) : null}

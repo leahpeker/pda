@@ -65,7 +65,7 @@ export default function JoinRequestsScreen() {
         <div
           role="radiogroup"
           aria-label="filter"
-          className="inline-flex rounded-md border border-neutral-300 bg-white p-0.5"
+          className="inline-flex rounded-md border border-border-strong bg-surface p-0.5"
         >
           {FILTERS.map((f) => {
             const active = filter === f.value;
@@ -74,7 +74,7 @@ export default function JoinRequestsScreen() {
                 key={f.value}
                 className={cn(
                   'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
-                  active ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100',
+                  active ? 'bg-brand-600 text-white' : 'text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim',
                 )}
               >
                 <input
@@ -95,13 +95,13 @@ export default function JoinRequestsScreen() {
       </div>
 
       {error ? (
-        <p role="alert" className="mb-3 text-sm text-red-600">
+        <p role="alert" className="mb-3 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       ) : null}
 
       {visible.length === 0 ? (
-        <p className="text-sm text-neutral-500">nothing here 🌿</p>
+        <p className="text-sm text-muted">nothing here 🌿</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {visible.map((r) => (
@@ -144,11 +144,11 @@ function JoinRequestCard({
 }) {
   const isPending = request.status === 'pending';
   return (
-    <article className="rounded-lg border border-neutral-200 bg-white p-4">
+    <article className="rounded-lg border border-border bg-surface p-4">
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-base font-medium">{request.displayName}</h2>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted">
             {request.phoneNumber} · submitted{' '}
             {format(new Date(request.submittedAt), 'MMM d, h:mm a')}
           </p>
@@ -160,8 +160,8 @@ function JoinRequestCard({
         <dl className="mt-2 flex flex-col gap-2">
           {request.answers.map((a) => (
             <div key={a.questionId}>
-              <dt className="text-xs font-medium text-neutral-500">{a.label}</dt>
-              <dd className="text-sm whitespace-pre-wrap text-neutral-800">{a.answer}</dd>
+              <dt className="text-xs font-medium text-muted">{a.label}</dt>
+              <dd className="text-sm whitespace-pre-wrap text-foreground">{a.answer}</dd>
             </div>
           ))}
         </dl>
@@ -195,10 +195,10 @@ function JoinRequestCard({
 function StatusBadge({ status }: { status: JoinRequestStatus }) {
   const tone =
     status === 'approved'
-      ? 'bg-green-100 text-green-800'
+      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
       : status === 'rejected'
-        ? 'bg-neutral-200 text-neutral-700'
-        : 'bg-amber-100 text-amber-800';
+        ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
+        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300';
   return <span className={cn('rounded-full px-2 py-0.5 text-xs', tone)}>{status}</span>;
 }
 

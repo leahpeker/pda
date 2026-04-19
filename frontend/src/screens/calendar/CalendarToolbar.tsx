@@ -21,7 +21,7 @@ export function CalendarToolbar({ label, onNavigate }: ToolbarProps<BigCalEvent>
         >
           <ChevronLeft />
         </ChevronButton>
-        <span className="min-w-[9rem] text-center text-sm font-medium text-neutral-800">
+        <span className="min-w-[9rem] text-center text-sm font-medium text-foreground">
           {label.toLowerCase()}
         </span>
         <ChevronButton
@@ -54,8 +54,8 @@ function ChevronButton({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        'inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600',
-        'hover:text-brand-700 hover:bg-neutral-100',
+        'inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 dark:text-neutral-400',
+        'hover:text-brand-700 hover:bg-surface-dim',
       )}
     >
       {children}

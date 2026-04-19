@@ -24,24 +24,24 @@ export default function SurveyResponsesScreen() {
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-medium tracking-tight">{survey.data.title}</h1>
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-muted">
             {String(responses.data.length)} response{responses.data.length === 1 ? '' : 's'}
           </p>
         </div>
         <Link
           to={`/admin/surveys/${surveyId}`}
-          className="inline-flex h-10 items-center rounded-md px-4 text-sm text-neutral-700 hover:bg-neutral-100"
+          className="inline-flex h-10 items-center rounded-md px-4 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
         >
           ← back to editor
         </Link>
       </header>
 
       {responses.data.length === 0 ? (
-        <p className="text-sm text-neutral-500">no responses yet</p>
+        <p className="text-sm text-muted">no responses yet</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-border bg-surface">
           <table className="w-full text-left text-sm">
-            <thead className="bg-neutral-50 text-xs text-neutral-500 uppercase">
+            <thead className="bg-background text-xs text-muted uppercase">
               <tr>
                 <th className="px-3 py-2">submitted by</th>
                 <th className="px-3 py-2">at</th>
@@ -54,13 +54,13 @@ export default function SurveyResponsesScreen() {
             </thead>
             <tbody>
               {responses.data.map((r) => (
-                <tr key={r.id} className="border-t border-neutral-100 align-top">
-                  <td className="px-3 py-2 text-neutral-800">{r.userName ?? '—'}</td>
-                  <td className="px-3 py-2 text-xs text-neutral-500">
+                <tr key={r.id} className="border-t border-border align-top">
+                  <td className="px-3 py-2 text-foreground">{r.userName ?? '—'}</td>
+                  <td className="px-3 py-2 text-xs text-muted">
                     {format(new Date(r.submittedAt), 'MMM d, yyyy h:mm a')}
                   </td>
                   {survey.data.questions.map((q) => (
-                    <td key={q.id} className="px-3 py-2 whitespace-pre-wrap text-neutral-800">
+                    <td key={q.id} className="px-3 py-2 whitespace-pre-wrap text-foreground">
                       {renderAnswer(r.answers[q.id])}
                     </td>
                   ))}

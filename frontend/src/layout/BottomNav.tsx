@@ -16,7 +16,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="primary"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
     >
       <div className="mx-auto grid h-14 max-w-6xl grid-cols-3">
         <NavItem to="/calendar" label="calendar">
@@ -61,7 +61,7 @@ function NavItem({ to, label, children }: NavItemProps) {
       aria-label={label}
       className={({ isActive }) =>
         cn(
-          'flex flex-col items-center justify-center gap-0.5 text-neutral-500 transition-colors hover:bg-neutral-50',
+          'flex flex-col items-center justify-center gap-0.5 text-muted transition-colors hover:bg-background',
           isActive && 'text-brand-700',
         )
       }

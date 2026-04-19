@@ -40,7 +40,7 @@ export default function ProfileScreen() {
         ) : (
           <span
             aria-hidden="true"
-            className="flex h-28 w-28 items-center justify-center rounded-full bg-neutral-200 text-3xl text-neutral-600"
+            className="flex h-28 w-28 items-center justify-center rounded-full bg-surface-active text-3xl text-neutral-600 dark:text-neutral-400"
           >
             {initials}
           </span>
@@ -52,9 +52,9 @@ export default function ProfileScreen() {
         </div>
       </header>
 
-      <section className="mt-8 rounded-lg border border-neutral-200 bg-white p-4">
+      <section className="mt-8 rounded-lg border border-border bg-surface p-4">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">bio</h2>
+          <h2 className="text-xs font-medium tracking-wide text-muted uppercase">bio</h2>
           {user.bio ? (
             <Button
               variant="ghost"
@@ -68,7 +68,7 @@ export default function ProfileScreen() {
           ) : null}
         </div>
         {user.bio ? (
-          <p className="text-sm whitespace-pre-wrap text-neutral-800">{user.bio}</p>
+          <p className="text-sm whitespace-pre-wrap text-foreground">{user.bio}</p>
         ) : (
           <Button
             variant="secondary"
@@ -106,7 +106,7 @@ export default function ProfileScreen() {
 
 function ContactLine({ value, visible }: { value: string; visible: boolean }) {
   return (
-    <p className="flex items-center gap-1.5 text-sm text-neutral-500">
+    <p className="flex items-center gap-1.5 text-sm text-muted">
       <span>{value}</span>
       <span
         aria-label={visible ? 'visible to members' : 'hidden from members'}
@@ -114,8 +114,8 @@ function ContactLine({ value, visible }: { value: string; visible: boolean }) {
         className={cn(
           'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
           visible
-            ? 'bg-brand-50 text-brand-700'
-            : 'bg-neutral-100 text-neutral-500',
+            ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300'
+            : 'bg-surface-dim text-muted',
         )}
       >
         {visible ? (
@@ -169,10 +169,10 @@ function ProfileLink({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to}
-      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm hover:bg-neutral-50"
+      className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3 text-sm hover:bg-background"
     >
       <span>{label}</span>
-      <span aria-hidden="true" className="text-neutral-400">
+      <span aria-hidden="true" className="text-muted-foreground">
         →
       </span>
     </Link>

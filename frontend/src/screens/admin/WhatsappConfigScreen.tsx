@@ -54,13 +54,13 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
   return (
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">whatsapp config</h1>
-      <p className="mb-6 text-sm text-neutral-600">bot connection settings</p>
+      <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">bot connection settings</p>
 
       <WhatsappSetupInstructions />
 
-      <section className="mb-6 flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-4">
+      <section className="mb-6 flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
         <StatusDot state={statusPending ? 'checking' : connected ? 'connected' : 'offline'} />
-        <span className="text-sm text-neutral-800">
+        <span className="text-sm text-foreground">
           {statusPending ? 'checking…' : connected ? 'connected' : 'not reachable'}
         </span>
       </section>
@@ -96,7 +96,7 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
         />
 
         {error ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {error}
           </p>
         ) : null}
@@ -114,7 +114,7 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
 
 function StatusDot({ state }: { state: 'connected' | 'offline' | 'checking' }) {
   const color =
-    state === 'connected' ? 'bg-green-500' : state === 'offline' ? 'bg-red-500' : 'bg-neutral-300';
+    state === 'connected' ? 'bg-green-500' : state === 'offline' ? 'bg-red-500' : 'bg-neutral-300 dark:bg-neutral-600';
   return <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${color}`} />;
 }
 

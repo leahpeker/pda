@@ -69,9 +69,9 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
 
   return (
     <div ref={ref} className="relative flex flex-col gap-1">
-      <label className="text-sm font-medium text-neutral-800">
+      <label className="text-sm font-medium text-foreground">
         {label}
-        {optional && <span className="ml-1 text-xs font-normal text-neutral-400">(optional)</span>}
+        {optional && <span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span>}
       </label>
 
       <button
@@ -85,16 +85,16 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
           'h-10 w-full rounded-[var(--radius-md)] border px-3 text-left text-sm transition-colors outline-none',
           display
             ? 'border-brand-200 bg-brand-50 text-brand-900 font-medium'
-            : 'border-neutral-300 bg-white text-neutral-400',
-          error && 'border-red-500 bg-red-50 text-red-700',
-          disabled && 'bg-neutral-100 text-neutral-400',
+            : 'border-border-strong bg-surface text-muted-foreground',
+          error && 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+          disabled && 'bg-surface-dim text-muted-foreground',
         ].join(' ')}
       >
         {display || 'pick a date & time'}
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 rounded-[var(--radius-md)] border border-brand-100 bg-white p-3 shadow-lg">
+        <div className="absolute z-50 mt-2 rounded-[var(--radius-md)] border border-brand-100 dark:border-brand-800 bg-surface p-3 shadow-lg dark:shadow-neutral-950/30">
           <DayPicker
             mode="single"
             selected={selectedDate}
@@ -107,8 +107,8 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
             defaultMonth={selectedDate ?? new Date()}
             locale={enUS}
           />
-          <div className="mt-2 flex items-center gap-2 border-t border-neutral-100 pt-2">
-            <label htmlFor="dt-time" className="text-xs text-neutral-500">time</label>
+          <div className="mt-2 flex items-center gap-2 border-t border-border pt-2">
+            <label htmlFor="dt-time" className="text-xs text-muted">time</label>
             <input
               id="dt-time"
               type="time"
@@ -122,14 +122,14 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
                 const base = selectedDate ?? new Date();
                 onChange(dateToIso(base, h, m));
               }}
-              className="h-8 rounded-md border border-neutral-200 bg-white px-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-200"
+              className="h-8 rounded-md border border-border bg-surface px-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-200"
             />
           </div>
         </div>
       )}
 
       {error ? (
-        <p className="text-xs text-red-600">{error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
       ) : null}
     </div>
   );

@@ -88,8 +88,8 @@ export default function SettingsScreen() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-4">
-      <h2 className="mb-3 text-xs font-medium tracking-wide text-neutral-500 uppercase">{label}</h2>
+    <section className="mb-6 rounded-lg border border-border bg-surface p-4">
+      <h2 className="mb-3 text-xs font-medium tracking-wide text-muted uppercase">{label}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
@@ -98,8 +98,8 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 function ReadOnly({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-neutral-500">{label}</div>
-      <div className="text-sm text-neutral-800">{value}</div>
+      <div className="text-xs text-muted">{label}</div>
+      <div className="text-sm text-foreground">{value}</div>
     </div>
   );
 }
@@ -137,8 +137,8 @@ function InlineText({
     return (
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xs text-neutral-500">{label}</div>
-          <div className="text-sm text-neutral-800">{value || placeholder}</div>
+          <div className="text-xs text-muted">{label}</div>
+          <div className="text-sm text-foreground">{value || placeholder}</div>
         </div>
         <Button
           variant="ghost"
@@ -192,11 +192,11 @@ function Toggle({
 }) {
   return (
     <label className="flex items-center justify-between gap-3">
-      <span className="text-sm text-neutral-800">{label}</span>
+      <span className="text-sm text-foreground">{label}</span>
       <span
         className={cn(
           'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors',
-          checked ? 'bg-brand-600' : 'bg-neutral-300',
+          checked ? 'bg-brand-600' : 'bg-neutral-300 dark:bg-neutral-600',
         )}
       >
         <input
@@ -271,27 +271,13 @@ function DyslexiaToggle({
 }) {
   return (
     <label className="flex items-center justify-between gap-3">
-      <span className="text-sm text-neutral-800">dyslexia-friendly font</span>
-      <span
-        className={cn(
-          'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors',
-          checked ? 'bg-brand-600' : 'bg-neutral-300',
-        )}
-      >
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onChange}
-          className="sr-only"
-        />
-        <span
-          aria-hidden="true"
-          className={cn(
-            'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
-            checked ? 'translate-x-5' : 'translate-x-0.5',
-          )}
-        />
-      </span>
+      <span className="text-sm text-foreground">dyslexia-friendly font</span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="h-5 w-10 cursor-pointer appearance-none rounded-full bg-toggle-off transition-colors checked:bg-accent"
+      />
     </label>
   );
 }
@@ -331,11 +317,11 @@ function SegmentedControl<T>({
 }) {
   return (
     <div>
-      <div className="mb-2 text-sm text-neutral-800">{label}</div>
+      <div className="mb-2 text-sm text-foreground">{label}</div>
       <div
         role="radiogroup"
         aria-label={label}
-        className="inline-flex rounded-md border border-neutral-300 bg-white p-0.5"
+        className="inline-flex rounded-md border border-border-strong bg-surface p-0.5"
       >
         {options.map((opt) => {
           const active = opt.value === value;
@@ -344,7 +330,7 @@ function SegmentedControl<T>({
               key={String(opt.value)}
               className={cn(
                 'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
-                active ? 'bg-neutral-900 text-white' : 'text-neutral-700 hover:bg-neutral-100',
+                active ? 'bg-accent text-accent-foreground' : 'text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim',
               )}
             >
               <input

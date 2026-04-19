@@ -18,13 +18,17 @@
   --color-brand-800: #1c4e1f;
   --color-brand-900: #123616;
 
-  --color-background: #ffffff;
-  --color-foreground: #1a1a1a;
+  --color-background: #fafafa;
+  --color-foreground: #171717;
   --color-surface: #ffffff;
   --color-surface-dim: #f5f5f5;
+  --color-surface-active: #e5e5e5;
   --color-border: #e5e5e5;
+  --color-border-strong: #d4d4d4;
   --color-muted: #737373;
   --color-muted-foreground: #a3a3a3;
+  --color-accent: #171717;
+  --color-accent-foreground: #ffffff;
 
   --color-evt-community-bg: #cce8e4;
   --color-evt-community-fg: #0a3c34;
@@ -49,9 +53,13 @@
   --color-foreground: #f5f5f5;
   --color-surface: #141414;
   --color-surface-dim: #1c1c1c;
+  --color-surface-active: #333333;
   --color-border: #2a2a2a;
+  --color-border-strong: #404040;
   --color-muted: #a3a3a3;
   --color-muted-foreground: #737373;
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #0a0a0a;
   --color-brand-50: #1a2e1b;
   --color-brand-100: #2a4a2c;
   --color-brand-200: #3d6b3f;
@@ -221,25 +229,26 @@ body {
 /* Outer frame — soft border + rounded corners to match Flutter's month frame. */
 .rbc-month-view,
 .rbc-time-view {
-  border: 1px solid rgb(229 229 229 / 0.8);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  background: var(--color-surface);
 }
 /* Internal dividers soften to 60% opacity. */
 .rbc-month-row + .rbc-month-row,
 .rbc-day-bg + .rbc-day-bg,
 .rbc-header + .rbc-header,
 .rbc-timeslot-group {
-  border-color: rgb(229 229 229 / 0.6);
+  border-color: color-mix(in srgb, var(--color-border) 60%, transparent);
 }
 /* Weekday headers: lowercase, medium weight, softer color. */
 .rbc-header {
   padding: 6px 4px;
   font-weight: 500;
-  color: rgb(82 82 82);
+  color: var(--color-muted);
   text-transform: none;
   font-size: 0.8125rem;
-  border-bottom: 1px solid rgb(229 229 229 / 0.8);
+  border-bottom: 1px solid var(--color-border);
 }
 /* Today cell: swap rbc's pale yellow for brand-50. */
 .rbc-today {
@@ -261,7 +270,7 @@ body {
    in-range number color so they read the same (only the cell shading
    distinguishes them). */
 .rbc-off-range-bg {
-  background: rgb(0 0 0 / 0.012);
+  background: color-mix(in srgb, var(--color-foreground) 1.2%, transparent);
 }
 .rbc-off-range {
   color: inherit;
@@ -365,8 +374,8 @@ body {
   background: var(--color-brand-700);
 }
 .rdp-disabled .rdp-day_button {
-  color: var(--color-neutral-300);
+  color: var(--color-muted-foreground);
 }
 .rdp-outside .rdp-day_button {
-  color: var(--color-neutral-300);
+  color: var(--color-muted-foreground);
 }

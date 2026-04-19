@@ -31,7 +31,7 @@ export default function EventDetailScreen() {
         <VisibilityBadge event={event} />
       </div>
 
-      <p className="text-sm text-neutral-700">
+      <p className="text-sm text-neutral-700 dark:text-neutral-300">
         {event.startDatetime
           ? formatEventDateTime(event.startDatetime, event.endDatetime, event.datetimeTbd)
           : 'date & time tbd'}
@@ -39,8 +39,8 @@ export default function EventDetailScreen() {
 
       {event.description ? (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-medium text-neutral-500">about</h2>
-          <p className="whitespace-pre-wrap text-neutral-800">{event.description}</p>
+          <h2 className="mb-2 text-sm font-medium text-muted">about</h2>
+          <p className="whitespace-pre-wrap text-foreground">{event.description}</p>
         </section>
       ) : null}
 
@@ -73,10 +73,10 @@ function Badge({
   children: React.ReactNode;
 }) {
   const tones = {
-    neutral: 'bg-neutral-100 text-neutral-700',
-    blue: 'bg-blue-100 text-blue-900',
-    amber: 'bg-amber-100 text-amber-900',
-    lavender: 'bg-purple-100 text-purple-900',
+    neutral: 'bg-surface-dim text-neutral-700 dark:text-neutral-300',
+    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300',
+    amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300',
+    lavender: 'bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-300',
   };
   return <span className={`rounded-full px-2 py-0.5 text-xs ${tones[tone]}`}>{children}</span>;
 }
@@ -84,21 +84,21 @@ function Badge({
 function LoginOrJoinSection() {
   // Unauthed users miss: hosts, location, links, cost, invite, RSVP.
   return (
-    <section className="mt-8 rounded-lg border border-neutral-200 bg-white p-6">
+    <section className="mt-8 rounded-lg border border-border bg-surface p-6">
       <h2 className="mb-2 text-base font-medium">want to see more?</h2>
-      <p className="mb-4 text-sm text-neutral-600">
+      <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
         location, rsvp, and organizer details are shown once you sign in
       </p>
       <div className="flex flex-wrap gap-3">
         <Link
           to="/login"
-          className="inline-flex h-10 items-center rounded-md bg-neutral-900 px-4 text-sm font-medium text-white hover:bg-neutral-800"
+          className="inline-flex h-10 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-neutral-800 dark:hover:bg-neutral-200"
         >
           sign in
         </Link>
         <Link
           to="/join"
-          className="inline-flex h-10 items-center rounded-md border border-neutral-300 px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          className="inline-flex h-10 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-background"
         >
           request to join
         </Link>

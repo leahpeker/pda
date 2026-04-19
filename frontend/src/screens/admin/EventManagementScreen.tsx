@@ -75,7 +75,7 @@ export default function EventManagementScreen() {
         <h1 className="text-2xl font-medium tracking-tight">manage events</h1>
         <Link
           to="/events/add"
-          className="inline-flex h-10 items-center rounded-md bg-neutral-900 px-4 text-sm font-medium text-white hover:bg-neutral-800"
+          className="inline-flex h-10 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-neutral-800"
         >
           new event
         </Link>
@@ -108,41 +108,34 @@ export default function EventManagementScreen() {
         </div>
       </div>
 
-      <div className="mb-4 flex justify-center">
-        <div
-          role="radiogroup"
-          aria-label="filter"
-          className="inline-flex rounded-md border border-neutral-300 bg-white p-0.5"
-        >
-          {BUCKETS.map((b) => {
-            const active = bucket === b.value;
-            return (
-              <label
-                key={b.value}
-                className={cn(
-                  'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
-                  active ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100',
-                )}
-              >
-                <input
-                  type="radio"
-                  name="event-bucket-filter"
-                  value={b.value}
-                  checked={active}
-                  onChange={() => {
-                    setBucket(b.value);
-                  }}
-                  className="sr-only"
-                />
-                {b.label}
-              </label>
-            );
-          })}
-        </div>
+      <div role="tablist" aria-label="event bucket" className="mb-4 flex flex-wrap gap-1">
+        {BUCKETS.map((b) => {
+          const active = bucket === b.value;
+          const count = data.filter((e) => bucketFilter(e, b.value)).length;
+          return (
+            <button
+              key={b.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => {
+                setBucket(b.value);
+              }}
+              className={cn(
+                'rounded-full px-3 py-1 text-xs transition-colors',
+                active
+                  ? 'bg-accent text-accent-foreground'
+                  : 'bg-surface-dim text-foreground-secondary hover:bg-surface-raised',
+              )}
+            >
+              {b.label} ({String(count)})
+            </button>
+          );
+        })}
       </div>
 
       {visible.length === 0 ? (
-        <p className="text-sm text-neutral-500">nothing in this bucket</p>
+        <p className="text-sm text-muted">nothing in this bucket</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {visible.map((e) => (
@@ -160,11 +153,11 @@ function EventRow({ event }: { event: Event }) {
   return (
     <Link
       to={`/events/${event.id}`}
-      className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3 hover:bg-neutral-50"
+      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3 hover:bg-background"
     >
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-neutral-800">{event.title}</p>
-        <p className="truncate text-xs text-neutral-500">
+        <p className="truncate text-sm font-medium text-foreground">{event.title}</p>
+        <p className="truncate text-xs text-muted">
           {event.datetimeTbd || !event.startDatetime ? 'tbd' : format(event.startDatetime, 'EEE MMM d, h:mm a').toLowerCase()}
           {event.location ? ` · ${event.location}` : ''}
         </p>
@@ -173,7 +166,7 @@ function EventRow({ event }: { event: Event }) {
         {event.eventType === 'official' ? (
           <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-900">official</span>
         ) : null}
-        <span className="text-neutral-500">{String(event.attendingCount)} going</span>
+        <span className="text-muted">{String(event.attendingCount)} going</span>
         <Button
           variant="ghost"
           onClick={(e) => {

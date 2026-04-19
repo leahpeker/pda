@@ -51,8 +51,8 @@ export default function FlaggedEventsScreen() {
               className={cn(
                 'rounded-full px-3 py-1 text-xs transition-colors',
                 active
-                  ? 'bg-neutral-900 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
+                  ? 'bg-accent text-accent-foreground'
+                  : 'bg-surface-dim text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700',
               )}
             >
               {f.label}
@@ -62,13 +62,13 @@ export default function FlaggedEventsScreen() {
       </div>
 
       {error ? (
-        <p role="alert" className="mb-3 text-sm text-red-600">
+        <p role="alert" className="mb-3 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       ) : null}
 
       {data.length === 0 ? (
-        <p className="text-sm text-neutral-500">nothing here 🌿</p>
+        <p className="text-sm text-muted">nothing here 🌿</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {data.map((f) => (
@@ -99,22 +99,22 @@ function FlagRow({
 }) {
   const isPending = flag.status === 'pending';
   return (
-    <article className="rounded-lg border border-neutral-200 bg-white p-4">
+    <article className="rounded-lg border border-border bg-surface p-4">
       <header className="mb-2 flex flex-wrap items-start justify-between gap-2">
         <div>
           <Link
             to={`/events/${flag.eventId}`}
-            className="text-base font-medium text-neutral-900 underline"
+            className="text-base font-medium text-foreground underline"
           >
             {flag.eventTitle}
           </Link>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted">
             flagged by {flag.flaggedByName} · {format(new Date(flag.createdAt), 'MMM d, h:mm a')}
           </p>
         </div>
         <StatusBadge status={flag.status} />
       </header>
-      <p className="text-sm whitespace-pre-wrap text-neutral-800">{flag.reason}</p>
+      <p className="text-sm whitespace-pre-wrap text-foreground">{flag.reason}</p>
       {isPending ? (
         <div className="mt-4 flex gap-2">
           <Button
@@ -143,10 +143,10 @@ function FlagRow({
 function StatusBadge({ status }: { status: FlagStatus }) {
   const tone =
     status === 'actioned'
-      ? 'bg-green-100 text-green-800'
+      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
       : status === 'dismissed'
-        ? 'bg-neutral-200 text-neutral-700'
-        : 'bg-amber-100 text-amber-800';
+        ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
+        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300';
   return <span className={cn('rounded-full px-2 py-0.5 text-xs', tone)}>{status}</span>;
 }
 

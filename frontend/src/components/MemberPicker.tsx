@@ -43,7 +43,7 @@ export function MemberPicker({ label, selected, onChange, hint, excludeIds = [] 
         hint={hint}
       />
       {term.trim().length >= 2 && results.length > 0 ? (
-        <ul className="max-h-48 overflow-y-auto rounded-md border border-neutral-200 bg-white">
+        <ul className="max-h-48 overflow-y-auto rounded-md border border-border bg-surface">
           {results.map((m) => (
             <li key={m.id}>
               <button
@@ -51,10 +51,10 @@ export function MemberPicker({ label, selected, onChange, hint, excludeIds = [] 
                 onClick={() => {
                   pick(m);
                 }}
-                className="flex w-full items-center justify-between px-3 py-2 text-start text-sm hover:bg-neutral-50"
+                className="flex w-full items-center justify-between px-3 py-2 text-start text-sm hover:bg-background"
               >
                 <span>{m.displayName}</span>
-                <span className="text-xs text-neutral-500">{m.phoneNumber}</span>
+                <span className="text-xs text-muted">{m.phoneNumber}</span>
               </button>
             </li>
           ))}
@@ -66,7 +66,7 @@ export function MemberPicker({ label, selected, onChange, hint, excludeIds = [] 
             <span
               key={m.id}
               className={cn(
-                'inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1 text-xs',
+                'inline-flex items-center gap-1 rounded-full bg-surface-dim px-2 py-1 text-xs',
               )}
             >
               {m.displayName}
@@ -76,7 +76,7 @@ export function MemberPicker({ label, selected, onChange, hint, excludeIds = [] 
                   remove(m.id);
                 }}
                 aria-label={`remove ${m.displayName}`}
-                className="ms-1 text-neutral-500 hover:text-neutral-900"
+                className="ms-1 text-muted hover:text-foreground"
               >
                 ×
               </button>

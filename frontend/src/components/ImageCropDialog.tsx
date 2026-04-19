@@ -54,7 +54,7 @@ export function ImageCropDialog({
       aria-label="crop photo"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
     >
-      <div className="flex w-full max-w-md flex-col gap-4 rounded-lg bg-white p-4 shadow-xl">
+      <div className="flex w-full max-w-md flex-col gap-4 rounded-lg bg-surface p-4 shadow-xl">
         <div className="relative h-80 overflow-hidden rounded-md bg-neutral-900">
           <Cropper
             image={src}
@@ -69,7 +69,7 @@ export function ImageCropDialog({
           />
         </div>
         <label className="flex items-center gap-3 text-sm">
-          <span className="w-12 text-neutral-600">zoom</span>
+          <span className="w-12 text-neutral-600 dark:text-neutral-400">zoom</span>
           <input
             type="range"
             min={1}

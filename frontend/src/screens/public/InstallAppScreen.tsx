@@ -38,7 +38,7 @@ export default function InstallAppScreen() {
   return (
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">install the app</h1>
-      <p className="mb-6 text-sm text-neutral-600">
+      <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
         add pda to your home screen for a native-app feel
       </p>
 
@@ -61,7 +61,7 @@ export default function InstallAppScreen() {
         steps={ANDROID_STEPS}
       />
 
-      <p className="mt-8 text-center text-xs text-neutral-500">
+      <p className="mt-8 text-center text-xs text-muted">
         once installed, pda opens full-screen — just like a native app
       </p>
     </ContentContainer>
@@ -82,27 +82,27 @@ function InstallCard({
   steps: Step[];
 }) {
   return (
-    <section className="mb-3 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+    <section className="mb-3 overflow-hidden rounded-lg border border-border bg-surface">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-neutral-50"
+        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-background"
       >
         <span className="flex items-center gap-3">
           <span aria-hidden="true">{icon}</span>
           <span className="text-base font-medium">{title}</span>
         </span>
-        <span aria-hidden="true" className="text-neutral-400">
+        <span aria-hidden="true" className="text-muted-foreground">
           {open ? '▾' : '▸'}
         </span>
       </button>
       {open ? (
-        <ol className="list-decimal border-t border-neutral-200 px-4 py-3 ps-10 text-sm">
+        <ol className="list-decimal border-t border-border px-4 py-3 ps-10 text-sm">
           {steps.map((s) => (
             <li key={s.label} className="mb-2 last:mb-0">
-              <p className="text-neutral-800">{s.label}</p>
-              {s.hint ? <p className="text-xs text-neutral-500">{s.hint}</p> : null}
+              <p className="text-foreground">{s.label}</p>
+              {s.hint ? <p className="text-xs text-muted">{s.hint}</p> : null}
             </li>
           ))}
         </ol>

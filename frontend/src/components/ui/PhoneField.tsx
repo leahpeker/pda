@@ -25,7 +25,7 @@ export function PhoneField({
   const describedBy = error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined;
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={inputId} className="text-sm font-medium text-neutral-800">
+      <label htmlFor={inputId} className="text-sm font-medium text-foreground">
         {label}
       </label>
       <PhoneInput
@@ -41,8 +41,8 @@ export function PhoneField({
         numberInputProps={{
           'aria-label': label,
           className: cn(
-            'h-10 w-full rounded-md border border-neutral-300 bg-white px-3 text-sm transition-colors outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200',
-            error && 'border-red-500 focus:border-red-500 focus:ring-red-100',
+            'h-10 w-full rounded-md border border-border-strong bg-surface px-3 text-sm transition-colors outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200',
+            error && 'border-red-500 dark:border-red-400 focus:border-red-500 focus:ring-red-100',
           ),
         }}
         countrySelectProps={{
@@ -51,15 +51,15 @@ export function PhoneField({
         className={cn(
           'PhoneInput flex items-center gap-2',
           '[&_.PhoneInputCountry]:flex [&_.PhoneInputCountry]:items-center [&_.PhoneInputCountry]:gap-1',
-          '[&_.PhoneInputCountrySelect]:h-10 [&_.PhoneInputCountrySelect]:rounded-md [&_.PhoneInputCountrySelect]:border [&_.PhoneInputCountrySelect]:border-neutral-300 [&_.PhoneInputCountrySelect]:bg-white [&_.PhoneInputCountrySelect]:px-2 [&_.PhoneInputCountrySelect]:text-sm',
+          '[&_.PhoneInputCountrySelect]:h-10 [&_.PhoneInputCountrySelect]:rounded-md [&_.PhoneInputCountrySelect]:border [&_.PhoneInputCountrySelect]:border-border-strong [&_.PhoneInputCountrySelect]:bg-surface [&_.PhoneInputCountrySelect]:px-2 [&_.PhoneInputCountrySelect]:text-sm',
         )}
       />
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs text-red-600">
+        <p id={`${inputId}-error`} className="text-xs text-red-600 dark:text-red-400">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${inputId}-hint`} className="text-xs text-neutral-500">
+        <p id={`${inputId}-hint`} className="text-xs text-muted">
           {hint}
         </p>
       ) : null}

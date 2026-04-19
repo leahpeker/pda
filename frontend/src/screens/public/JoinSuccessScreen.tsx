@@ -9,12 +9,12 @@ export default function JoinSuccessScreen() {
           🌱
         </div>
         <h1 className="text-2xl font-medium tracking-tight">request received!</h1>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
           a vetting member will review your request and reach out soon
         </p>
         <Link
           to="/"
-          className="mt-2 inline-flex h-10 items-center rounded-md px-4 text-sm text-neutral-700 hover:bg-neutral-100"
+          className="mt-2 inline-flex h-10 items-center rounded-md px-4 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
         >
           back to home
         </Link>

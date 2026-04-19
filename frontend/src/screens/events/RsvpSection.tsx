@@ -92,7 +92,7 @@ export function RsvpSection({ event, canSeeInvited }: Props) {
             ))}
           </div>
           {atCapacity && myRsvp !== RsvpServerStatus.Attending ? (
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-amber-700 dark:text-amber-300">
               event is full — tapping "i'm going" adds you to the waitlist
             </p>
           ) : null}
@@ -107,7 +107,7 @@ export function RsvpSection({ event, canSeeInvited }: Props) {
 
       <Summary event={event} />
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       ) : null}
@@ -139,8 +139,8 @@ function RsvpPill({
       className={cn(
         'inline-flex h-10 items-center rounded-full px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed',
         active
-          ? 'bg-neutral-900 text-white'
-          : 'border border-neutral-300 text-neutral-700 hover:bg-neutral-50',
+          ? 'bg-accent text-accent-foreground'
+          : 'border border-border-strong text-neutral-700 dark:text-neutral-300 hover:bg-background',
         disabled && 'opacity-60',
       )}
     >
@@ -152,7 +152,7 @@ function RsvpPill({
 function WaitlistView({ onLeave, busy }: { onLeave: () => void; busy: boolean }) {
   return (
     <div className="flex items-center gap-3 rounded-md bg-amber-50 px-3 py-2">
-      <span className="text-sm text-amber-900">you're on the waitlist</span>
+      <span className="text-sm text-amber-900 dark:text-amber-300">you're on the waitlist</span>
       <Button variant="ghost" onClick={onLeave} disabled={busy}>
         leave waitlist
       </Button>
@@ -168,7 +168,7 @@ function Summary({ event }: { event: Event }) {
     parts.push(`${String(event.attendingCount)} going`);
   }
   if (event.waitlistedCount > 0) parts.push(`${String(event.waitlistedCount)} waitlisted`);
-  return <p className="text-xs text-neutral-500">{parts.join(' · ')}</p>;
+  return <p className="text-xs text-muted">{parts.join(' · ')}</p>;
 }
 
 function extractError(err: unknown): string {

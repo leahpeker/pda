@@ -22,7 +22,7 @@ export function AutosaveStatus({ status, className }: Props) {
       className={cn(
         'inline-flex items-center rounded-full px-2 py-0.5 text-xs',
         status === 'saved' && 'bg-green-100 text-green-800',
-        status === 'saving' && 'bg-neutral-100 text-neutral-600',
+        status === 'saving' && 'bg-surface-dim text-neutral-600 dark:text-neutral-400',
         status === 'error' && 'bg-red-100 text-red-700',
         className,
       )}

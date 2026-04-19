@@ -76,11 +76,11 @@ function SurveyForm({ survey }: { survey: Survey }) {
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">{survey.title}</h1>
       {survey.description ? (
-        <p className="mb-6 text-sm text-neutral-600">{survey.description}</p>
+        <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">{survey.description}</p>
       ) : null}
 
       {finalized ? (
-        <div className="mb-6 rounded-md bg-neutral-100 px-3 py-2 text-sm text-neutral-700">
+        <div className="mb-6 rounded-md bg-surface-dim px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300">
           this poll has been finalized — responses are locked
         </div>
       ) : null}

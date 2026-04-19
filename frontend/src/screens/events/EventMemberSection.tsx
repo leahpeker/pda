@@ -75,8 +75,8 @@ function ReportEventButton({ eventId }: { eventId: string }) {
 
 function Card({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white p-4">
-      <h2 className="mb-3 text-xs font-medium tracking-wide text-neutral-500 uppercase">{label}</h2>
+    <section className="rounded-lg border border-border bg-surface p-4">
+      <h2 className="mb-3 text-xs font-medium tracking-wide text-muted uppercase">{label}</h2>
       {children}
     </section>
   );
@@ -113,13 +113,13 @@ function HostSection({ event }: { event: Event }) {
 
 function HostChip({ name, photoUrl }: { name: string; photoUrl: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-2 py-1 text-sm">
+    <span className="inline-flex items-center gap-2 rounded-full bg-surface-dim px-2 py-1 text-sm">
       {photoUrl ? (
         <img src={photoUrl} alt="" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-300 text-xs text-neutral-700"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-600 text-xs text-neutral-700 dark:text-neutral-300"
         >
           {name.slice(0, 1).toUpperCase()}
         </span>
@@ -140,7 +140,7 @@ function LocationSection({ event }: { event: Event }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`open ${event.location} in maps`}
-        className="text-sm text-neutral-900 hover:underline"
+        className="text-sm text-foreground hover:underline"
       >
         {primary}
       </a>
@@ -165,7 +165,7 @@ function LinksSection({ event }: { event: Event }) {
               href={l.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-neutral-900 hover:underline"
+              className="text-foreground hover:underline"
             >
               {l.label}
             </a>
@@ -173,7 +173,7 @@ function LinksSection({ event }: { event: Event }) {
         ))}
         {feedbackSurveys.map((slug) => (
           <li key={slug}>
-            <Link to={`/surveys/${slug}`} className="text-neutral-900 hover:underline">
+            <Link to={`/surveys/${slug}`} className="text-foreground hover:underline">
               give feedback
             </Link>
           </li>
@@ -200,12 +200,12 @@ function CostSection({ event }: { event: Event }) {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-neutral-900 hover:underline"
+                className="text-foreground hover:underline"
               >
                 {item.label}
               </a>
             ) : (
-              <span className="text-neutral-800">{item.label}</span>
+              <span className="text-foreground">{item.label}</span>
             )}
           </li>
         ))}

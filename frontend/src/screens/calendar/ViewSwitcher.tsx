@@ -21,7 +21,7 @@ export function ViewSwitcher({ value, onChange }: Props) {
     <div
       role="radiogroup"
       aria-label="calendar view"
-      className="inline-flex rounded-md border border-neutral-300 bg-white p-0.5"
+      className="inline-flex rounded-md border border-border-strong bg-surface p-0.5"
     >
       {VIEWS.map((v) => {
         const active = v.value === value;
@@ -30,7 +30,7 @@ export function ViewSwitcher({ value, onChange }: Props) {
             key={v.value}
             className={cn(
               'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
-              active ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100',
+              active ? 'bg-accent text-accent-foreground' : 'text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim',
             )}
           >
             <input

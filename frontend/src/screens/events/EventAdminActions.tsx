@@ -31,8 +31,8 @@ export function EventAdminActions({ event }: Props) {
   if (!canEdit) return null;
 
   return (
-    <section className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-4">
-      <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+    <section className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4">
+      <h2 className="text-xs font-medium tracking-wide text-muted uppercase">
         admin actions
       </h2>
       <AdminActionRow event={event} isCreator={isCreator} canManage={canManage} />
@@ -115,7 +115,7 @@ function AdminActionRow({
         }}
         title="cancel event"
       >
-        <p className="text-sm text-neutral-700">
+        <p className="text-sm text-neutral-700 dark:text-neutral-300">
           mark this event as cancelled? attendees will see a cancelled badge — you can't un-cancel
           from the React app yet.
         </p>
@@ -153,7 +153,7 @@ function AdminActionRow({
         }}
         title="delete event"
       >
-        <p className="text-sm text-neutral-700">
+        <p className="text-sm text-neutral-700 dark:text-neutral-300">
           this permanently deletes the event and all rsvps. This cannot be undone.
         </p>
         {deleteError ? (

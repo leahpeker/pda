@@ -51,7 +51,7 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
   const visible = active === 'invited' ? [] : buckets[active];
 
   if (tabs.every((t) => counts[t.key] === 0)) {
-    return <p className="text-xs text-neutral-500">no one yet</p>;
+    return <p className="text-xs text-muted">no one yet</p>;
   }
 
   return (
@@ -69,8 +69,8 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
             className={cn(
               'rounded-full px-3 py-1 text-xs transition-colors',
               active === t.key
-                ? 'bg-neutral-900 text-white'
-                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
+                ? 'bg-accent text-accent-foreground'
+                : 'bg-surface-dim text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700',
             )}
           >
             {t.label}
@@ -93,7 +93,7 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
 function GuestChip({ guest }: { guest: EventGuest }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2 py-1 text-xs"
+      className="inline-flex items-center gap-1.5 rounded-full bg-surface-dim px-2 py-1 text-xs"
       title={guest.name}
     >
       {guest.photoUrl ? (
@@ -106,20 +106,20 @@ function GuestChip({ guest }: { guest: EventGuest }) {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-300 text-[10px] text-neutral-700"
+          className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-300 dark:bg-neutral-600 text-[10px] text-neutral-700 dark:text-neutral-300"
         >
           {guest.name.slice(0, 1).toUpperCase()}
         </span>
       )}
       {guest.name}
-      {guest.hasPlusOne ? <span className="text-neutral-500">+1</span> : null}
+      {guest.hasPlusOne ? <span className="text-muted">+1</span> : null}
     </span>
   );
 }
 
 function InvitedList({ event }: { event: Event }) {
   if (event.invitedUserIds.length === 0) {
-    return <p className="text-xs text-neutral-500">no one invited yet</p>;
+    return <p className="text-xs text-muted">no one invited yet</p>;
   }
   return (
     <div className="flex flex-wrap gap-2">

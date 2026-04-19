@@ -112,7 +112,7 @@ export function LocationField({
 
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1">
-      <label htmlFor={inputId} className="text-sm font-medium text-neutral-800">
+      <label htmlFor={inputId} className="text-sm font-medium text-foreground">
         {label}
       </label>
       <div className="relative">
@@ -133,23 +133,23 @@ export function LocationField({
           maxLength={maxLength}
           placeholder={placeholder}
           className={[
-            'h-10 w-full rounded-md border bg-white px-3 text-sm transition-colors outline-none focus:ring-2',
-            'border-neutral-300 focus:border-brand-500 focus:ring-brand-200',
-            error && 'border-red-500 focus:border-red-500 focus:ring-red-100',
-            disabled && 'bg-neutral-100 text-neutral-400',
+            'h-10 w-full rounded-md border bg-surface px-3 text-sm transition-colors outline-none focus:ring-2',
+            'border-border-strong focus:border-brand-500 focus:ring-brand-200',
+            error && 'border-red-500 dark:border-red-400 focus:border-red-500 focus:ring-red-100',
+            disabled && 'bg-surface-dim text-muted-foreground',
           ]
             .filter(Boolean)
             .join(' ')}
         />
         {searching && (
           <span className="absolute right-3 top-1/2 -translate-y-1/2">
-            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-neutral-300 border-t-brand-600" />
+            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-border-strong border-t-brand-600" />
           </span>
         )}
       </div>
 
       {open && results.length > 0 && (
-        <ul className="absolute top-full left-0 right-0 z-50 mt-1 max-h-56 overflow-auto rounded-[var(--radius-md)] border border-neutral-200 bg-white shadow-lg">
+        <ul className="absolute top-full left-0 right-0 z-50 mt-1 max-h-56 overflow-auto rounded-[var(--radius-md)] border border-border bg-surface shadow-lg dark:shadow-neutral-950/30">
           {results.map((r, i) => (
             <li key={`${String(r.lat)},${String(r.lon)}-${String(i)}`}>
               <button
@@ -160,9 +160,9 @@ export function LocationField({
                   handleSelect(r);
                 }}
               >
-                <span className="font-medium text-neutral-900">{r.name.toLowerCase()}</span>
+                <span className="font-medium text-foreground">{r.name.toLowerCase()}</span>
                 {r.subtitle && r.subtitle !== r.name ? (
-                  <span className="ml-1 text-neutral-500">{r.subtitle.toLowerCase()}</span>
+                  <span className="ml-1 text-muted">{r.subtitle.toLowerCase()}</span>
                 ) : null}
               </button>
             </li>
@@ -170,7 +170,7 @@ export function LocationField({
         </ul>
       )}
 
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-red-600 dark:text-red-400">{error}</p> : null}
     </div>
   );
 }

@@ -59,11 +59,11 @@ export function NotificationBell() {
         }}
         aria-label={count > 0 ? `notifications (${display} unread)` : 'notifications'}
         aria-expanded={open}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-700 hover:bg-neutral-100"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-surface-dim"
       >
         <BellIcon />
         {count > 0 ? (
-          <span className="absolute end-1 top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-medium text-white">
+          <span className="absolute end-1 top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 dark:bg-red-500 px-1 text-[10px] font-medium text-white">
             {display}
           </span>
         ) : null}
@@ -82,9 +82,9 @@ export function NotificationBell() {
           <div
             role="dialog"
             aria-label="notifications"
-            className="absolute end-0 top-10 z-20 w-80 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg"
+            className="absolute end-0 top-10 z-20 w-80 overflow-hidden rounded-lg border border-border bg-surface shadow-lg dark:shadow-neutral-950/30"
           >
-            <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2">
+            <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <span className="text-sm font-medium">notifications</span>
               {count > 0 ? (
                 <Button
@@ -100,7 +100,7 @@ export function NotificationBell() {
             </div>
             <div className="max-h-96 overflow-y-auto">
               {notificationsQuery.isPending ? (
-                <p className="p-4 text-sm text-neutral-500">loading…</p>
+                <p className="p-4 text-sm text-muted">loading…</p>
               ) : notificationsQuery.data && notificationsQuery.data.length > 0 ? (
                 <ul className="divide-y divide-neutral-100">
                   {notificationsQuery.data.map((n) => (
@@ -118,7 +118,7 @@ export function NotificationBell() {
                   ))}
                 </ul>
               ) : (
-                <p className="p-4 text-sm text-neutral-500">nothing new 🌿</p>
+                <p className="p-4 text-sm text-muted">nothing new 🌿</p>
               )}
             </div>
           </div>
@@ -149,16 +149,16 @@ function NotificationRow({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-start gap-2 px-3 py-2 text-start hover:bg-neutral-50',
-        !n.isRead && 'bg-blue-50',
+        'flex w-full items-start gap-2 px-3 py-2 text-start hover:bg-background',
+        !n.isRead && 'bg-blue-50 dark:bg-blue-950/30',
       )}
     >
       {!n.isRead ? (
-        <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600" />
+        <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600 dark:bg-blue-500" />
       ) : (
         <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0" />
       )}
-      <span className="text-sm text-neutral-800">{n.message}</span>
+      <span className="text-sm text-foreground">{n.message}</span>
     </button>
   );
 }

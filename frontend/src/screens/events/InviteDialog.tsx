@@ -46,7 +46,7 @@ export function InviteDialog({ event, open, onClose }: Props) {
         ]}
       />
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       ) : null}

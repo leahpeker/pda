@@ -149,7 +149,7 @@ function RadioGroup({
 }) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-neutral-800">{label}</legend>
+      <legend className="text-sm font-medium text-foreground">{label}</legend>
       {options.map((o) => (
         <label key={o} className="flex items-center gap-2 text-sm">
           <input
@@ -195,7 +195,7 @@ function CheckboxGroup({
   }
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-neutral-800">{label}</legend>
+      <legend className="text-sm font-medium text-foreground">{label}</legend>
       {options.map((o) => (
         <label key={o} className="flex items-center gap-2 text-sm">
           <input
@@ -235,7 +235,7 @@ function StarRating({
 }) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-neutral-800">{label}</legend>
+      <legend className="text-sm font-medium text-foreground">{label}</legend>
       <div role="radiogroup" aria-label={label} className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => {
           const filled = n <= value;
@@ -252,7 +252,7 @@ function StarRating({
               }}
               className={cn(
                 'text-2xl transition-colors disabled:cursor-not-allowed',
-                filled ? 'text-amber-500' : 'text-neutral-300',
+                filled ? 'text-amber-500' : 'text-neutral-300 dark:text-neutral-600',
               )}
             >
               ★
@@ -294,13 +294,13 @@ function DatetimePoll({
   }
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="text-sm font-medium text-neutral-800">{label}</legend>
+      <legend className="text-sm font-medium text-foreground">{label}</legend>
       {options.map((option) => {
         const current = value[option];
         return (
           <div
             key={option}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-2"
           >
             <span className="text-sm">{new Date(option).toLocaleString()}</span>
             <div className="flex gap-1" role="radiogroup">
@@ -317,8 +317,8 @@ function DatetimePoll({
                   className={cn(
                     'rounded-full px-3 py-1 text-xs transition-colors',
                     current === a
-                      ? 'bg-neutral-900 text-white'
-                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
+                      ? 'bg-accent text-accent-foreground'
+                      : 'bg-surface-dim text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700',
                   )}
                 >
                   {a}

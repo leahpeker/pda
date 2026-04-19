@@ -62,7 +62,7 @@ export default function LoginScreen() {
   if (step === 'pending') {
     return (
       <AuthLayout title="under review" subtitle="your join request is in the queue">
-        <p className="text-sm text-neutral-700">
+        <p className="text-sm text-neutral-700 dark:text-neutral-300">
           thanks for your patience — someone will reach out once your request has been reviewed.
         </p>
         <button
@@ -70,7 +70,7 @@ export default function LoginScreen() {
           onClick={() => {
             setStep('phone');
           }}
-          className="mt-4 text-sm text-neutral-900 underline"
+          className="mt-4 text-sm text-foreground underline"
         >
           back
         </button>
@@ -100,7 +100,7 @@ export default function LoginScreen() {
       {invited ? (
         <div
           role="status"
-          className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900"
+          className="mb-4 rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm text-emerald-900 dark:text-emerald-200"
         >
           you've been invited — sign in to get started.
         </div>
@@ -121,9 +121,9 @@ export default function LoginScreen() {
           {checking ? 'checking…' : 'continue'}
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-neutral-500">
+      <p className="mt-4 text-center text-sm text-muted">
         not a member yet?{' '}
-        <Link to="/join" className="text-neutral-900 underline">
+        <Link to="/join" className="text-foreground underline">
           request to join
         </Link>
       </p>
@@ -182,7 +182,7 @@ function PasswordStep({
       {invited ? (
         <div
           role="status"
-          className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900"
+          className="mb-4 rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm text-emerald-900 dark:text-emerald-200"
         >
           you've been invited — sign in to get started.
         </div>
@@ -201,13 +201,13 @@ function PasswordStep({
         <Button type="submit" fullWidth disabled={isSubmitting}>
           {isSubmitting ? 'signing in…' : 'sign in'}
         </Button>
-        <button type="button" onClick={onBack} className="text-sm text-neutral-500 underline">
+        <button type="button" onClick={onBack} className="text-sm text-muted underline">
           that's not me
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-neutral-500">
+      <p className="mt-4 text-center text-sm text-muted">
         not a member yet?{' '}
-        <Link to="/join" className="text-neutral-900 underline">
+        <Link to="/join" className="text-foreground underline">
           request to join
         </Link>
       </p>

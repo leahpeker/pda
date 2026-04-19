@@ -45,7 +45,7 @@ export function DayEventList({ date, events, onSelectEvent }: Props) {
 
   if (dayEvents.length === 0) {
     return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center text-neutral-500">
+      <div className="flex min-h-[40vh] flex-col items-center justify-center text-muted">
         <span aria-hidden="true" className="mb-3 text-4xl">
           🌿
         </span>

@@ -16,8 +16,8 @@ export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-50">
-      <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white">
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-surface">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
           <button
             type="button"

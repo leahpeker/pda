@@ -66,17 +66,17 @@ export default function AdminHubScreen() {
     <ContentContainer>
       <h1 className="mb-6 text-2xl font-medium tracking-tight">admin</h1>
       {visible.length === 0 ? (
-        <p className="text-sm text-neutral-500">nothing available to you yet</p>
+        <p className="text-sm text-muted">nothing available to you yet</p>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {visible.map((t) => (
             <li key={t.to}>
               <Link
                 to={t.to}
-                className="flex h-full flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-4 transition-colors hover:bg-neutral-50"
+                className="flex h-full flex-col gap-1 rounded-lg border border-border bg-surface p-4 transition-colors hover:bg-background"
               >
-                <span className="text-base font-medium text-neutral-900">{t.label}</span>
-                <span className="text-xs text-neutral-500">{t.description}</span>
+                <span className="text-base font-medium text-foreground">{t.label}</span>
+                <span className="text-xs text-muted">{t.description}</span>
               </Link>
             </li>
           ))}

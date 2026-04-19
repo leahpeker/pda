@@ -26,7 +26,7 @@ export default function HomeScreen() {
       />
 
       {!isAuthed && data.joinContentHtml ? (
-        <section className="mt-10 rounded-lg border border-neutral-200 bg-white p-6">
+        <section className="mt-10 rounded-lg border border-border bg-surface p-6">
           <EditableHtmlBlock
             canEdit={canEdit}
             contentHtml={data.joinContentHtml}
@@ -36,7 +36,7 @@ export default function HomeScreen() {
           />
           <Link
             to="/join"
-            className="mt-4 inline-flex h-10 items-center rounded-md bg-neutral-900 px-4 text-sm font-medium text-white hover:bg-neutral-800"
+            className="mt-4 inline-flex h-10 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent/80"
           >
             request to join
           </Link>
@@ -49,7 +49,7 @@ export default function HomeScreen() {
             href={data.donateUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-10 items-center rounded-md bg-neutral-900 px-4 text-sm font-medium text-white hover:bg-neutral-800"
+            className="inline-flex h-10 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent/80"
           >
             donate
           </a>

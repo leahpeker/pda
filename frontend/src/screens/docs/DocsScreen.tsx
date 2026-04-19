@@ -14,7 +14,7 @@ export default function DocsScreen() {
     return (
       <ContentContainer>
         <h1 className="mb-4 text-2xl font-medium tracking-tight">docs</h1>
-        <p className="text-sm text-neutral-500">nothing here yet 🌿</p>
+        <p className="text-sm text-muted">nothing here yet 🌿</p>
       </ContentContainer>
     );
   }
@@ -37,7 +37,7 @@ function FolderView({ folder, depth }: { folder: DocFolder; depth: number }) {
     <section>
       <Heading
         className={
-          depth === 0 ? 'text-lg font-medium' : 'mt-3 text-sm font-medium text-neutral-600'
+          depth === 0 ? 'text-lg font-medium' : 'mt-3 text-sm font-medium text-neutral-600 dark:text-neutral-400'
         }
       >
         {folder.name}
@@ -48,7 +48,7 @@ function FolderView({ folder, depth }: { folder: DocFolder; depth: number }) {
             <li key={d.id}>
               <Link
                 to={`/docs/${d.id}`}
-                className="block rounded px-2 py-1 text-sm text-neutral-800 hover:bg-neutral-100"
+                className="block rounded px-2 py-1 text-sm text-foreground hover:bg-surface-dim"
               >
                 {d.title}
               </Link>
@@ -57,7 +57,7 @@ function FolderView({ folder, depth }: { folder: DocFolder; depth: number }) {
         </ul>
       ) : null}
       {folder.children.length > 0 ? (
-        <div className="ms-3 mt-2 border-s border-neutral-200 ps-3">
+        <div className="ms-3 mt-2 border-s border-border ps-3">
           {folder.children.map((c) => (
             <FolderView key={c.id} folder={c} depth={depth + 1} />
           ))}
