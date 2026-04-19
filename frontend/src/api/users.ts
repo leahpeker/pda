@@ -1,11 +1,5 @@
-// Admin user management — list, create, edit. Mirrors backend/users/_management.py.
-//
-// Scope: admin CRUD over the full user set. For the lookup-for-autocomplete
-// flow (co-host picker, invites) see userSearch.ts.
-//
-// `roles` on Member is a read-only projection of the user's role memberships.
-// Role assignment happens via the separate PATCH /users/{id}/roles/ endpoint,
-// which isn't wired into this file yet — phase 4b covers the role editor.
+// Admin user management — list, create, edit, magic-link resend, role patch.
+// Mirrors backend/users/_management.py.
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
@@ -230,6 +224,46 @@ export function useArchiveUser() {
   return useMutation({
     mutationFn: async (userId: string): Promise<void> => {
       await apiClient.delete(`/api/auth/users/${userId}/`);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: USERS_KEY });
+    },
+  });
+}
+
+interface WireMagicLinkResult {
+  detail: string;
+  magic_link_token: string;
+}
+
+export interface MemberMagicLinkResult {
+  detail: string;
+  magicLinkToken: string;
+}
+
+export function useSendMemberMagicLink(userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<MemberMagicLinkResult> => {
+      const { data } = await apiClient.post<WireMagicLinkResult>(
+        `/api/auth/users/${userId}/magic-link/`,
+      );
+      return { detail: data.detail, magicLinkToken: data.magic_link_token };
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: USERS_KEY });
+    },
+  });
+}
+
+export function useUpdateMemberRoles(userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (roleIds: string[]): Promise<Member> => {
+      const { data } = await apiClient.patch<WireMember>(`/api/auth/users/${userId}/roles/`, {
+        role_ids: roleIds,
+      });
+      return fromWire(data);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: USERS_KEY });

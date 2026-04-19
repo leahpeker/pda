@@ -16,6 +16,8 @@ import {
   useUpdateUser,
   useBulkCreateUsers,
   useArchiveUser,
+  useSendMemberMagicLink,
+  useUpdateMemberRoles,
 } from './users';
 
 const mockedGet = vi.mocked(apiClient.get);
@@ -208,11 +210,6 @@ describe('useUpdateUser', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Intents in the Flutter doc that have no React counterpart. Kept as skipped
-// placeholders so reviewers can see the coverage gap explicitly.
-// ---------------------------------------------------------------------------
-
 describe('useBulkCreateUsers', () => {
   it('posts the phone list, maps results, and invalidates users query', async () => {
     mockedPost.mockResolvedValueOnce({
@@ -273,6 +270,45 @@ describe('useArchiveUser', () => {
     await result.current.mutateAsync('u-archive');
 
     expect(mockedDelete).toHaveBeenCalledWith('/api/auth/users/u-archive/');
+    await waitFor(() =>
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
+    );
+  });
+});
+
+describe('useSendMemberMagicLink', () => {
+  it('posts magic-link and maps token', async () => {
+    mockedPost.mockResolvedValueOnce({
+      data: { detail: 'Magic login link generated.', magic_link_token: 'tok-abc' },
+    });
+    const qc = makeQc();
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
+    const { result } = renderHook(() => useSendMemberMagicLink('u9'), { wrapper: makeWrapper(qc) });
+    const out = await result.current.mutateAsync();
+    expect(mockedPost).toHaveBeenCalledWith('/api/auth/users/u9/magic-link/');
+    expect(out.magicLinkToken).toBe('tok-abc');
+    await waitFor(() =>
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
+    );
+  });
+});
+
+describe('useUpdateMemberRoles', () => {
+  it('patches role_ids and maps member', async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        id: 'u9',
+        display_name: 'Ada',
+        phone_number: '+1',
+        roles: [{ id: 'r2', name: 'vet', is_default: false, permissions: ['approve_join_requests'] }],
+      },
+    });
+    const qc = makeQc();
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
+    const { result } = renderHook(() => useUpdateMemberRoles('u9'), { wrapper: makeWrapper(qc) });
+    const member = await result.current.mutateAsync(['r2']);
+    expect(mockedPatch).toHaveBeenCalledWith('/api/auth/users/u9/roles/', { role_ids: ['r2'] });
+    expect(member.roles[0]?.name).toBe('vet');
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
     );

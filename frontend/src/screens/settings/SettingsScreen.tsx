@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { SegmentedControl as SharedSegmentedControl } from '@/components/ui/SegmentedControl';
 import { TextField } from '@/components/ui/TextField';
 import { useAuthStore } from '@/auth/store';
 import { useAccessibilityStore, type ThemeMode, type TextScale } from '@/accessibility/store';
+import { useCalendarToken, useRegenerateCalendarToken } from '@/api/calendar';
 import { ContentContainer } from '@/screens/public/ContentContainer';
 import { AvatarUpload } from './AvatarUpload';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
@@ -69,6 +71,7 @@ export default function SettingsScreen() {
 
       <Section label="calendar">
         <WeekStartToggle value={user.weekStart} onChange={(v) => updateProfile({ weekStart: v })} />
+        <CalendarFeedSubscription />
       </Section>
 
       <Section label="accessibility">
@@ -84,6 +87,93 @@ export default function SettingsScreen() {
         }}
       />
     </ContentContainer>
+  );
+}
+
+function CalendarFeedSubscription() {
+  const tokenQ = useCalendarToken();
+  const regenerate = useRegenerateCalendarToken();
+
+  async function copyFeedUrl() {
+    const url = tokenQ.data?.feedUrl;
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('feed link copied 🌱');
+    } catch {
+      toast.error("couldn't copy — try selecting the text");
+    }
+  }
+
+  if (tokenQ.isPending) {
+    return <p className="text-sm text-muted">loading feed link…</p>;
+  }
+  if (tokenQ.isError) {
+    return <p className="text-sm text-muted">couldn't load calendar feed — try again later</p>;
+  }
+
+  const hasUrl = Boolean(tokenQ.data?.feedUrl);
+
+  return (
+    <div className="flex flex-col gap-2 border-t border-border pt-4">
+      <p className="text-xs text-muted">
+        subscribe to the community calendar in apple calendar, google calendar, etc. paste the
+        private url once; it stays the same until you regenerate.
+      </p>
+      {hasUrl ? (
+        <>
+          <label className="text-xs text-muted" htmlFor="cal-feed-url">
+            feed url
+          </label>
+          <input
+            id="cal-feed-url"
+            readOnly
+            className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground"
+            value={tokenQ.data!.feedUrl}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={() => void copyFeedUrl()}>
+              copy link
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={regenerate.isPending}
+              onClick={() => {
+                void regenerate
+                  .mutateAsync()
+                  .then(() => {
+                    toast.success('new feed link generated 🌱');
+                  })
+                  .catch(() => {
+                    toast.error("couldn't regenerate feed link");
+                  });
+              }}
+            >
+              {regenerate.isPending ? 'generating…' : 'regenerate link'}
+            </Button>
+          </div>
+        </>
+      ) : (
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={regenerate.isPending}
+          onClick={() => {
+            void regenerate
+              .mutateAsync()
+              .then(() => {
+                toast.success('feed link ready — copy it below 🌱');
+              })
+              .catch(() => {
+                toast.error("couldn't create feed link");
+              });
+          }}
+        >
+          {regenerate.isPending ? 'generating…' : 'create subscription link'}
+        </Button>
+      )}
+    </div>
   );
 }
 

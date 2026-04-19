@@ -2,14 +2,22 @@
 // list (no dedicated detail endpoint exists on the backend) and lets admins
 // edit display name / email / phone + pause/unpause the account.
 
-import { useState, type SyntheticEvent } from 'react';
+import { useEffect, useState, type SyntheticEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { Toggle } from '@/components/ui/Toggle';
-import { useArchiveUser, useUpdateUser, useUsers, type Member } from '@/api/users';
+import {
+  useArchiveUser,
+  useSendMemberMagicLink,
+  useUpdateMemberRoles,
+  useUpdateUser,
+  useUsers,
+  type Member,
+} from '@/api/users';
+import { useRoles } from '@/api/roles';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
 
 export default function MemberDetailScreen() {
@@ -66,23 +74,9 @@ function MemberDetailView({ member }: { member: Member }) {
         </div>
       </header>
 
-      {member.roles.length > 0 ? (
-        <section className="mb-4">
-          <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">
-            roles
-          </h2>
-          <div className="flex flex-wrap gap-1">
-            {member.roles.map((r) => (
-              <span
-                key={r.id}
-                className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700"
-              >
-                {r.name}
-              </span>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <MemberRolesSection member={member} />
+
+      <MemberMagicLinkSection memberId={member.id} />
 
       {member.bio ? (
         <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-4">
@@ -122,6 +116,98 @@ function MemberDetailView({ member }: { member: Member }) {
         </div>
       )}
     </ContentContainer>
+  );
+}
+
+function MemberRolesSection({ member }: { member: Member }) {
+  const { data: allRoles = [], isPending, isError } = useRoles();
+  const updateRoles = useUpdateMemberRoles(member.id);
+  const [selected, setSelected] = useState(() => new Set(member.roles.map((r) => r.id)));
+
+  useEffect(() => {
+    setSelected(new Set(member.roles.map((r) => r.id)));
+  }, [member.id, member.roles]);
+
+  const unchanged =
+    selected.size === member.roles.length &&
+    member.roles.every((r) => selected.has(r.id));
+
+  async function onSaveRoles() {
+    try {
+      await updateRoles.mutateAsync([...selected]);
+      toast.success('roles updated ✓');
+    } catch (e) {
+      toast.error(extractError(e));
+    }
+  }
+
+  if (isPending) {
+    return <p className="mb-4 text-sm text-neutral-500">loading roles…</p>;
+  }
+  if (isError) return null;
+
+  return (
+    <section className="mb-4">
+      <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">roles</h2>
+      <div className="flex flex-col gap-2">
+        {allRoles.map((r) => (
+          <label key={r.id} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={selected.has(r.id)}
+              onChange={(e) => {
+                setSelected((prev) => {
+                  const next = new Set(prev);
+                  if (e.target.checked) next.add(r.id);
+                  else next.delete(r.id);
+                  return next;
+                });
+              }}
+            />
+            <span>{r.name}</span>
+          </label>
+        ))}
+      </div>
+      <Button
+        type="button"
+        className="mt-2"
+        variant="secondary"
+        disabled={unchanged || updateRoles.isPending}
+        onClick={() => void onSaveRoles()}
+      >
+        {updateRoles.isPending ? 'saving…' : 'save roles'}
+      </Button>
+    </section>
+  );
+}
+
+function MemberMagicLinkSection({ memberId }: { memberId: string }) {
+  const magic = useSendMemberMagicLink(memberId);
+  async function onSend() {
+    try {
+      const { magicLinkToken } = await magic.mutateAsync();
+      const url = `${window.location.origin}/magic-login/${magicLinkToken}`;
+      await navigator.clipboard.writeText(url);
+      toast.success('magic login link copied ✓');
+    } catch (e) {
+      toast.error(extractError(e));
+    }
+  }
+  return (
+    <section className="mb-6">
+      <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">access</h2>
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={magic.isPending}
+        onClick={() => void onSend()}
+      >
+        {magic.isPending ? 'working…' : 'copy magic login link'}
+      </Button>
+      <p className="mt-1 text-xs text-neutral-500">
+        resets password flow for this member and copies a one-time login url for you to send them.
+      </p>
+    </section>
   );
 }
 

@@ -309,6 +309,84 @@ export function useSurveyResponses(surveyId: string | undefined) {
   });
 }
 
+// --- survey-level datetime poll (tallies + finalize) -----------------------
+
+export interface SurveyPollVoter {
+  userId: string;
+  name: string;
+  photoUrl: string;
+}
+
+export interface SurveyPollTallyRow {
+  questionId: string;
+  tallies: Record<string, Record<string, number>>;
+  voters: Record<string, SurveyPollVoter[]>;
+  totalResponses: number;
+}
+
+interface WireVoter {
+  user_id: string;
+  name: string;
+  photo_url: string;
+}
+
+interface WireTallyRow {
+  question_id: string;
+  tallies: Record<string, Record<string, number>>;
+  voters?: Record<string, WireVoter[]>;
+  total_responses: number;
+}
+
+function mapVoter(v: WireVoter): SurveyPollVoter {
+  return { userId: v.user_id, name: v.name, photoUrl: v.photo_url };
+}
+
+function mapTallyRow(w: WireTallyRow): SurveyPollTallyRow {
+  const rawVoters = w.voters ?? {};
+  const voters: Record<string, SurveyPollVoter[]> = {};
+  for (const [opt, list] of Object.entries(rawVoters)) {
+    voters[opt] = list.map(mapVoter);
+  }
+  return {
+    questionId: w.question_id,
+    tallies: w.tallies,
+    voters,
+    totalResponses: w.total_responses,
+  };
+}
+
+export function useSurveyPollTallies(surveyId: string | undefined) {
+  return useQuery({
+    queryKey: ['surveys', 'admin', surveyId ?? '', 'tallies'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<WireTallyRow[]>(
+        `/api/community/surveys/${surveyId ?? ''}/tallies/`,
+      );
+      return data.map(mapTallyRow);
+    },
+    enabled: Boolean(surveyId),
+  });
+}
+
+export function useFinalizeSurveyPoll(surveyId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (winningDatetime: Date) => {
+      const { data } = await apiClient.post<WireSurveyFull>(
+        `/api/community/surveys/${surveyId}/finalize/`,
+        { winning_datetime: winningDatetime.toISOString() },
+      );
+      return mapSurveyFull(data);
+    },
+    onSuccess: (survey) => {
+      qc.setQueryData(['surveys', 'admin', surveyId], survey);
+      void qc.invalidateQueries({ queryKey: ['surveys', 'admin'] });
+      void qc.invalidateQueries({ queryKey: ['surveys', 'admin', surveyId, 'responses'] });
+      void qc.invalidateQueries({ queryKey: ['surveys', 'admin', surveyId, 'tallies'] });
+    },
+  });
+}
+
 // Re-export survey types for convenience so admin screens don't need to
 // import from two places.
 export type { Survey, SurveyQuestion, SurveyQuestionType } from './surveys';

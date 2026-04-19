@@ -49,6 +49,7 @@ describe('useJoinRequests', () => {
           submitted_at: '2024-04-01T09:00:00Z',
           status: 'pending',
           user_id: null,
+          previously_archived: false,
         },
       ],
     });
@@ -66,6 +67,7 @@ describe('useJoinRequests', () => {
         submittedAt: '2024-04-01T09:00:00Z',
         status: 'pending',
         userId: null,
+        previouslyArchived: false,
       },
     ]);
 

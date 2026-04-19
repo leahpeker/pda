@@ -11,6 +11,7 @@ import { AuthBoot, OnboardingGate, RequireAuth, RequirePermission } from '@/auth
 import { AppShell } from '@/layout/AppShell';
 import { Permission } from '@/models/permissions';
 import { lazyEl as el } from './lazyRoute';
+import { RootRouteError } from './RootRouteError';
 
 const Login = lazy(() => import('@/screens/auth/LoginScreen'));
 const Onboarding = lazy(() => import('@/screens/auth/OnboardingScreen'));
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
         <OnboardingGate />
       </AuthBoot>
     ),
+    errorElement: <RootRouteError />,
     children: [
       // Auth screens render edge-to-edge (no AppShell).
       { path: '/login', element: el(<Login />) },
