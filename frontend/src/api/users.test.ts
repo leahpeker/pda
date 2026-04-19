@@ -10,11 +10,18 @@ vi.mock('@/api/client', () => ({
 }));
 
 import { apiClient } from '@/api/client';
-import { useUsers, useCreateUser, useUpdateUser } from './users';
+import {
+  useUsers,
+  useCreateUser,
+  useUpdateUser,
+  useBulkCreateUsers,
+  useArchiveUser,
+} from './users';
 
 const mockedGet = vi.mocked(apiClient.get);
 const mockedPost = vi.mocked(apiClient.post);
 const mockedPatch = vi.mocked(apiClient.patch);
+const mockedDelete = vi.mocked(apiClient.delete);
 
 function makeQc() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -206,16 +213,68 @@ describe('useUpdateUser', () => {
 // placeholders so reviewers can see the coverage gap explicitly.
 // ---------------------------------------------------------------------------
 
-// TODO(tier3-mismatch): Flutter had a separate `useBulkCreateUsers` that
-// returned a result map and invalidated the users query. React only exposes
-// the single-user `useCreateUser`; there's no bulk mutation in `api/users.ts`.
-it.skip('useBulkCreateUsers returns result map and invalidates users query', () => {
-  // No React equivalent.
+describe('useBulkCreateUsers', () => {
+  it('posts the phone list, maps results, and invalidates users query', async () => {
+    mockedPost.mockResolvedValueOnce({
+      data: {
+        results: [
+          {
+            row: 1,
+            phone_number: '+15551230001',
+            success: true,
+            magic_link_token: 'magic-1',
+          },
+          {
+            row: 2,
+            phone_number: 'garbage',
+            success: false,
+            error: 'Invalid phone number',
+          },
+        ],
+        created: 1,
+        failed: 1,
+      },
+    });
+
+    const qc = makeQc();
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
+    const { result } = renderHook(() => useBulkCreateUsers(), { wrapper: makeWrapper(qc) });
+
+    const response = await result.current.mutateAsync(['+15551230001', 'garbage']);
+
+    expect(mockedPost).toHaveBeenCalledWith('/api/auth/bulk-create-users/', {
+      phone_numbers: ['+15551230001', 'garbage'],
+    });
+    expect(response.created).toBe(1);
+    expect(response.failed).toBe(1);
+    expect(response.results[0]).toEqual({
+      row: 1,
+      phoneNumber: '+15551230001',
+      success: true,
+      error: undefined,
+      magicLinkToken: 'magic-1',
+    });
+    expect(response.results[1]?.success).toBe(false);
+    expect(response.results[1]?.error).toBe('Invalid phone number');
+    await waitFor(() =>
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
+    );
+  });
 });
 
-// TODO(tier3-mismatch): Flutter had `useDeleteUser`. React's `api/users.ts`
-// exposes create + update (pause via `isPaused`) but no delete mutation. The
-// `apiClient.delete` export in the mock is unused here.
-it.skip('useDeleteUser calls delete endpoint and invalidates users query', () => {
-  // No React equivalent.
+describe('useArchiveUser', () => {
+  it('calls delete endpoint and invalidates users query', async () => {
+    mockedDelete.mockResolvedValueOnce({ data: undefined });
+
+    const qc = makeQc();
+    const invalidateSpy = vi.spyOn(qc, 'invalidateQueries');
+    const { result } = renderHook(() => useArchiveUser(), { wrapper: makeWrapper(qc) });
+
+    await result.current.mutateAsync('u-archive');
+
+    expect(mockedDelete).toHaveBeenCalledWith('/api/auth/users/u-archive/');
+    await waitFor(() =>
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
+    );
+  });
 });

@@ -168,3 +168,68 @@ export function useUpdateUser(userId: string) {
     },
   });
 }
+
+export interface BulkCreateResult {
+  row: number;
+  phoneNumber: string;
+  success: boolean;
+  error?: string;
+  magicLinkToken?: string;
+}
+
+export interface BulkCreateResponse {
+  results: BulkCreateResult[];
+  created: number;
+  failed: number;
+}
+
+interface WireBulkResult {
+  row: number;
+  phone_number: string;
+  success: boolean;
+  error?: string;
+  magic_link_token?: string;
+}
+
+interface WireBulkResponse {
+  results: WireBulkResult[];
+  created: number;
+  failed: number;
+}
+
+export function useBulkCreateUsers() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (phoneNumbers: string[]): Promise<BulkCreateResponse> => {
+      const { data } = await apiClient.post<WireBulkResponse>('/api/auth/bulk-create-users/', {
+        phone_numbers: phoneNumbers,
+      });
+      return {
+        created: data.created,
+        failed: data.failed,
+        results: data.results.map((r) => ({
+          row: r.row,
+          phoneNumber: r.phone_number,
+          success: r.success,
+          error: r.error,
+          magicLinkToken: r.magic_link_token,
+        })),
+      };
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: USERS_KEY });
+    },
+  });
+}
+
+export function useArchiveUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string): Promise<void> => {
+      await apiClient.delete(`/api/auth/users/${userId}/`);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: USERS_KEY });
+    },
+  });
+}

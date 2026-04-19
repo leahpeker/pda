@@ -89,9 +89,7 @@ def _join_request_out(jr: JoinRequest) -> JoinRequestOut:
     ]
     user = User.objects.filter(phone_number=jr.phone_number).first()
     previously_archived = bool(
-        User.objects.filter(
-            phone_number=jr.phone_number, archived_at__isnull=False
-        ).exists()
+        User.objects.filter(phone_number=jr.phone_number, archived_at__isnull=False).exists()
     )
     return JoinRequestOut(
         id=str(jr.id),
