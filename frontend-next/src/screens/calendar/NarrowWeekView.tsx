@@ -24,7 +24,7 @@ export function NarrowWeekView({ date, weekStartsOn, events, onSelectEvent }: Pr
   return (
     <ul
       aria-label="week"
-      className="overflow-hidden rounded-md border border-neutral-200/80 bg-white"
+      className="flex h-full flex-col overflow-hidden rounded-md border border-neutral-200/80 bg-white"
     >
       {days.map((day, idx) => (
         <DayRow
@@ -69,7 +69,7 @@ function DayRow({ day, isLast, isToday, events, onSelectEvent }: DayRowProps) {
     <li
       aria-label={`${weekdayLabel} ${dayNumber}`}
       className={cn(
-        'flex h-20 items-stretch',
+        'flex min-h-0 flex-1 items-stretch',
         !isLast && 'border-b border-neutral-200/60',
       )}
     >
@@ -92,7 +92,13 @@ function DayRow({ day, isLast, isToday, events, onSelectEvent }: DayRowProps) {
           <EventChip key={event.id} event={event} onSelect={onSelectEvent} />
         ))}
         {overflowCount > 0 ? (
-          <span className="text-brand-700 text-[11px] font-medium">
+          <span
+            className="text-brand-700 text-[11px] font-medium"
+            style={{
+              borderInlineStart: '3px solid transparent',
+              paddingInlineStart: '6px',
+            }}
+          >
             {String(overflowCount)} more
           </span>
         ) : null}

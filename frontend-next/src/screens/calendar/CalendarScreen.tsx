@@ -112,7 +112,7 @@ export default function CalendarScreen() {
         {useNarrowWeek ? (
           <>
             <NarrowWeekToolbar date={date} weekStartsOn={weekStartsOn} onNavigate={setDate} />
-            <div className="flex-1 overflow-y-auto">
+            <div className="min-h-0 flex-1">
               <NarrowWeekView
                 date={date}
                 weekStartsOn={weekStartsOn}

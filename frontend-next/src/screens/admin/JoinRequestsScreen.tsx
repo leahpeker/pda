@@ -61,31 +61,37 @@ export default function JoinRequestsScreen() {
     <ContentContainer>
       <h1 className="mb-6 text-2xl font-medium tracking-tight">join requests</h1>
 
-      <div role="tablist" aria-label="filter" className="mb-4 flex flex-wrap gap-1">
-        {FILTERS.map((f) => {
-          const active = filter === f.value;
-          const count =
-            f.value === 'all' ? data.length : data.filter((r) => r.status === f.value).length;
-          return (
-            <button
-              key={f.value}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => {
-                setFilter(f.value);
-              }}
-              className={cn(
-                'rounded-full px-3 py-1 text-xs transition-colors',
-                active
-                  ? 'bg-neutral-900 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
-              )}
-            >
-              {f.label} ({String(count)})
-            </button>
-          );
-        })}
+      <div className="mb-4 flex justify-center">
+        <div
+          role="radiogroup"
+          aria-label="filter"
+          className="inline-flex rounded-md border border-neutral-300 bg-white p-0.5"
+        >
+          {FILTERS.map((f) => {
+            const active = filter === f.value;
+            return (
+              <label
+                key={f.value}
+                className={cn(
+                  'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
+                  active ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="join-filter"
+                  value={f.value}
+                  checked={active}
+                  onChange={() => {
+                    setFilter(f.value);
+                  }}
+                  className="sr-only"
+                />
+                {f.label}
+              </label>
+            );
+          })}
+        </div>
       </div>
 
       {error ? (

@@ -226,127 +226,17 @@ function WeekStartToggle({
   value: 'sunday' | 'monday';
   onChange: (v: 'sunday' | 'monday') => Promise<void>;
 }) {
+  const options: { value: 'sunday' | 'monday'; label: string }[] = [
+    { value: 'sunday', label: 'sunday' },
+    { value: 'monday', label: 'monday' },
+  ];
   return (
     <SegmentedControl
       label="week starts on"
-      ariaLabel="week start"
-      name="week-start"
       value={value}
-      options={[
-        { value: 'sunday', label: 'sunday' },
-        { value: 'monday', label: 'monday' },
-      ]}
+      options={options}
       onChange={(v) => void onChange(v)}
     />
-  );
-}
-
-function AccessibilityControls() {
-  const dyslexiaFriendly = useAccessibilityStore((s) => s.dyslexiaFriendlyFont);
-  const setDyslexiaFriendly = useAccessibilityStore((s) => s.setDyslexiaFriendlyFont);
-  const textSize = useAccessibilityStore((s) => s.textSize);
-  const setTextSize = useAccessibilityStore((s) => s.setTextSize);
-
-  return (
-    <>
-      <label className="flex items-center justify-between gap-3">
-        <span className="text-sm text-neutral-800">dyslexia-friendly font</span>
-        <span
-          className={cn(
-            'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors',
-            dyslexiaFriendly ? 'bg-brand-600' : 'bg-neutral-300',
-          )}
-        >
-          <input
-            type="checkbox"
-            checked={dyslexiaFriendly}
-            onChange={(e) => {
-              setDyslexiaFriendly(e.target.checked);
-            }}
-            className="sr-only"
-          />
-          <span
-            aria-hidden="true"
-            className={cn(
-              'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
-              dyslexiaFriendly ? 'translate-x-5' : 'translate-x-0.5',
-            )}
-          />
-        </span>
-      </label>
-      <SegmentedControl
-        label="text size"
-        ariaLabel="text size"
-        name="text-size"
-        value={textSize}
-        options={[
-          { value: 'small', label: 'small' },
-          { value: 'normal', label: 'normal' },
-          { value: 'large', label: 'large' },
-          { value: 'xlarge', label: 'x-large' },
-        ]}
-        onChange={(v: TextSize) => {
-          setTextSize(v);
-        }}
-      />
-    </>
-  );
-}
-
-interface SegmentedOption<T extends string> {
-  value: T;
-  label: string;
-}
-
-function SegmentedControl<T extends string>({
-  label,
-  ariaLabel,
-  name,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  ariaLabel: string;
-  name: string;
-  value: T;
-  options: SegmentedOption<T>[];
-  onChange: (v: T) => void;
-}) {
-  return (
-    <div>
-      <div className="mb-2 text-sm text-neutral-800">{label}</div>
-      <div
-        role="radiogroup"
-        aria-label={ariaLabel}
-        className="inline-flex rounded-md border border-neutral-300 bg-white p-0.5"
-      >
-        {options.map((opt) => {
-          const active = opt.value === value;
-          return (
-            <label
-              key={opt.value}
-              className={cn(
-                'inline-flex h-8 cursor-pointer items-center rounded px-3 text-sm transition-colors',
-                active ? 'bg-neutral-900 text-white' : 'text-neutral-700 hover:bg-neutral-100',
-              )}
-            >
-              <input
-                type="radio"
-                name={name}
-                value={opt.value}
-                checked={active}
-                onChange={() => {
-                  onChange(opt.value);
-                }}
-                className="sr-only"
-              />
-              {opt.label}
-            </label>
-          );
-        })}
-</div>
-    </div>
   );
 }
 
