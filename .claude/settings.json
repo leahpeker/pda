@@ -34,15 +34,6 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '\"\\(.tool_input.command) - \\(.tool_input.description // \"No description\")\"' >> ~/.claude/bash-command-log.txt"
-          }
-        ]
-      },
-      {
         "matcher": "Write",
         "hooks": [
           {
@@ -90,17 +81,6 @@
             "type": "command",
             "command": "FILE=$(echo $STDIN_JSON | jq -r '.tool_input.file_path // \"\"'); if [[ \"$FILE\" =~ \\.py$ && \"$FILE\" != *\"test_\"* && \"$FILE\" != *\"_test.py\" && \"$FILE\" != *\"/tests/\"* ]]; then BASENAME=$(basename \"$FILE\" .py); for TEST_DIR in backend/tests backend/listings/tests backend/users/tests; do TEST_FILE=\"$TEST_DIR/test_$BASENAME.py\"; if [ -f \"$TEST_FILE\" ]; then echo \"Running $TEST_FILE...\"; cd backend && uv run python -m pytest \"../$TEST_FILE\" -v; cd -; break; fi; done; fi",
             "timeout": 60
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"Claude Code notification: $(date)\" >> ~/.claude/notifications.log"
           }
         ]
       }
