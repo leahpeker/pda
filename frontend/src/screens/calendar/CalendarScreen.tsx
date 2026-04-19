@@ -182,13 +182,15 @@ interface DayToolbarProps {
 function DayToolbar({ date, onNavigate }: DayToolbarProps) {
   const label = lower(date, 'EEEE, MMM d');
   return (
-    <div className="mb-2 flex items-center justify-between gap-2 px-1">
-      <TodayIconButton
-        onClick={() => {
-          onNavigate(new Date());
-        }}
-      />
-      <div className="flex items-center gap-1">
+    <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
+      <div className="justify-self-start">
+        <TodayIconButton
+          onClick={() => {
+            onNavigate(new Date());
+          }}
+        />
+      </div>
+      <div className="flex items-center gap-1 justify-self-center">
         <button
           type="button"
           aria-label="previous day"
@@ -213,7 +215,7 @@ function DayToolbar({ date, onNavigate }: DayToolbarProps) {
           ›
         </button>
       </div>
-      <span className="w-14" aria-hidden="true" />
+      <span aria-hidden="true" />
     </div>
   );
 }
@@ -222,13 +224,15 @@ function NarrowWeekToolbar({ date, weekStartsOn, onNavigate }: NarrowWeekToolbar
   const weekStart = startOfWeek(date, { weekStartsOn });
   const label = `week of ${lower(weekStart, 'MMM d')}`;
   return (
-    <div className="mb-2 flex items-center justify-between gap-2 px-1">
-      <TodayIconButton
-        onClick={() => {
-          onNavigate(new Date());
-        }}
-      />
-      <div className="flex items-center gap-1">
+    <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
+      <div className="justify-self-start">
+        <TodayIconButton
+          onClick={() => {
+            onNavigate(new Date());
+          }}
+        />
+      </div>
+      <div className="flex items-center gap-1 justify-self-center">
         <button
           type="button"
           aria-label="previous week"
@@ -253,7 +257,7 @@ function NarrowWeekToolbar({ date, weekStartsOn, onNavigate }: NarrowWeekToolbar
           ›
         </button>
       </div>
-      <span className="w-14" aria-hidden="true" />
+      <span aria-hidden="true" />
     </div>
   );
 }
