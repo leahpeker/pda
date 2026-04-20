@@ -123,7 +123,7 @@ function GuestChip({ guest }: { guest: EventGuest }) {
   );
 }
 
-function InvitedList({ event }: { event: Event }) {
+export function InvitedList({ event }: { event: Event }) {
   if (event.invitedUserIds.length === 0) {
     return <p className="text-xs text-muted">no one invited yet</p>;
   }

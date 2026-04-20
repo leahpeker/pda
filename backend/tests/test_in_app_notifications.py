@@ -296,7 +296,7 @@ class TestEventInviteIntegration:
 
 @pytest.mark.django_db
 class TestCanSeeInvited:
-    def test_invited_user_can_see_invited_list_on_invite_only_event(
+    def test_invited_user_cannot_see_invited_list_on_invite_only_event(
         self, api_client, inviter, invitee
     ):
         event = Event.objects.create(
@@ -314,8 +314,25 @@ class TestCanSeeInvited:
             **_auth_headers(invitee),
         )
         assert response.status_code == 200
-        data = response.json()
-        assert str(invitee.pk) in data["invited_user_ids"]
+        assert response.json()["invited_user_ids"] == []
+
+    def test_host_can_see_invited_list_when_rsvp_disabled(self, api_client, inviter, invitee):
+        event = Event.objects.create(
+            title="No-rsvp party",
+            start_datetime="2026-06-01T18:00:00Z",
+            end_datetime="2026-06-01T20:00:00Z",
+            created_by=inviter,
+            rsvp_enabled=False,
+        )
+        event.invited_users.set([invitee])
+
+        response = api_client.get(
+            f"/api/community/events/{event.id}/",
+            content_type="application/json",
+            **_auth_headers(inviter),
+        )
+        assert response.status_code == 200
+        assert str(invitee.pk) in response.json()["invited_user_ids"]
 
     def test_invited_user_cannot_see_invited_list_on_public_event(
         self, api_client, inviter, invitee

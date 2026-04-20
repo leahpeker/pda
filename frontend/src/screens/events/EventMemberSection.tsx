@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RsvpSection } from './RsvpSection';
+import { InvitedList } from './RsvpGuestList';
 import { EventAdminActions } from './EventAdminActions';
 import { EventFlagDialog } from './EventFlagDialog';
 import { InviteDialog } from './InviteDialog';
@@ -25,11 +26,12 @@ export function EventMemberSection({ event }: Props) {
 
   const isCoHost = user.id === event.createdById || event.coHostIds.includes(user.id);
   const canManageEvents = hasPermission(user, Permission.ManageEvents);
-  const canSeeInvited = isCoHost || canManageEvents || event.invitedUserIds.includes(user.id);
+  const canSeeInvited = isCoHost || canManageEvents;
   const isCancelled = event.status === EventStatus.Cancelled;
   const canInvite =
     !isCancelled && (isCoHost || event.invitePermission === InvitePermission.AllMembers);
   const showRsvp = !event.isPast && event.rsvpEnabled && event.status !== EventStatus.Cancelled;
+  const showStandaloneInvited = !showRsvp && canSeeInvited && event.invitedCount > 0;
 
   return (
     <div className="mt-8 flex flex-col gap-6">
@@ -40,6 +42,11 @@ export function EventMemberSection({ event }: Props) {
       {showRsvp ? (
         <Card label="rsvp">
           <RsvpSection event={event} canSeeInvited={canSeeInvited} />
+        </Card>
+      ) : null}
+      {showStandaloneInvited ? (
+        <Card label="invited">
+          <InvitedList event={event} />
         </Card>
       ) : null}
       {canInvite ? <InviteSection event={event} /> : null}

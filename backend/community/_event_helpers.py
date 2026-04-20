@@ -10,7 +10,7 @@ from users.permissions import PermissionKey
 
 from community._event_schemas import EventOut, RSVPGuestOut
 from community._shared import _authenticated_user, _members_only
-from community.models import Event, EventRSVP, PageVisibility, RSVPStatus, SurveyQuestionType
+from community.models import Event, EventRSVP, RSVPStatus, SurveyQuestionType
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -122,22 +122,19 @@ def _can_see_invited(
     requesting_user,
     creator,
     co_host_ids: set[str],
-    visibility: str = "",
-    invited_user_ids: set[str] | None = None,
 ) -> bool:
-    """Check if requesting user can see invited users list."""
+    """Check if requesting user can see invited users list.
+
+    Hosts/co-hosts/admins only. Regular members — even when they're themselves
+    invited — cannot see the list.
+    """
     if requesting_user is None:
         return False
     if creator is not None and requesting_user.pk == creator.pk:
         return True
     if str(requesting_user.pk) in co_host_ids:
         return True
-    if requesting_user.has_permission(PermissionKey.MANAGE_EVENTS):
-        return True
-    # Invited users can see the list for invite-only events
-    if visibility == PageVisibility.INVITE_ONLY and invited_user_ids is not None:
-        return str(requesting_user.pk) in invited_user_ids
-    return False
+    return requesting_user.has_permission(PermissionKey.MANAGE_EVENTS)
 
 
 def _can_see_invite_only(
@@ -182,12 +179,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
     phones_visible = _can_see_phones(auth_user, creator, co_host_ids)
     rsvps = list(event.rsvps.all()) if (event.rsvp_enabled and is_authed) else []
     all_invited = list(event.invited_users.all())
-    invited_user_ids = {str(u.id) for u in all_invited}
-    invited = (
-        all_invited
-        if _can_see_invited(auth_user, creator, co_host_ids, event.visibility, invited_user_ids)
-        else []
-    )
+    invited = all_invited if _can_see_invited(auth_user, creator, co_host_ids) else []
     return EventOut(
         id=str(event.id),
         title=event.title,
