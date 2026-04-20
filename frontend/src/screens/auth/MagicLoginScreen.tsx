@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store';
@@ -15,9 +15,15 @@ export default function MagicLoginScreen() {
   const [params] = useSearchParams();
   const [state, setState] = useState<State>('pending');
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  // Magic-login tokens are single-use. Guard against StrictMode double-fire
+  // and any re-mount from upstream (e.g. AuthBoot) so we only spend the
+  // token once per component lifetime.
+  const firedFor = useRef<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
+    if (firedFor.current === token) return;
+    firedFor.current = token;
     void magicLogin(token)
       .then(() => {
         // Route based on the fresh user in the store. Doing this here (instead

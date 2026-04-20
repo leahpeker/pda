@@ -9,18 +9,24 @@
 // The onboarding gate wraps the WHOLE app so it applies on every navigation,
 // matching the Flutter behavior.
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from './store';
 import { hasPermission, type PermissionKey } from '@/models/permissions';
 
 // ----------------------------------------------------------------------------
 // AuthBoot — kick off session restore exactly once on mount.
+// Only gates children during the initial boot (idle → first transition).
+// After boot, a 'loading' status from a subsequent login/magic-login/etc.
+// must NOT unmount the tree — screens like MagicLoginScreen own their own
+// loading UX and re-mounting them mid-request would re-fire their effects
+// and burn single-use tokens.
 // ----------------------------------------------------------------------------
 
 export function AuthBoot({ children }: { children: ReactNode }) {
   const status = useAuthStore((s) => s.status);
   const restore = useAuthStore((s) => s.restoreSession);
+  const booted = useRef(false);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -28,8 +34,11 @@ export function AuthBoot({ children }: { children: ReactNode }) {
     }
   }, [status, restore]);
 
-  if (status === 'idle' || status === 'loading') {
-    return <BootSpinner />;
+  if (!booted.current) {
+    if (status === 'idle' || status === 'loading') {
+      return <BootSpinner />;
+    }
+    booted.current = true;
   }
   return <>{children}</>;
 }
