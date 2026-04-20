@@ -187,7 +187,7 @@ function MemberRow({ member }: { member: Member }) {
   const primaryRole = member.roles[0]?.name;
   return (
     <Link
-      to={`/members/${member.id}`}
+      to={`/admin/members/${member.id}`}
       className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 transition-colors hover:bg-neutral-50"
     >
       {member.profilePhotoUrl ? (

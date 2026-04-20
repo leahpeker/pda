@@ -270,3 +270,52 @@ export function useUpdateMemberRoles(userId: string) {
     },
   });
 }
+
+// --- Public member profile (any authed user) --------------------------------
+// Backend nulls phone_number/email if the target user has hidden them, so
+// we just check truthiness in the UI.
+
+export interface MemberProfile {
+  id: string;
+  displayName: string;
+  phoneNumber: string;
+  email: string;
+  bio: string;
+  profilePhotoUrl: string;
+  loginLinkRequested: boolean;
+}
+
+interface WireMemberProfile {
+  id: string;
+  display_name: string;
+  phone_number: string;
+  email: string;
+  bio: string;
+  profile_photo_url: string;
+  login_link_requested: boolean;
+}
+
+function fromWireProfile(w: WireMemberProfile): MemberProfile {
+  return {
+    id: w.id,
+    displayName: w.display_name,
+    phoneNumber: w.phone_number,
+    email: w.email,
+    bio: w.bio,
+    profilePhotoUrl: w.profile_photo_url,
+    loginLinkRequested: w.login_link_requested,
+  };
+}
+
+export function useMemberProfile(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['member-profile', userId] as const,
+    queryFn: async () => {
+      const { data } = await apiClient.get<WireMemberProfile>(
+        `/api/auth/users/${userId ?? ''}/profile/`,
+      );
+      return fromWireProfile(data);
+    },
+    enabled: Boolean(userId),
+  });
+}

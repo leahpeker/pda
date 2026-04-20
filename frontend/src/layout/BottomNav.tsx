@@ -6,12 +6,19 @@
 // survives the color-blind-friendly rule (not color-only).
 
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/auth/store';
 import { cn } from '@/utils/cn';
 
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const onEventsAdd = location.pathname === '/events/add';
+  const user = useAuthStore((s) => s.user);
+  const photoUrl = user?.profilePhotoUrl
+    ? user.photoUpdatedAt
+      ? `${user.profilePhotoUrl}?v=${encodeURIComponent(user.photoUpdatedAt)}`
+      : user.profilePhotoUrl
+    : '';
 
   return (
     <nav
@@ -40,7 +47,9 @@ export function BottomNav() {
         </div>
 
         <NavItem to="/profile" label="profile">
-          {({ active }) => <ProfileIcon filled={active} />}
+          {({ active }) =>
+            photoUrl ? <ProfilePhoto src={photoUrl} active={active} /> : <ProfileIcon filled={active} />
+          }
         </NavItem>
       </div>
     </nav>
@@ -99,6 +108,20 @@ function CalendarIcon({ filled }: { filled: boolean }) {
       <rect x="3" y="5" width="18" height="16" rx="2" fill={filled ? 'currentColor' : 'none'} />
       <path d="M8 3v4M16 3v4M3 10h18" stroke={filled ? 'white' : 'currentColor'} />
     </svg>
+  );
+}
+
+function ProfilePhoto({ src, active }: { src: string; active: boolean }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      className={cn(
+        'h-6 w-6 rounded-full object-cover ring-1 ring-border',
+        active && 'ring-2 ring-brand-700',
+      )}
+    />
   );
 }
 

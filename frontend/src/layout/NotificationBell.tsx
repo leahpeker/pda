@@ -174,7 +174,7 @@ function notificationTarget(n: AppNotification): string | null {
     case NotificationType.JoinRequest:
       return '/join-requests';
     case NotificationType.MagicLinkRequest:
-      return n.relatedUserId ? `/members/${n.relatedUserId}` : '/members';
+      return n.relatedUserId ? `/admin/members/${n.relatedUserId}` : '/members';
     default:
       return null;
   }

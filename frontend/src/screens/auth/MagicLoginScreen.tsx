@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store';
 import { AuthLayout } from './AuthLayout';
+import { Button } from '@/components/ui/Button';
+import { RequestLoginLinkDialog } from './RequestLoginLinkDialog';
 
 type State = 'pending' | 'error';
 
@@ -11,6 +13,7 @@ export default function MagicLoginScreen() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [state, setState] = useState<State>('pending');
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -39,12 +42,26 @@ export default function MagicLoginScreen() {
     return (
       <AuthLayout title="link expired" subtitle="this login link didn't work">
         <p className="text-sm text-foreground-tertiary">
-          ask an organizer to send a new one, or{' '}
+          grab a fresh one below, or{' '}
           <a href="/login" className="text-brand-700 hover:text-brand-900">
             sign in with your password
           </a>
-          .
         </p>
+        <Button
+          fullWidth
+          className="mt-4"
+          onClick={() => {
+            setLinkDialogOpen(true);
+          }}
+        >
+          send me a new link
+        </Button>
+        <RequestLoginLinkDialog
+          open={linkDialogOpen}
+          onClose={() => {
+            setLinkDialogOpen(false);
+          }}
+        />
       </AuthLayout>
     );
   }

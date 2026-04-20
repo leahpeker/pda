@@ -1,14 +1,11 @@
-// Admin actions for events: edit, duplicate, cancel, delete. Visible only
+// Admin actions for events: edit, duplicate, cancel, archive. Visible only
 // to the creator, a co-host, or a user with manage_events. Matches
 // EventAdminActions from the flutter app.
 
-import { isAxiosError, type AxiosError } from 'axios';
+import { isAxiosError } from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/api/client';
-import { eventKeys } from '@/api/events';
-import { useUpdateEvent } from '@/api/eventWrites';
+import { useArchiveEvent, useUpdateEvent } from '@/api/eventWrites';
 import { useAuthStore } from '@/auth/store';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
@@ -50,17 +47,17 @@ function AdminActionRow({
   const navigate = useNavigate();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
 
   const update = useUpdateEvent(event.id);
-  const del = useDeleteEvent(event.id);
+  const archive = useArchiveEvent(event.id);
   const [publishError, setPublishError] = useState<string | null>(null);
 
   const isCancelled = event.status === EventStatus.Cancelled;
   const isDraft = event.status === EventStatus.Draft;
   const hasNoAttendees = event.attendingCount === 0;
-  const canDelete =
+  const canArchive =
     (isCreator || canManage) && (isDraft || isCancelled || hasNoAttendees);
   const showCancel = !isCancelled && !isDraft && !hasNoAttendees;
   const canEditEvent = !event.isPast;
@@ -68,7 +65,7 @@ function AdminActionRow({
   async function onCancel() {
     setCancelError(null);
     try {
-      await update.mutateAsync({ status: 'cancelled' });
+      await archive.mutateAsync();
       setCancelOpen(false);
     } catch (err) {
       setCancelError(extractMutationError(err));
@@ -84,13 +81,13 @@ function AdminActionRow({
     }
   }
 
-  async function onDelete() {
-    setDeleteError(null);
+  async function onArchive() {
+    setArchiveError(null);
     try {
-      await del.mutateAsync();
+      await archive.mutateAsync();
       void navigate('/calendar', { replace: true });
     } catch (err) {
-      setDeleteError(extractMutationError(err));
+      setArchiveError(extractMutationError(err));
     }
   }
 
@@ -122,15 +119,15 @@ function AdminActionRow({
             cancel event
           </Button>
         ) : null}
-        {canDelete ? (
+        {canArchive ? (
           <Button
             variant="secondary"
             onClick={() => {
-              setDeleteOpen(true);
+              setArchiveOpen(true);
             }}
             className="border-red-300 text-red-700 hover:bg-red-50"
           >
-            delete
+            archive
           </Button>
         ) : null}
       </div>
@@ -149,8 +146,8 @@ function AdminActionRow({
         title="cancel event"
       >
         <p className="text-sm text-foreground-secondary">
-          mark this event as cancelled? attendees will see a cancelled badge — you can't un-cancel
-          from the React app yet.
+          mark this event as cancelled? attendees will get a notification and see a cancelled badge
+          — you can't un-cancel from the React app yet.
         </p>
         {cancelError ? (
           <p role="alert" className="mt-3 text-sm text-red-600">
@@ -171,47 +168,48 @@ function AdminActionRow({
             onClick={() => {
               void onCancel();
             }}
-            disabled={update.isPending}
+            disabled={archive.isPending}
           >
-            {update.isPending ? 'cancelling…' : 'cancel event'}
+            {archive.isPending ? 'cancelling…' : 'cancel event'}
           </Button>
         </div>
       </Dialog>
 
       <Dialog
-        open={deleteOpen}
+        open={archiveOpen}
         onClose={() => {
-          setDeleteOpen(false);
-          setDeleteError(null);
+          setArchiveOpen(false);
+          setArchiveError(null);
         }}
-        title="delete event"
+        title="archive event"
       >
         <p className="text-sm text-foreground-secondary">
-          this permanently deletes the event and all rsvps. This cannot be undone.
+          archive this event? it will be marked cancelled and hidden from the active calendar. This
+          cannot be undone from the React app yet.
         </p>
-        {deleteError ? (
+        {archiveError ? (
           <p role="alert" className="mt-3 text-sm text-red-600">
-            {deleteError}
+            {archiveError}
           </p>
         ) : null}
         <div className="mt-4 flex justify-end gap-2">
           <Button
             variant="ghost"
             onClick={() => {
-              setDeleteOpen(false);
-              setDeleteError(null);
+              setArchiveOpen(false);
+              setArchiveError(null);
             }}
-            disabled={del.isPending}
+            disabled={archive.isPending}
           >
             back
           </Button>
           <Button
             onClick={() => {
-              void onDelete();
+              void onArchive();
             }}
-            disabled={del.isPending}
+            disabled={archive.isPending}
           >
-            {del.isPending ? 'deleting…' : 'delete'}
+            {archive.isPending ? 'archiving…' : 'archive'}
           </Button>
         </div>
       </Dialog>
@@ -226,27 +224,4 @@ function extractMutationError(err: unknown): string {
   }
   if (err instanceof Error && err.message) return err.message.toLowerCase();
   return "couldn't update the event — try again";
-}
-
-function useDeleteEvent(eventId: string) {
-  const qc = useQueryClient();
-  const isAuthed = useAuthStore((s) => s.status === 'authed');
-  return useMutation({
-    mutationFn: async () => {
-      try {
-        await apiClient.delete(`/api/community/events/${eventId}/`);
-      } catch (err) {
-        if (isAxiosError(err)) throw new Error(extractDetail(err) ?? 'delete failed');
-        throw err;
-      }
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: eventKeys.list(isAuthed) });
-    },
-  });
-}
-
-function extractDetail(err: AxiosError): string | null {
-  const d = (err.response?.data as { detail?: string } | undefined)?.detail;
-  return d ?? null;
 }

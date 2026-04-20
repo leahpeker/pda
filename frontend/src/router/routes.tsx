@@ -47,6 +47,7 @@ const SurveyBuilder = lazyWithRetry(() => import('@/screens/admin/SurveyBuilderS
 const SurveyResponses = lazyWithRetry(() => import('@/screens/admin/SurveyResponsesScreen'));
 const Members = lazyWithRetry(() => import('@/screens/admin/MembersScreen'));
 const MemberDetail = lazyWithRetry(() => import('@/screens/admin/MemberDetailScreen'));
+const MemberProfile = lazyWithRetry(() => import('@/screens/members/MemberProfileScreen'));
 
 const Stub = lazyWithRetry(() => import('@/screens/NotImplemented'));
 
@@ -75,11 +76,6 @@ export const router = createBrowserRouter([
           { path: '/join/success', element: el(<JoinSuccess />) },
           { path: '/calendar', element: el(<Calendar />) },
           { path: '/events/:id', element: el(<EventDetail />) },
-          // Authed-only write paths, placed here (outside RequireAuth) because
-          // the form itself renders regardless of auth status — we let the
-          // backend 401 return bubble up to the error UI.
-          { path: '/events/:id/edit', element: el(<EventEdit />) },
-          { path: '/events/add', element: el(<EventCreate />) },
           { path: '/surveys/:slug', element: el(<Survey />) },
           { path: '/donate', element: el(<Donate />) },
           { path: '/install', element: el(<Install />) },
@@ -96,6 +92,9 @@ export const router = createBrowserRouter([
               { path: '/docs', element: el(<Docs />) },
               { path: '/docs/:id', element: el(<DocDetail />) },
               { path: '/events/mine', element: el(<MyEvents />) },
+              { path: '/events/add', element: el(<EventCreate />) },
+              { path: '/events/:id/edit', element: el(<EventEdit />) },
+              { path: '/members/:userId', element: el(<MemberProfile />) },
             ],
           },
 
@@ -111,7 +110,7 @@ export const router = createBrowserRouter([
             element: <RequirePermission perm={Permission.ManageUsers} />,
             children: [
               { path: '/members', element: el(<Members />) },
-              { path: '/members/:id', element: el(<MemberDetail />) },
+              { path: '/admin/members/:id', element: el(<MemberDetail />) },
             ],
           },
           {

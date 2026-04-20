@@ -22,7 +22,7 @@ export interface SubmitFeedbackPayload {
   };
 }
 
-interface FeedbackOut {
+export interface FeedbackOut {
   html_url: string;
 }
 

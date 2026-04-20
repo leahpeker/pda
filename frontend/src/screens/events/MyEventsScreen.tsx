@@ -1,8 +1,8 @@
 // Member-facing "my events" list — events the current user created or
-// co-hosts. Backed by the same flat `useEvents()` feed as the calendar; the
-// filter is client-side (matches the Flutter behavior where
-// event_management_screen.dart had a `myEventsOnly` toggle that filtered on
-// createdById == user.id || coHostIds.contains(user.id)).
+// co-hosts. Active events come from the same flat `useEvents()` feed as the
+// calendar (client-split by start time into upcoming/past). Drafts and
+// cancelled events come from dedicated `?status=` queries; backend already
+// scopes those to events the user created or co-hosts.
 
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
@@ -14,48 +14,76 @@ import { EventStatus, EventType } from '@/models/event';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
 
-type Filter = 'upcoming' | 'past' | 'cancelled';
+type Filter = 'upcoming' | 'past' | 'drafts' | 'cancelled';
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: 'upcoming', label: 'upcoming' },
   { value: 'past', label: 'past' },
+  { value: 'drafts', label: 'drafts' },
   { value: 'cancelled', label: 'cancelled' },
 ];
 
+const EMPTY_COPY: Record<Filter, string> = {
+  upcoming: 'nothing coming up 🌿 — events you create or co-host will show up here',
+  past: 'no past events yet 🌿',
+  drafts: 'no drafts saved 🌿 — start one and we\u2019ll keep it here until you publish',
+  cancelled: 'no cancelled events 🌿',
+};
+
+type EventsQuery = ReturnType<typeof useEvents>;
+
+function pickSourceQuery(
+  filter: Filter,
+  sources: { active: EventsQuery; drafts: EventsQuery; cancelled: EventsQuery },
+): EventsQuery {
+  if (filter === 'drafts') return sources.drafts;
+  if (filter === 'cancelled') return sources.cancelled;
+  return sources.active;
+}
+
 export default function MyEventsScreen() {
-  const { data = [], isPending, isError } = useEvents();
   const userId = useAuthStore((s) => s.user?.id ?? null);
   const [filter, setFilter] = useState<Filter>('upcoming');
 
+  const activeQuery = useEvents();
+  const draftsQuery = useEvents(EventStatus.Draft);
+  const cancelledQuery = useEvents(EventStatus.Cancelled);
+
+  const isHostOnlyTab = filter === 'drafts' || filter === 'cancelled';
+  const sourceQuery = pickSourceQuery(filter, {
+    active: activeQuery,
+    drafts: draftsQuery,
+    cancelled: cancelledQuery,
+  });
   const mine = useMemo(() => {
+    const sourceData = sourceQuery.data ?? [];
     if (!userId) return [];
-    const filtered = data.filter(
+    // Drafts/cancelled tabs: backend already scopes to host/co-host. No
+    // additional filtering needed.
+    if (isHostOnlyTab) {
+      return [...sourceData].sort(
+        (a, b) => (b.startDatetime?.getTime() ?? 0) - (a.startDatetime?.getTime() ?? 0),
+      );
+    }
+    const mineActive = sourceData.filter(
       (e) => e.createdById === userId || e.coHostIds.includes(userId),
     );
-    if (filter === 'cancelled') {
-      return filtered
-        .filter((e) => e.status === EventStatus.Cancelled)
-        .sort(
-          (a, b) => (b.startDatetime?.getTime() ?? 0) - (a.startDatetime?.getTime() ?? 0),
-        );
-    }
-    const nonCancelled = filtered.filter((e) => e.status !== EventStatus.Cancelled);
     if (filter === 'upcoming') {
-      return nonCancelled
+      return mineActive
         .filter((e) => !e.isPast)
         .sort(
           (a, b) => (a.startDatetime?.getTime() ?? 0) - (b.startDatetime?.getTime() ?? 0),
         );
     }
-    return nonCancelled
+    return mineActive
       .filter((e) => e.isPast)
       .sort(
         (a, b) => (b.startDatetime?.getTime() ?? 0) - (a.startDatetime?.getTime() ?? 0),
       );
-  }, [data, userId, filter]);
+  }, [sourceQuery.data, userId, filter, isHostOnlyTab]);
 
-  if (isPending) return <ContentLoading />;
-  if (isError) return <ContentError message="couldn't load events — try refreshing" />;
+  if (sourceQuery.isPending) return <ContentLoading />;
+  if (sourceQuery.isError) return <ContentError message="couldn't load events — try refreshing" />;
 
   return (
     <ContentContainer>
@@ -80,9 +108,7 @@ export default function MyEventsScreen() {
       </div>
 
       {mine.length === 0 ? (
-        <p className="text-sm text-neutral-500">
-          nothing here 🌿 — events you create or co-host will show up here
-        </p>
+        <p className="text-sm text-neutral-500">{EMPTY_COPY[filter]}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {mine.map((e) => (
@@ -116,6 +142,9 @@ function EventRow({ event }: { event: Event }) {
           <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-neutral-700">
             cancelled
           </span>
+        ) : null}
+        {event.status === EventStatus.Draft ? (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">draft</span>
         ) : null}
         {event.eventType === EventType.Official ? (
           <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-900">official</span>

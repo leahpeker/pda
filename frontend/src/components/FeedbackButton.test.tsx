@@ -15,8 +15,8 @@ const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
-    success: (msg: string) => {
-      toastSuccessMock(msg);
+    success: (msg: string, opts?: unknown) => {
+      toastSuccessMock(msg, opts);
     },
     error: (msg: string) => {
       toastErrorMock(msg);
@@ -165,6 +165,28 @@ describe('FeedbackButton', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: /send feedback/i })).not.toBeInTheDocument();
     });
+  });
+
+  it('exposes the github issue url in the success toast action', async () => {
+    submitFeedbackMock.mockResolvedValueOnce({
+      html_url: 'https://github.com/owner/repo/issues/123',
+    });
+    const user = userEvent.setup();
+    renderButton();
+    await user.click(screen.getByRole('button', { name: /send feedback/i }));
+
+    await user.type(screen.getByRole('textbox', { name: /^title$/i }), 't');
+    await user.type(screen.getByRole('textbox', { name: /^description$/i }), 'd');
+    await user.click(screen.getByRole('button', { name: /^submit$/i }));
+
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalled();
+    });
+    const opts = toastSuccessMock.mock.calls[0]?.[1] as
+      | { action?: { label?: string; onClick?: () => void } }
+      | undefined;
+    expect(opts?.action?.label).toBe('view your issue');
+    expect(typeof opts?.action?.onClick).toBe('function');
   });
 
   it('shows an error toast and keeps the dialog open when submission fails', async () => {

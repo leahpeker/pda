@@ -144,6 +144,32 @@ function kebabToCamel(s: string): string {
   return s.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
+// Archive (a.k.a. cancel) an event. The backend has no DELETE route for
+// events — the only destructive path is PATCH status=cancelled. We always
+// send notify_attendees=true so RSVPs get pinged; the backend no-ops the
+// notification on draft→cancelled transitions.
+export function useArchiveEvent(eventId: string) {
+  const qc = useQueryClient();
+  const isAuthed = useAuthStore((s) => s.status === 'authed');
+  return useMutation({
+    mutationFn: async () => {
+      const body: WireBody = {
+        status: 'cancelled' satisfies EventStatus,
+        notify_attendees: true,
+      };
+      const { data } = await apiClient.patch<WireEvent>(
+        `/api/community/events/${eventId}/`,
+        body,
+      );
+      return mapEvent(data);
+    },
+    onSuccess: (event) => {
+      qc.setQueryData(eventKeys.detail(event.id, isAuthed), event);
+      void qc.invalidateQueries({ queryKey: eventKeys.list(isAuthed) });
+    },
+  });
+}
+
 export function useUploadEventPhoto(eventId: string) {
   const qc = useQueryClient();
   const isAuthed = useAuthStore((s) => s.status === 'authed');

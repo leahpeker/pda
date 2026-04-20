@@ -79,7 +79,7 @@ export function FeedbackButton() {
     if (isFeature) feedbackTypes.push('feature request');
 
     try {
-      await mutateAsync({
+      const result = await mutateAsync({
         title: trimmedTitle,
         description: trimmedDescription,
         feedbackTypes,
@@ -91,7 +91,19 @@ export function FeedbackButton() {
           appVersion: '',
         },
       });
-      toast.success('feedback submitted — thanks! 🌱');
+      const issueUrl = result.html_url;
+      if (issueUrl) {
+        toast.success('feedback submitted — thanks! 🌱', {
+          action: {
+            label: 'view your issue',
+            onClick: () => {
+              window.open(issueUrl, '_blank', 'noopener,noreferrer');
+            },
+          },
+        });
+      } else {
+        toast.success('feedback submitted — thanks! 🌱');
+      }
       close();
     } catch {
       toast.error("couldn't submit feedback — try again");

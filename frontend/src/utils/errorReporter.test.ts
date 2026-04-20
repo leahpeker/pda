@@ -58,6 +58,42 @@ describe('reportError', () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
+  it('always includes navigator.userAgent in the payload', async () => {
+    useAuthStore.setState(AUTHED_STATE);
+    Object.defineProperty(window.navigator, 'userAgent', {
+      value: 'jsdom-error-reporter',
+      configurable: true,
+    });
+    mockedPost.mockResolvedValueOnce({ data: { detail: 'ok' } });
+
+    await reportError(new Error('boom'), '/calendar');
+
+    const [, body] = mockedPost.mock.calls[0] ?? [];
+    expect((body as { user_agent: string }).user_agent).toBe('jsdom-error-reporter');
+  });
+
+  it('serializes optional caller context as a JSON string', async () => {
+    useAuthStore.setState(AUTHED_STATE);
+    mockedPost.mockResolvedValueOnce({ data: { detail: 'ok' } });
+
+    await reportError(new Error('boom'), '/calendar', { boundary: 'Root', extra: 1 });
+
+    const [, body] = mockedPost.mock.calls[0] ?? [];
+    expect((body as { context: string }).context).toBe(
+      JSON.stringify({ boundary: 'Root', extra: 1 }),
+    );
+  });
+
+  it('omits context when no caller context is supplied', async () => {
+    useAuthStore.setState(AUTHED_STATE);
+    mockedPost.mockResolvedValueOnce({ data: { detail: 'ok' } });
+
+    await reportError(new Error('boom'), '/calendar');
+
+    const [, body] = mockedPost.mock.calls[0] ?? [];
+    expect((body as { context: string }).context).toBe('');
+  });
+
   it('includes the current route in the payload', async () => {
     useAuthStore.setState(AUTHED_STATE);
     mockedPost.mockResolvedValueOnce({ data: { detail: 'ok' } });

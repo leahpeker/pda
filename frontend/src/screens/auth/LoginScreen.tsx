@@ -12,6 +12,7 @@ import { PhoneField } from '@/components/ui/PhoneField';
 import { useAuthStore } from '@/auth/store';
 import { checkPhone } from '@/api/join';
 import { extractApiError } from '@/utils/errors';
+import { RequestLoginLinkDialog } from './RequestLoginLinkDialog';
 
 type Step = 'phone' | 'password' | 'pending';
 
@@ -145,6 +146,7 @@ function PasswordStep({
   loginFn: (phone: string, password: string) => Promise<void>;
 }) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const passwordRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -201,6 +203,15 @@ function PasswordStep({
         <Button type="submit" fullWidth disabled={isSubmitting}>
           {isSubmitting ? 'signing in…' : 'sign in'}
         </Button>
+        <button
+          type="button"
+          onClick={() => {
+            setLinkDialogOpen(true);
+          }}
+          className="text-sm text-brand-700 hover:text-brand-900"
+        >
+          send me a login link instead
+        </button>
         <button type="button" onClick={onBack} className="text-sm text-brand-700 hover:text-brand-900">
           that's not me
         </button>
@@ -211,6 +222,13 @@ function PasswordStep({
           request to join
         </Link>
       </p>
+      <RequestLoginLinkDialog
+        open={linkDialogOpen}
+        initialPhone={phone}
+        onClose={() => {
+          setLinkDialogOpen(false);
+        }}
+      />
     </AuthLayout>
   );
 }

@@ -78,6 +78,14 @@ interface WireSurvey {
   } | null;
 }
 
+interface WireSurveyResponse {
+  id: string;
+  user_id: string | null;
+  user_name: string | null;
+  answers: Record<string, string | Record<string, string>>;
+  submitted_at: string;
+}
+
 function mapSurvey(w: WireSurvey): Survey {
   return {
     id: w.id,
@@ -129,14 +137,14 @@ export function useSubmitSurvey(slug: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (answers: Record<string, AnswerValue>) => {
-      const { data } = await apiClient.post<WireSurvey>(
+      const { data } = await apiClient.post<WireSurveyResponse>(
         `/api/community/surveys/view/${slug}/respond/`,
         { answers },
       );
-      return mapSurvey(data);
+      return data;
     },
-    onSuccess: (survey) => {
-      qc.setQueryData(['survey', slug], survey);
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['survey', slug] });
     },
   });
 }

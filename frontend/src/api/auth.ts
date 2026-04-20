@@ -1,6 +1,7 @@
 // Auth endpoint callers. Returns are shaped for the auth store, not raw axios
 // responses — centralizes the mapping from backend snake_case to frontend camelCase.
 
+import { useMutation } from '@tanstack/react-query';
 import { apiClient, authClient } from './client';
 import type { User, Role } from '@/models/user';
 
@@ -176,4 +177,24 @@ export async function uploadProfilePhoto(file: File): Promise<User> {
 export async function deleteProfilePhoto(): Promise<User> {
   const { data } = await apiClient.delete<WireUser>('/api/auth/me/photo/');
   return mapUser(data);
+}
+
+// --- request login link -----------------------------------------------------
+
+interface RequestLoginLinkOut {
+  detail: string;
+}
+
+export function useRequestLoginLink() {
+  // Endpoint always returns 200 (anti-enumeration) — we surface a generic
+  // success regardless of whether the phone matches a real account.
+  return useMutation({
+    mutationFn: async (phoneNumber: string) => {
+      const { data } = await authClient.post<RequestLoginLinkOut>(
+        '/api/community/request-login-link/',
+        { phone_number: phoneNumber },
+      );
+      return data;
+    },
+  });
 }

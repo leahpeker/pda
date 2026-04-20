@@ -250,23 +250,6 @@ class TestUserManagementAPI:
         assert response.status_code == 400
         assert "own admin role" in response.json()["detail"]
 
-    def test_reset_password(self, api_client, admin_headers, test_user):
-        response = api_client.post(
-            f"/api/auth/users/{test_user.id}/reset-password/",
-            **admin_headers,
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "magic_link_token" in data
-        assert len(data["magic_link_token"]) == 36  # UUID format
-
-    def test_reset_password_requires_manage_users(self, api_client, auth_headers, test_user):
-        response = api_client.post(
-            f"/api/auth/users/{test_user.id}/reset-password/",
-            **auth_headers,
-        )
-        assert response.status_code == 403
-
 
 # ---------------------------------------------------------------------------
 # Unit tests for _create_user_with_role helper

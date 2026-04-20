@@ -2,6 +2,7 @@
 // waitlist / invited) and renders GuestChip pills.
 
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 import type { Event, EventGuest } from '@/models/event';
 import { RsvpServerStatus } from '@/models/event';
@@ -96,8 +97,9 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
 
 function GuestChip({ guest }: { guest: EventGuest }) {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full bg-surface-dim px-2 py-1 text-xs"
+    <Link
+      to={`/members/${guest.userId}`}
+      className="inline-flex items-center gap-1.5 rounded-full bg-surface-dim px-2 py-1 text-xs hover:bg-surface-dim/70"
       title={guest.name}
     >
       {guest.photoUrl ? (
@@ -117,7 +119,7 @@ function GuestChip({ guest }: { guest: EventGuest }) {
       )}
       {guest.name}
       {guest.hasPlusOne ? <span className="text-muted">+1</span> : null}
-    </span>
+    </Link>
   );
 }
 

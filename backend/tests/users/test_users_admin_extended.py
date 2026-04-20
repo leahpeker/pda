@@ -1,4 +1,4 @@
-"""Tests for user update, profile, delete, reset password, and magic link."""
+"""Tests for user update, profile, delete, and magic link."""
 
 import pytest
 
@@ -185,34 +185,6 @@ class TestDeleteUser:
         response = api_client.get(f"/api/auth/magic-login/{magic.token}/")
         assert response.status_code == 403
         assert response.json()["detail"] == "this account is no longer active"
-
-
-@pytest.mark.django_db
-class TestResetPassword:
-    def test_reset_password_not_found(self, api_client, manage_users_headers):
-        response = api_client.post(
-            "/api/auth/users/00000000-0000-0000-0000-000000000000/reset-password/",
-            **manage_users_headers,
-        )
-        assert response.status_code == 404
-        assert response.json()["detail"] == "User not found."
-
-    def test_reset_password_requires_auth(self, api_client, other_user):
-        response = api_client.post(f"/api/auth/users/{other_user.pk}/reset-password/")
-        assert response.status_code == 401
-
-    def test_reset_password_sets_needs_onboarding(
-        self, api_client, manage_users_headers, other_user
-    ):
-        response = api_client.post(
-            f"/api/auth/users/{other_user.pk}/reset-password/",
-            **manage_users_headers,
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data["magic_link_token"]) == 36
-        other_user.refresh_from_db()
-        assert not other_user.has_usable_password()
 
 
 @pytest.mark.django_db

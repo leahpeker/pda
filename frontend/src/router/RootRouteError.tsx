@@ -30,7 +30,12 @@ export function RootRouteError() {
               ? `${String(error.status)} ${error.statusText}`
               : String(error),
           );
-    void reportError(err, location.pathname);
+    const context: Record<string, unknown> = { boundary: 'RootRouteError' };
+    if (isRouteErrorResponse(error)) {
+      context.routeErrorStatus = error.status;
+      context.routeErrorStatusText = error.statusText;
+    }
+    void reportError(err, location.pathname, context);
   }, [error, location.pathname]);
 
   const message = isRouteErrorResponse(error)
