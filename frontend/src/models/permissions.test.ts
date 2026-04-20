@@ -3,7 +3,6 @@ import { Permission, hasPermission, hasAnyAdminPermission, type UserLike } from 
 
 function user(opts: Partial<UserLike> = {}): UserLike {
   return {
-    isSuperuser: false,
     roles: [],
     ...opts,
   };
@@ -12,10 +11,6 @@ function user(opts: Partial<UserLike> = {}): UserLike {
 describe('hasPermission', () => {
   it('returns false for null user', () => {
     expect(hasPermission(null, Permission.ManageUsers)).toBe(false);
-  });
-
-  it('superusers bypass role checks', () => {
-    expect(hasPermission(user({ isSuperuser: true }), Permission.ManageUsers)).toBe(true);
   });
 
   it('default-admin role grants everything', () => {

@@ -34,7 +34,6 @@ const ADMIN_PERMISSIONS: readonly PermissionKey[] = [
 ];
 
 export interface UserLike {
-  isSuperuser: boolean;
   roles: readonly {
     name: string;
     isDefault: boolean;
@@ -44,7 +43,6 @@ export interface UserLike {
 
 export function hasPermission(user: UserLike | null, key: PermissionKey): boolean {
   if (!user) return false;
-  if (user.isSuperuser) return true;
   return user.roles.some(
     (r) => (r.name === ADMIN_ROLE_NAME && r.isDefault) || r.permissions.includes(key),
   );
@@ -52,6 +50,5 @@ export function hasPermission(user: UserLike | null, key: PermissionKey): boolea
 
 export function hasAnyAdminPermission(user: UserLike | null): boolean {
   if (!user) return false;
-  if (user.isSuperuser) return true;
   return ADMIN_PERMISSIONS.some((p) => hasPermission(user, p));
 }
