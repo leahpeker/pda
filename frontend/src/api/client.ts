@@ -72,6 +72,20 @@ async function doRefresh(): Promise<string | null> {
   }
 }
 
+// Shared entry point for non-axios callers (e.g. the SSE hook, which can't
+// go through the response interceptor). Uses the same in-flight lock so
+// concurrent callers don't each kick off a refresh. On failure, flips the
+// store to 'unauthed' so downstream effects (e.g. SSE hooks) tear down on
+// the next render.
+export async function refreshAccessToken(): Promise<string | null> {
+  refreshPromise ??= doRefresh().finally(() => {
+    refreshPromise = null;
+  });
+  const token = await refreshPromise;
+  if (!token) bridge?.onSessionExpired();
+  return token;
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -81,15 +95,8 @@ apiClient.interceptors.response.use(
     }
     config._retried = true;
 
-    refreshPromise ??= doRefresh().finally(() => {
-      refreshPromise = null;
-    });
-
-    const token = await refreshPromise;
-    if (!token) {
-      bridge?.onSessionExpired();
-      throw error;
-    }
+    const token = await refreshAccessToken();
+    if (!token) throw error; // refreshAccessToken already flipped to unauthed
     config.headers.Authorization = `Bearer ${token}`;
     const retried = await apiClient.request(config);
     return retried;
