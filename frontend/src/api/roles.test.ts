@@ -39,8 +39,8 @@ describe('useRoles', () => {
   it('returns a mapped list of roles on success', async () => {
     mockedGet.mockResolvedValueOnce({
       data: [
-        { id: 'r1', name: 'member', is_default: true, permissions: [] },
-        { id: 'r2', name: 'admin', is_default: true, permissions: ['manage_users'] },
+        { id: 'r1', name: 'member', is_default: true, permissions: [], user_count: 3 },
+        { id: 'r2', name: 'admin', is_default: true, permissions: ['manage_users'], user_count: 1 },
       ],
     });
 
@@ -51,8 +51,8 @@ describe('useRoles', () => {
 
     expect(mockedGet).toHaveBeenCalledWith('/api/auth/roles/');
     expect(result.current.data).toEqual([
-      { id: 'r1', name: 'member', isDefault: true, permissions: [] },
-      { id: 'r2', name: 'admin', isDefault: true, permissions: ['manage_users'] },
+      { id: 'r1', name: 'member', isDefault: true, permissions: [], userCount: 3 },
+      { id: 'r2', name: 'admin', isDefault: true, permissions: ['manage_users'], userCount: 1 },
     ]);
   });
 });
@@ -81,6 +81,7 @@ describe('useCreateRole', () => {
       name: 'greeter',
       isDefault: false,
       permissions: ['manage_events'],
+      userCount: 0,
     });
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['roles'] }),

@@ -4,11 +4,11 @@
 // are checked.
 
 import { useState, type SyntheticEvent } from 'react';
-import { isAxiosError } from 'axios';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { TextField } from '@/components/ui/TextField';
 import { Permission } from '@/models/permissions';
+import { extractApiError } from '@/utils/errors';
 import {
   useCreateRole,
   useUpdateRole,
@@ -70,12 +70,7 @@ export function RoleFormDialog({ open, onClose, initialRole: role }: Props) {
       }
       onClose();
     } catch (err) {
-      if (isAxiosError(err)) {
-        const detail = (err.response?.data as { detail?: string } | undefined)?.detail;
-        setFormError(detail ?? 'something went wrong — try again');
-        return;
-      }
-      setFormError('something went wrong — try again');
+      setFormError(extractApiError(err, 'something went wrong — try again'));
     }
   }
 
@@ -128,7 +123,7 @@ export function RoleFormDialog({ open, onClose, initialRole: role }: Props) {
         </fieldset>
 
         {formError ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-600 break-words">
             {formError}
           </p>
         ) : null}

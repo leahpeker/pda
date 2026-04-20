@@ -54,4 +54,39 @@ describe('extractApiError', () => {
     });
     expect(extractApiError(error, 'fallback')).toBe('fallback');
   });
+
+  it('joins pydantic validation errors when detail is an array', () => {
+    const error = Object.assign(new Error('422'), {
+      isAxiosError: true,
+      response: {
+        status: 422,
+        data: {
+          detail: [
+            { type: 'string_too_long', loc: ['body', 'payload', 'name'], msg: 'String should have at most 50 characters' },
+          ],
+        },
+      },
+    });
+    expect(extractApiError(error, 'fallback')).toBe(
+      'string should have at most 50 characters',
+    );
+  });
+
+  it('joins multiple validation errors with a separator', () => {
+    const error = Object.assign(new Error('422'), {
+      isAxiosError: true,
+      response: {
+        status: 422,
+        data: {
+          detail: [
+            { msg: 'Field a is required' },
+            { msg: 'Field b must be a number' },
+          ],
+        },
+      },
+    });
+    expect(extractApiError(error, 'fallback')).toBe(
+      'field a is required · field b must be a number',
+    );
+  });
 });
