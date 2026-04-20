@@ -64,7 +64,7 @@ export default function SurveyResponsesScreen() {
 
       {datetimeQuestions.length > 0 ? (
         <section className="mb-8">
-          <h2 className="mb-3 text-xs font-medium tracking-wide text-muted uppercase">
+          <h2 className="mb-3 text-xs font-medium tracking-wide text-muted">
             poll tallies
           </h2>
           {tallies.isPending ? (
@@ -85,7 +85,7 @@ export default function SurveyResponsesScreen() {
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-surface">
           <table className="w-full text-left text-sm">
-            <thead className="bg-background text-xs text-muted uppercase">
+            <thead className="bg-background text-xs text-muted">
               <tr>
                 <th className="px-3 py-2">submitted by</th>
                 <th className="px-3 py-2">at</th>
@@ -138,7 +138,7 @@ function TalliesTables({
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="text-muted uppercase">
+              <thead className="text-muted">
                 <tr>
                   <th className="py-1 pe-2">option</th>
                   <th className="px-2 py-1">yes</th>

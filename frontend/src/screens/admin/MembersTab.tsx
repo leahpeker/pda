@@ -169,7 +169,7 @@ function filterAndSort(
 }
 
 function MemberRow({ member }: { member: Member }) {
-  const initials = (member.displayName || member.phoneNumber).slice(0, 2).toUpperCase();
+  const initials = (member.displayName || member.phoneNumber).slice(0, 2).toLowerCase();
   const primaryRole = member.roles[0]?.name;
   return (
     <Link

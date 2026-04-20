@@ -50,7 +50,7 @@ export default function DocsScreen() {
 
       {canManage ? (
         <section className="mb-8 rounded-lg border border-border bg-surface p-4">
-          <h2 className="mb-3 text-xs font-medium tracking-wide text-muted uppercase">
+          <h2 className="mb-3 text-xs font-medium tracking-wide text-muted">
             library admin
           </h2>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">

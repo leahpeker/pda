@@ -87,7 +87,7 @@ function MemberDetailView({ member }: { member: Member }) {
 
       {member.bio ? (
         <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-4">
-          <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">bio</h2>
+          <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">bio</h2>
           <p className="text-sm whitespace-pre-wrap text-neutral-800">{member.bio}</p>
         </section>
       ) : null}
@@ -151,7 +151,7 @@ function MemberRolesSection({ member }: { member: Member }) {
 
   return (
     <section className="mb-4">
-      <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">roles</h2>
+      <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">roles</h2>
       <div className="flex flex-col gap-2">
         {allRoles.map((r) => (
           <label key={r.id} className="flex items-center gap-2 text-sm">
@@ -198,7 +198,7 @@ function MemberMagicLinkSection({ memberId }: { memberId: string }) {
   }
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">access</h2>
+      <h2 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">access</h2>
       <Button
         type="button"
         variant="secondary"
@@ -215,7 +215,7 @@ function MemberMagicLinkSection({ memberId }: { memberId: string }) {
 }
 
 function MemberAvatar({ member }: { member: Member }) {
-  const initials = (member.displayName || member.phoneNumber).slice(0, 2).toUpperCase() || '?';
+  const initials = (member.displayName || member.phoneNumber).slice(0, 2).toLowerCase() || '?';
   if (member.profilePhotoUrl) {
     return (
       <img src={member.profilePhotoUrl} alt="" className="h-28 w-28 rounded-full object-cover" />

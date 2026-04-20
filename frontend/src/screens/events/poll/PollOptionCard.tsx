@@ -40,7 +40,7 @@ export function PollOptionCard({ option, isWinner, isFinalized }: Props) {
           fade && 'opacity-60',
         )}
       >
-        <span className="text-xs font-medium uppercase tracking-wide text-foreground-tertiary">
+        <span className="text-xs font-medium tracking-wide text-foreground-tertiary">
           {dayOfWeek}
           {isWinner ? <span className="ml-1 text-brand-700">✓</span> : null}
         </span>

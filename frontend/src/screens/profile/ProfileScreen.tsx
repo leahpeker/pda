@@ -39,7 +39,7 @@ export default function ProfileScreen() {
 
       <section className="mt-8 rounded-lg border border-border bg-surface p-4">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-medium tracking-wide text-muted uppercase">bio</h2>
+          <h2 className="text-xs font-medium tracking-wide text-muted">bio</h2>
           {user.bio ? (
             <Button
               variant="ghost"

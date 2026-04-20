@@ -105,7 +105,7 @@ function ResultsView({
 
       {successes.length > 0 ? (
         <section className="mt-4">
-          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">
+          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">
             created
           </h3>
           <ul className="flex flex-col gap-2">
@@ -120,7 +120,7 @@ function ResultsView({
 
       {failures.length > 0 ? (
         <section className="mt-4">
-          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">
+          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">
             failed
           </h3>
           <ul className="flex flex-col gap-1">

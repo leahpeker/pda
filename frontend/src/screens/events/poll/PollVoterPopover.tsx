@@ -57,7 +57,7 @@ function VoterRow({ label, voters }: { label: string; voters: readonly PollVoter
   if (voters.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-1 text-xs font-medium uppercase tracking-wide text-foreground-tertiary">
+      <h3 className="mb-1 text-xs font-medium tracking-wide text-foreground-tertiary">
         {label} · {voters.length}
       </h3>
       <div className="flex flex-wrap gap-2">
@@ -84,7 +84,7 @@ function VoterChip({ voter }: { voter: PollVoter }) {
           aria-hidden="true"
           className="flex h-6 w-6 items-center justify-center rounded-full bg-toggle-off text-xs text-foreground-secondary"
         >
-          {voter.name.slice(0, 1).toUpperCase()}
+          {voter.name.slice(0, 1).toLowerCase()}
         </span>
       )}
       {voter.name}

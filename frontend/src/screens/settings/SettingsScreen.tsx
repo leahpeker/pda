@@ -180,7 +180,7 @@ function CalendarFeedSubscription() {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="mb-6 rounded-lg border border-border bg-surface p-4">
-      <h2 className="mb-3 text-xs font-medium tracking-wide text-muted uppercase">{label}</h2>
+      <h2 className="mb-3 text-xs font-medium tracking-wide text-muted">{label}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );

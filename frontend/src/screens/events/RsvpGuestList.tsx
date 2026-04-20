@@ -114,7 +114,7 @@ function GuestChip({ guest }: { guest: EventGuest }) {
           aria-hidden="true"
           className="flex h-5 w-5 items-center justify-center rounded-full bg-toggle-off text-[10px] text-foreground-secondary"
         >
-          {guest.name.slice(0, 1).toUpperCase()}
+          {guest.name.slice(0, 1).toLowerCase()}
         </span>
       )}
       {guest.name}

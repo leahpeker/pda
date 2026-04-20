@@ -23,7 +23,7 @@ export default function MemberProfileScreen() {
 
       {data.bio ? (
         <section className="mt-8 rounded-lg border border-border bg-surface p-4">
-          <h2 className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">bio</h2>
+          <h2 className="mb-2 text-xs font-medium tracking-wide text-muted">bio</h2>
           <p className="text-sm whitespace-pre-wrap text-foreground">{data.bio}</p>
         </section>
       ) : null}
@@ -41,7 +41,7 @@ function Avatar({ member }: { member: MemberProfile }) {
       />
     );
   }
-  const initials = (member.displayName || '?').slice(0, 2).toUpperCase();
+  const initials = (member.displayName || '?').slice(0, 2).toLowerCase();
   return (
     <span
       aria-hidden="true"
