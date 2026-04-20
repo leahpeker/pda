@@ -3,7 +3,7 @@
 // count refetch. Polling is a fallback (30s when SSE is disconnected, 5 min
 // when connected).
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/auth/store';
@@ -16,8 +16,9 @@ import {
 } from '@/api/notifications';
 import { useEventSource } from '@/hooks/useEventSource';
 import { NotificationType, type AppNotification } from '@/models/notification';
-import { Button } from '@/components/ui/Button';
 import { cn } from '@/utils/cn';
+
+const AUTO_READ_DELAY_MS = 1500;
 
 export function NotificationBell() {
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -53,6 +54,22 @@ export function NotificationBell() {
   const notificationsQuery = useNotifications(open);
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
+
+  // Auto-mark all as read after the dropdown has been open for a beat — giving
+  // the user time to actually see what's new before we clear the badge.
+  // Closing (or unmounting) within the window cancels the pending call; a new
+  // SSE-pushed notification bumps `count`, which resets the timer.
+  const markAllMutate = markAll.mutateAsync;
+  const markAllPending = markAll.isPending;
+  useEffect(() => {
+    if (!open || count === 0 || markAllPending) return;
+    const timer = setTimeout(() => {
+      void markAllMutate();
+    }, AUTO_READ_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [open, count, markAllPending, markAllMutate]);
 
   const display = count > 99 ? '99+' : String(count);
 
@@ -90,19 +107,8 @@ export function NotificationBell() {
             aria-label="notifications"
             className="border-border bg-surface absolute end-0 top-10 z-20 w-80 overflow-hidden rounded-lg border shadow-(--shadow-lg)"
           >
-            <div className="border-border flex items-center justify-between border-b px-3 py-2">
+            <div className="border-border border-b px-3 py-2">
               <span className="text-sm font-medium">notifications</span>
-              {count > 0 ? (
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    void markAll.mutateAsync();
-                  }}
-                  disabled={markAll.isPending}
-                >
-                  mark all read
-                </Button>
-              ) : null}
             </div>
             <div className="max-h-96 overflow-y-auto">
               {notificationsQuery.isPending ? (

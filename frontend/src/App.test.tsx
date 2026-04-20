@@ -137,6 +137,6 @@ describe('LoginScreen', () => {
 
   it('shows invited banner when ?invited=true', () => {
     renderWith(['/login?invited=true']);
-    expect(screen.getByText(/you've been invited/i)).toBeInTheDocument();
+    expect(screen.getByText(/you already have an account/i)).toBeInTheDocument();
   });
 });

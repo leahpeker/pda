@@ -1,9 +1,9 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAuthStore } from '@/auth/store';
 import { NotificationType } from '@/models/notification';
 
@@ -116,33 +116,6 @@ describe('NotificationBell', () => {
     expect(screen.getByText(/nothing new/i)).toBeInTheDocument();
   });
 
-  it('shows mark-all-as-read button when panel is open and there are notifications', async () => {
-    const user = userEvent.setup();
-    mockUseUnreadCount.mockReturnValue({ data: 2 } as unknown as ReturnType<typeof useUnreadCount>);
-    mockUseNotifications.mockReturnValue({
-      isPending: false,
-      data: [
-        {
-          id: 'n1',
-          notificationType: NotificationType.EventInvite,
-          eventId: 'ev1',
-          relatedUserId: null,
-          message: 'you were invited',
-          isRead: false,
-          createdAt: '2024-01-01T00:00:00Z',
-        },
-      ],
-    } as ReturnType<typeof useNotifications>);
-
-    renderBell();
-
-    await user.click(screen.getByRole('button', { name: /notifications \(2 unread\)/i }));
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /mark all read/i })).toBeInTheDocument();
-    });
-  });
-
   it('tapping an event_invite notification navigates to /events/:id', async () => {
     const user = userEvent.setup();
     mockUseUnreadCount.mockReturnValue({ data: 1 } as unknown as ReturnType<typeof useUnreadCount>);
@@ -189,5 +162,107 @@ describe('NotificationBell', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: /notifications/i })).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('NotificationBell auto-clear on open', () => {
+  const AUTO_READ_DELAY_MS = 1500;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('fires mark-all-read after the delay when opened with unread items', () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    mockUseUnreadCount.mockReturnValue({ data: 2 } as unknown as ReturnType<typeof useUnreadCount>);
+    mockUseMarkAllNotificationsRead.mockReturnValue(
+      makeMutation({ mutateAsync }) as unknown as ReturnType<typeof useMarkAllNotificationsRead>,
+    );
+
+    renderBell();
+
+    fireEvent.click(screen.getByRole('button', { name: /notifications \(2 unread\)/i }));
+    expect(mutateAsync).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(AUTO_READ_DELAY_MS);
+    });
+
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not fire when the dropdown is opened with zero unread', () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    mockUseUnreadCount.mockReturnValue({ data: 0 } as unknown as ReturnType<typeof useUnreadCount>);
+    mockUseMarkAllNotificationsRead.mockReturnValue(
+      makeMutation({ mutateAsync }) as unknown as ReturnType<typeof useMarkAllNotificationsRead>,
+    );
+
+    renderBell();
+
+    fireEvent.click(screen.getByRole('button', { name: /^notifications$/i }));
+
+    act(() => {
+      vi.advanceTimersByTime(AUTO_READ_DELAY_MS * 2);
+    });
+
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('cancels the pending mark-all call if the dropdown closes within the delay', () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    mockUseUnreadCount.mockReturnValue({ data: 3 } as unknown as ReturnType<typeof useUnreadCount>);
+    mockUseMarkAllNotificationsRead.mockReturnValue(
+      makeMutation({ mutateAsync }) as unknown as ReturnType<typeof useMarkAllNotificationsRead>,
+    );
+
+    renderBell();
+
+    const bell = screen.getByRole('button', { name: /notifications \(3 unread\)/i });
+    fireEvent.click(bell); // open
+    act(() => {
+      vi.advanceTimersByTime(AUTO_READ_DELAY_MS - 100);
+    });
+    fireEvent.click(bell); // close before delay elapses
+
+    act(() => {
+      vi.advanceTimersByTime(AUTO_READ_DELAY_MS * 2);
+    });
+
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('resets the timer when the dropdown is reopened', () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    mockUseUnreadCount.mockReturnValue({ data: 1 } as unknown as ReturnType<typeof useUnreadCount>);
+    mockUseMarkAllNotificationsRead.mockReturnValue(
+      makeMutation({ mutateAsync }) as unknown as ReturnType<typeof useMarkAllNotificationsRead>,
+    );
+
+    renderBell();
+
+    const bell = screen.getByRole('button', { name: /notifications \(1 unread\)/i });
+    fireEvent.click(bell); // open
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    fireEvent.click(bell); // close
+    fireEvent.click(bell); // reopen
+
+    // Advance only the partial remainder of the first timer — must not have fired yet
+    act(() => {
+      vi.advanceTimersByTime(AUTO_READ_DELAY_MS - 500);
+    });
+    expect(mutateAsync).not.toHaveBeenCalled();
+
+    // Now advance the rest of the new full delay — fires exactly once
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
   });
 });

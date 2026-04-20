@@ -86,6 +86,12 @@ export function useMarkAllNotificationsRead() {
     mutationFn: async () => {
       await apiClient.post('/api/notifications/read-all/');
     },
+    onMutate: () => {
+      qc.setQueryData<number>(notificationKeys.unread, 0);
+      qc.setQueryData<AppNotification[]>(notificationKeys.list, (prev) =>
+        prev ? prev.map((n) => ({ ...n, isRead: true })) : prev,
+      );
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: notificationKeys.all });
     },
