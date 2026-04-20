@@ -22,6 +22,10 @@ interface AuthState {
   status: AuthStatus;
   user: User | null;
   accessToken: string | null;
+  // True once the initial session-restore has resolved (to authed or
+  // unauthed). Guards the app-level boot spinner so later 'loading' states
+  // (login, magic-login) don't unmount the tree.
+  booted: boolean;
   login: (phoneNumber: string, password: string) => Promise<void>;
   magicLogin: (token: string) => Promise<void>;
   restoreSession: () => Promise<void>;
@@ -44,6 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   status: 'idle',
   user: null,
   accessToken: null,
+  booted: false,
 
   async login(phoneNumber, password) {
     set({ status: 'loading' });
@@ -82,9 +87,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: 'loading' });
     const result = await authApi.restoreSession();
     if (result) {
-      set({ status: 'authed', user: result.user, accessToken: result.access });
+      set({ status: 'authed', user: result.user, accessToken: result.access, booted: true });
     } else {
-      set({ status: 'unauthed', user: null, accessToken: null });
+      set({ status: 'unauthed', user: null, accessToken: null, booted: true });
     }
   },
 

@@ -22,6 +22,7 @@ vi.mock('@/hooks/useEventSource', () => ({
 
 vi.mock('@/auth/useAuth', () => ({
   useHasAnyAdminPermission: vi.fn().mockReturnValue(false),
+  useHasPermission: vi.fn().mockReturnValue(false),
 }));
 
 import { AppShell } from './AppShell';
