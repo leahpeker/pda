@@ -179,7 +179,55 @@ class TestJoinRequestManagement:
             **vettor_headers,
         )
         assert response.status_code == 400
-        assert "already been approved" in response.json()["detail"]
+        assert "already been decided" in response.json()["detail"]
+
+    def test_reject_after_reject_fails(self, api_client, vettor_headers, sample_join_request):
+        api_client.patch(
+            f"/api/community/join-requests/{sample_join_request.id}/",
+            {"status": JoinRequestStatus.REJECTED},
+            content_type="application/json",
+            **vettor_headers,
+        )
+        response = api_client.patch(
+            f"/api/community/join-requests/{sample_join_request.id}/",
+            {"status": JoinRequestStatus.APPROVED},
+            content_type="application/json",
+            **vettor_headers,
+        )
+        assert response.status_code == 400
+        assert "already been decided" in response.json()["detail"]
+
+    def test_approve_records_actor_and_timestamp(
+        self, api_client, vettor_headers, vettor_user, sample_join_request
+    ):
+        response = api_client.patch(
+            f"/api/community/join-requests/{sample_join_request.id}/",
+            {"status": JoinRequestStatus.APPROVED},
+            content_type="application/json",
+            **vettor_headers,
+        )
+        assert response.status_code == 200
+        sample_join_request.refresh_from_db()
+        assert sample_join_request.approved_by == vettor_user
+        assert sample_join_request.approved_at is not None
+        assert sample_join_request.rejected_by is None
+        assert sample_join_request.rejected_at is None
+
+    def test_reject_records_actor_and_timestamp(
+        self, api_client, vettor_headers, vettor_user, sample_join_request
+    ):
+        response = api_client.patch(
+            f"/api/community/join-requests/{sample_join_request.id}/",
+            {"status": JoinRequestStatus.REJECTED},
+            content_type="application/json",
+            **vettor_headers,
+        )
+        assert response.status_code == 200
+        sample_join_request.refresh_from_db()
+        assert sample_join_request.rejected_by == vettor_user
+        assert sample_join_request.rejected_at is not None
+        assert sample_join_request.approved_by is None
+        assert sample_join_request.approved_at is None
 
     def test_approve_creates_user_with_member_role(
         self, api_client, vettor_headers, sample_join_request, db

@@ -37,6 +37,7 @@ class SeedJoinRequest:
     phone_number: str
     answers: dict[str, str]
     status: str
+    decided_days_ago: int | None = None
 
 
 @dataclass
@@ -148,6 +149,7 @@ SEED_JOIN_REQUESTS = [
             "What are your pronouns?": "they/them",
         },
         status=JoinRequestStatus.APPROVED,
+        decided_days_ago=5,
     ),
     SeedJoinRequest(
         display_name="Sam Taylor",
@@ -156,6 +158,58 @@ SEED_JOIN_REQUESTS = [
             "Why do you want to join?": "Curious about veganism.",
         },
         status=JoinRequestStatus.REJECTED,
+        decided_days_ago=3,
+    ),
+    SeedJoinRequest(
+        display_name="Priya Raghavendra-Nakamura",
+        phone_number="+17025550013",
+        answers={
+            "Why do you want to join?": (
+                "i've been plant-based for about six months and am finally ready to find my people. "
+                "looking for folks to cook with, share resources, and organize around animal liberation "
+                "and broader collective liberation work."
+            ),
+            "How did you hear about us?": "saw a flyer at the co-op on grand ave.",
+            "What are your pronouns?": "she/they",
+        },
+        status=JoinRequestStatus.PENDING,
+    ),
+    SeedJoinRequest(
+        display_name="Mo",
+        phone_number="+442079460958",
+        answers={
+            "Why do you want to join?": "moving to the area next month and want to plug in before i arrive.",
+            "What are your pronouns?": "he/him",
+        },
+        status=JoinRequestStatus.PENDING,
+    ),
+    SeedJoinRequest(
+        display_name="Riley Okonkwo-Vasquez",
+        phone_number="+17025550015",
+        answers={
+            "Why do you want to join?": "food not bombs volunteer, interested in mutual aid + vegan outreach.",
+            "How did you hear about us?": "instagram — pda showed up in a story reshare.",
+        },
+        status=JoinRequestStatus.PENDING,
+    ),
+    SeedJoinRequest(
+        display_name="Taylor Kim",
+        phone_number="+17025550016",
+        answers={
+            "Why do you want to join?": "just curious — not vegan yet but open to learning.",
+        },
+        status=JoinRequestStatus.PENDING,
+    ),
+    SeedJoinRequest(
+        display_name="Devon Alvarez",
+        phone_number="+17025550017",
+        answers={
+            "Why do you want to join?": "longtime abolitionist looking for aligned community.",
+            "How did you hear about us?": "word of mouth at a local protest.",
+            "What are your pronouns?": "they/them",
+        },
+        status=JoinRequestStatus.APPROVED,
+        decided_days_ago=1,
     ),
 ]
 
@@ -179,7 +233,7 @@ class Command(BaseCommand):
         admin_user = self._seed_users()
         questions = self._seed_join_form_questions()
         self._seed_events(admin_user)
-        self._seed_join_requests(questions)
+        self._seed_join_requests(questions, admin_user)
         self._seed_content()
         self._print_summary()
 
@@ -252,20 +306,30 @@ class Command(BaseCommand):
             label = "Created" if created else "Already exists"
             self.stdout.write(f"  {label} event: {data.title}")
 
-    def _seed_join_requests(self, questions: dict[str, JoinFormQuestion]) -> None:
+    def _seed_join_requests(self, questions: dict[str, JoinFormQuestion], admin_user: User) -> None:
+        now = timezone.now()
         for data in SEED_JOIN_REQUESTS:
             custom_answers = {
                 str(questions[label].id): {"label": label, "answer": answer}
                 for label, answer in data.answers.items()
                 if label in questions
             }
+            defaults: dict[str, object] = {
+                "custom_answers": custom_answers,
+                "status": data.status,
+            }
+            if data.decided_days_ago is not None:
+                decided_at = now - timedelta(days=data.decided_days_ago)
+                if data.status == JoinRequestStatus.APPROVED:
+                    defaults["approved_at"] = decided_at
+                    defaults["approved_by"] = admin_user
+                elif data.status == JoinRequestStatus.REJECTED:
+                    defaults["rejected_at"] = decided_at
+                    defaults["rejected_by"] = admin_user
             _, created = JoinRequest.objects.get_or_create(
                 display_name=data.display_name,
                 phone_number=data.phone_number,
-                defaults={
-                    "custom_answers": custom_answers,
-                    "status": data.status,
-                },
+                defaults=defaults,
             )
             label = "Created" if created else "Already exists"
             self.stdout.write(f"  {label} join request: {data.display_name}")

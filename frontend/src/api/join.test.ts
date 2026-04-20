@@ -66,6 +66,10 @@ describe('useJoinRequests', () => {
         status: 'pending',
         userId: null,
         previouslyArchived: false,
+        approvedAt: null,
+        approvedByName: null,
+        rejectedAt: null,
+        rejectedByName: null,
       },
     ]);
 

@@ -43,6 +43,13 @@ export default function JoinRequestsScreen() {
   if (isError) return <ContentError message="couldn't load join requests — try refreshing" />;
 
   async function decideRequest(request: JoinRequestSummary, status: 'approved' | 'rejected') {
+    const name = request.displayName || request.phoneNumber;
+    const message =
+      status === 'approved'
+        ? `approve ${name}? once you approve someone you can't un-approve them — are you sure?`
+        : `reject ${name}? once you reject someone you can't un-reject them — are you sure?`;
+    if (!window.confirm(message)) return;
+
     setError(null);
     try {
       const result = await decide.mutateAsync({ id: request.id, status });
@@ -175,9 +182,33 @@ function JoinRequestCard({
             reject
           </Button>
         </div>
-      ) : null}
+      ) : (
+        <DecisionAttribution request={request} />
+      )}
     </article>
   );
+}
+
+function DecisionAttribution({ request }: { request: JoinRequestSummary }) {
+  if (request.status === 'approved' && request.approvedAt) {
+    const who = request.approvedByName ?? 'an admin';
+    return (
+      <p className="text-muted mt-3 text-xs">
+        approved by {who.toLowerCase()} on{' '}
+        {format(new Date(request.approvedAt), 'MMM d, h:mm a').toLowerCase()}
+      </p>
+    );
+  }
+  if (request.status === 'rejected' && request.rejectedAt) {
+    const who = request.rejectedByName ?? 'an admin';
+    return (
+      <p className="text-muted mt-3 text-xs">
+        rejected by {who.toLowerCase()} on{' '}
+        {format(new Date(request.rejectedAt), 'MMM d, h:mm a').toLowerCase()}
+      </p>
+    );
+  }
+  return null;
 }
 
 function StatusBadge({ status }: { status: JoinRequestStatus }) {

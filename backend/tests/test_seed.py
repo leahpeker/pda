@@ -11,7 +11,7 @@ def test_seed_creates_expected_data():
     assert User.objects.filter(phone_number="+17025550001").exists()
     assert User.objects.filter(phone_number="+17025550002").exists()
     assert Event.objects.count() == 4
-    assert JoinRequest.objects.count() == 3
+    assert JoinRequest.objects.count() == 8
 
 
 @pytest.mark.django_db
@@ -21,7 +21,7 @@ def test_seed_is_idempotent():
 
     assert User.objects.filter(phone_number__startswith="+1702555").count() == 2
     assert Event.objects.count() == 4
-    assert JoinRequest.objects.count() == 3
+    assert JoinRequest.objects.count() == 8
 
 
 @pytest.mark.django_db

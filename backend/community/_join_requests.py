@@ -7,6 +7,7 @@ from uuid import UUID
 from config.audit import audit_log
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
@@ -57,6 +58,10 @@ class JoinRequestOut(BaseModel):
     status: str
     user_id: str | None = None
     previously_archived: bool = False
+    approved_at: datetime | None = None
+    approved_by_name: str | None = None
+    rejected_at: datetime | None = None
+    rejected_by_name: str | None = None
 
 
 class JoinRequestStatusIn(BaseModel):
@@ -100,6 +105,10 @@ def _join_request_out(jr: JoinRequest) -> JoinRequestOut:
         status=jr.status,
         user_id=str(user.id) if user else None,
         previously_archived=previously_archived,
+        approved_at=jr.approved_at,
+        approved_by_name=jr.approved_by.display_name if jr.approved_by else None,
+        rejected_at=jr.rejected_at,
+        rejected_by_name=jr.rejected_by.display_name if jr.rejected_by else None,
     )
 
 
@@ -238,6 +247,18 @@ def list_join_requests(request):
     return Status(200, [_join_request_out(jr) for jr in join_requests])
 
 
+def _stamp_decision(join_request: JoinRequest, status: str, actor) -> None:
+    now = timezone.now()
+    join_request.status = status
+    if status == JoinRequestStatus.APPROVED:
+        join_request.approved_at = now
+        join_request.approved_by = actor
+    else:
+        join_request.rejected_at = now
+        join_request.rejected_by = actor
+    join_request.save()
+
+
 @router.patch(
     "/join-requests/{id}/",
     response={200: ApproveJoinRequestOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut},
@@ -270,11 +291,10 @@ def update_join_request_status(request, id: UUID, payload: JoinRequestStatusIn):
     except JoinRequest.DoesNotExist:
         return Status(404, ErrorOut(detail="Join request not found."))
 
-    if join_request.status == JoinRequestStatus.APPROVED:
-        return Status(400, ErrorOut(detail="This request has already been approved."))
+    if join_request.status in (JoinRequestStatus.APPROVED, JoinRequestStatus.REJECTED):
+        return Status(400, ErrorOut(detail="This request has already been decided."))
 
-    join_request.status = payload.status
-    join_request.save()
+    _stamp_decision(join_request, payload.status, request.auth)
 
     magic_token = None
     user_created = False

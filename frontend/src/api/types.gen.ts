@@ -424,6 +424,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/community/join-form/questions/order/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder Join Form Questions */
+        put: operations["community__join_form_reorder_join_form_questions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/community/join-form/questions/{question_id}/": {
         parameters: {
             query?: never;
@@ -440,23 +457,6 @@ export interface paths {
         head?: never;
         /** Update Join Form Question */
         patch: operations["community__join_form_update_join_form_question"];
-        trace?: never;
-    };
-    "/api/community/join-form/questions/order/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Reorder Join Form Questions */
-        put: operations["community__join_form_reorder_join_form_questions"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/community/join-request/": {
@@ -1296,6 +1296,11 @@ export interface components {
             is_default: boolean;
             /** Permissions */
             permissions: string[];
+            /**
+             * User Count
+             * @default 0
+             */
+            user_count: number;
         };
         /** ErrorOut */
         ErrorOut: {
@@ -1720,6 +1725,14 @@ export interface components {
              * @default false
              */
             previously_archived: boolean;
+            /** Approved At */
+            approved_at?: string | null;
+            /** Approved By Name */
+            approved_by_name?: string | null;
+            /** Rejected At */
+            rejected_at?: string | null;
+            /** Rejected By Name */
+            rejected_by_name?: string | null;
         };
         /** JoinRequestIn */
         JoinRequestIn: {
@@ -4013,6 +4026,39 @@ export interface operations {
             };
         };
     };
+    community__join_form_reorder_join_form_questions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinFormQuestionOrderIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinFormQuestionOut"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
     community__join_form_delete_join_form_question: {
         parameters: {
             query?: never;
@@ -4086,39 +4132,6 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorOut"];
-                };
-            };
-        };
-    };
-    community__join_form_reorder_join_form_questions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinFormQuestionOrderIn"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinFormQuestionOut"][];
-                };
-            };
-            /** @description Forbidden */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6105,6 +6118,15 @@ export interface operations {
                     "application/json": components["schemas"]["DocFolderOut"][];
                 };
             };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
         };
     };
     community__docs_create_folder: {
@@ -6365,6 +6387,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
                 };
             };
             /** @description Not Found */
