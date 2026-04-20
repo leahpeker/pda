@@ -73,6 +73,22 @@ class TestUpdateUser:
         )
         assert response.status_code == 400
 
+    def test_cannot_pause_admin(self, api_client, manage_users_headers, other_user):
+        from users.roles import Role
+
+        admin_role = Role.objects.get(name="admin", is_default=True)
+        other_user.roles.add(admin_role)
+        response = api_client.patch(
+            f"/api/auth/users/{other_user.pk}/",
+            {"is_paused": True},
+            content_type="application/json",
+            **manage_users_headers,
+        )
+        assert response.status_code == 400
+        assert "admin" in response.json()["detail"].lower()
+        other_user.refresh_from_db()
+        assert other_user.is_paused is False
+
     def test_admin_list_includes_paused_users(self, api_client, manage_users_headers, other_user):
         other_user.is_paused = True
         other_user.save(update_fields=["is_paused"])

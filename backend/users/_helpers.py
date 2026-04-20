@@ -30,6 +30,11 @@ def _is_last_admin(user: User) -> bool:
     return admin_role.users.filter(archived_at__isnull=True).count() <= 1
 
 
+def _is_admin(user: User) -> bool:
+    """True if the user holds the built-in admin role."""
+    return user.roles.filter(name="admin", is_default=True).exists()
+
+
 def _validate_phone(raw: str) -> str:
     """Parse, validate, and return E.164. Raises ValueError on invalid.
 

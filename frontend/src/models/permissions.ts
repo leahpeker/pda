@@ -20,7 +20,7 @@ export type PermissionKey = (typeof Permission)[keyof typeof Permission];
 
 // The built-in admin role is named "admin". When present as default role,
 // it grants every permission. Mirrors user.dart:hasPermission.
-const ADMIN_ROLE_NAME = 'admin';
+export const ADMIN_ROLE_NAME = 'admin';
 
 // Admin roll-up: any of these grants access to /admin. Order matches
 // user.dart:hasAnyAdminPermission.

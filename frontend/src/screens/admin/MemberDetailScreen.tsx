@@ -18,6 +18,7 @@ import {
   type Member,
 } from '@/api/users';
 import { useRoles } from '@/api/roles';
+import { ADMIN_ROLE_NAME } from '@/models/permissions';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
 
 export default function MemberDetailScreen() {
@@ -245,6 +246,7 @@ function MemberEditForm({
   const [email, setEmail] = useState(member.email);
   const [isPaused, setIsPaused] = useState(member.isPaused);
   const [error, setError] = useState<string | null>(null);
+  const targetIsAdmin = member.roles.some((r) => r.name === ADMIN_ROLE_NAME && r.isDefault);
 
   async function onSubmit(e: SyntheticEvent) {
     e.preventDefault();
@@ -301,7 +303,15 @@ function MemberEditForm({
           setEmail(e.target.value);
         }}
       />
-      <Toggle label="pause account" checked={isPaused} onChange={setIsPaused} />
+      <Toggle
+        label="pause account"
+        checked={isPaused}
+        onChange={setIsPaused}
+        disabled={targetIsAdmin}
+      />
+      {targetIsAdmin ? (
+        <p className="text-xs text-neutral-500">admins can't be paused</p>
+      ) : null}
 
       {error ? (
         <p role="alert" className="text-sm text-red-600">

@@ -15,6 +15,7 @@ from notifications.models import Notification, NotificationType
 from users._helpers import (
     _create_magic_token,
     _create_user_with_role,
+    _is_admin,
     _is_last_admin,
     _validate_admin_role_change,
     _validate_phone,
@@ -273,6 +274,16 @@ def _patch_phone(user: User, user_id: str, phone_number: str) -> str | None:
     return None
 
 
+def _validate_pause_change(user: User, is_paused: bool | None, requester_id: str) -> str | None:
+    if not is_paused:
+        return None
+    if requester_id == str(user.pk):
+        return "You cannot pause your own account."
+    if _is_admin(user):
+        return "Admins cannot be paused."
+    return None
+
+
 def _apply_user_patch(
     user: User, user_id: str, payload: UserPatchIn, requester_id: str
 ) -> str | None:
@@ -288,8 +299,9 @@ def _apply_user_patch(
         user.display_name = payload.display_name.strip()
     if payload.email is not None:
         user.email = payload.email
-    if payload.is_paused and requester_id == str(user.pk):
-        return "You cannot pause your own account."
+    err = _validate_pause_change(user, payload.is_paused, requester_id)
+    if err:
+        return err
     if payload.is_paused is not None:
         user.is_paused = payload.is_paused
     return None
