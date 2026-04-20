@@ -8,6 +8,7 @@ from users._helpers import (  # re-exported
     _validate_admin_role_change,
     _validate_member_role_required,
 )
+from users._magic_links import router as magic_links_router
 from users._management import router as management_router
 from users._roles import router as roles_router
 
@@ -22,3 +23,4 @@ router = Router()
 router.add_router("", roles_router)
 router.add_router("", auth_router)
 router.add_router("", management_router)
+router.add_router("", magic_links_router)
