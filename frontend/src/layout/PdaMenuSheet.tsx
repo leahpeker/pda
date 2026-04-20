@@ -7,7 +7,8 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/auth/store';
-import { useHasAnyAdminPermission } from '@/auth/useAuth';
+import { useHasAnyAdminPermission, useHasPermission } from '@/auth/useAuth';
+import { Permission } from '@/models/permissions';
 import { extractApiError } from '@/utils/errors';
 import { cn } from '@/utils/cn';
 
@@ -30,7 +31,6 @@ const ALWAYS_ITEMS: MenuItem[] = [
 
 const AUTHED_ITEMS: MenuItem[] = [
   { to: '/guidelines', label: 'guidelines' },
-  { to: '/docs', label: 'docs' },
   { to: '/volunteer', label: 'volunteer' },
   { to: '/settings', label: 'settings' },
 ];
@@ -40,6 +40,7 @@ export function PdaMenuSheet({ open, onClose }: Props) {
   const location = useLocation();
   const isAuthed = useAuthStore((s) => s.status === 'authed');
   const isAdmin = useHasAnyAdminPermission();
+  const canManageDocs = useHasPermission(Permission.ManageDocuments);
   const logout = useAuthStore((s) => s.logout);
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export function PdaMenuSheet({ open, onClose }: Props) {
   const items: MenuItem[] = [
     ...ALWAYS_ITEMS,
     ...(isAuthed ? AUTHED_ITEMS : []),
+    ...(isAuthed && canManageDocs ? [{ to: '/docs', label: 'docs' }] : []),
     ...(isAuthed && isAdmin ? [{ to: '/admin', label: 'admin' }] : []),
   ];
 

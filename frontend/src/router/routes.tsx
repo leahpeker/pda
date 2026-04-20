@@ -89,8 +89,6 @@ export const router = createBrowserRouter([
               { path: '/settings', element: el(<Settings />) },
               { path: '/profile', element: el(<Profile />) },
               { path: '/volunteer', element: el(<Volunteer />) },
-              { path: '/docs', element: el(<Docs />) },
-              { path: '/docs/:id', element: el(<DocDetail />) },
               { path: '/events/mine', element: el(<MyEvents />) },
               { path: '/events/add', element: el(<EventCreate />) },
               { path: '/events/:id/edit', element: el(<EventEdit />) },
@@ -127,6 +125,13 @@ export const router = createBrowserRouter([
           {
             element: <RequirePermission perm={Permission.ManageWhatsapp} />,
             children: [{ path: '/admin/whatsapp', element: el(<WhatsappConfig />) }],
+          },
+          {
+            element: <RequirePermission perm={Permission.ManageDocuments} />,
+            children: [
+              { path: '/docs', element: el(<Docs />) },
+              { path: '/docs/:id', element: el(<DocDetail />) },
+            ],
           },
           {
             element: <RequirePermission perm={Permission.EditJoinQuestions} />,

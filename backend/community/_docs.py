@@ -133,8 +133,23 @@ def _has_manage_docs(user) -> bool:
 # ---------------------------------------------------------------------------
 
 
-@router.get("/docs/folders/", response={200: list[DocFolderOut]}, auth=JWTAuth())
+@router.get(
+    "/docs/folders/",
+    response={200: list[DocFolderOut], 403: ErrorOut},
+    auth=JWTAuth(),
+)
 def list_folders(request):
+    if not _has_manage_docs(request.auth):
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            details={
+                "endpoint": "list_folders",
+                "required_permission": PermissionKey.MANAGE_DOCUMENTS,
+            },
+        )
+        return Status(403, ErrorOut(detail="Permission denied."))
     top_level = DocFolder.objects.filter(parent__isnull=True).prefetch_related(
         "children", "documents", "children__documents"
     )
@@ -364,10 +379,21 @@ def reorder_documents(request, payload: ReorderIn):
 
 @router.get(
     "/docs/{doc_id}/",
-    response={200: DocumentOut, 404: ErrorOut},
+    response={200: DocumentOut, 403: ErrorOut, 404: ErrorOut},
     auth=JWTAuth(),
 )
 def get_document(request, doc_id: str):
+    if not _has_manage_docs(request.auth):
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            details={
+                "endpoint": "get_document",
+                "required_permission": PermissionKey.MANAGE_DOCUMENTS,
+            },
+        )
+        return Status(403, ErrorOut(detail="Permission denied."))
     try:
         doc = Document.objects.get(pk=doc_id)
     except Document.DoesNotExist:
