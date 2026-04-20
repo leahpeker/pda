@@ -54,7 +54,7 @@ export function PollFinalizeDialog({ open, onClose, event, poll }: Props) {
   return (
     <Dialog open={open} onClose={close} title="finalize date">
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-foreground-secondary">
+        <p className="text-foreground-secondary text-sm">
           pick the winning date — yes-voters get auto-rsvp'd
         </p>
 
@@ -87,7 +87,9 @@ export function PollFinalizeDialog({ open, onClose, event, poll }: Props) {
                   <span
                     aria-hidden="true"
                     className={`flex h-4 w-4 flex-none items-center justify-center rounded-full border ${
-                      isSelected ? 'border-brand-600 bg-brand-600' : 'border-border-strong bg-surface'
+                      isSelected
+                        ? 'border-brand-600 bg-brand-600'
+                        : 'border-border-strong bg-surface'
                     }`}
                   >
                     {isSelected ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
@@ -96,7 +98,7 @@ export function PollFinalizeDialog({ open, onClose, event, poll }: Props) {
                     <span className="text-sm font-medium">
                       {format(opt.datetime, 'EEE MMM d · h:mm a').toLowerCase()}
                     </span>
-                    <span className="text-xs text-foreground-tertiary">
+                    <span className="text-foreground-tertiary text-xs">
                       {opt.yesCount} yes · {opt.maybeCount} maybe · {opt.noCount} no
                     </span>
                   </div>
@@ -107,7 +109,10 @@ export function PollFinalizeDialog({ open, onClose, event, poll }: Props) {
         </ul>
 
         {error ? (
-          <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700">
+          <p
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700"
+          >
             {error}
           </p>
         ) : null}

@@ -10,12 +10,7 @@ vi.mock('@/api/client', () => ({
 }));
 
 import { apiClient } from '@/api/client';
-import {
-  useRoles,
-  useCreateRole,
-  useUpdateRole,
-  useDeleteRole,
-} from './roles';
+import { useRoles, useCreateRole, useUpdateRole, useDeleteRole } from './roles';
 
 const mockedGet = vi.mocked(apiClient.get);
 const mockedPost = vi.mocked(apiClient.post);
@@ -83,9 +78,7 @@ describe('useCreateRole', () => {
       permissions: ['manage_events'],
       userCount: 0,
     });
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['roles'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['roles'] }));
   });
 });
 
@@ -129,8 +122,6 @@ describe('useDeleteRole', () => {
     await result.current.mutateAsync('r3');
 
     expect(mockedDelete).toHaveBeenCalledWith('/api/auth/roles/r3/');
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['roles'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['roles'] }));
   });
 });

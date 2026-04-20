@@ -83,8 +83,8 @@ function ReportEventButton({ eventId }: { eventId: string }) {
 
 function Card({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="mb-3 text-xs font-medium tracking-wide text-muted">{label}</h2>
+    <section className="border-border bg-surface rounded-lg border p-4">
+      <h2 className="text-muted mb-3 text-xs font-medium tracking-wide">{label}</h2>
       {children}
     </section>
   );
@@ -122,7 +122,7 @@ function HostSection({ event, canEdit }: { event: Event; canEdit: boolean }) {
               setAddOpen(true);
             }}
             aria-label="add co-host"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-surface-dim text-lg text-foreground-secondary hover:bg-surface-dim/70"
+            className="bg-surface-dim text-foreground-secondary hover:bg-surface-dim/70 inline-flex h-8 w-8 items-center justify-center rounded-full text-lg"
           >
             +
           </button>
@@ -145,14 +145,14 @@ function HostChip({ id, name, photoUrl }: { id: string; name: string; photoUrl: 
   return (
     <Link
       to={`/members/${id}`}
-      className="inline-flex items-center gap-2 rounded-full bg-surface-dim px-2 py-1 text-sm hover:bg-surface-dim/70"
+      className="bg-surface-dim hover:bg-surface-dim/70 inline-flex items-center gap-2 rounded-full px-2 py-1 text-sm"
     >
       {photoUrl ? (
         <img src={photoUrl} alt="" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-toggle-off text-xs text-foreground-secondary"
+          className="bg-toggle-off text-foreground-secondary flex h-6 w-6 items-center justify-center rounded-full text-xs"
         >
           {name.slice(0, 1).toLowerCase()}
         </span>

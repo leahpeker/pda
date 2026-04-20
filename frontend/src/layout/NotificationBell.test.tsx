@@ -180,7 +180,9 @@ describe('NotificationBell', () => {
     await user.click(screen.getByRole('button', { name: /notifications \(1 unread\)/i }));
 
     // Click the notification row
-    const notifButton = await screen.findByRole('button', { name: /you were invited to an event/i });
+    const notifButton = await screen.findByRole('button', {
+      name: /you were invited to an event/i,
+    });
     await user.click(notifButton);
 
     // After clicking, the panel should close (dialog gone)

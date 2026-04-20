@@ -63,7 +63,7 @@ export default function LoginScreen() {
   if (step === 'pending') {
     return (
       <AuthLayout title="under review" subtitle="your join request is in the queue">
-        <p className="text-sm text-foreground-secondary">
+        <p className="text-foreground-secondary text-sm">
           thanks for your patience — someone will reach out once your request has been reviewed.
         </p>
         <button
@@ -71,7 +71,7 @@ export default function LoginScreen() {
           onClick={() => {
             setStep('phone');
           }}
-          className="mt-4 text-sm text-brand-700 hover:text-brand-900"
+          className="text-brand-700 hover:text-brand-900 mt-4 text-sm"
         >
           back
         </button>
@@ -101,7 +101,7 @@ export default function LoginScreen() {
       {invited ? (
         <div
           role="status"
-          className="mb-4 rounded-md border border-positive-border bg-positive-subtle p-3 text-sm text-positive"
+          className="border-positive-border bg-positive-subtle text-positive mb-4 rounded-md border p-3 text-sm"
         >
           you've been invited — sign in to get started.
         </div>
@@ -124,7 +124,7 @@ export default function LoginScreen() {
           {checking ? 'checking…' : 'continue'}
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-muted">
+      <p className="text-muted mt-4 text-center text-sm">
         not a member yet?{' '}
         <Link to="/join" className="text-brand-700 hover:text-brand-900">
           request to join
@@ -186,7 +186,7 @@ function PasswordStep({
       {invited ? (
         <div
           role="status"
-          className="mb-4 rounded-md border border-positive-border bg-positive-subtle p-3 text-sm text-positive"
+          className="border-positive-border bg-positive-subtle text-positive mb-4 rounded-md border p-3 text-sm"
         >
           you've been invited — sign in to get started.
         </div>
@@ -210,15 +210,19 @@ function PasswordStep({
           onClick={() => {
             setLinkDialogOpen(true);
           }}
-          className="text-sm text-brand-700 hover:text-brand-900"
+          className="text-brand-700 hover:text-brand-900 text-sm"
         >
           request a login link from an admin
         </button>
-        <button type="button" onClick={onBack} className="text-sm text-brand-700 hover:text-brand-900">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-brand-700 hover:text-brand-900 text-sm"
+        >
           use a different number
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-muted">
+      <p className="text-muted mt-4 text-center text-sm">
         not a member yet?{' '}
         <Link to="/join" className="text-brand-700 hover:text-brand-900">
           request to join

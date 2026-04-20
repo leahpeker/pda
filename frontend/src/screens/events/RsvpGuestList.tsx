@@ -51,7 +51,7 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
   const visible = active === 'invited' ? [] : buckets[active];
 
   if (tabs.every((t) => counts[t.key] === 0)) {
-    return <p className="text-xs text-muted">no one yet</p>;
+    return <p className="text-muted text-xs">no one yet</p>;
   }
 
   return (
@@ -59,7 +59,7 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
       <div
         role="tablist"
         aria-label="guest status"
-        className="mb-2 flex w-full rounded-full border border-border-strong bg-surface p-1"
+        className="border-border-strong bg-surface mb-2 flex w-full rounded-full border p-1"
       >
         {tabs.map((t) => (
           <button
@@ -71,7 +71,7 @@ export function RsvpGuestList({ event, canSeeInvited }: Props) {
               setActive(t.key);
             }}
             className={cn(
-              'inline-flex flex-1 flex-col items-center justify-center whitespace-nowrap rounded-full px-2 py-1 text-sm leading-tight transition-colors',
+              'inline-flex flex-1 flex-col items-center justify-center rounded-full px-2 py-1 text-sm leading-tight whitespace-nowrap transition-colors',
               active === t.key
                 ? 'bg-brand-600 text-brand-on'
                 : 'text-foreground-secondary hover:bg-surface-dim',
@@ -99,7 +99,7 @@ function GuestChip({ guest }: { guest: EventGuest }) {
   return (
     <Link
       to={`/members/${guest.userId}`}
-      className="inline-flex items-center gap-1.5 rounded-full bg-surface-dim px-2 py-1 text-xs hover:bg-surface-dim/70"
+      className="bg-surface-dim hover:bg-surface-dim/70 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs"
       title={guest.name}
     >
       {guest.photoUrl ? (
@@ -112,7 +112,7 @@ function GuestChip({ guest }: { guest: EventGuest }) {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-5 w-5 items-center justify-center rounded-full bg-toggle-off text-[10px] text-foreground-secondary"
+          className="bg-toggle-off text-foreground-secondary flex h-5 w-5 items-center justify-center rounded-full text-[10px]"
         >
           {guest.name.slice(0, 1).toLowerCase()}
         </span>
@@ -125,7 +125,7 @@ function GuestChip({ guest }: { guest: EventGuest }) {
 
 export function InvitedList({ event }: { event: Event }) {
   if (event.invitedUserIds.length === 0) {
-    return <p className="text-xs text-muted">no one invited yet</p>;
+    return <p className="text-muted text-xs">no one invited yet</p>;
   }
   return (
     <div className="flex flex-wrap gap-2">

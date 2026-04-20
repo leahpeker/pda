@@ -15,12 +15,7 @@ vi.mock('@/auth/store', () => ({
 }));
 
 import { apiClient } from '@/api/client';
-import {
-  useHome,
-  useUpdateHome,
-  useGuidelines,
-  useUpdateGuidelines,
-} from './content';
+import { useHome, useUpdateHome, useGuidelines, useUpdateGuidelines } from './content';
 
 const mockedGet = vi.mocked(apiClient.get);
 const mockedPatch = vi.mocked(apiClient.patch);
@@ -123,9 +118,7 @@ describe('useUpdateHome', () => {
 
     const { result } = renderHook(() => useUpdateHome(), { wrapper: wrapper() });
 
-    await expect(result.current.mutateAsync({ contentPm: 'x' })).rejects.toThrow(
-      'network error',
-    );
+    await expect(result.current.mutateAsync({ contentPm: 'x' })).rejects.toThrow('network error');
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });

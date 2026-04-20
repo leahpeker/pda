@@ -56,9 +56,7 @@ describe('useCreateDocFolder', () => {
       name: 'guides',
       parent_id: null,
     });
-    await waitFor(() =>
-      expect(spy).toHaveBeenCalledWith({ queryKey: ['docs', 'folders'] }),
-    );
+    await waitFor(() => expect(spy).toHaveBeenCalledWith({ queryKey: ['docs', 'folders'] }));
   });
 });
 
@@ -88,9 +86,7 @@ describe('useCreateDocument', () => {
       content: '',
       content_pm: '',
     });
-    await waitFor(() =>
-      expect(spy).toHaveBeenCalledWith({ queryKey: ['docs', 'folders'] }),
-    );
+    await waitFor(() => expect(spy).toHaveBeenCalledWith({ queryKey: ['docs', 'folders'] }));
   });
 });
 
@@ -102,9 +98,7 @@ describe('useDeleteDocument', () => {
     const { result } = renderHook(() => useDeleteDocument(), { wrapper: makeWrapper(qc) });
     await result.current.mutateAsync('d9');
     expect(mockedDelete).toHaveBeenCalledWith('/api/community/docs/d9/');
-    await waitFor(() =>
-      expect(spy).toHaveBeenCalledWith({ queryKey: ['docs', 'folders'] }),
-    );
+    await waitFor(() => expect(spy).toHaveBeenCalledWith({ queryKey: ['docs', 'folders'] }));
   });
 });
 

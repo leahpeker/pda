@@ -5,12 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAuthStore } from '@/auth/store';
 import type { Event } from '@/models/event';
-import {
-  EventStatus,
-  EventType,
-  EventVisibility,
-  InvitePermission,
-} from '@/models/event';
+import { EventStatus, EventType, EventVisibility, InvitePermission } from '@/models/event';
 import type { User } from '@/models/user';
 
 vi.mock('@/api/events', () => ({

@@ -20,7 +20,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
   const inputId = id ?? `field-${label.replace(/\s+/g, '-').toLowerCase()}`;
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={inputId} className="text-sm font-medium text-foreground">
+      <label htmlFor={inputId} className="text-foreground text-sm font-medium">
         {label}
       </label>
       <div className="relative">
@@ -30,7 +30,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${inputId}-error` : undefined}
           className={cn(
-            'h-10 w-full appearance-none rounded-md border border-border-strong bg-surface pr-9 pl-3 text-sm transition-colors outline-none focus:border-neutral-500 focus:ring-2 focus:ring-border',
+            'border-border-strong bg-surface focus:ring-border h-10 w-full appearance-none rounded-md border pr-9 pl-3 text-sm transition-colors outline-none focus:border-neutral-500 focus:ring-2',
             error && 'border-destructive-border focus:border-red-500 focus:ring-red-100',
             className,
           )}
@@ -50,7 +50,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
         <svg
           aria-hidden="true"
           viewBox="0 0 20 20"
-          className="pointer-events-none absolute inset-y-0 end-3 my-auto h-4 w-4 text-foreground-secondary"
+          className="text-foreground-secondary pointer-events-none absolute inset-y-0 end-3 my-auto h-4 w-4"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -61,7 +61,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
         </svg>
       </div>
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs text-destructive">
+        <p id={`${inputId}-error`} className="text-destructive text-xs">
           {error}
         </p>
       ) : null}

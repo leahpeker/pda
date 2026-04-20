@@ -112,7 +112,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
           <>
             <img src={displayUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/40 via-transparent to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-foreground">
+              <span className="text-foreground rounded-full bg-white/90 px-3 py-1 text-xs font-medium">
                 change photo
               </span>
             </div>
@@ -123,9 +123,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
               📸
             </span>
             <span className="text-sm font-medium">add a cover photo</span>
-            <span className="text-brand-600/80 text-xs">
-              tap to pick — landscape to portrait
-            </span>
+            <span className="text-brand-600/80 text-xs">tap to pick — landscape to portrait</span>
           </span>
         )}
       </button>
@@ -136,7 +134,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
             type="button"
             onClick={(e) => void handleDelete(e)}
             disabled={locked}
-            className="text-xs text-muted underline decoration-dotted hover:text-destructive disabled:cursor-not-allowed"
+            className="text-muted hover:text-destructive text-xs underline decoration-dotted disabled:cursor-not-allowed"
           >
             remove photo
           </button>
@@ -144,7 +142,7 @@ export function EventFormPhoto({ photoUrl, photoUpdatedAt, onCrop, onDelete, dis
       ) : null}
 
       {error ? (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="text-destructive text-xs">
           {error}
         </p>
       ) : null}

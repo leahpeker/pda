@@ -41,7 +41,9 @@ describe('InstallAppScreen', () => {
   it('renders page title and subtitle', () => {
     renderWith(<InstallAppScreen />);
     expect(screen.getByRole('heading', { name: /install the app/i })).toBeInTheDocument();
-    expect(screen.getByText(/add pda to your home screen for a native-app feel/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/add pda to your home screen for a native-app feel/i),
+    ).toBeInTheDocument();
   });
 
   it('shows Android section', () => {

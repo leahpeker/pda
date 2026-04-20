@@ -49,10 +49,8 @@ export default function DocsScreen() {
       <h1 className="mb-6 text-2xl font-medium tracking-tight">docs</h1>
 
       {canManage ? (
-        <section className="mb-8 rounded-lg border border-border bg-surface p-4">
-          <h2 className="mb-3 text-xs font-medium tracking-wide text-muted">
-            library admin
-          </h2>
+        <section className="border-border bg-surface mb-8 rounded-lg border p-4">
+          <h2 className="text-muted mb-3 text-xs font-medium tracking-wide">library admin</h2>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
             <TextField
               label="new folder name"
@@ -93,10 +91,10 @@ export default function DocsScreen() {
                 setNewDocTitle(e.target.value);
               }}
             />
-            <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-muted">
+            <label className="text-muted flex min-w-[10rem] flex-col gap-1 text-xs">
               folder
               <select
-                className="rounded-md border border-border bg-background px-2 py-2 text-sm text-foreground"
+                className="border-border bg-background text-foreground rounded-md border px-2 py-2 text-sm"
                 value={effectiveDocFolderId}
                 onChange={(e) => {
                   setNewDocFolderId(e.target.value);
@@ -141,7 +139,7 @@ export default function DocsScreen() {
       ) : null}
 
       {empty ? (
-        <p className="text-sm text-muted">nothing here yet 🌿</p>
+        <p className="text-muted text-sm">nothing here yet 🌿</p>
       ) : (
         <div className="flex flex-col gap-4">
           {data.map((folder) => (
@@ -196,7 +194,9 @@ function FolderView({
       <div className="flex flex-wrap items-center gap-2">
         <Heading
           className={
-            depth === 0 ? 'text-lg font-medium' : 'mt-3 text-sm font-medium text-foreground-tertiary'
+            depth === 0
+              ? 'text-lg font-medium'
+              : 'text-foreground-tertiary mt-3 text-sm font-medium'
           }
         >
           {folder.name.toLowerCase()}
@@ -205,7 +205,7 @@ function FolderView({
           <Button
             type="button"
             variant="ghost"
-            className="text-xs text-muted"
+            className="text-muted text-xs"
             onClick={() => {
               const ok = window.confirm(`delete folder "${folder.name}" and everything inside?`);
               if (!ok) return;
@@ -271,7 +271,7 @@ function FolderView({
         )
       ) : null}
       {folder.children.length > 0 ? (
-        <div className="ms-3 mt-2 border-s border-border ps-3">
+        <div className="border-border ms-3 mt-2 border-s ps-3">
           {folder.children.map((c) => (
             <FolderView
               key={c.id}
@@ -299,8 +299,8 @@ function DocRow({
   onDelete?: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded px-2 py-1 hover:bg-surface-dim">
-      <Link to={`/docs/${doc.id}`} className="text-sm text-foreground">
+    <div className="hover:bg-surface-dim flex flex-wrap items-center gap-2 rounded px-2 py-1">
+      <Link to={`/docs/${doc.id}`} className="text-foreground text-sm">
         {doc.title.toLowerCase()}
       </Link>
       {canManage && onDelete ? (

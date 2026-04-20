@@ -37,9 +37,9 @@ export default function ProfileScreen() {
         </div>
       </header>
 
-      <section className="mt-8 rounded-lg border border-border bg-surface p-4">
+      <section className="border-border bg-surface mt-8 rounded-lg border p-4">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-medium tracking-wide text-muted">bio</h2>
+          <h2 className="text-muted text-xs font-medium tracking-wide">bio</h2>
           {user.bio ? (
             <Button
               variant="ghost"
@@ -53,7 +53,7 @@ export default function ProfileScreen() {
           ) : null}
         </div>
         {user.bio ? (
-          <p className="text-sm whitespace-pre-wrap text-foreground">{user.bio}</p>
+          <p className="text-foreground text-sm whitespace-pre-wrap">{user.bio}</p>
         ) : (
           <Button
             variant="secondary"
@@ -92,23 +92,17 @@ export default function ProfileScreen() {
 
 function ContactLine({ value, visible }: { value: string; visible: boolean }) {
   return (
-    <p className="flex items-center gap-1.5 text-sm text-muted">
+    <p className="text-muted flex items-center gap-1.5 text-sm">
       <span>{value}</span>
       <span
         aria-label={visible ? 'visible to members' : 'hidden from members'}
         title={visible ? 'visible to members' : 'only you can see this'}
         className={cn(
           'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-          visible
-            ? 'bg-brand-50 text-brand-700'
-            : 'bg-surface-dim text-muted',
+          visible ? 'bg-brand-50 text-brand-700' : 'bg-surface-dim text-muted',
         )}
       >
-        {visible ? (
-          <EyeIcon className="h-3 w-3" />
-        ) : (
-          <EyeOffIcon className="h-3 w-3" />
-        )}
+        {visible ? <EyeIcon className="h-3 w-3" /> : <EyeOffIcon className="h-3 w-3" />}
         {visible ? 'visible' : 'hidden'}
       </span>
     </p>
@@ -155,7 +149,7 @@ function ProfileLink({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to}
-      className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3 text-sm hover:bg-background"
+      className="border-border bg-surface hover:bg-background flex items-center justify-between rounded-lg border px-4 py-3 text-sm"
     >
       <span>{label}</span>
       <span aria-hidden="true" className="text-muted-foreground">

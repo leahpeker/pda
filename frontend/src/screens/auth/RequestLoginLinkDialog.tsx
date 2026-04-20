@@ -57,7 +57,7 @@ function RequestLoginLinkForm({
         }}
         className="flex flex-col gap-4"
       >
-        <p className="text-sm text-muted">
+        <p className="text-muted text-sm">
           an admin will be pinged to send you a one-tap login link — works for invited members only
         </p>
         <PhoneField
@@ -67,12 +67,7 @@ function RequestLoginLinkForm({
           error={error ?? undefined}
         />
         <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            disabled={requestLink.isPending}
-          >
+          <Button type="button" variant="ghost" onClick={onClose} disabled={requestLink.isPending}>
             cancel
           </Button>
           <Button type="submit" disabled={requestLink.isPending}>

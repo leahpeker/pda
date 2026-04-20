@@ -9,11 +9,7 @@ import { isAxiosError } from 'axios';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { Textarea } from '@/components/ui/Textarea';
-import {
-  useBulkCreateUsers,
-  type BulkCreateResponse,
-  type BulkCreateResult,
-} from '@/api/users';
+import { useBulkCreateUsers, type BulkCreateResponse, type BulkCreateResult } from '@/api/users';
 
 interface Props {
   open: boolean;
@@ -99,15 +95,13 @@ function ResultsView({
   return (
     <Dialog open={open} onClose={onClose} title="bulk results">
       <p className="text-sm text-neutral-700">
-        created {response.created} of {response.created + response.failed} — share each magic
-        link with its recipient; links won't be shown again.
+        created {response.created} of {response.created + response.failed} — share each magic link
+        with its recipient; links won't be shown again.
       </p>
 
       {successes.length > 0 ? (
         <section className="mt-4">
-          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">
-            created
-          </h3>
+          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">created</h3>
           <ul className="flex flex-col gap-2">
             {successes.map((r) => (
               <li key={r.row}>
@@ -120,9 +114,7 @@ function ResultsView({
 
       {failures.length > 0 ? (
         <section className="mt-4">
-          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">
-            failed
-          </h3>
+          <h3 className="mb-2 text-xs font-medium tracking-wide text-neutral-500">failed</h3>
           <ul className="flex flex-col gap-1">
             {failures.map((r) => (
               <li key={r.row} className="text-sm text-red-700">
@@ -158,9 +150,7 @@ function MagicLinkRow({ result }: { result: BulkCreateResult }) {
   return (
     <div className="flex flex-col gap-1 rounded-md border border-neutral-200 bg-white p-2">
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-sm font-medium text-neutral-900">
-          {result.phoneNumber}
-        </span>
+        <span className="truncate text-sm font-medium text-neutral-900">{result.phoneNumber}</span>
         <Button variant="secondary" onClick={() => void copy()}>
           {copied ? 'copied ✓' : 'copy link'}
         </Button>

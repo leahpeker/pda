@@ -38,10 +38,12 @@ export function EventPollCard({ event }: Props) {
   }
 
   if (isPending) {
-    return <p className="text-sm text-foreground-tertiary">loading poll…</p>;
+    return <p className="text-foreground-tertiary text-sm">loading poll…</p>;
   }
   if (isError || !poll) {
-    return <p className="text-sm text-foreground-tertiary">couldn't load the poll — try refreshing</p>;
+    return (
+      <p className="text-foreground-tertiary text-sm">couldn't load the poll — try refreshing</p>
+    );
   }
 
   // Finalized — parent resumes the normal datetime line.
@@ -50,10 +52,10 @@ export function EventPollCard({ event }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
+    <div className="border-border bg-surface flex flex-col gap-3 rounded-md border p-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium">find a time</h2>
-        <span className="text-xs text-foreground-tertiary">
+        <span className="text-foreground-tertiary text-xs">
           {poll.options.length} {poll.options.length === 1 ? 'option' : 'options'}
         </span>
       </div>
@@ -73,7 +75,7 @@ export function EventPollCard({ event }: Props) {
         ) : (
           <Link
             to="/login"
-            className="inline-flex h-10 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-foreground-secondary hover:bg-background"
+            className="border-border-strong text-foreground-secondary hover:bg-background inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium"
           >
             sign in to vote
           </Link>
@@ -100,7 +102,7 @@ export function EventPollCard({ event }: Props) {
       </div>
 
       {poll.finalizedAt ? (
-        <p className="text-xs text-foreground-tertiary">
+        <p className="text-foreground-tertiary text-xs">
           finalized {format(poll.finalizedAt, 'MMM d').toLowerCase()}
         </p>
       ) : null}
@@ -137,4 +139,3 @@ function canManagePoll(event: Event, user: (UserLike & { id: string }) | null): 
   if (event.coHostIds.includes(user.id)) return true;
   return hasPermission(user, Permission.ManageEvents);
 }
-

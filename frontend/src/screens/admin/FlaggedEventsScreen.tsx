@@ -62,13 +62,13 @@ export default function FlaggedEventsScreen() {
       </div>
 
       {error ? (
-        <p role="alert" className="mb-3 text-sm text-destructive">
+        <p role="alert" className="text-destructive mb-3 text-sm">
           {error}
         </p>
       ) : null}
 
       {data.length === 0 ? (
-        <p className="text-sm text-muted">nothing here 🌿</p>
+        <p className="text-muted text-sm">nothing here 🌿</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {data.map((f) => (
@@ -99,22 +99,22 @@ function FlagRow({
 }) {
   const isPending = flag.status === 'pending';
   return (
-    <article className="rounded-lg border border-border bg-surface p-4">
+    <article className="border-border bg-surface rounded-lg border p-4">
       <header className="mb-2 flex flex-wrap items-start justify-between gap-2">
         <div>
           <Link
             to={`/events/${flag.eventId}`}
-            className="text-base font-medium text-foreground underline"
+            className="text-foreground text-base font-medium underline"
           >
             {flag.eventTitle}
           </Link>
-          <p className="text-xs text-muted">
+          <p className="text-muted text-xs">
             flagged by {flag.flaggedByName} · {format(new Date(flag.createdAt), 'MMM d, h:mm a')}
           </p>
         </div>
         <StatusBadge status={flag.status} />
       </header>
-      <p className="text-sm whitespace-pre-wrap text-foreground">{flag.reason}</p>
+      <p className="text-foreground text-sm whitespace-pre-wrap">{flag.reason}</p>
       {isPending ? (
         <div className="mt-4 flex gap-2">
           <Button

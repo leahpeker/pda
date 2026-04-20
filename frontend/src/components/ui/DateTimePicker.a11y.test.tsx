@@ -6,9 +6,7 @@ import { DateTimePicker } from './DateTimePicker';
 
 describe('DateTimePicker accessibility', () => {
   it('renders a visible label and a discoverable trigger button with no axe violations', async () => {
-    const { container } = render(
-      <DateTimePicker label="starts" value={null} onChange={vi.fn()} />,
-    );
+    const { container } = render(<DateTimePicker label="starts" value={null} onChange={vi.fn()} />);
 
     expect(screen.getByText('starts')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /pick a date & time/i })).toBeInTheDocument();

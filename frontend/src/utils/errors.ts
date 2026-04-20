@@ -7,7 +7,7 @@ interface NinjaValidationError {
 
 function formatValidationErrors(items: NinjaValidationError[]): string | null {
   const msgs = items
-    .map((item) => (typeof item?.msg === 'string' ? item.msg.toLowerCase() : null))
+    .map((item) => (typeof item.msg === 'string' ? item.msg.toLowerCase() : null))
     .filter((m): m is string => Boolean(m));
   if (msgs.length === 0) return null;
   return msgs.join(' · ');

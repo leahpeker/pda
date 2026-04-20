@@ -43,7 +43,7 @@ export function CollapsibleCard({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-[var(--radius-md)] border bg-surface shadow-(--shadow-sm) transition-colors',
+        'bg-surface overflow-hidden rounded-[var(--radius-md)] border shadow-(--shadow-sm) transition-colors',
         isOpen ? 'border-brand-200' : 'border-brand-100 hover:border-brand-200',
       )}
     >
@@ -62,11 +62,11 @@ export function CollapsibleCard({
               {emoji}
             </span>
           ) : null}
-          <span className="text-sm font-medium text-foreground">{title}</span>
+          <span className="text-foreground text-sm font-medium">{title}</span>
         </span>
         <span className="flex items-center gap-2">
           {error ? (
-            <span className="rounded-full bg-destructive-subtle px-2 py-0.5 text-xs font-medium text-destructive">
+            <span className="bg-destructive-subtle text-destructive rounded-full px-2 py-0.5 text-xs font-medium">
               {error}
             </span>
           ) : !isOpen && summary ? (

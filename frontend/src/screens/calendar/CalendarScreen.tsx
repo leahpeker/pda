@@ -98,7 +98,7 @@ export default function CalendarScreen() {
       </header>
 
       {isError ? (
-        <div className="mb-4 rounded-md border border-destructive bg-destructive-subtle px-3 py-2 text-sm text-destructive">
+        <div className="border-destructive bg-destructive-subtle text-destructive mb-4 rounded-md border px-3 py-2 text-sm">
           couldn't load events —{' '}
           <button
             type="button"
@@ -112,10 +112,7 @@ export default function CalendarScreen() {
         </div>
       ) : null}
 
-      <div
-        className="flex flex-col p-1"
-        style={{ height: 'calc(100dvh - 14rem)' }}
-      >
+      <div className="flex flex-col p-1" style={{ height: 'calc(100dvh - 14rem)' }}>
         {useNarrowWeek ? (
           <>
             <NarrowWeekToolbar date={date} weekStartsOn={weekStartsOn} onNavigate={setDate} />
@@ -179,9 +176,7 @@ export default function CalendarScreen() {
             style={{ height: '100%' }}
           />
         )}
-        {isPending ? (
-          <p className="mt-2 text-center text-xs text-muted">loading events…</p>
-        ) : null}
+        {isPending ? <p className="text-muted mt-2 text-center text-xs">loading events…</p> : null}
       </div>
     </main>
   );
@@ -215,18 +210,18 @@ function DayToolbar({ date, onNavigate }: DayToolbarProps) {
             onClick={() => {
               onNavigate(addDays(date, -1));
             }}
-            className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
+            className="hover:text-brand-700 text-foreground-tertiary hover:bg-surface-dim inline-flex h-8 w-8 items-center justify-center rounded-md"
           >
             ‹
           </button>
-          <span className="text-center text-sm font-medium text-foreground">{label}</span>
+          <span className="text-foreground text-center text-sm font-medium">{label}</span>
           <button
             type="button"
             aria-label="next day"
             onClick={() => {
               onNavigate(addDays(date, 1));
             }}
-            className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
+            className="hover:text-brand-700 text-foreground-tertiary hover:bg-surface-dim inline-flex h-8 w-8 items-center justify-center rounded-md"
           >
             ›
           </button>
@@ -254,18 +249,18 @@ function NarrowWeekToolbar({ date, weekStartsOn, onNavigate }: NarrowWeekToolbar
             onClick={() => {
               onNavigate(addDays(date, -7));
             }}
-            className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
+            className="hover:text-brand-700 text-foreground-tertiary hover:bg-surface-dim inline-flex h-8 w-8 items-center justify-center rounded-md"
           >
             ‹
           </button>
-          <span className="text-center text-sm font-medium text-foreground">{label}</span>
+          <span className="text-foreground text-center text-sm font-medium">{label}</span>
           <button
             type="button"
             aria-label="next week"
             onClick={() => {
               onNavigate(addDays(date, 7));
             }}
-            className="hover:text-brand-700 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:bg-surface-dim"
+            className="hover:text-brand-700 text-foreground-tertiary hover:bg-surface-dim inline-flex h-8 w-8 items-center justify-center rounded-md"
           >
             ›
           </button>

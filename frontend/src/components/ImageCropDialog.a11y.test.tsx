@@ -4,13 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe } from 'vitest-axe';
 
 vi.mock('react-image-crop', () => ({
-  default: ({
-    circularCrop,
-    children,
-  }: {
-    circularCrop?: boolean;
-    children?: React.ReactNode;
-  }) => (
+  default: ({ circularCrop, children }: { circularCrop?: boolean; children?: React.ReactNode }) => (
     <div data-testid="cropper" data-circular={String(Boolean(circularCrop))}>
       {children}
     </div>
@@ -39,24 +33,14 @@ function makeFile() {
 describe('ImageCropDialog accessibility', () => {
   it('round mode has no axe violations', async () => {
     const { container } = render(
-      <ImageCropDialog
-        file={makeFile()}
-        shape="round"
-        onCancel={vi.fn()}
-        onCrop={vi.fn()}
-      />,
+      <ImageCropDialog file={makeFile()} shape="round" onCancel={vi.fn()} onCrop={vi.fn()} />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });
 
   it('rect mode has no axe violations', async () => {
     const { container } = render(
-      <ImageCropDialog
-        file={makeFile()}
-        shape="rect"
-        onCancel={vi.fn()}
-        onCrop={vi.fn()}
-      />,
+      <ImageCropDialog file={makeFile()} shape="rect" onCancel={vi.fn()} onCrop={vi.fn()} />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });

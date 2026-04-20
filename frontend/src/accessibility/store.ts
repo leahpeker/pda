@@ -67,10 +67,8 @@ function applyToDOM(state: AccessibilityState): void {
 
 useAccessibilityStore.subscribe(applyToDOM);
 
-window
-  .matchMedia('(prefers-color-scheme: dark)')
-  .addEventListener('change', () => {
-    if (useAccessibilityStore.getState().themeMode === 'system') {
-      applyToDOM(useAccessibilityStore.getState());
-    }
-  });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (useAccessibilityStore.getState().themeMode === 'system') {
+    applyToDOM(useAccessibilityStore.getState());
+  }
+});

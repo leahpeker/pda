@@ -22,7 +22,7 @@ export function SegmentedControl<T extends string | number>({
       role="radiogroup"
       aria-label={ariaLabel}
       className={cn(
-        'inline-flex rounded-full border border-border-strong bg-surface p-1',
+        'border-border-strong bg-surface inline-flex rounded-full border p-1',
         className,
       )}
     >

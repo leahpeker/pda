@@ -45,8 +45,8 @@ export default function EventDetailScreen() {
 
       {event.description ? (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-medium text-muted">about</h2>
-          <p className="whitespace-pre-wrap text-foreground">{event.description}</p>
+          <h2 className="text-muted mb-2 text-sm font-medium">about</h2>
+          <p className="text-foreground whitespace-pre-wrap">{event.description}</p>
         </section>
       ) : null}
 
@@ -61,7 +61,7 @@ function WhenLine({ event }: { event: Event }) {
   const pollActive = event.hasPoll && !event.startDatetime;
   if (pollActive) return null;
   return (
-    <p className="text-sm text-foreground-secondary">
+    <p className="text-foreground-secondary text-sm">
       {event.startDatetime
         ? formatEventDateTime(event.startDatetime, event.endDatetime, event.datetimeTbd)
         : 'date & time tbd'}
@@ -104,14 +104,14 @@ function Badge({
 function InviteOnlyNotice() {
   return (
     <ContentContainer>
-      <section className="mt-8 rounded-lg border border-border bg-surface p-6">
+      <section className="border-border bg-surface mt-8 rounded-lg border p-6">
         <h2 className="mb-2 text-base font-medium">invite only 🌿</h2>
-        <p className="mb-4 text-sm text-foreground-tertiary">
+        <p className="text-foreground-tertiary mb-4 text-sm">
           this event is invite only — reach out to the host if you'd like to come along
         </p>
         <Link
           to="/calendar"
-          className="inline-flex h-10 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-foreground-secondary hover:bg-background"
+          className="border-border-strong text-foreground-secondary hover:bg-background inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium"
         >
           back to calendar
         </Link>
@@ -123,21 +123,21 @@ function InviteOnlyNotice() {
 function LoginOrJoinSection() {
   // Unauthed users miss: hosts, location, links, cost, invite, RSVP.
   return (
-    <section className="mt-8 rounded-lg border border-border bg-surface p-6">
+    <section className="border-border bg-surface mt-8 rounded-lg border p-6">
       <h2 className="mb-2 text-base font-medium">want to see more?</h2>
-      <p className="mb-4 text-sm text-foreground-tertiary">
+      <p className="text-foreground-tertiary mb-4 text-sm">
         location, rsvp, and organizer details are shown once you sign in
       </p>
       <div className="flex flex-wrap gap-3">
         <Link
           to="/login"
-          className="inline-flex h-10 items-center rounded-md bg-brand-600 px-4 text-sm font-medium text-brand-on hover:bg-brand-700"
+          className="bg-brand-600 text-brand-on hover:bg-brand-700 inline-flex h-10 items-center rounded-md px-4 text-sm font-medium"
         >
           sign in
         </Link>
         <Link
           to="/join"
-          className="inline-flex h-10 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-foreground-secondary hover:bg-background"
+          className="border-border-strong text-foreground-secondary hover:bg-background inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium"
         >
           request to join
         </Link>

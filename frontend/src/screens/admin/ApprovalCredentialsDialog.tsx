@@ -38,10 +38,10 @@ export function ApprovalCredentialsDialog({
 
   return (
     <Dialog open={open} onClose={onClose} title={`welcome ${displayName}`}>
-      <p className="text-sm text-foreground-secondary">
+      <p className="text-foreground-secondary text-sm">
         share this one-time login link with {phoneNumber}. it won't be shown again.
       </p>
-      <div className="mt-3 overflow-x-auto rounded-md bg-surface-dim px-3 py-2 font-mono text-xs break-all">
+      <div className="bg-surface-dim mt-3 overflow-x-auto rounded-md px-3 py-2 font-mono text-xs break-all">
         {magicLinkUrl}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">

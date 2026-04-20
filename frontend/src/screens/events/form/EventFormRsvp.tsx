@@ -22,7 +22,11 @@ export function EventFormRsvp({ values, onChange, errors }: Props) {
         checked={values.rsvpEnabled}
         onChange={(checked) => {
           if (!checked) {
-            onChange({ rsvpEnabled: false, allowPlusOnes: false, invitePermission: 'co_hosts_only' });
+            onChange({
+              rsvpEnabled: false,
+              allowPlusOnes: false,
+              invitePermission: 'co_hosts_only',
+            });
           } else {
             onChange({ rsvpEnabled: true });
           }

@@ -39,9 +39,7 @@ function renderWith(component: React.ReactElement, initialRoute = '/join') {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={[initialRoute]}>
-        {component}
-      </MemoryRouter>
+      <MemoryRouter initialEntries={[initialRoute]}>{component}</MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -108,9 +106,7 @@ describe('JoinScreen', () => {
     await user.click(screen.getByRole('button', { name: /submit request/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'something went wrong on the server',
-      );
+      expect(screen.getByRole('alert')).toHaveTextContent('something went wrong on the server');
     });
   });
 

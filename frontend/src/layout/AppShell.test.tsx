@@ -86,5 +86,4 @@ describe('AppShell + BottomNav', () => {
     const nav = screen.getByRole('navigation', { name: /primary/i });
     expect(nav).toBeInTheDocument();
   });
-
 });

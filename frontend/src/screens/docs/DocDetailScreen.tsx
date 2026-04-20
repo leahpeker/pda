@@ -17,7 +17,7 @@ export default function DocDetailScreen() {
 
   return (
     <ContentContainer>
-      <Link to="/docs" className="mb-4 inline-block text-sm text-muted hover:underline">
+      <Link to="/docs" className="text-muted mb-4 inline-block text-sm hover:underline">
         ← back to docs
       </Link>
       <h1 className="mb-4 text-2xl font-medium tracking-tight">{data.title}</h1>

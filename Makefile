@@ -5,12 +5,12 @@
 export
 
 .PHONY: help install run test test-since lint lint-check format typecheck lint-file typecheck-file check migrate \
-        createsuperuser seed db-start db-stop ci agent-ci dev complexity \
+        createsuperuser seed db-start db-stop ci backend-ci frontend-ci agent-ci agent-backend-ci agent-frontend-ci dev complexity \
         frontend-install frontend-run frontend-build frontend-lint \
-        frontend-format frontend-test frontend-typecheck frontend-types \
+        frontend-format frontend-format-check frontend-test frontend-typecheck frontend-types \
         parallel-frontend parallel-agent-frontend \
         agent-lint agent-check agent-test agent-test-since agent-typecheck agent-complexity \
-        agent-frontend-lint agent-frontend-test agent-frontend-typecheck
+        agent-frontend-lint agent-frontend-format agent-frontend-test agent-frontend-typecheck
 
 help:
 	@echo "Backend commands:"
@@ -32,16 +32,21 @@ help:
 	@echo "  make frontend-install   pnpm install (frontend)"
 	@echo "  make frontend-run        Run Vite dev server (localhost:3000, proxies /api to 8000)"
 	@echo "  make frontend-build     Build Vite production bundle"
-	@echo "  make frontend-lint      Run ESLint + Prettier check"
-	@echo "  make frontend-format    Auto-format files"
-	@echo "  make frontend-test      Run Vitest suite"
-	@echo "  make frontend-typecheck Run TypeScript check"
-	@echo "  make frontend-types     Generate API types from OpenAPI"
+	@echo "  make frontend-lint        Run ESLint"
+	@echo "  make frontend-format      Auto-format files (prettier --write)"
+	@echo "  make frontend-format-check  Prettier check (no write)"
+	@echo "  make frontend-test        Run Vitest suite"
+	@echo "  make frontend-typecheck   Run TypeScript check"
+	@echo "  make frontend-types       Generate API types from OpenAPI"
 	@echo ""
 	@echo "Workflow commands:"
 	@echo "  make dev              Run Django + Vite concurrently (default)"
-	@echo "  make ci               Run all pre-commit checks"
+	@echo "  make ci               Run all pre-commit checks (backend-ci + frontend-ci)"
+	@echo "  make backend-ci       Backend-only pre-commit checks"
+	@echo "  make frontend-ci      Frontend-only pre-commit checks"
 	@echo "  make agent-ci         Same as ci with minimal output (for agents / logs)"
+	@echo "  make agent-backend-ci   agent-ci backend portion only"
+	@echo "  make agent-frontend-ci  agent-ci frontend portion only"
 	@echo "  make agent-test-since Quiet test-since (same selection rules)"
 
 # Backend + Frontend
@@ -126,6 +131,9 @@ frontend-lint:
 frontend-format:
 	cd frontend && pnpm format
 
+frontend-format-check:
+	cd frontend && pnpm format:check
+
 frontend-test:
 	cd frontend && pnpm test
 
@@ -136,11 +144,15 @@ frontend-types:
 	cd frontend && pnpm types:api
 
 # CI (run before every commit)
-ci: lint check test typecheck complexity parallel-frontend
+ci: backend-ci frontend-ci
 
-# ESLint, Vitest, and tsc are independent — run in parallel to cut wall-clock time.
+backend-ci: lint check test typecheck complexity
+
+frontend-ci: parallel-frontend
+
+# ESLint, Prettier, Vitest, and tsc are independent — run in parallel to cut wall-clock time.
 parallel-frontend:
-	$(MAKE) -j3 frontend-lint frontend-test frontend-typecheck
+	$(MAKE) -j4 frontend-lint frontend-format-check frontend-test frontend-typecheck
 
 # CI with quiet runners (same steps as ci; still auto-fixes via ruff)
 agent-lint:
@@ -177,16 +189,23 @@ agent-complexity:
 agent-frontend-lint:
 	cd frontend && pnpm exec eslint . --max-warnings 0
 
+agent-frontend-format:
+	cd frontend && pnpm exec prettier --write --log-level warn .
+
 agent-frontend-test:
 	cd frontend && pnpm exec vitest run --reporter=dot --silent passed-only
 
 agent-frontend-typecheck:
 	cd frontend && pnpm exec tsc -b --noEmit --pretty false
 
-agent-ci: agent-lint agent-check agent-test agent-typecheck agent-complexity parallel-agent-frontend
+agent-ci: agent-backend-ci agent-frontend-ci
+
+agent-backend-ci: agent-lint agent-check agent-test agent-typecheck agent-complexity
+
+agent-frontend-ci: parallel-agent-frontend
 
 parallel-agent-frontend:
-	$(MAKE) -j3 agent-frontend-lint agent-frontend-test agent-frontend-typecheck
+	$(MAKE) -j4 agent-frontend-lint agent-frontend-format agent-frontend-test agent-frontend-typecheck
 
 # Dev (concurrent backend + frontend)
 dev:

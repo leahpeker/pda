@@ -39,9 +39,7 @@ export default function SurveyResponsesScreen() {
 
   const firstDatetimeQuestion = datetimeQuestions[0];
   const finalizeOptions =
-    !survey.data.pollResult &&
-    firstDatetimeQuestion &&
-    firstDatetimeQuestion.options.length > 0
+    !survey.data.pollResult && firstDatetimeQuestion && firstDatetimeQuestion.options.length > 0
       ? firstDatetimeQuestion.options
       : null;
 
@@ -50,13 +48,13 @@ export default function SurveyResponsesScreen() {
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-medium tracking-tight">{survey.data.title}</h1>
-          <p className="text-sm text-muted">
+          <p className="text-muted text-sm">
             {String(responses.data.length)} response{responses.data.length === 1 ? '' : 's'}
           </p>
         </div>
         <Link
           to={`/admin/surveys/${surveyId}`}
-          className="inline-flex h-10 items-center rounded-md px-4 text-sm text-foreground-secondary hover:bg-surface-dim"
+          className="text-foreground-secondary hover:bg-surface-dim inline-flex h-10 items-center rounded-md px-4 text-sm"
         >
           ← back to editor
         </Link>
@@ -64,13 +62,11 @@ export default function SurveyResponsesScreen() {
 
       {datetimeQuestions.length > 0 ? (
         <section className="mb-8">
-          <h2 className="mb-3 text-xs font-medium tracking-wide text-muted">
-            poll tallies
-          </h2>
+          <h2 className="text-muted mb-3 text-xs font-medium tracking-wide">poll tallies</h2>
           {tallies.isPending ? (
-            <p className="text-sm text-muted">loading tallies…</p>
+            <p className="text-muted text-sm">loading tallies…</p>
           ) : tallies.isError ? (
-            <p className="text-sm text-muted">couldn't load tallies</p>
+            <p className="text-muted text-sm">couldn't load tallies</p>
           ) : (
             <TalliesTables questions={survey.data.questions} rows={tallies.data} />
           )}
@@ -81,11 +77,11 @@ export default function SurveyResponsesScreen() {
       ) : null}
 
       {responses.data.length === 0 ? (
-        <p className="text-sm text-muted">no responses yet</p>
+        <p className="text-muted text-sm">no responses yet</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+        <div className="border-border bg-surface overflow-x-auto rounded-lg border">
           <table className="w-full text-left text-sm">
-            <thead className="bg-background text-xs text-muted">
+            <thead className="bg-background text-muted text-xs">
               <tr>
                 <th className="px-3 py-2">submitted by</th>
                 <th className="px-3 py-2">at</th>
@@ -98,13 +94,13 @@ export default function SurveyResponsesScreen() {
             </thead>
             <tbody>
               {responses.data.map((r) => (
-                <tr key={r.id} className="border-t border-border align-top">
-                  <td className="px-3 py-2 text-foreground">{r.userName ?? '—'}</td>
-                  <td className="px-3 py-2 text-xs text-muted">
+                <tr key={r.id} className="border-border border-t align-top">
+                  <td className="text-foreground px-3 py-2">{r.userName ?? '—'}</td>
+                  <td className="text-muted px-3 py-2 text-xs">
                     {format(new Date(r.submittedAt), 'MMM d, yyyy h:mm a').toLowerCase()}
                   </td>
                   {survey.data.questions.map((q) => (
-                    <td key={q.id} className="px-3 py-2 whitespace-pre-wrap text-foreground">
+                    <td key={q.id} className="text-foreground px-3 py-2 whitespace-pre-wrap">
                       {renderAnswer(r.answers[q.id])}
                     </td>
                   ))}
@@ -129,11 +125,11 @@ function TalliesTables({
   return (
     <div className="flex flex-col gap-4">
       {rows.map((row) => (
-        <div key={row.questionId} className="rounded-lg border border-border bg-surface p-3">
-          <p className="mb-2 text-sm font-medium text-foreground">
+        <div key={row.questionId} className="border-border bg-surface rounded-lg border p-3">
+          <p className="text-foreground mb-2 text-sm font-medium">
             {(labelById.get(row.questionId) ?? row.questionId).toLowerCase()}
           </p>
-          <p className="mb-2 text-xs text-muted">
+          <p className="text-muted mb-2 text-xs">
             total responses recorded: {String(row.totalResponses)}
           </p>
           <div className="overflow-x-auto">
@@ -147,8 +143,8 @@ function TalliesTables({
               </thead>
               <tbody>
                 {Object.entries(row.tallies).map(([opt, counts]) => (
-                  <tr key={opt} className="border-t border-border">
-                    <td className="py-1 pe-2 font-mono text-foreground">
+                  <tr key={opt} className="border-border border-t">
+                    <td className="text-foreground py-1 pe-2 font-mono">
                       {formatOptionLabel(opt)}
                     </td>
                     <td className="px-2 py-1">{String(counts.yes ?? 0)}</td>
@@ -209,15 +205,15 @@ function SurveyFinalizeControls({ surveyId, options }: { surveyId: string; optio
         title="finalize survey poll"
       >
         <div className="flex max-h-[70vh] flex-col gap-3 overflow-y-auto p-4">
-          <p className="text-sm text-muted">
-            pick the winning datetime. this locks the survey and, if linked, updates the event
-            start time.
+          <p className="text-muted text-sm">
+            pick the winning datetime. this locks the survey and, if linked, updates the event start
+            time.
           </p>
           <div className="flex flex-col gap-2">
             {options.map((opt) => (
               <label
                 key={opt}
-                className="flex cursor-pointer items-start gap-2 rounded-md border border-border p-2 text-sm"
+                className="border-border flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm"
               >
                 <input
                   type="radio"

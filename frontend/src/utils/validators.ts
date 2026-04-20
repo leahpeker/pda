@@ -13,9 +13,7 @@ export function displayName(value: string | null | undefined): string | null {
   return null;
 }
 
-export function optionalDisplayName(
-  value: string | null | undefined,
-): string | null {
+export function optionalDisplayName(value: string | null | undefined): string | null {
   if (!value || value.trim() === '') {
     return null;
   }
@@ -28,8 +26,7 @@ export function optionalDisplayName(
   return null;
 }
 
-const emailRe =
-  /^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/;
+const emailRe = /^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/;
 
 export function optionalEmail(value: string | null | undefined): string | null {
   if (!value || value.trim() === '') {

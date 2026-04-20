@@ -36,9 +36,7 @@ describe('useSurveyPollTallies', () => {
           question_id: 'q1',
           tallies: { '2026-04-20T12:00:00.000Z': { yes: 2, maybe: 1 } },
           voters: {
-            '2026-04-20T12:00:00.000Z': [
-              { user_id: 'u1', name: 'ada', photo_url: '' },
-            ],
+            '2026-04-20T12:00:00.000Z': [{ user_id: 'u1', name: 'ada', photo_url: '' }],
           },
           total_responses: 3,
         },

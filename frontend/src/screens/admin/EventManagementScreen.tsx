@@ -75,7 +75,7 @@ export default function EventManagementScreen() {
         <h1 className="text-2xl font-medium tracking-tight">manage events</h1>
         <Link
           to="/events/add"
-          className="inline-flex h-10 items-center rounded-md bg-brand-600 px-4 text-sm font-medium text-brand-on hover:bg-brand-700"
+          className="bg-brand-600 text-brand-on hover:bg-brand-700 inline-flex h-10 items-center rounded-md px-4 text-sm font-medium"
         >
           new event
         </Link>
@@ -119,7 +119,7 @@ export default function EventManagementScreen() {
       </div>
 
       {visible.length === 0 ? (
-        <p className="text-sm text-muted">nothing in this bucket</p>
+        <p className="text-muted text-sm">nothing in this bucket</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {visible.map((e) => (
@@ -137,12 +137,14 @@ function EventRow({ event }: { event: Event }) {
   return (
     <Link
       to={`/events/${event.id}`}
-      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3 hover:bg-background"
+      className="border-border bg-surface hover:bg-background flex items-center justify-between gap-3 rounded-lg border p-3"
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">{event.title}</p>
-        <p className="truncate text-xs text-muted">
-          {event.datetimeTbd || !event.startDatetime ? 'tbd' : format(event.startDatetime, 'EEE MMM d, h:mm a').toLowerCase()}
+        <p className="text-foreground truncate text-sm font-medium">{event.title}</p>
+        <p className="text-muted truncate text-xs">
+          {event.datetimeTbd || !event.startDatetime
+            ? 'tbd'
+            : format(event.startDatetime, 'EEE MMM d, h:mm a').toLowerCase()}
           {event.location ? ` · ${event.location}` : ''}
         </p>
       </div>

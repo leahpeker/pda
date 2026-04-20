@@ -105,11 +105,7 @@ function MemberDetailView({ member }: { member: Member }) {
         />
       ) : (
         <div className="flex justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => void onArchive()}
-            disabled={archive.isPending}
-          >
+          <Button variant="ghost" onClick={() => void onArchive()} disabled={archive.isPending}>
             {archive.isPending ? 'archiving…' : 'archive'}
           </Button>
           <Button
@@ -132,8 +128,7 @@ function MemberRolesSection({ member }: { member: Member }) {
   const [selected, setSelected] = useState(() => new Set(member.roles.map((r) => r.id)));
 
   const unchanged =
-    selected.size === member.roles.length &&
-    member.roles.every((r) => selected.has(r.id));
+    selected.size === member.roles.length && member.roles.every((r) => selected.has(r.id));
 
   async function onSaveRoles() {
     try {
@@ -309,9 +304,7 @@ function MemberEditForm({
         onChange={setIsPaused}
         disabled={targetIsAdmin}
       />
-      {targetIsAdmin ? (
-        <p className="text-xs text-neutral-500">admins can't be paused</p>
-      ) : null}
+      {targetIsAdmin ? <p className="text-xs text-neutral-500">admins can't be paused</p> : null}
 
       {error ? (
         <p role="alert" className="text-sm text-red-600">

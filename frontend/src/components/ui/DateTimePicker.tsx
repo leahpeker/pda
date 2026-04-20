@@ -69,9 +69,11 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
 
   return (
     <div ref={ref} className="relative flex flex-col gap-1">
-      <label className="text-sm font-medium text-foreground">
+      <label className="text-foreground text-sm font-medium">
         {label}
-        {optional && <span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span>}
+        {optional && (
+          <span className="text-muted-foreground ml-1 text-xs font-normal">(optional)</span>
+        )}
       </label>
 
       <button
@@ -94,7 +96,7 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 rounded-[var(--radius-md)] border border-brand-100 bg-surface p-3 shadow-(--shadow-lg)">
+        <div className="border-brand-100 bg-surface absolute z-50 mt-2 rounded-[var(--radius-md)] border p-3 shadow-(--shadow-lg)">
           <DayPicker
             mode="single"
             selected={selectedDate}
@@ -107,8 +109,10 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
             defaultMonth={selectedDate ?? new Date()}
             locale={enUS}
           />
-          <div className="mt-2 flex items-center gap-2 border-t border-border pt-2">
-            <label htmlFor="dt-time" className="text-xs text-muted">time</label>
+          <div className="border-border mt-2 flex items-center gap-2 border-t pt-2">
+            <label htmlFor="dt-time" className="text-muted text-xs">
+              time
+            </label>
             <input
               id="dt-time"
               type="time"
@@ -122,15 +126,13 @@ export function DateTimePicker({ label, value, onChange, disabled, error, option
                 const base = selectedDate ?? new Date();
                 onChange(dateToIso(base, h, m));
               }}
-              className="h-8 rounded-md border border-border bg-surface px-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-200"
+              className="border-border bg-surface focus:border-brand-500 focus:ring-brand-200 h-8 rounded-md border px-2 text-sm outline-none focus:ring-1"
             />
           </div>
         </div>
       )}
 
-      {error ? (
-        <p className="text-xs text-destructive">{error}</p>
-      ) : null}
+      {error ? <p className="text-destructive text-xs">{error}</p> : null}
     </div>
   );
 }

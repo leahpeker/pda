@@ -40,13 +40,13 @@ export function PollOptionCard({ option, isWinner, isFinalized }: Props) {
           fade && 'opacity-60',
         )}
       >
-        <span className="text-xs font-medium tracking-wide text-foreground-tertiary">
+        <span className="text-foreground-tertiary text-xs font-medium tracking-wide">
           {dayOfWeek}
-          {isWinner ? <span className="ml-1 text-brand-700">✓</span> : null}
+          {isWinner ? <span className="text-brand-700 ml-1">✓</span> : null}
         </span>
         <span className="text-base font-medium">{monthDay}</span>
-        <span className="text-sm text-foreground-secondary">{time}</span>
-        <span className="mt-1 text-xs text-foreground-tertiary">
+        <span className="text-foreground-secondary text-sm">{time}</span>
+        <span className="text-foreground-tertiary mt-1 text-xs">
           {option.yesCount} yes · {option.maybeCount} maybe
         </span>
       </button>

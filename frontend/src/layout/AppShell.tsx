@@ -16,8 +16,8 @@ export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-surface">
+    <div className="bg-background flex min-h-screen flex-col">
+      <header className="border-border bg-surface sticky top-0 z-10 border-b">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
           <button
             type="button"
@@ -31,9 +31,7 @@ export function AppShell() {
           >
             pda
           </button>
-          <div className="flex items-center gap-1">
-            {isAuthed ? <NotificationBell /> : null}
-          </div>
+          <div className="flex items-center gap-1">{isAuthed ? <NotificationBell /> : null}</div>
         </div>
       </header>
 

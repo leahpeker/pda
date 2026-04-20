@@ -69,18 +69,14 @@ export function AvatarUpload({ size = 'md' }: Props) {
     <div className="flex flex-col items-center gap-2">
       <div className="relative">
         {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt=""
-            className={cn(avatarSize, 'rounded-full object-cover')}
-          />
+          <img src={photoUrl} alt="" className={cn(avatarSize, 'rounded-full object-cover')} />
         ) : (
           <span
             aria-hidden="true"
             className={cn(
               avatarSize,
               initialsSize,
-              'flex items-center justify-center rounded-full bg-surface-active text-foreground-tertiary',
+              'bg-surface-active text-foreground-tertiary flex items-center justify-center rounded-full',
             )}
           >
             {initials}
@@ -92,7 +88,7 @@ export function AvatarUpload({ size = 'md' }: Props) {
           aria-label={photoUrl ? 'change photo' : 'upload photo'}
           className={cn(
             cameraSize,
-            'absolute right-0 bottom-0 inline-flex items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-sm transition-colors hover:bg-surface-dim',
+            'border-border bg-surface text-foreground hover:bg-surface-dim absolute right-0 bottom-0 inline-flex items-center justify-center rounded-full border shadow-sm transition-colors',
           )}
         >
           <CameraIcon className={cameraIconSize} />

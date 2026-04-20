@@ -35,7 +35,7 @@ export function PollRespondDialog({ open, onClose, poll }: Props) {
   return (
     <Dialog open={open} onClose={onClose} title="respond to poll">
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-foreground-secondary">
+        <p className="text-foreground-secondary text-sm">
           pick one per option — tap again to switch
         </p>
 
@@ -45,7 +45,7 @@ export function PollRespondDialog({ open, onClose, poll }: Props) {
             return (
               <li
                 key={opt.id}
-                className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3"
+                className="border-border bg-surface flex flex-col gap-2 rounded-md border p-3"
               >
                 <span className="text-sm font-medium">
                   {format(opt.datetime, 'EEE MMM d · h:mm a').toLowerCase()}
@@ -103,9 +103,7 @@ function ChoiceButton({
       aria-pressed={active}
       className={cn(
         'flex-1 rounded-md border px-3 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-        active
-          ? tone
-          : 'border-border bg-surface text-foreground-secondary hover:bg-surface-dim',
+        active ? tone : 'border-border bg-surface text-foreground-secondary hover:bg-surface-dim',
       )}
     >
       {active ? '✓ ' : ''}

@@ -44,15 +44,15 @@ export function EventFormBasics({
   const [pollOpen, setPollOpen] = useState(false);
 
   const isCreateFlow = !existingEventId;
-  const bufferedDates = bufferedPollOptions && bufferedPollOptions.length > 0 ? bufferedPollOptions : null;
+  const bufferedDates =
+    bufferedPollOptions && bufferedPollOptions.length > 0 ? bufferedPollOptions : null;
   // Show the "propose dates" button when:
   //   - edit flow, no poll yet (live mode), OR
   //   - create flow, nothing buffered yet (buffer mode).
-  const canShowProposeButton =
-    !timeLocked && (isCreateFlow ? !bufferedDates : !existingHasPoll);
+  const canShowProposeButton = !timeLocked && (isCreateFlow ? !bufferedDates : !existingHasPoll);
 
   return (
-    <div className="flex flex-col gap-4 rounded-[var(--radius-md)] border border-brand-100 bg-surface p-4 shadow-(--shadow-sm)">
+    <div className="border-brand-100 bg-surface flex flex-col gap-4 rounded-[var(--radius-md)] border p-4 shadow-(--shadow-sm)">
       <TextField
         label="title"
         value={values.title}
@@ -172,11 +172,11 @@ function BufferedPollSummary({
 }) {
   const sorted = [...dates].sort((a, b) => a.getTime() - b.getTime());
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-dashed border-brand-300 bg-brand-50 p-3">
-      <p className="text-sm font-medium text-brand-900">
+    <div className="border-brand-300 bg-brand-50 flex flex-col gap-2 rounded-md border border-dashed p-3">
+      <p className="text-brand-900 text-sm font-medium">
         {dates.length} dates queued — vote opens after you save
       </p>
-      <ul className="flex flex-col gap-0.5 text-xs text-foreground-secondary">
+      <ul className="text-foreground-secondary flex flex-col gap-0.5 text-xs">
         {sorted.map((d) => (
           <li key={d.toISOString()}>{format(d, 'EEE MMM d · h:mm a').toLowerCase()}</li>
         ))}

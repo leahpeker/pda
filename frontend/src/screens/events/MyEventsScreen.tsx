@@ -71,15 +71,11 @@ export default function MyEventsScreen() {
     if (filter === 'upcoming') {
       return mineActive
         .filter((e) => !e.isPast)
-        .sort(
-          (a, b) => (a.startDatetime?.getTime() ?? 0) - (b.startDatetime?.getTime() ?? 0),
-        );
+        .sort((a, b) => (a.startDatetime?.getTime() ?? 0) - (b.startDatetime?.getTime() ?? 0));
     }
     return mineActive
       .filter((e) => e.isPast)
-      .sort(
-        (a, b) => (b.startDatetime?.getTime() ?? 0) - (a.startDatetime?.getTime() ?? 0),
-      );
+      .sort((a, b) => (b.startDatetime?.getTime() ?? 0) - (a.startDatetime?.getTime() ?? 0));
   }, [sourceQuery.data, userId, filter, isHostOnlyTab]);
 
   if (sourceQuery.isPending) return <ContentLoading />;
@@ -91,7 +87,7 @@ export default function MyEventsScreen() {
         <h1 className="text-2xl font-medium tracking-tight">my events</h1>
         <Link
           to="/events/add"
-          className="inline-flex h-10 items-center rounded-md bg-brand-600 px-4 text-sm font-medium text-brand-on hover:bg-brand-700"
+          className="bg-brand-600 text-brand-on hover:bg-brand-700 inline-flex h-10 items-center rounded-md px-4 text-sm font-medium"
         >
           create event
         </Link>

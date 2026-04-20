@@ -92,7 +92,7 @@ export function PdaMenuSheet({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="menu"
-        className="absolute inset-x-0 bottom-0 flex max-h-[80vh] flex-col rounded-t-xl bg-surface pb-[env(safe-area-inset-bottom)] shadow-xl"
+        className="bg-surface absolute inset-x-0 bottom-0 flex max-h-[80vh] flex-col rounded-t-xl pb-[env(safe-area-inset-bottom)] shadow-xl"
       >
         <div className="flex justify-center pt-2" aria-hidden="true">
           <span className="h-1 w-10 rounded-full bg-neutral-300" />
@@ -109,7 +109,7 @@ export function PdaMenuSheet({ open, onClose }: Props) {
                   }}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'flex w-full items-center px-5 py-3 text-start text-base text-foreground hover:bg-background',
+                    'text-foreground hover:bg-background flex w-full items-center px-5 py-3 text-start text-base',
                     active && 'bg-surface-dim font-medium',
                   )}
                 >
@@ -123,7 +123,7 @@ export function PdaMenuSheet({ open, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => void onLogout()}
-                className="flex w-full items-center px-5 py-3 text-start text-base text-foreground-secondary hover:bg-background"
+                className="text-foreground-secondary hover:bg-background flex w-full items-center px-5 py-3 text-start text-base"
               >
                 log out
               </button>

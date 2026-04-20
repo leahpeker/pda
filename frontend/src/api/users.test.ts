@@ -151,9 +151,7 @@ describe('useCreateUser', () => {
       displayName: 'Grace',
       magicLinkToken: 'magic-abc',
     });
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }));
   });
 
   it('omits optional fields from the wire payload when not provided', async () => {
@@ -204,9 +202,7 @@ describe('useUpdateUser', () => {
       display_name: 'Ada Lovelace',
       is_paused: false,
     });
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }));
   });
 });
 
@@ -253,9 +249,7 @@ describe('useBulkCreateUsers', () => {
     });
     expect(response.results[1]?.success).toBe(false);
     expect(response.results[1]?.error).toBe('Invalid phone number');
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }));
   });
 });
 
@@ -270,9 +264,7 @@ describe('useArchiveUser', () => {
     await result.current.mutateAsync('u-archive');
 
     expect(mockedDelete).toHaveBeenCalledWith('/api/auth/users/u-archive/');
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }));
   });
 });
 
@@ -287,9 +279,7 @@ describe('useSendMemberMagicLink', () => {
     const out = await result.current.mutateAsync();
     expect(mockedPost).toHaveBeenCalledWith('/api/auth/users/u9/magic-link/');
     expect(out.magicLinkToken).toBe('tok-abc');
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }));
   });
 });
 
@@ -300,7 +290,9 @@ describe('useUpdateMemberRoles', () => {
         id: 'u9',
         display_name: 'Ada',
         phone_number: '+1',
-        roles: [{ id: 'r2', name: 'vet', is_default: false, permissions: ['approve_join_requests'] }],
+        roles: [
+          { id: 'r2', name: 'vet', is_default: false, permissions: ['approve_join_requests'] },
+        ],
       },
     });
     const qc = makeQc();
@@ -309,8 +301,6 @@ describe('useUpdateMemberRoles', () => {
     const member = await result.current.mutateAsync(['r2']);
     expect(mockedPatch).toHaveBeenCalledWith('/api/auth/users/u9/roles/', { role_ids: ['r2'] });
     expect(member.roles[0]?.name).toBe('vet');
-    await waitFor(() =>
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }),
-    );
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users'] }));
   });
 });

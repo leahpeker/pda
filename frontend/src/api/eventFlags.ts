@@ -79,10 +79,9 @@ export function useFlagEvent(eventId: string) {
   return useMutation({
     mutationFn: async (args: { reason: string }) => {
       try {
-        const { data } = await apiClient.post<WireFlag>(
-          `/api/community/events/${eventId}/flag/`,
-          { reason: args.reason },
-        );
+        const { data } = await apiClient.post<WireFlag>(`/api/community/events/${eventId}/flag/`, {
+          reason: args.reason,
+        });
         return mapFlag(data);
       } catch (err) {
         if (isAxiosError(err)) {

@@ -9,7 +9,8 @@ import { useAuthStore } from '@/auth/store';
 import type { User } from '@/models/user';
 
 const submitFeedbackMock = vi.fn();
-const useSubmitFeedbackMock = vi.fn<() => { mutateAsync: typeof submitFeedbackMock; isPending: boolean }>();
+const useSubmitFeedbackMock =
+  vi.fn<() => { mutateAsync: typeof submitFeedbackMock; isPending: boolean }>();
 
 vi.mock('@/api/feedback', () => ({
   useSubmitFeedback: () => useSubmitFeedbackMock(),

@@ -15,7 +15,10 @@ vi.mock('@/auth/store', () => {
   };
   const useAuthStore = vi.fn((selector?: (s: typeof state) => unknown) =>
     selector ? selector(state) : state,
-  ) as unknown as { (selector: (s: typeof state) => unknown): unknown; getState: () => typeof state };
+  ) as unknown as {
+    (selector: (s: typeof state) => unknown): unknown;
+    getState: () => typeof state;
+  };
   useAuthStore.getState = () => state;
   return { useAuthStore };
 });
@@ -206,9 +209,9 @@ describe('useVotePoll', () => {
 
     const { result } = renderHook(() => useVotePoll('evt-1'), { wrapper: Wrapper });
 
-    await expect(
-      result.current.mutateAsync({ 'opt-a': VoteChoice.Yes }),
-    ).rejects.toThrow('network fail');
+    await expect(result.current.mutateAsync({ 'opt-a': VoteChoice.Yes })).rejects.toThrow(
+      'network fail',
+    );
 
     const rolledBack = qc.getQueryData<ReturnType<typeof mapEventPoll>>(key)!;
     expect(rolledBack.options[0]!.yesCount).toBe(2);

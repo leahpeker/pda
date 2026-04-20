@@ -76,7 +76,7 @@ function JoinForm({ questions }: { questions: readonly JoinQuestion[] }) {
   return (
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">request to join pda</h1>
-      <p className="mb-6 text-sm text-foreground-tertiary">
+      <p className="text-foreground-tertiary mb-6 text-sm">
         we review all requests — you'll hear from us once a vetting member has had a look
       </p>
 
@@ -114,7 +114,7 @@ function JoinForm({ questions }: { questions: readonly JoinQuestion[] }) {
         ))}
 
         {serverError ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive text-sm">
             {serverError}
           </p>
         ) : null}

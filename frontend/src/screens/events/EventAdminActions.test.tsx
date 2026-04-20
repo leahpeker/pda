@@ -5,12 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAuthStore } from '@/auth/store';
 import type { Event } from '@/models/event';
-import {
-  EventStatus,
-  EventType,
-  EventVisibility,
-  InvitePermission,
-} from '@/models/event';
+import { EventStatus, EventType, EventVisibility, InvitePermission } from '@/models/event';
 import type { User } from '@/models/user';
 
 // Mock network-touching dependencies
@@ -40,9 +35,7 @@ function makeUser(id: string, permissions: string[] = []): User {
     weekStart: 'sunday',
     profilePhotoUrl: '',
     photoUpdatedAt: null,
-    roles: permissions.length
-      ? [{ id: 'r1', name: 'custom', isDefault: true, permissions }]
-      : [],
+    roles: permissions.length ? [{ id: 'r1', name: 'custom', isDefault: true, permissions }] : [],
   };
 }
 

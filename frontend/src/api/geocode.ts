@@ -48,14 +48,13 @@ function parseFeature(f: PhotonFeature): PhotonResult {
 
   const placeName = props.name ?? '';
   const streetAddress =
-    props.housenumber && props.street ? `${props.housenumber} ${props.street}` : props.street ?? null;
+    props.housenumber && props.street
+      ? `${props.housenumber} ${props.street}`
+      : (props.street ?? null);
 
-  const name = placeName.length > 0 ? placeName : streetAddress ?? '';
+  const name = placeName.length > 0 ? placeName : (streetAddress ?? '');
 
-  const subtitle =
-    placeName && streetAddress
-      ? streetAddress
-      : props.city ?? null;
+  const subtitle = placeName && streetAddress ? streetAddress : (props.city ?? null);
 
   const cityLabel = abbreviateCity(props.city);
 

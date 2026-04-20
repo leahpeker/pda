@@ -53,9 +53,11 @@ describe('useRegenerateCalendarToken', () => {
     const { result } = renderHook(() => useRegenerateCalendarToken(), { wrapper: makeWrapper(qc) });
     await result.current.mutateAsync();
     expect(mockedPost).toHaveBeenCalledWith('/api/community/calendar/token/');
-    await waitFor(() => expect(qc.getQueryData(['calendar', 'token'])).toEqual({
-      token: 'newtok',
-      feedUrl: 'https://x.example/feed/?token=newtok',
-    }));
+    await waitFor(() =>
+      expect(qc.getQueryData(['calendar', 'token'])).toEqual({
+        token: 'newtok',
+        feedUrl: 'https://x.example/feed/?token=newtok',
+      }),
+    );
   });
 });

@@ -95,10 +95,10 @@ function CalendarFeedSubscription() {
   const regenerate = useRegenerateCalendarToken();
 
   if (tokenQ.isPending) {
-    return <p className="text-sm text-muted">loading feed link…</p>;
+    return <p className="text-muted text-sm">loading feed link…</p>;
   }
   if (tokenQ.isError) {
-    return <p className="text-sm text-muted">couldn't load calendar feed — try again later</p>;
+    return <p className="text-muted text-sm">couldn't load calendar feed — try again later</p>;
   }
 
   const feedUrl = tokenQ.data.feedUrl;
@@ -115,20 +115,20 @@ function CalendarFeedSubscription() {
   }
 
   return (
-    <div className="flex flex-col gap-2 border-t border-border pt-4">
-      <p className="text-xs text-muted">
+    <div className="border-border flex flex-col gap-2 border-t pt-4">
+      <p className="text-muted text-xs">
         subscribe to the community calendar in apple calendar, google calendar, etc. paste the
         private url once; it stays the same until you regenerate.
       </p>
       {hasUrl ? (
         <>
-          <label className="text-xs text-muted" htmlFor="cal-feed-url">
+          <label className="text-muted text-xs" htmlFor="cal-feed-url">
             feed url
           </label>
           <input
             id="cal-feed-url"
             readOnly
-            className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground"
+            className="border-border bg-background text-foreground w-full rounded-md border px-3 py-2 font-mono text-xs"
             value={feedUrl}
           />
           <div className="flex flex-wrap gap-2">
@@ -179,8 +179,8 @@ function CalendarFeedSubscription() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="mb-6 rounded-lg border border-border bg-surface p-4">
-      <h2 className="mb-3 text-xs font-medium tracking-wide text-muted">{label}</h2>
+    <section className="border-border bg-surface mb-6 rounded-lg border p-4">
+      <h2 className="text-muted mb-3 text-xs font-medium tracking-wide">{label}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
@@ -189,8 +189,8 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 function ReadOnly({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-muted">{label}</div>
-      <div className="text-sm text-foreground">{value}</div>
+      <div className="text-muted text-xs">{label}</div>
+      <div className="text-foreground text-sm">{value}</div>
     </div>
   );
 }
@@ -228,8 +228,8 @@ function InlineText({
     return (
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xs text-muted">{label}</div>
-          <div className="text-sm text-foreground">{value || placeholder}</div>
+          <div className="text-muted text-xs">{label}</div>
+          <div className="text-foreground text-sm">{value || placeholder}</div>
         </div>
         <Button
           variant="ghost"
@@ -283,7 +283,7 @@ function Toggle({
 }) {
   return (
     <label className="flex items-center justify-between gap-3">
-      <span className="text-sm text-foreground">{label}</span>
+      <span className="text-foreground text-sm">{label}</span>
       <span
         className={cn(
           'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors',
@@ -331,35 +331,16 @@ function WeekStartToggle({
   );
 }
 
-function ThemeToggle({
-  value,
-  onChange,
-}: {
-  value: ThemeMode;
-  onChange: (v: ThemeMode) => void;
-}) {
+function ThemeToggle({ value, onChange }: { value: ThemeMode; onChange: (v: ThemeMode) => void }) {
   const options: { value: ThemeMode; label: string }[] = [
     { value: 'system', label: 'system' },
     { value: 'light', label: 'light' },
     { value: 'dark', label: 'dark' },
   ];
-  return (
-    <SegmentedControl
-      label="theme"
-      options={options}
-      value={value}
-      onChange={onChange}
-    />
-  );
+  return <SegmentedControl label="theme" options={options} value={value} onChange={onChange} />;
 }
 
-function DyslexiaToggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: () => void;
-}) {
+function DyslexiaToggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
   const options: { value: 'on' | 'off'; label: string }[] = [
     { value: 'off', label: 'off' },
     { value: 'on', label: 'on' },
@@ -388,14 +369,7 @@ function TextScaleToggle({
     { value: 1.15, label: 'medium' },
     { value: 1.3, label: 'large' },
   ];
-  return (
-    <SegmentedControl
-      label="text size"
-      options={options}
-      value={value}
-      onChange={onChange}
-    />
-  );
+  return <SegmentedControl label="text size" options={options} value={value} onChange={onChange} />;
 }
 
 function SegmentedControl<T extends string | number>({
@@ -411,7 +385,7 @@ function SegmentedControl<T extends string | number>({
 }) {
   return (
     <div>
-      <div className="mb-2 text-sm text-foreground">{label}</div>
+      <div className="text-foreground mb-2 text-sm">{label}</div>
       <SharedSegmentedControl
         name={label}
         ariaLabel={label}

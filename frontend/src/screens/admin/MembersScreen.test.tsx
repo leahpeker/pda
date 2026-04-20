@@ -136,9 +136,7 @@ describe('MembersScreen', () => {
 
     renderScreen();
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /couldn't load members/i,
-    );
+    expect(screen.getByRole('alert')).toHaveTextContent(/couldn't load members/i);
   });
 
   it('shows a loading state while the users query is pending', () => {
@@ -215,8 +213,6 @@ describe('MembersScreen', () => {
 
     renderScreen();
 
-    expect(
-      screen.queryByRole('radiogroup', { name: /members or roles/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: /members or roles/i })).not.toBeInTheDocument();
   });
 });

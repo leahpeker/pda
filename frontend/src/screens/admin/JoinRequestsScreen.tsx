@@ -73,13 +73,13 @@ export default function JoinRequestsScreen() {
       </div>
 
       {error ? (
-        <p role="alert" className="mb-3 text-sm text-destructive">
+        <p role="alert" className="text-destructive mb-3 text-sm">
           {error}
         </p>
       ) : null}
 
       {visible.length === 0 ? (
-        <p className="text-sm text-muted">nothing here 🌿</p>
+        <p className="text-muted text-sm">nothing here 🌿</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {visible.map((r) => (
@@ -122,11 +122,11 @@ function JoinRequestCard({
 }) {
   const isPending = request.status === 'pending';
   return (
-    <article className="rounded-lg border border-border bg-surface p-4">
+    <article className="border-border bg-surface rounded-lg border p-4">
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-base font-medium">{request.displayName}</h2>
-          <p className="text-xs text-muted">
+          <p className="text-muted text-xs">
             {request.phoneNumber} · submitted{' '}
             {format(new Date(request.submittedAt), 'MMM d, h:mm a')}
           </p>
@@ -134,7 +134,7 @@ function JoinRequestCard({
         <div className="flex flex-wrap items-center gap-1">
           {request.previouslyArchived ? (
             <span
-              className="rounded-full bg-warning-subtle px-2 py-0.5 text-xs text-warning"
+              className="bg-warning-subtle text-warning rounded-full px-2 py-0.5 text-xs"
               title="this phone number belongs to a previously archived member — approving will restore their account"
             >
               previously archived
@@ -148,8 +148,8 @@ function JoinRequestCard({
         <dl className="mt-2 flex flex-col gap-2">
           {request.answers.map((a) => (
             <div key={a.questionId}>
-              <dt className="text-xs font-medium text-muted">{a.label}</dt>
-              <dd className="text-sm whitespace-pre-wrap text-foreground">{a.answer}</dd>
+              <dt className="text-muted text-xs font-medium">{a.label}</dt>
+              <dd className="text-foreground text-sm whitespace-pre-wrap">{a.answer}</dd>
             </div>
           ))}
         </dl>

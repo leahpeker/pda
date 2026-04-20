@@ -24,7 +24,7 @@ export function NarrowWeekView({ date, weekStartsOn, events, onSelectEvent }: Pr
   return (
     <ul
       aria-label="week"
-      className="flex h-full flex-col overflow-hidden rounded-md border border-border/80 bg-surface"
+      className="border-border/80 bg-surface flex h-full flex-col overflow-hidden rounded-md border"
     >
       {days.map((day, idx) => (
         <DayRow
@@ -68,12 +68,9 @@ function DayRow({ day, isLast, isToday, events, onSelectEvent }: DayRowProps) {
   return (
     <li
       aria-label={`${weekdayLabel} ${dayNumber}`}
-      className={cn(
-        'flex min-h-0 flex-1 items-stretch',
-        !isLast && 'border-b border-border/60',
-      )}
+      className={cn('flex min-h-0 flex-1 items-stretch', !isLast && 'border-border/60 border-b')}
     >
-      <div className="flex w-14 shrink-0 items-center justify-center border-r border-border/60 px-1 py-2">
+      <div className="border-border/60 flex w-14 shrink-0 items-center justify-center border-r px-1 py-2">
         <div
           className={cn(
             'flex flex-col items-center justify-center rounded-md px-1.5 py-1 text-center leading-tight',

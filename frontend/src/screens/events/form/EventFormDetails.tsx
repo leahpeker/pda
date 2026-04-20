@@ -21,9 +21,7 @@ interface Props {
 }
 
 export function EventFormDetails({ values, onChange, errors, canTagOfficial }: Props) {
-  const visibleOptions = VISIBILITY_OPTIONS.filter(
-    (o) => !o.officialOnly || canTagOfficial,
-  );
+  const visibleOptions = VISIBILITY_OPTIONS.filter((o) => !o.officialOnly || canTagOfficial);
 
   return (
     <div className="flex flex-col gap-4">
@@ -44,7 +42,8 @@ export function EventFormDetails({ values, onChange, errors, canTagOfficial }: P
         onChange={(e) => {
           const choice = e.target.value as VisibilityChoice;
           const { visibility, eventType } = (() => {
-            if (choice === 'official') return { visibility: 'public' as const, eventType: 'official' as const };
+            if (choice === 'official')
+              return { visibility: 'public' as const, eventType: 'official' as const };
             return { visibility: choice, eventType: 'community' as const };
           })();
           onChange({ visibilityChoice: choice, visibility, eventType });

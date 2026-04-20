@@ -10,7 +10,7 @@ export function RichEditorToolbar({ editor }: Props) {
     <div
       role="toolbar"
       aria-label="formatting"
-      className="flex flex-wrap items-center gap-1 border-b border-border px-2 py-1.5"
+      className="border-border flex flex-wrap items-center gap-1 border-b px-2 py-1.5"
     >
       <ToolButton
         label="bold"
@@ -92,7 +92,7 @@ export function RichEditorToolbar({ editor }: Props) {
 }
 
 function Divider() {
-  return <span aria-hidden="true" className="mx-1 h-5 w-px bg-surface-raised" />;
+  return <span aria-hidden="true" className="bg-surface-raised mx-1 h-5 w-px" />;
 }
 
 function ToolButton({
@@ -113,7 +113,7 @@ function ToolButton({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'h-8 rounded px-2 text-sm transition-colors hover:bg-surface-dim',
+        'hover:bg-surface-dim h-8 rounded px-2 text-sm transition-colors',
         active && 'bg-surface-raised text-foreground',
       )}
     >

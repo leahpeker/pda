@@ -43,25 +43,25 @@ export default function JoinFormAdminScreen() {
           add question
         </Button>
       </header>
-      <p className="mb-6 text-sm text-foreground-tertiary">
+      <p className="text-foreground-tertiary mb-6 text-sm">
         questions shown to applicants on /join. name + phone are always included.
       </p>
 
       {data.length === 0 ? (
-        <p className="text-sm text-muted">no custom questions yet</p>
+        <p className="text-muted text-sm">no custom questions yet</p>
       ) : (
         <SortableList
           items={data}
           onReorder={handleReorder}
           ariaLabel="join form questions"
           renderItem={(q) => (
-            <article className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
+            <article className="border-border bg-surface flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border p-3">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium break-words">
                   {q.label}
-                  {q.required ? <span className="ml-1 text-xs text-muted">· required</span> : null}
+                  {q.required ? <span className="text-muted ml-1 text-xs">· required</span> : null}
                 </p>
-                <p className="text-xs text-muted break-words">
+                <p className="text-muted text-xs break-words">
                   {q.fieldType}
                   {q.fieldType === 'select' && q.options.length > 0
                     ? ` · ${String(q.options.length)} options`

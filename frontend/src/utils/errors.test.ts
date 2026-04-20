@@ -62,14 +62,16 @@ describe('extractApiError', () => {
         status: 422,
         data: {
           detail: [
-            { type: 'string_too_long', loc: ['body', 'payload', 'name'], msg: 'String should have at most 50 characters' },
+            {
+              type: 'string_too_long',
+              loc: ['body', 'payload', 'name'],
+              msg: 'String should have at most 50 characters',
+            },
           ],
         },
       },
     });
-    expect(extractApiError(error, 'fallback')).toBe(
-      'string should have at most 50 characters',
-    );
+    expect(extractApiError(error, 'fallback')).toBe('string should have at most 50 characters');
   });
 
   it('joins multiple validation errors with a separator', () => {
@@ -78,10 +80,7 @@ describe('extractApiError', () => {
       response: {
         status: 422,
         data: {
-          detail: [
-            { msg: 'Field a is required' },
-            { msg: 'Field b must be a number' },
-          ],
+          detail: [{ msg: 'Field a is required' }, { msg: 'Field b must be a number' }],
         },
       },
     });

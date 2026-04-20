@@ -43,9 +43,7 @@ describe('useJoinRequests', () => {
           id: 'jr-1',
           display_name: 'Alex Smith',
           phone_number: '+12125551234',
-          answers: [
-            { question_id: 'q-1', label: 'Why join?', answer: 'Community' },
-          ],
+          answers: [{ question_id: 'q-1', label: 'Why join?', answer: 'Community' }],
           submitted_at: '2024-04-01T09:00:00Z',
           status: 'pending',
           user_id: null,

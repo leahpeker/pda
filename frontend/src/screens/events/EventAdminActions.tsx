@@ -28,8 +28,8 @@ export function EventAdminActions({ event }: Props) {
   if (!canEdit) return null;
 
   return (
-    <section className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4">
-      <h2 className="mb-1 text-xs font-medium tracking-wide text-muted">event actions</h2>
+    <section className="border-border bg-surface flex flex-col gap-2 rounded-lg border p-4">
+      <h2 className="text-muted mb-1 text-xs font-medium tracking-wide">event actions</h2>
       <AdminActionRow event={event} isCreator={isCreator} canManage={canManage} />
     </section>
   );
@@ -57,8 +57,7 @@ function AdminActionRow({
   const isCancelled = event.status === EventStatus.Cancelled;
   const isDraft = event.status === EventStatus.Draft;
   const hasNoAttendees = event.attendingCount === 0;
-  const canArchive =
-    (isCreator || canManage) && (isDraft || isCancelled || hasNoAttendees);
+  const canArchive = (isCreator || canManage) && (isDraft || isCancelled || hasNoAttendees);
   const showCancel = !isCancelled && !isDraft && !hasNoAttendees;
   const canEditEvent = !event.isPast;
 
@@ -145,7 +144,7 @@ function AdminActionRow({
         }}
         title="cancel event"
       >
-        <p className="text-sm text-foreground-secondary">
+        <p className="text-foreground-secondary text-sm">
           mark this event as cancelled? attendees will get a notification and see a cancelled badge
           — you can't un-cancel from the React app yet.
         </p>
@@ -183,7 +182,7 @@ function AdminActionRow({
         }}
         title="archive event"
       >
-        <p className="text-sm text-foreground-secondary">
+        <p className="text-foreground-secondary text-sm">
           archive this event? it will be marked cancelled and hidden from the active calendar. This
           cannot be undone from the React app yet.
         </p>

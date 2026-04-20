@@ -72,22 +72,20 @@ export function PollManageDialog({ open, onClose, poll }: Props) {
             <OptionRow
               key={opt.id}
               option={opt}
-              onUpdate={(iso) => updateOpt.mutateAsync({ optionId: opt.id, datetime: new Date(iso) })}
+              onUpdate={(iso) =>
+                updateOpt.mutateAsync({ optionId: opt.id, datetime: new Date(iso) })
+              }
               onDelete={() => deleteOpt.mutateAsync(opt.id)}
               disabled={busy}
             />
           ))}
         </ul>
 
-        <div className="flex flex-col gap-2 border-t border-border pt-3">
+        <div className="border-border flex flex-col gap-2 border-t pt-3">
           <span className="text-sm font-medium">add an option</span>
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <DateTimePicker
-                label="date & time"
-                value={newIso}
-                onChange={setNewIso}
-              />
+              <DateTimePicker label="date & time" value={newIso} onChange={setNewIso} />
             </div>
             <Button
               variant="secondary"
@@ -101,12 +99,10 @@ export function PollManageDialog({ open, onClose, poll }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border pt-3">
+        <div className="border-border flex flex-col gap-2 border-t pt-3">
           {confirmDelete ? (
             <>
-              <p className="text-sm text-red-700">
-                delete the whole poll? this can't be undone.
-              </p>
+              <p className="text-sm text-red-700">delete the whole poll? this can't be undone.</p>
               <div className="flex gap-2">
                 <Button
                   variant="ghost"
@@ -196,7 +192,7 @@ function OptionRow({
 
   if (!editing) {
     return (
-      <li className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface p-2">
+      <li className="border-border bg-surface flex items-center justify-between gap-2 rounded-md border p-2">
         <span className="text-sm">
           {format(option.datetime, 'EEE MMM d · h:mm a').toLowerCase()}
         </span>
@@ -226,7 +222,7 @@ function OptionRow({
   }
 
   return (
-    <li className="flex items-end gap-2 rounded-md border border-border bg-surface p-2">
+    <li className="border-border bg-surface flex items-end gap-2 rounded-md border p-2">
       <div className="flex-1">
         <DateTimePicker label="date & time" value={iso} onChange={setIso} />
       </div>

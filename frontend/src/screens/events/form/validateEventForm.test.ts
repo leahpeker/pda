@@ -89,9 +89,7 @@ describe('validateEventForm', () => {
     });
 
     it('does not require startDatetime when datetimeTbd is true', () => {
-      const errors = validateEventForm(
-        validValues({ startDatetime: '', datetimeTbd: true }),
-      );
+      const errors = validateEventForm(validValues({ startDatetime: '', datetimeTbd: true }));
       expect(errors.startDatetime).toBeUndefined();
     });
 
@@ -128,7 +126,6 @@ describe('validateEventForm', () => {
       expect(errors.endDatetime).toBeUndefined();
     });
   });
-
 
   describe('maxAttendees', () => {
     it('rejects negative maxAttendees', () => {

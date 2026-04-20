@@ -83,7 +83,7 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
         aria-label="drag to reorder"
         {...attributes}
         {...listeners}
-        className="flex w-6 shrink-0 touch-none cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-surface-dim active:cursor-grabbing"
+        className="text-muted-foreground hover:bg-surface-dim flex w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded active:cursor-grabbing"
       >
         <span aria-hidden="true">⋮⋮</span>
       </button>

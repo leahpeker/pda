@@ -92,7 +92,7 @@ export function RsvpSection({ event, canSeeInvited }: Props) {
             ))}
           </div>
           {atCapacity && myRsvp !== RsvpServerStatus.Attending ? (
-            <p className="text-xs text-warning">
+            <p className="text-warning text-xs">
               event is full — tapping "i'm going" adds you to the waitlist
             </p>
           ) : null}
@@ -107,7 +107,7 @@ export function RsvpSection({ event, canSeeInvited }: Props) {
 
       <Summary event={event} />
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-destructive text-sm">
           {error}
         </p>
       ) : null}
@@ -140,7 +140,7 @@ function RsvpPill({
         'inline-flex h-10 items-center rounded-full px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed',
         active
           ? 'bg-brand-600 text-brand-on'
-          : 'border border-border-strong text-foreground-secondary hover:bg-background',
+          : 'border-border-strong text-foreground-secondary hover:bg-background border',
         disabled && 'opacity-60',
       )}
     >
@@ -152,7 +152,7 @@ function RsvpPill({
 function WaitlistView({ onLeave, busy }: { onLeave: () => void; busy: boolean }) {
   return (
     <div className="flex items-center gap-3 rounded-md bg-amber-50 px-3 py-2">
-      <span className="text-sm text-warning">you're on the waitlist</span>
+      <span className="text-warning text-sm">you're on the waitlist</span>
       <Button variant="ghost" onClick={onLeave} disabled={busy}>
         leave waitlist
       </Button>
@@ -168,7 +168,7 @@ function Summary({ event }: { event: Event }) {
     parts.push(`${String(event.attendingCount)} going`);
   }
   if (event.waitlistedCount > 0) parts.push(`${String(event.waitlistedCount)} waitlisted`);
-  return <p className="text-xs text-muted">{parts.join(' · ')}</p>;
+  return <p className="text-muted text-xs">{parts.join(' · ')}</p>;
 }
 
 function extractError(err: unknown): string {

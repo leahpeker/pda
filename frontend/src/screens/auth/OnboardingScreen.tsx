@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -28,13 +28,13 @@ export default function OnboardingScreen() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { displayName: '', email: '', newPassword: '' },
   });
-  const passwordValue = watch('newPassword');
+  const passwordValue = useWatch({ control, name: 'newPassword' });
 
   async function onSubmit(values: FormValues) {
     setServerError(null);
@@ -75,7 +75,7 @@ export default function OnboardingScreen() {
           error={errors.newPassword?.message}
         />
         {serverError ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive text-sm">
             {serverError}
           </p>
         ) : null}

@@ -80,7 +80,7 @@ function CalendarMenu({ event }: { event: Event }) {
       {open ? (
         <div
           role="menu"
-          className="absolute left-0 z-10 mt-1 w-44 overflow-hidden rounded-md border border-border bg-surface text-sm shadow-lg"
+          className="border-border bg-surface absolute left-0 z-10 mt-1 w-44 overflow-hidden rounded-md border text-sm shadow-lg"
         >
           {google ? (
             <a
@@ -88,7 +88,7 @@ function CalendarMenu({ event }: { event: Event }) {
               target="_blank"
               rel="noopener noreferrer"
               role="menuitem"
-              className="block px-3 py-2 text-foreground hover:bg-surface-dim"
+              className="text-foreground hover:bg-surface-dim block px-3 py-2"
               onClick={() => {
                 setOpen(false);
               }}
@@ -99,7 +99,7 @@ function CalendarMenu({ event }: { event: Event }) {
           <a
             href={webcalUrl(event.id)}
             role="menuitem"
-            className="block px-3 py-2 text-foreground hover:bg-surface-dim"
+            className="text-foreground hover:bg-surface-dim block px-3 py-2"
             onClick={() => {
               setOpen(false);
             }}
@@ -110,7 +110,7 @@ function CalendarMenu({ event }: { event: Event }) {
             href={icsUrl(event.id)}
             download={`${event.title}.ics`}
             role="menuitem"
-            className="block px-3 py-2 text-foreground hover:bg-surface-dim"
+            className="text-foreground hover:bg-surface-dim block px-3 py-2"
             onClick={() => {
               setOpen(false);
             }}
@@ -137,7 +137,7 @@ function IconChip({ label, children, onClick, ...rest }: IconChipProps) {
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-surface-dim text-foreground-secondary transition-colors hover:bg-surface-dim/70 hover:text-foreground"
+      className="bg-surface-dim text-foreground-secondary hover:bg-surface-dim/70 hover:text-foreground inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors"
       {...rest}
     >
       {children}

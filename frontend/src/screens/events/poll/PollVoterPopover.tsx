@@ -29,16 +29,14 @@ export function PollVoterPopover({ option, onClose }: Props) {
   }, [onClose]);
 
   const hasAnyVoter =
-    option.yesVoters.length > 0 ||
-    option.maybeVoters.length > 0 ||
-    option.noVoters.length > 0;
+    option.yesVoters.length > 0 || option.maybeVoters.length > 0 || option.noVoters.length > 0;
 
   return (
     <div
       ref={ref}
       role="dialog"
       aria-label="voters"
-      className="absolute left-0 right-0 top-full z-20 mt-2 rounded-md border border-border bg-surface p-3 shadow-(--shadow-lg)"
+      className="border-border bg-surface absolute top-full right-0 left-0 z-20 mt-2 rounded-md border p-3 shadow-(--shadow-lg)"
     >
       {hasAnyVoter ? (
         <div className="flex flex-col gap-3">
@@ -47,7 +45,7 @@ export function PollVoterPopover({ option, onClose }: Props) {
           <VoterRow label="no" voters={option.noVoters} />
         </div>
       ) : (
-        <p className="text-sm text-foreground-tertiary">no one's voted on this one yet 🌿</p>
+        <p className="text-foreground-tertiary text-sm">no one's voted on this one yet 🌿</p>
       )}
     </div>
   );
@@ -57,7 +55,7 @@ function VoterRow({ label, voters }: { label: string; voters: readonly PollVoter
   if (voters.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-1 text-xs font-medium tracking-wide text-foreground-tertiary">
+      <h3 className="text-foreground-tertiary mb-1 text-xs font-medium tracking-wide">
         {label} · {voters.length}
       </h3>
       <div className="flex flex-wrap gap-2">
@@ -71,7 +69,7 @@ function VoterRow({ label, voters }: { label: string; voters: readonly PollVoter
 
 function VoterChip({ voter }: { voter: PollVoter }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-surface-dim px-2 py-1 text-sm">
+    <span className="bg-surface-dim inline-flex items-center gap-2 rounded-full px-2 py-1 text-sm">
       {voter.photoUrl ? (
         <img
           src={voter.photoUrl}
@@ -82,7 +80,7 @@ function VoterChip({ voter }: { voter: PollVoter }) {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-toggle-off text-xs text-foreground-secondary"
+          className="bg-toggle-off text-foreground-secondary flex h-6 w-6 items-center justify-center rounded-full text-xs"
         >
           {voter.name.slice(0, 1).toLowerCase()}
         </span>

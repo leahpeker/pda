@@ -101,16 +101,10 @@ export function ImageCropDialog({
       aria-label="crop photo"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
     >
-      <div className="flex w-full max-w-md flex-col gap-4 rounded-lg bg-surface p-4 shadow-xl">
+      <div className="bg-surface flex w-full max-w-md flex-col gap-4 rounded-lg p-4 shadow-xl">
         <div className="flex max-h-80 items-center justify-center overflow-hidden rounded-md bg-neutral-900">
           <ReactCrop {...reactCropProps}>
-            <img
-              ref={imgRef}
-              src={src}
-              alt=""
-              onLoad={onImageLoad}
-              className="max-h-80 w-auto"
-            />
+            <img ref={imgRef} src={src} alt="" onLoad={onImageLoad} className="max-h-80 w-auto" />
           </ReactCrop>
         </div>
         <div className="flex justify-end gap-2">

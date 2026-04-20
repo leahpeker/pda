@@ -54,13 +54,13 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
   return (
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">whatsapp config</h1>
-      <p className="mb-6 text-sm text-foreground-tertiary">bot connection settings</p>
+      <p className="text-foreground-tertiary mb-6 text-sm">bot connection settings</p>
 
       <WhatsappSetupInstructions />
 
-      <section className="mb-6 flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+      <section className="border-border bg-surface mb-6 flex items-center gap-3 rounded-lg border p-4">
         <StatusDot state={statusPending ? 'checking' : connected ? 'connected' : 'offline'} />
-        <span className="text-sm text-foreground">
+        <span className="text-foreground text-sm">
           {statusPending ? 'checking…' : connected ? 'connected' : 'not reachable'}
         </span>
       </section>
@@ -99,7 +99,7 @@ function WhatsappConfigForm({ config }: { config: WhatsappConfig }) {
         />
 
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive text-sm">
             {error}
           </p>
         ) : null}

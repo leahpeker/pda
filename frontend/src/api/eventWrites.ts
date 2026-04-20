@@ -11,12 +11,7 @@ import { useAuthStore } from '@/auth/store';
 import { eventKeys } from './events';
 import { mapEvent, type WireEvent } from './eventMapper';
 import type { Event } from '@/models/event';
-import {
-  fromCashAppUrl,
-  fromVenmoUrl,
-  toCashAppUrl,
-  toVenmoUrl,
-} from '@/utils/paymentHandle';
+import { fromCashAppUrl, fromVenmoUrl, toCashAppUrl, toVenmoUrl } from '@/utils/paymentHandle';
 
 export type EventStatus = 'active' | 'draft' | 'cancelled';
 
@@ -157,10 +152,7 @@ export function useArchiveEvent(eventId: string) {
         status: 'cancelled' satisfies EventStatus,
         notify_attendees: true,
       };
-      const { data } = await apiClient.patch<WireEvent>(
-        `/api/community/events/${eventId}/`,
-        body,
-      );
+      const { data } = await apiClient.patch<WireEvent>(`/api/community/events/${eventId}/`, body);
       return mapEvent(data);
     },
     onSuccess: (event) => {

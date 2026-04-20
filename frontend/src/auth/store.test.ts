@@ -88,9 +88,9 @@ describe('useAuthStore', () => {
       });
       vi.mocked(authApi.login).mockRejectedValueOnce(err);
 
-      await expect(
-        useAuthStore.getState().login('+12125551234', 'wrongpassword'),
-      ).rejects.toThrow('401');
+      await expect(useAuthStore.getState().login('+12125551234', 'wrongpassword')).rejects.toThrow(
+        '401',
+      );
 
       const { status, user, accessToken } = useAuthStore.getState();
       expect(status).toBe('unauthed');
@@ -102,9 +102,9 @@ describe('useAuthStore', () => {
       const err = Object.assign(new Error('Network Error'), { isAxiosError: true });
       vi.mocked(authApi.login).mockRejectedValueOnce(err);
 
-      await expect(
-        useAuthStore.getState().login('+12125551234', 'password123'),
-      ).rejects.toThrow('Network Error');
+      await expect(useAuthStore.getState().login('+12125551234', 'password123')).rejects.toThrow(
+        'Network Error',
+      );
 
       expect(useAuthStore.getState().status).toBe('unauthed');
     });
@@ -116,9 +116,9 @@ describe('useAuthStore', () => {
       });
       vi.mocked(authApi.login).mockRejectedValueOnce(err);
 
-      await expect(
-        useAuthStore.getState().login('+12125551234', 'password123'),
-      ).rejects.toThrow('500');
+      await expect(useAuthStore.getState().login('+12125551234', 'password123')).rejects.toThrow(
+        '500',
+      );
 
       expect(useAuthStore.getState().status).toBe('unauthed');
     });

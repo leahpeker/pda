@@ -13,5 +13,8 @@
       "WebFetch(domain:www.npmjs.com)"
     ]
   },
-  "enabledMcpjsonServers": []
+  "enabledMcpjsonServers": [
+    "github"
+  ],
+  "enableAllProjectMcpServers": true
 }

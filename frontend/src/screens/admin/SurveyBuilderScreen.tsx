@@ -46,20 +46,20 @@ export default function SurveyBuilderScreen() {
       <header className="mb-2 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-medium tracking-tight">{currentSurvey.title}</h1>
-          <p className="text-sm text-muted">
+          <p className="text-muted text-sm">
             /{currentSurvey.slug} · {currentSurvey.visibility}
           </p>
         </div>
         <div className="flex gap-2">
           <Link
             to={`/surveys/${currentSurvey.slug}`}
-            className="inline-flex h-10 items-center rounded-md px-4 text-sm text-foreground-secondary hover:bg-surface-dim"
+            className="text-foreground-secondary hover:bg-surface-dim inline-flex h-10 items-center rounded-md px-4 text-sm"
           >
             preview
           </Link>
           <Link
             to={`/admin/surveys/${surveyId}/responses`}
-            className="inline-flex h-10 items-center rounded-md px-4 text-sm text-foreground-secondary hover:bg-surface-dim"
+            className="text-foreground-secondary hover:bg-surface-dim inline-flex h-10 items-center rounded-md px-4 text-sm"
           >
             responses
           </Link>
@@ -75,7 +75,7 @@ export default function SurveyBuilderScreen() {
       </header>
 
       {currentSurvey.pollResult ? (
-        <div className="mb-6 rounded-md bg-surface-dim px-3 py-2 text-sm text-foreground-secondary">
+        <div className="bg-surface-dim text-foreground-secondary mb-6 rounded-md px-3 py-2 text-sm">
           this poll has been finalized — the survey is locked
         </div>
       ) : null}
@@ -93,22 +93,22 @@ export default function SurveyBuilderScreen() {
         </div>
 
         {currentSurvey.questions.length === 0 ? (
-          <p className="text-sm text-muted">no questions yet</p>
+          <p className="text-muted text-sm">no questions yet</p>
         ) : (
           <SortableList
             items={currentSurvey.questions}
             onReorder={onReorder}
             ariaLabel="survey questions"
             renderItem={(q) => (
-              <article className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3">
+              <article className="border-border bg-surface flex items-center justify-between gap-3 rounded-lg border p-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">
                     {q.label}
                     {q.required ? (
-                      <span className="ms-1 text-xs text-muted">· required</span>
+                      <span className="text-muted ms-1 text-xs">· required</span>
                     ) : null}
                   </p>
-                  <p className="text-xs text-muted">
+                  <p className="text-muted text-xs">
                     {q.fieldType}
                     {q.options.length > 0 ? ` · ${String(q.options.length)} options` : ''}
                   </p>

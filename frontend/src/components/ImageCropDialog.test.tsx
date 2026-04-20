@@ -54,12 +54,7 @@ function renderDialog({
   onCrop = vi.fn(),
 } = {}) {
   return render(
-    <ImageCropDialog
-      file={makeFile()}
-      shape={shape}
-      onCancel={onCancel}
-      onCrop={onCrop}
-    />,
+    <ImageCropDialog file={makeFile()} shape={shape} onCancel={onCancel} onCrop={onCrop} />,
   );
 }
 

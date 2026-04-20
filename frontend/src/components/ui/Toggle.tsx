@@ -11,7 +11,7 @@ interface Props {
 export function Toggle({ checked, onChange, disabled, label, className }: Props) {
   return (
     <label className={cn('flex items-center justify-between gap-3 py-1', className)}>
-      <span className="text-sm text-foreground">{label}</span>
+      <span className="text-foreground text-sm">{label}</span>
       <button
         type="button"
         role="switch"
@@ -21,7 +21,7 @@ export function Toggle({ checked, onChange, disabled, label, className }: Props)
           onChange(!checked);
         }}
         className={cn(
-          'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300',
+          'focus-visible:ring-brand-300 relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none',
           checked ? 'bg-brand-600' : 'bg-toggle-off',
           disabled && 'cursor-not-allowed opacity-50',
         )}

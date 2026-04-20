@@ -47,7 +47,7 @@ export function RootRouteError() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
       <h1 className="text-xl font-medium">something broke 🌿</h1>
-      <p className="max-w-md text-center text-sm text-muted">{message}</p>
+      <p className="text-muted max-w-md text-center text-sm">{message}</p>
       <Button
         type="button"
         variant="secondary"

@@ -56,9 +56,7 @@ export default function MagicLoginScreen() {
   if (state === 'cross_user') {
     return (
       <AuthLayout title="already signed in" subtitle="this link is for a different account">
-        <p className="text-sm text-foreground-tertiary">
-          log out first, then open the link again
-        </p>
+        <p className="text-foreground-tertiary text-sm">log out first, then open the link again</p>
         <Button
           fullWidth
           className="mt-4"
@@ -75,7 +73,7 @@ export default function MagicLoginScreen() {
   if (state === 'expired') {
     return (
       <AuthLayout title="link expired" subtitle="this login link didn't work">
-        <p className="text-sm text-foreground-tertiary">
+        <p className="text-foreground-tertiary text-sm">
           grab a fresh one below, or{' '}
           <a href="/login" className="text-brand-700 hover:text-brand-900">
             sign in with your password
@@ -102,7 +100,7 @@ export default function MagicLoginScreen() {
 
   return (
     <AuthLayout title="signing you in…">
-      <p className="text-sm text-muted">hold tight 🌿</p>
+      <p className="text-muted text-sm">hold tight 🌿</p>
     </AuthLayout>
   );
 }

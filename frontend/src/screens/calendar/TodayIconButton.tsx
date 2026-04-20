@@ -32,7 +32,7 @@ export function TodayIconButton({ onClick }: Props) {
       </svg>
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 flex items-center justify-center pt-[6px] text-[10px] font-bold leading-none"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center pt-[6px] text-[10px] leading-none font-bold"
       >
         {String(day)}
       </span>

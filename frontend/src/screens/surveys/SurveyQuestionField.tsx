@@ -149,7 +149,7 @@ function RadioGroup({
 }) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-foreground">{label}</legend>
+      <legend className="text-foreground text-sm font-medium">{label}</legend>
       {options.map((o) => (
         <label key={o} className="flex items-center gap-2 text-sm">
           <input
@@ -195,7 +195,7 @@ function CheckboxGroup({
   }
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-foreground">{label}</legend>
+      <legend className="text-foreground text-sm font-medium">{label}</legend>
       {options.map((o) => (
         <label key={o} className="flex items-center gap-2 text-sm">
           <input
@@ -235,7 +235,7 @@ function StarRating({
 }) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-foreground">{label}</legend>
+      <legend className="text-foreground text-sm font-medium">{label}</legend>
       <div role="radiogroup" aria-label={label} className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => {
           const filled = n <= value;
@@ -294,13 +294,13 @@ function DatetimePoll({
   }
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="text-sm font-medium text-foreground">{label}</legend>
+      <legend className="text-foreground text-sm font-medium">{label}</legend>
       {options.map((option) => {
         const current = value[option];
         return (
           <div
             key={option}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-2"
+            className="border-border bg-surface flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
           >
             <span className="text-sm">{new Date(option).toLocaleString()}</span>
             <div className="flex gap-1" role="radiogroup">

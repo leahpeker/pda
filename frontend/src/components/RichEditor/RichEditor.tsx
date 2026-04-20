@@ -49,7 +49,7 @@ export function RichEditor({ value, onChange, placeholder, className, disabled }
   }, [editor, disabled]);
 
   return (
-    <div className={cn('rounded-md border border-border-strong bg-surface', className)}>
+    <div className={cn('border-border-strong bg-surface rounded-md border', className)}>
       <RichEditorToolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>

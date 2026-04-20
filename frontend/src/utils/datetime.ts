@@ -3,7 +3,11 @@
 
 import { format, isSameDay } from 'date-fns';
 
-export function formatEventDateTime(start: Date | null, end: Date | null, datetimeTbd = false): string {
+export function formatEventDateTime(
+  start: Date | null,
+  end: Date | null,
+  datetimeTbd = false,
+): string {
   if (datetimeTbd || !start) return 'date & time tbd';
   const startStr = format(start, 'EEE MMM d, h:mm a').toLowerCase();
   if (!end) return startStr;

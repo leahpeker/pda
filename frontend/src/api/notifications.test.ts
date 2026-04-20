@@ -17,11 +17,7 @@ vi.mock('@/auth/store', () => ({
 }));
 
 import { apiClient } from '@/api/client';
-import {
-  useNotifications,
-  useUnreadCount,
-  useMarkAllNotificationsRead,
-} from './notifications';
+import { useNotifications, useUnreadCount, useMarkAllNotificationsRead } from './notifications';
 
 const mockedGet = vi.mocked(apiClient.get);
 const mockedPost = vi.mocked(apiClient.post);

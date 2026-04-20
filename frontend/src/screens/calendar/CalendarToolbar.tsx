@@ -21,7 +21,7 @@ export function CalendarToolbar({ label, onNavigate }: ToolbarProps<BigCalEvent>
           >
             <ChevronLeft />
           </ChevronButton>
-          <span className="text-center text-sm font-medium text-foreground">
+          <span className="text-foreground text-center text-sm font-medium">
             {label.toLowerCase()}
           </span>
           <ChevronButton
@@ -53,7 +53,7 @@ function ChevronButton({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        'inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary',
+        'text-foreground-tertiary inline-flex h-8 w-8 items-center justify-center rounded-md',
         'hover:text-brand-700 hover:bg-surface-dim',
       )}
     >

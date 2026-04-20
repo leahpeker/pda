@@ -38,7 +38,7 @@ export function Dialog({ open, onClose, title, children }: Props) {
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-black/60"
       />
-      <div className="relative w-full max-w-md rounded-lg bg-surface p-5 shadow-(--shadow-xl)">
+      <div className="bg-surface relative w-full max-w-md rounded-lg p-5 shadow-(--shadow-xl)">
         <h2 className="mb-4 text-base font-medium">{title}</h2>
         {children}
       </div>

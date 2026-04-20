@@ -9,11 +9,7 @@ import { Dialog } from '@/components/ui/Dialog';
 import { TextField } from '@/components/ui/TextField';
 import { Permission } from '@/models/permissions';
 import { extractApiError } from '@/utils/errors';
-import {
-  useCreateRole,
-  useUpdateRole,
-  type Role,
-} from '@/api/roles';
+import { useCreateRole, useUpdateRole, type Role } from '@/api/roles';
 
 interface Props {
   open: boolean;
@@ -49,9 +45,7 @@ export function RoleFormDialog({ open, onClose, initialRole: role }: Props) {
   const [formError, setFormError] = useState<string | null>(null);
 
   function toggle(key: string) {
-    setPermissions((prev) =>
-      prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key],
-    );
+    setPermissions((prev) => (prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key]));
   }
 
   async function onSubmit(e: SyntheticEvent) {
@@ -95,19 +89,14 @@ export function RoleFormDialog({ open, onClose, initialRole: role }: Props) {
           }}
         />
         {readOnly ? (
-          <p className="-mt-2 text-xs text-neutral-500">
-            built-in role — view only
-          </p>
+          <p className="-mt-2 text-xs text-neutral-500">built-in role — view only</p>
         ) : null}
 
         <fieldset className="flex flex-col gap-2" disabled={readOnly}>
           <legend className="mb-1 text-sm font-medium">permissions</legend>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
-              <label
-                key={key}
-                className="flex items-center gap-2 text-sm text-neutral-700"
-              >
+              <label key={key} className="flex items-center gap-2 text-sm text-neutral-700">
                 <input
                   type="checkbox"
                   checked={permissions.includes(key)}
@@ -123,7 +112,7 @@ export function RoleFormDialog({ open, onClose, initialRole: role }: Props) {
         </fieldset>
 
         {formError ? (
-          <p role="alert" className="text-sm text-red-600 break-words">
+          <p role="alert" className="text-sm break-words text-red-600">
             {formError}
           </p>
         ) : null}

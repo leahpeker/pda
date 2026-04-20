@@ -22,9 +22,9 @@ export default function MemberProfileScreen() {
       </header>
 
       {data.bio ? (
-        <section className="mt-8 rounded-lg border border-border bg-surface p-4">
-          <h2 className="mb-2 text-xs font-medium tracking-wide text-muted">bio</h2>
-          <p className="text-sm whitespace-pre-wrap text-foreground">{data.bio}</p>
+        <section className="border-border bg-surface mt-8 rounded-lg border p-4">
+          <h2 className="text-muted mb-2 text-xs font-medium tracking-wide">bio</h2>
+          <p className="text-foreground text-sm whitespace-pre-wrap">{data.bio}</p>
         </section>
       ) : null}
     </ContentContainer>
@@ -34,18 +34,14 @@ export default function MemberProfileScreen() {
 function Avatar({ member }: { member: MemberProfile }) {
   if (member.profilePhotoUrl) {
     return (
-      <img
-        src={member.profilePhotoUrl}
-        alt=""
-        className="h-28 w-28 rounded-full object-cover"
-      />
+      <img src={member.profilePhotoUrl} alt="" className="h-28 w-28 rounded-full object-cover" />
     );
   }
   const initials = (member.displayName || '?').slice(0, 2).toLowerCase();
   return (
     <span
       aria-hidden="true"
-      className="flex h-28 w-28 items-center justify-center rounded-full bg-toggle-off text-3xl text-foreground-secondary"
+      className="bg-toggle-off text-foreground-secondary flex h-28 w-28 items-center justify-center rounded-full text-3xl"
     >
       {initials}
     </span>
@@ -56,17 +52,23 @@ function ContactLines({ member }: { member: MemberProfile }) {
   const hasPhone = Boolean(member.phoneNumber);
   const hasEmail = Boolean(member.email);
   if (!hasPhone && !hasEmail) {
-    return <p className="text-sm text-muted">contact info hidden</p>;
+    return <p className="text-muted text-sm">contact info hidden</p>;
   }
   return (
     <div className="flex flex-col items-center gap-1">
       {hasPhone ? (
-        <a href={`tel:${member.phoneNumber}`} className="text-sm text-foreground-secondary hover:underline">
+        <a
+          href={`tel:${member.phoneNumber}`}
+          className="text-foreground-secondary text-sm hover:underline"
+        >
           {member.phoneNumber}
         </a>
       ) : null}
       {hasEmail ? (
-        <a href={`mailto:${member.email}`} className="text-sm text-foreground-secondary hover:underline">
+        <a
+          href={`mailto:${member.email}`}
+          className="text-foreground-secondary text-sm hover:underline"
+        >
           {member.email}
         </a>
       ) : null}

@@ -11,7 +11,11 @@ interface Props {
   value: string;
   latitude: number | null;
   longitude: number | null;
-  onChange: (patch: { location: string; latitude: number | null; longitude: number | null }) => void;
+  onChange: (patch: {
+    location: string;
+    latitude: number | null;
+    longitude: number | null;
+  }) => void;
   disabled?: boolean;
   error?: string | undefined;
   maxLength?: number;
@@ -112,7 +116,7 @@ export function LocationField({
 
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1">
-      <label htmlFor={inputId} className="text-sm font-medium text-foreground">
+      <label htmlFor={inputId} className="text-foreground text-sm font-medium">
         {label}
       </label>
       <div className="relative">
@@ -133,7 +137,7 @@ export function LocationField({
           maxLength={maxLength}
           placeholder={placeholder}
           className={[
-            'h-10 w-full rounded-md border bg-surface px-3 text-sm transition-colors outline-none focus:ring-2',
+            'bg-surface h-10 w-full rounded-md border px-3 text-sm transition-colors outline-none focus:ring-2',
             'border-border-strong focus:border-brand-500 focus:ring-brand-200',
             error && 'border-destructive-border focus:border-red-500 focus:ring-red-100',
             disabled && 'bg-surface-dim text-muted-foreground',
@@ -142,27 +146,27 @@ export function LocationField({
             .join(' ')}
         />
         {searching && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2">
-            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-border-strong border-t-brand-600" />
+          <span className="absolute top-1/2 right-3 -translate-y-1/2">
+            <span className="border-border-strong border-t-brand-600 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2" />
           </span>
         )}
       </div>
 
       {open && results.length > 0 && (
-        <ul className="absolute top-full left-0 right-0 z-50 mt-1 max-h-56 overflow-auto rounded-[var(--radius-md)] border border-border bg-surface shadow-(--shadow-lg)">
+        <ul className="border-border bg-surface absolute top-full right-0 left-0 z-50 mt-1 max-h-56 overflow-auto rounded-[var(--radius-md)] border shadow-(--shadow-lg)">
           {results.map((r, i) => (
             <li key={`${String(r.lat)},${String(r.lon)}-${String(i)}`}>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-brand-50 focus:bg-brand-50 focus:outline-none"
+                className="hover:bg-brand-50 focus:bg-brand-50 w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleSelect(r);
                 }}
               >
-                <span className="font-medium text-foreground">{r.name.toLowerCase()}</span>
+                <span className="text-foreground font-medium">{r.name.toLowerCase()}</span>
                 {r.subtitle && r.subtitle !== r.name ? (
-                  <span className="ml-1 text-muted">{r.subtitle.toLowerCase()}</span>
+                  <span className="text-muted ml-1">{r.subtitle.toLowerCase()}</span>
                 ) : null}
               </button>
             </li>
@@ -170,7 +174,7 @@ export function LocationField({
         </ul>
       )}
 
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {error ? <p className="text-destructive text-xs">{error}</p> : null}
     </div>
   );
 }

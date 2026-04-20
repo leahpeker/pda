@@ -28,7 +28,7 @@ export function WideWeekView({ date, weekStartsOn, events, onSelectEvent, onSele
     <div
       aria-label="week"
       role="grid"
-      className="grid h-full grid-cols-7 overflow-hidden rounded-md border border-border/80 bg-surface"
+      className="border-border/80 bg-surface grid h-full grid-cols-7 overflow-hidden rounded-md border"
     >
       {days.map((day, idx) => (
         <DayColumn
@@ -72,9 +72,9 @@ function DayColumn({ day, isLast, isToday, events, onSelectEvent, onSelectDay }:
     <div
       role="gridcell"
       aria-label={`${weekdayLabel} ${dayNumber}`}
-      className={cn('flex min-h-0 flex-col', !isLast && 'border-r border-border/60')}
+      className={cn('flex min-h-0 flex-col', !isLast && 'border-border/60 border-r')}
     >
-      <div className="flex items-center justify-center border-b border-border/60 px-1 py-2">
+      <div className="border-border/60 flex items-center justify-center border-b px-1 py-2">
         <div
           className={cn(
             'flex items-center gap-1.5 rounded-md px-1.5 py-1 leading-tight',

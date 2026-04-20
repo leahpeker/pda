@@ -104,7 +104,7 @@ function PollCreateDialogBody({ onClose, eventId, onBuffer, initialOptions }: Pr
   return (
     <Dialog open onClose={close} title="poll for dates">
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-foreground-secondary">
+        <p className="text-foreground-secondary text-sm">
           add a few times — members vote yes / maybe / no on each
         </p>
 
@@ -128,7 +128,7 @@ function PollCreateDialogBody({ onClose, eventId, onBuffer, initialOptions }: Pr
                 }}
                 disabled={rows.length <= 1}
                 aria-label={`remove option ${String(idx + 1)}`}
-                className="h-10 rounded-md border border-border px-3 text-sm text-foreground-tertiary hover:bg-surface-dim disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-border text-foreground-tertiary hover:bg-surface-dim h-10 rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ×
               </button>
@@ -146,7 +146,10 @@ function PollCreateDialogBody({ onClose, eventId, onBuffer, initialOptions }: Pr
         </Button>
 
         {error ? (
-          <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700">
+          <p
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700"
+          >
             {error}
           </p>
         ) : null}

@@ -1,9 +1,4 @@
-import type {
-  EventPoll,
-  EventPollOption,
-  PollVoter,
-  VoteChoice,
-} from '@/models/eventPoll';
+import type { EventPoll, EventPollOption, PollVoter, VoteChoice } from '@/models/eventPoll';
 
 interface WireVoter {
   user_id: string;

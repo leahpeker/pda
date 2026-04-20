@@ -23,7 +23,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="primary"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="border-border bg-surface fixed inset-x-0 bottom-0 z-20 border-t pb-[env(safe-area-inset-bottom)]"
     >
       <div className="mx-auto grid h-14 max-w-6xl grid-cols-3">
         <NavItem to="/calendar" label="calendar">
@@ -38,7 +38,7 @@ export function BottomNav() {
             aria-current={onEventsAdd ? 'page' : undefined}
             onClick={() => void navigate('/events/add')}
             className={cn(
-              'inline-flex h-11 w-11 items-center justify-center rounded-full text-brand-on shadow transition-colors',
+              'text-brand-on inline-flex h-11 w-11 items-center justify-center rounded-full shadow transition-colors',
               onEventsAdd ? 'bg-brand-700' : 'bg-brand-600 hover:bg-brand-700',
             )}
           >
@@ -48,7 +48,11 @@ export function BottomNav() {
 
         <NavItem to="/profile" label="profile">
           {({ active }) =>
-            photoUrl ? <ProfilePhoto src={photoUrl} active={active} /> : <ProfileIcon filled={active} />
+            photoUrl ? (
+              <ProfilePhoto src={photoUrl} active={active} />
+            ) : (
+              <ProfileIcon filled={active} />
+            )
           }
         </NavItem>
       </div>
@@ -70,7 +74,7 @@ function NavItem({ to, label, children }: NavItemProps) {
       aria-label={label}
       className={({ isActive }) =>
         cn(
-          'flex flex-col items-center justify-center gap-0.5 text-muted transition-colors hover:bg-background',
+          'text-muted hover:bg-background flex flex-col items-center justify-center gap-0.5 transition-colors',
           isActive && 'text-brand-700',
         )
       }
@@ -118,8 +122,8 @@ function ProfilePhoto({ src, active }: { src: string; active: boolean }) {
       alt=""
       aria-hidden="true"
       className={cn(
-        'h-6 w-6 rounded-full object-cover ring-1 ring-border',
-        active && 'ring-2 ring-brand-700',
+        'ring-border h-6 w-6 rounded-full object-cover ring-1',
+        active && 'ring-brand-700 ring-2',
       )}
     />
   );

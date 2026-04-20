@@ -38,7 +38,7 @@ export default function InstallAppScreen() {
   return (
     <ContentContainer>
       <h1 className="mb-2 text-2xl font-medium tracking-tight">install the app</h1>
-      <p className="mb-6 text-sm text-foreground-tertiary">
+      <p className="text-foreground-tertiary mb-6 text-sm">
         add pda to your home screen for a native-app feel
       </p>
 
@@ -61,7 +61,7 @@ export default function InstallAppScreen() {
         steps={ANDROID_STEPS}
       />
 
-      <p className="mt-8 text-center text-xs text-muted">
+      <p className="text-muted mt-8 text-center text-xs">
         once installed, pda opens full-screen — just like a native app
       </p>
     </ContentContainer>
@@ -82,12 +82,12 @@ function InstallCard({
   steps: Step[];
 }) {
   return (
-    <section className="mb-3 overflow-hidden rounded-lg border border-border bg-surface">
+    <section className="border-border bg-surface mb-3 overflow-hidden rounded-lg border">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-background"
+        className="hover:bg-background flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <span className="flex items-center gap-3">
           <span aria-hidden="true">{icon}</span>
@@ -98,11 +98,11 @@ function InstallCard({
         </span>
       </button>
       {open ? (
-        <ol className="list-decimal border-t border-border px-4 py-3 ps-10 text-sm">
+        <ol className="border-border list-decimal border-t px-4 py-3 ps-10 text-sm">
           {steps.map((s) => (
             <li key={s.label} className="mb-2 last:mb-0">
               <p className="text-foreground">{s.label}</p>
-              {s.hint ? <p className="text-xs text-muted">{s.hint}</p> : null}
+              {s.hint ? <p className="text-muted text-xs">{s.hint}</p> : null}
             </li>
           ))}
         </ol>
