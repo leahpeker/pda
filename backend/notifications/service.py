@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def _notify_users(user_ids: Iterable[str]) -> None:
-    """Fire pg_notify for each recipient so SSE clients get immediate updates."""
+    """Fire pg_notify on the notifications channel (for new notification rows)."""
     from django.db import connection
 
     if connection.vendor != "postgresql":
@@ -21,6 +21,57 @@ def _notify_users(user_ids: Iterable[str]) -> None:
     with connection.cursor() as cursor:
         for uid in user_ids:
             cursor.execute("SELECT pg_notify('notifications', %s)", [str(uid)])
+
+
+_EVENT_UPDATES_CHANNEL = "event_updates"
+
+
+def _ping_event_update(user_ids: Iterable[str], event_id: str) -> None:
+    """Fire pg_notify on the event_updates channel — a silent live-update ping.
+
+    The SSE layer delivers this as an `event_updated` event (distinct from
+    `notification`) so the frontend only invalidates event caches — no bell,
+    no unread-count refetch, no notification row.
+    """
+    from django.db import connection
+
+    if connection.vendor != "postgresql":
+        return
+
+    with connection.cursor() as cursor:
+        for uid in user_ids:
+            payload = f"{uid}:{event_id}"
+            cursor.execute(f"SELECT pg_notify('{_EVENT_UPDATES_CHANNEL}', %s)", [payload])
+
+
+def broadcast_event_update(
+    event: Event,
+    *,
+    exclude_user_ids: Iterable[str] = (),
+    extra_user_ids: Iterable[str] = (),
+) -> None:
+    """Live-update ping for everyone currently able to see this event.
+
+    Creates no notification rows. Stakeholders are the creator + current
+    co-hosts + invited + attending/maybe RSVPs. Pass `extra_user_ids` to
+    include users who just lost their stake (e.g. a co-host who was removed).
+    """
+    from community.models import RSVPStatus
+
+    recipients: set[str] = set()
+    if event.created_by_id:
+        recipients.add(str(event.created_by_id))
+    recipients.update(str(uid) for uid in event.co_hosts.values_list("pk", flat=True))
+    recipients.update(str(uid) for uid in event.invited_users.values_list("pk", flat=True))
+    recipients.update(
+        str(r.user_id)
+        for r in event.rsvps.all()
+        if r.status in (RSVPStatus.ATTENDING, RSVPStatus.MAYBE)
+    )
+    recipients.update(str(uid) for uid in extra_user_ids)
+    recipients.difference_update(str(uid) for uid in exclude_user_ids)
+    if recipients:
+        _ping_event_update(recipients, str(event.pk))
 
 
 def notify_new_event(event: Event) -> bool:

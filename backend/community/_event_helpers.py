@@ -232,14 +232,25 @@ def _update_co_hosts(
     updater: UserModel,
 ) -> None:
     """Update event.co_hosts and notify newly added co-hosts."""
-    from notifications.service import create_cohost_added_notifications
+    from notifications.service import broadcast_event_update, create_cohost_added_notifications
 
     old_ids = {str(uid) for uid in event.co_hosts.values_list("pk", flat=True)}
+    next_ids = {str(uid) for uid in co_host_ids}
     co_hosts = UserModel.objects.filter(pk__in=co_host_ids)
     event.co_hosts.set(co_hosts)
-    new_ids = {str(uid) for uid in co_host_ids} - old_ids
+    new_ids = next_ids - old_ids
     if new_ids:
         create_cohost_added_notifications(event, new_ids, updater)
+    # Silent live-update ping for anyone already viewing the event — so removed
+    # co-hosts and other stakeholders see the change without needing to reload.
+    # Exclude the updater (their local cache is already up-to-date).
+    if old_ids != next_ids:
+        removed_ids = old_ids - next_ids
+        broadcast_event_update(
+            event,
+            exclude_user_ids={str(updater.pk)},
+            extra_user_ids=removed_ids,
+        )
 
 
 def _update_invited_users(

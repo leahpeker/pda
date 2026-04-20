@@ -12,6 +12,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 logger = logging.getLogger("pda")
 
 _PG_CHANNEL = "notifications"
+_EVENT_UPDATES_CHANNEL = "event_updates"
 _HEARTBEAT_INTERVAL = 30  # seconds
 
 
@@ -45,14 +46,27 @@ async def _sse_generator(user_id: str):
     try:
         async with await psycopg.AsyncConnection.connect(dsn, autocommit=True) as conn:
             await conn.execute(f"LISTEN {_PG_CHANNEL}")
+            await conn.execute(f"LISTEN {_EVENT_UPDATES_CHANNEL}")
             yield "event: connected\ndata: {}\n\n"
 
             gen = conn.notifies().__aiter__()
             while True:
                 try:
                     notify = await asyncio.wait_for(gen.__anext__(), timeout=_HEARTBEAT_INTERVAL)
-                    if notify.payload == user_id:
-                        yield f"event: notification\ndata: {json.dumps({'type': 'notification'})}\n\n"
+                    if notify.channel == _PG_CHANNEL:
+                        if notify.payload == user_id:
+                            yield (
+                                f"event: notification\n"
+                                f"data: {json.dumps({'type': 'notification'})}\n\n"
+                            )
+                    elif notify.channel == _EVENT_UPDATES_CHANNEL:
+                        # Payload format: "<user_id>:<event_id>"
+                        target_user, _, event_id = notify.payload.partition(":")
+                        if target_user == user_id and event_id:
+                            yield (
+                                f"event: event_updated\n"
+                                f"data: {json.dumps({'event_id': event_id})}\n\n"
+                            )
                 except TimeoutError:
                     yield ": heartbeat\n\n"
                 except StopAsyncIteration:

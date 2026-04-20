@@ -40,6 +40,12 @@ export function NotificationBell() {
         void qc.invalidateQueries({ queryKey: ['events'] });
         void qc.invalidateQueries({ queryKey: ['users'] });
       },
+      // Silent cache invalidation for live event changes (co-host edits,
+      // etc.) — no notification row, no bell bump. Just keep the UI fresh
+      // for anyone who happens to be looking at the event right now.
+      event_updated: () => {
+        void qc.invalidateQueries({ queryKey: ['events'] });
+      },
     },
   });
 
