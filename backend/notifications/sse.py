@@ -38,6 +38,21 @@ def _build_async_dsn() -> str:
     return f"postgresql://{db['USER']}:{db['PASSWORD']}@{host}:{port}/{db['NAME']}"
 
 
+def _format_notify_for_user(channel: str, payload: str, user_id: str) -> str | None:
+    """Turn a pg_notify payload into an SSE frame for this user, or None to skip."""
+    if channel == _PG_CHANNEL:
+        if payload == user_id:
+            return f"event: notification\ndata: {json.dumps({'type': 'notification'})}\n\n"
+        return None
+    if channel == _EVENT_UPDATES_CHANNEL:
+        # Payload format: "<user_id>:<event_id>"
+        target_user, _, event_id = payload.partition(":")
+        if target_user == user_id and event_id:
+            return f"event: event_updated\ndata: {json.dumps({'event_id': event_id})}\n\n"
+        return None
+    return None
+
+
 async def _sse_generator(user_id: str):
     """Async generator that yields SSE events for a single user."""
     import psycopg
@@ -53,20 +68,9 @@ async def _sse_generator(user_id: str):
             while True:
                 try:
                     notify = await asyncio.wait_for(gen.__anext__(), timeout=_HEARTBEAT_INTERVAL)
-                    if notify.channel == _PG_CHANNEL:
-                        if notify.payload == user_id:
-                            yield (
-                                f"event: notification\n"
-                                f"data: {json.dumps({'type': 'notification'})}\n\n"
-                            )
-                    elif notify.channel == _EVENT_UPDATES_CHANNEL:
-                        # Payload format: "<user_id>:<event_id>"
-                        target_user, _, event_id = notify.payload.partition(":")
-                        if target_user == user_id and event_id:
-                            yield (
-                                f"event: event_updated\n"
-                                f"data: {json.dumps({'event_id': event_id})}\n\n"
-                            )
+                    frame = _format_notify_for_user(notify.channel, notify.payload, user_id)
+                    if frame is not None:
+                        yield frame
                 except TimeoutError:
                     yield ": heartbeat\n\n"
                 except StopAsyncIteration:

@@ -90,6 +90,30 @@ def create_join_form_question(request, payload: JoinFormQuestionIn):
     return Status(201, _question_out(q))
 
 
+@router.put(
+    "/join-form/questions/order/",
+    response={200: list[JoinFormQuestionOut], 403: ErrorOut},
+    auth=JWTAuth(),
+)
+def reorder_join_form_questions(request, payload: JoinFormQuestionOrderIn):
+    if not request.auth.has_permission(PermissionKey.EDIT_JOIN_QUESTIONS):
+        audit_log(
+            logging.WARNING,
+            "permission_denied",
+            request,
+            details={
+                "endpoint": "reorder_join_form_questions",
+                "required_permission": PermissionKey.EDIT_JOIN_QUESTIONS,
+            },
+        )
+        return Status(403, ErrorOut(detail="Permission denied."))
+    for idx, qid in enumerate(payload.question_ids):
+        JoinFormQuestion.objects.filter(id=qid).update(display_order=idx)
+    audit_log(logging.INFO, "join_form_questions_reordered", request)
+    questions = JoinFormQuestion.objects.all()
+    return Status(200, [_question_out(q) for q in questions])
+
+
 @router.patch(
     "/join-form/questions/{question_id}/",
     response={200: JoinFormQuestionOut, 403: ErrorOut, 404: ErrorOut},
@@ -163,27 +187,3 @@ def delete_join_form_question(request, question_id: UUID):
         details={"label": label},
     )
     return Status(204, None)
-
-
-@router.put(
-    "/join-form/questions/order/",
-    response={200: list[JoinFormQuestionOut], 403: ErrorOut},
-    auth=JWTAuth(),
-)
-def reorder_join_form_questions(request, payload: JoinFormQuestionOrderIn):
-    if not request.auth.has_permission(PermissionKey.EDIT_JOIN_QUESTIONS):
-        audit_log(
-            logging.WARNING,
-            "permission_denied",
-            request,
-            details={
-                "endpoint": "reorder_join_form_questions",
-                "required_permission": PermissionKey.EDIT_JOIN_QUESTIONS,
-            },
-        )
-        return Status(403, ErrorOut(detail="Permission denied."))
-    for idx, qid in enumerate(payload.question_ids):
-        JoinFormQuestion.objects.filter(id=qid).update(display_order=idx)
-    audit_log(logging.INFO, "join_form_questions_reordered", request)
-    questions = JoinFormQuestion.objects.all()
-    return Status(200, [_question_out(q) for q in questions])

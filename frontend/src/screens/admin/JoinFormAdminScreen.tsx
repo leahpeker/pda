@@ -55,26 +55,27 @@ export default function JoinFormAdminScreen() {
           onReorder={handleReorder}
           ariaLabel="join form questions"
           renderItem={(q) => (
-            <article className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3">
-              <div className="min-w-0 flex-1 pr-3">
-                <p className="truncate text-sm font-medium">
-                  {q.label}{' '}
-                  {q.required ? <span className="text-xs text-muted">· required</span> : null}
+            <article className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium break-words">
+                  {q.label}
+                  {q.required ? <span className="ml-1 text-xs text-muted">· required</span> : null}
                 </p>
-                <p className="text-xs text-muted">
+                <p className="text-xs text-muted break-words">
                   {q.fieldType}
                   {q.fieldType === 'select' && q.options.length > 0
                     ? ` · ${String(q.options.length)} options`
                     : ''}
                 </p>
               </div>
-              <div className="flex shrink-0 gap-1">
+              <div className="flex shrink-0 gap-0.5">
                 <Button
                   variant="ghost"
                   aria-label={`edit ${q.label}`}
                   onClick={() => {
                     setEditing(q);
                   }}
+                  className="!px-2"
                 >
                   <PencilIcon />
                 </Button>
@@ -84,6 +85,7 @@ export default function JoinFormAdminScreen() {
                   onClick={() => {
                     askDelete(q);
                   }}
+                  className="!px-2"
                 >
                   <CloseIcon />
                 </Button>

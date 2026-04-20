@@ -39,7 +39,7 @@ export function AppShell() {
 
       {/* Pad the bottom so the fixed BottomNav (h-14 + iOS safe area) doesn't
           cover the end of the scroll. Header already eats its own space. */}
-      <div className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <div className="flex-1 overflow-x-hidden pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
         <Outlet />
       </div>
 
