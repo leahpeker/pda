@@ -103,7 +103,7 @@ export default function LoginScreen() {
           role="status"
           className="border-positive-border bg-positive-subtle text-positive mb-4 rounded-md border p-3 text-sm"
         >
-          you've been invited — sign in to get started.
+          you already have an account — sign in below
         </div>
       ) : null}
       <form
@@ -188,7 +188,7 @@ function PasswordStep({
           role="status"
           className="border-positive-border bg-positive-subtle text-positive mb-4 rounded-md border p-3 text-sm"
         >
-          you've been invited — sign in to get started.
+          you already have an account — sign in below
         </div>
       ) : null}
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="flex flex-col gap-4">
