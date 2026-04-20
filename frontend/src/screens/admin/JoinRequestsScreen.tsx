@@ -193,7 +193,7 @@ function JoinRequestCard({
             approve
           </Button>
           <Button
-            variant="ghost"
+            variant="secondary"
             onClick={() => {
               onDecide('rejected');
             }}
@@ -207,7 +207,7 @@ function JoinRequestCard({
           <DecisionAttribution request={request} />
           {isRejected ? (
             <div className="mt-3">
-              <Button variant="ghost" onClick={onUnreject} disabled={busy}>
+              <Button variant="secondary" onClick={onUnreject} disabled={busy}>
                 un-reject
               </Button>
             </div>
