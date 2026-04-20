@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { Event } from '@/models/event';
-import { googleCalendarUrl, icsUrl, shareEventUrl } from '@/utils/eventCalendar';
+import { googleCalendarUrl, icsUrl, webcalUrl, shareEventUrl } from '@/utils/eventCalendar';
 
 interface Props {
   event: Event;
@@ -97,7 +97,7 @@ function CalendarMenu({ event }: { event: Event }) {
             </a>
           ) : null}
           <a
-            href={icsUrl(event.id)}
+            href={webcalUrl(event.id)}
             role="menuitem"
             className="block px-3 py-2 text-foreground hover:bg-surface-dim"
             onClick={() => {
