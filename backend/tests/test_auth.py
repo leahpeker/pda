@@ -158,6 +158,29 @@ class TestMagicLogin:
         magic.refresh_from_db()
         assert magic.used is True
 
+    def test_magic_login_cross_user_blocked(self, api_client, test_user):
+        """A logged-in user clicking another user's magic link must be rejected."""
+        from users.models import MagicLoginToken, User
+
+        other = User.objects.create_user(
+            phone_number="+12025550202", password="otherpass123", display_name="other"
+        )
+        magic = MagicLoginToken.create_for_user(other)
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {RefreshToken.for_user(test_user).access_token}"}  # type: ignore
+        response = api_client.get(f"/api/auth/magic-login/{magic.token}/", **headers)
+        assert response.status_code == 403
+        magic.refresh_from_db()
+        assert magic.used is False
+
+    def test_magic_login_same_user_still_works_when_authed(self, api_client, test_user):
+        """Clicking your own magic link while already logged in is allowed."""
+        from users.models import MagicLoginToken
+
+        magic = MagicLoginToken.create_for_user(test_user)
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {RefreshToken.for_user(test_user).access_token}"}  # type: ignore
+        response = api_client.get(f"/api/auth/magic-login/{magic.token}/", **headers)
+        assert response.status_code == 200
+
 
 # ---------------------------------------------------------------------------
 # TestRefreshToken

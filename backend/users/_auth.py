@@ -79,6 +79,22 @@ def login(request, payload: LoginIn, response: HttpResponse):
     return Status(200, TokenOut(access=str(refresh.access_token), refresh=refresh_str))  # type: ignore
 
 
+def _current_jwt_user(request) -> User | None:
+    """Best-effort JWT read for endpoints declared with auth=None.
+
+    Returns the authenticated user if the request carries a valid access token,
+    else None. Any auth error (missing/invalid/expired token) is treated as
+    anonymous — the calling endpoint decides whether that matters.
+    """
+    try:
+        user = JWTAuth()(request)
+    except Exception:
+        return None
+    if isinstance(user, User):
+        return user
+    return None
+
+
 @router.get(
     "/magic-login/{token}/", response={200: TokenOut, 400: ErrorOut, 403: ErrorOut}, auth=None
 )
@@ -90,6 +106,23 @@ def magic_login(request, token: str, response: HttpResponse):
             logging.WARNING, "magic_login_failed", request, details={"reason": "invalid_token"}
         )
         return Status(400, ErrorOut(detail="Invalid or expired login link."))
+    # Reject cross-user magic links: if the caller is already authenticated as a
+    # different user, a silent session swap would let them complete onboarding /
+    # password-set on behalf of the link's target. Force explicit logout first.
+    current_user = _current_jwt_user(request)
+    if current_user is not None and current_user.pk != magic.user.pk:
+        audit_log(
+            logging.WARNING,
+            "magic_login_cross_user_blocked",
+            request,
+            target_type="user",
+            target_id=str(magic.user.pk),
+            details={"current_user_id": str(current_user.pk)},
+        )
+        return Status(
+            403,
+            ErrorOut(detail="you're signed in as a different user — log out first"),
+        )
     if magic.used or magic.is_expired:
         audit_log(
             logging.WARNING,
