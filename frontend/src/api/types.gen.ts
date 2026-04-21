@@ -311,7 +311,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Generate Magic Link */
-        post: operations["users__management_generate_magic_link"];
+        post: operations["users__magic_links_generate_magic_link"];
         delete?: never;
         options?: never;
         head?: never;
@@ -510,6 +510,23 @@ export interface paths {
         patch: operations["community__join_requests_update_join_request_status"];
         trace?: never;
     };
+    "/api/community/join-requests/{id}/unreject/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Unreject Join Request */
+        patch: operations["community__join_requests_unreject_join_request"];
+        trace?: never;
+    };
     "/api/community/check-phone/": {
         parameters: {
             query?: never;
@@ -543,7 +560,7 @@ export interface paths {
          *     Always returns 200 to prevent phone number enumeration.
          *     If a User exists, generates a magic link token and notifies admins.
          */
-        post: operations["community__join_requests_request_login_link"];
+        post: operations["community__login_link_request_login_link"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1592,14 +1609,6 @@ export interface components {
             content_pm: string;
             /** Content Html */
             content_html: string;
-            /** Join Content */
-            join_content: string;
-            /** Join Content Pm */
-            join_content_pm: string;
-            /** Join Content Html */
-            join_content_html: string;
-            /** Donate Url */
-            donate_url: string;
             /**
              * Updated At
              * Format: date-time
@@ -1610,14 +1619,8 @@ export interface components {
         HomePagePatchIn: {
             /** Content */
             content?: string | null;
-            /** Join Content */
-            join_content?: string | null;
             /** Content Pm */
             content_pm?: string | null;
-            /** Join Content Pm */
-            join_content_pm?: string | null;
-            /** Donate Url */
-            donate_url?: string | null;
         };
         /** EditablePageOut */
         EditablePageOut: {
@@ -1747,6 +1750,11 @@ export interface components {
             answers: {
                 [key: string]: string;
             };
+            /**
+             * Website
+             * @default
+             */
+            website: string;
         };
         /** ApproveJoinRequestOut */
         ApproveJoinRequestOut: {
@@ -3708,7 +3716,7 @@ export interface operations {
             };
         };
     };
-    users__management_generate_magic_link: {
+    users__magic_links_generate_magic_link: {
         parameters: {
             query?: never;
             header?: never;
@@ -4265,6 +4273,55 @@ export interface operations {
             };
         };
     };
+    community__join_requests_unreject_join_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinRequestOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
     community__join_requests_check_phone: {
         parameters: {
             query?: never;
@@ -4289,7 +4346,7 @@ export interface operations {
             };
         };
     };
-    community__join_requests_request_login_link: {
+    community__login_link_request_login_link: {
         parameters: {
             query?: never;
             header?: never;

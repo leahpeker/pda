@@ -96,7 +96,6 @@ class TestHomePage:
         assert response.status_code == 200
         data = response.json()
         assert "content" in data
-        assert "join_content" in data
         assert "updated_at" in data
 
     def test_get_home_authenticated(self, api_client, auth_headers):
@@ -112,28 +111,6 @@ class TestHomePage:
         )
         assert response.status_code == 200
         assert response.json()["content"] == "New main content"
-
-    def test_update_home_join_content(self, api_client, edit_homepage_headers):
-        response = api_client.patch(
-            "/api/community/home/",
-            {"join_content": "New join section"},
-            content_type="application/json",
-            **edit_homepage_headers,
-        )
-        assert response.status_code == 200
-        assert response.json()["join_content"] == "New join section"
-
-    def test_update_home_both_fields(self, api_client, edit_homepage_headers):
-        response = api_client.patch(
-            "/api/community/home/",
-            {"content": "Main content", "join_content": "Join content"},
-            content_type="application/json",
-            **edit_homepage_headers,
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["content"] == "Main content"
-        assert data["join_content"] == "Join content"
 
     def test_update_home_requires_permission(self, api_client, auth_headers):
         response = api_client.patch(
@@ -151,25 +128,6 @@ class TestHomePage:
             content_type="application/json",
         )
         assert response.status_code == 401
-
-    def test_update_home_partial_does_not_overwrite_other_field(
-        self, api_client, edit_homepage_headers
-    ):
-        api_client.patch(
-            "/api/community/home/",
-            {"content": "First content", "join_content": "First join"},
-            content_type="application/json",
-            **edit_homepage_headers,
-        )
-        api_client.patch(
-            "/api/community/home/",
-            {"content": "Updated content"},
-            content_type="application/json",
-            **edit_homepage_headers,
-        )
-        response = api_client.get("/api/community/home/")
-        assert response.json()["join_content"] == "First join"
-        assert response.json()["content"] == "Updated content"
 
 
 # ---------------------------------------------------------------------------

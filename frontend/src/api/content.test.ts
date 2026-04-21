@@ -41,10 +41,6 @@ describe('useHome', () => {
         content: 'delta',
         content_pm: '{"type":"doc"}',
         content_html: '<p>hello</p>',
-        join_content: 'join delta',
-        join_content_pm: '{"type":"doc"}',
-        join_content_html: '<p>join</p>',
-        donate_url: 'https://example.com/donate',
         updated_at: '2024-01-01T00:00:00Z',
       },
     });
@@ -57,22 +53,17 @@ describe('useHome', () => {
       content: 'delta',
       contentPm: '{"type":"doc"}',
       contentHtml: '<p>hello</p>',
-      joinContent: 'join delta',
-      joinContentPm: '{"type":"doc"}',
-      joinContentHtml: '<p>join</p>',
-      donateUrl: 'https://example.com/donate',
       updatedAt: '2024-01-01T00:00:00Z',
     });
 
     expect(mockedGet).toHaveBeenCalledWith('/api/community/home/');
   });
 
-  it('defaults donateUrl to empty string when null in response', async () => {
+  it('defaults missing string fields to empty string', async () => {
     mockedGet.mockResolvedValueOnce({
       data: {
         content_html: '<p>hi</p>',
         updated_at: '2024-01-01T00:00:00Z',
-        // donate_url omitted — wire type allows undefined
       },
     });
 
@@ -80,7 +71,8 @@ describe('useHome', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.donateUrl).toBe('');
+    expect(result.current.data?.content).toBe('');
+    expect(result.current.data?.contentPm).toBe('');
   });
 });
 
@@ -93,7 +85,6 @@ describe('useUpdateHome', () => {
     const wireResponse = {
       content_pm: '{"type":"doc"}',
       content_html: '<p>updated</p>',
-      donate_url: 'https://example.com/donate',
       updated_at: '2024-06-01T00:00:00Z',
     };
     mockedPatch.mockResolvedValueOnce({ data: wireResponse });
@@ -102,12 +93,10 @@ describe('useUpdateHome', () => {
 
     await result.current.mutateAsync({
       contentPm: '{"type":"doc"}',
-      donateUrl: 'https://example.com/donate',
     });
 
     expect(mockedPatch).toHaveBeenCalledWith('/api/community/home/', {
       content_pm: '{"type":"doc"}',
-      donate_url: 'https://example.com/donate',
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });

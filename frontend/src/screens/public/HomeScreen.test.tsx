@@ -26,10 +26,6 @@ const baseHomeData = {
   content: '',
   contentPm: '',
   contentHtml: '<p>Welcome</p>',
-  joinContent: '',
-  joinContentPm: '',
-  joinContentHtml: '<p>Join us!</p>',
-  donateUrl: 'https://example.com/donate',
   updatedAt: '2024-01-01T00:00:00Z',
 };
 
@@ -77,56 +73,6 @@ describe('HomeScreen', () => {
     expect(screen.getByText('loading…')).toBeInTheDocument();
   });
 
-  it('shows join CTA for unauthenticated user', () => {
-    useAuthStore.setState({ status: 'unauthed', user: null, accessToken: null });
-    mockUseHome.mockReturnValue({
-      isPending: false,
-      isError: false,
-      data: { ...baseHomeData, joinContentHtml: '<p>Join us!</p>' },
-    } as ReturnType<typeof useHome>);
-
-    renderWith(<HomeScreen />);
-
-    expect(screen.getByRole('link', { name: /request to join/i })).toBeInTheDocument();
-  });
-
-  it('hides join CTA for authenticated user', () => {
-    useAuthStore.setState({ status: 'authed', user: baseUser, accessToken: 'token' });
-    mockUseHome.mockReturnValue({
-      isPending: false,
-      isError: false,
-      data: { ...baseHomeData, joinContentHtml: '<p>Join us!</p>' },
-    } as ReturnType<typeof useHome>);
-
-    renderWith(<HomeScreen />);
-
-    expect(screen.queryByRole('link', { name: /request to join/i })).not.toBeInTheDocument();
-  });
-
-  it('shows donate button when donateUrl is non-empty', () => {
-    mockUseHome.mockReturnValue({
-      isPending: false,
-      isError: false,
-      data: { ...baseHomeData, donateUrl: 'https://example.com/donate' },
-    } as ReturnType<typeof useHome>);
-
-    renderWith(<HomeScreen />);
-
-    expect(screen.getByRole('link', { name: /donate/i })).toBeInTheDocument();
-  });
-
-  it('hides donate button when donateUrl is empty string', () => {
-    mockUseHome.mockReturnValue({
-      isPending: false,
-      isError: false,
-      data: { ...baseHomeData, donateUrl: '' },
-    } as ReturnType<typeof useHome>);
-
-    renderWith(<HomeScreen />);
-
-    expect(screen.queryByRole('link', { name: /donate/i })).not.toBeInTheDocument();
-  });
-
   it('shows edit button for user with edit_homepage permission', () => {
     const editorUser: User = {
       ...baseUser,
@@ -143,7 +89,7 @@ describe('HomeScreen', () => {
     mockUseHome.mockReturnValue({
       isPending: false,
       isError: false,
-      data: { ...baseHomeData, joinContentHtml: '' },
+      data: baseHomeData,
     } as ReturnType<typeof useHome>);
 
     renderWith(<HomeScreen />);

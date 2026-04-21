@@ -120,7 +120,6 @@ SEED_EVENTS = [
 
 SEED_HOME_PAGE = {
     "content_html": "<p>This is seed text for the home page.</p>",
-    "join_content_html": "<p>This is seed text for the home page join section.</p>",
 }
 
 SEED_GUIDELINES = {
@@ -335,7 +334,7 @@ class Command(BaseCommand):
             self.stdout.write(f"  {label} join request: {data.display_name}")
 
     def _seed_content(self) -> None:
-        _seed_singleton(HomePage, SEED_HOME_PAGE, ("content_html", "join_content_html"), self)
+        _seed_singleton(HomePage, SEED_HOME_PAGE, ("content_html",), self)
         _seed_singleton(CommunityGuidelines, SEED_GUIDELINES, ("content_html",), self)
         _seed_singleton(FAQ, SEED_FAQ, ("content_html",), self)
 

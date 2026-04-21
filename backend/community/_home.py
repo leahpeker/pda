@@ -22,22 +22,15 @@ class HomePageOut(BaseModel):
     content: str
     content_pm: str
     content_html: str
-    join_content: str
-    join_content_pm: str
-    join_content_html: str
-    donate_url: str
     updated_at: datetime
 
 
 class HomePagePatchIn(BaseModel):
-    # Legacy (Flutter) fields — Quill Delta JSON.
+    # Legacy (Flutter) field — Quill Delta JSON.
     content: str | None = Field(default=None, max_length=FieldLimit.CONTENT)
-    join_content: str | None = Field(default=None, max_length=FieldLimit.CONTENT)
-    # React/TipTap fields — ProseMirror JSON. Either content or content_pm
-    # (but not both) should be set per field group.
+    # React/TipTap field — ProseMirror JSON. Either content or content_pm
+    # (but not both) should be set.
     content_pm: str | None = Field(default=None, max_length=FieldLimit.CONTENT)
-    join_content_pm: str | None = Field(default=None, max_length=FieldLimit.CONTENT)
-    donate_url: str | None = Field(default=None, max_length=FieldLimit.URL)
 
 
 def _home_out(h: HomePage) -> HomePageOut:
@@ -45,10 +38,6 @@ def _home_out(h: HomePage) -> HomePageOut:
         content=h.content,
         content_pm=h.content_pm,
         content_html=h.content_html,
-        join_content=h.join_content,
-        join_content_pm=h.join_content_pm,
-        join_content_html=h.join_content_html,
-        donate_url=h.donate_url,
         updated_at=h.updated_at,
     )
 
@@ -91,13 +80,6 @@ def update_home(request, payload: HomePagePatchIn):
         h, delta=payload.content, pm=payload.content_pm, field_prefix="content"
     ):
         changed.append("content")
-    if _apply_content_update(
-        h, delta=payload.join_content, pm=payload.join_content_pm, field_prefix="join_content"
-    ):
-        changed.append("join_content")
-    if payload.donate_url is not None:
-        h.donate_url = payload.donate_url
-        changed.append("donate_url")
     h.save()
     audit_log(
         logging.INFO,

@@ -11,10 +11,6 @@ export interface HomePage {
   content: string;
   contentPm: string;
   contentHtml: string;
-  joinContent: string;
-  joinContentPm: string;
-  joinContentHtml: string;
-  donateUrl: string;
   updatedAt: string;
 }
 
@@ -38,10 +34,6 @@ interface WireHome {
   content?: string;
   content_pm?: string;
   content_html?: string;
-  join_content?: string;
-  join_content_pm?: string;
-  join_content_html?: string;
-  donate_url?: string;
   updated_at: string;
 }
 interface WireSimple {
@@ -64,10 +56,6 @@ function mapHome(data: WireHome): HomePage {
     content: data.content ?? '',
     contentPm: data.content_pm ?? '',
     contentHtml: data.content_html ?? '',
-    joinContent: data.join_content ?? '',
-    joinContentPm: data.join_content_pm ?? '',
-    joinContentHtml: data.join_content_html ?? '',
-    donateUrl: data.donate_url ?? '',
     updatedAt: data.updated_at,
   };
 }
@@ -138,8 +126,6 @@ export function useEditablePage(slug: string) {
 
 export interface HomeUpdate {
   contentPm?: string;
-  joinContentPm?: string;
-  donateUrl?: string;
 }
 
 export function useUpdateHome() {
@@ -148,8 +134,6 @@ export function useUpdateHome() {
     mutationFn: async (patch: HomeUpdate) => {
       const body: Record<string, string> = {};
       if (patch.contentPm !== undefined) body.content_pm = patch.contentPm;
-      if (patch.joinContentPm !== undefined) body.join_content_pm = patch.joinContentPm;
-      if (patch.donateUrl !== undefined) body.donate_url = patch.donateUrl;
       const { data } = await apiClient.patch<WireHome>('/api/community/home/', body);
       return mapHome(data);
     },
