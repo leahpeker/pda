@@ -345,7 +345,10 @@ def update_join_request_status(request, id: UUID, payload: JoinRequestStatusIn):
 
             existing_user.archived_at = None
             existing_user.needs_onboarding = True
-            existing_user.save(update_fields=["archived_at", "needs_onboarding"])
+            existing_user.display_name = join_request.display_name
+            existing_user.save(
+                update_fields=["archived_at", "needs_onboarding", "display_name"]
+            )
             magic_token = _create_magic_token(existing_user)
             user_created = True
 
