@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlreadyInvitedError, useJoinQuestions, useSubmitJoinRequest } from '@/api/join';
 import type { JoinQuestion } from '@/api/join';
-import { useAuth } from '@/auth/useAuth';
+import { useAuthStore } from '@/auth/store';
 import { Button } from '@/components/ui/Button';
 import { PhoneField } from '@/components/ui/PhoneField';
 import { Select } from '@/components/ui/Select';
@@ -22,7 +22,7 @@ function isMultiline(q: JoinQuestion): boolean {
 }
 
 export default function JoinScreen() {
-  const { isAuthed } = useAuth();
+  const isAuthed = useAuthStore((s) => s.status === 'authed');
   if (isAuthed) return <AlreadyMemberPanel />;
   return <JoinFormLoader />;
 }
