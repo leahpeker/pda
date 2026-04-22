@@ -315,7 +315,7 @@ function MemberRow({ member }: { member: Member }) {
   return (
     <Link
       to={`/admin/members/${member.id}`}
-      className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 transition-colors hover:bg-neutral-50"
+      className="border-border bg-surface hover:bg-surface-dim flex items-center gap-3 rounded-lg border p-3 transition-colors"
     >
       {member.profilePhotoUrl ? (
         <img
@@ -326,28 +326,28 @@ function MemberRow({ member }: { member: Member }) {
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm text-neutral-600"
+          className="bg-surface-dim text-foreground-secondary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm"
         >
           {initials || '?'}
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-neutral-900">
+        <p className="text-foreground truncate text-sm font-medium">
           {member.displayName || member.phoneNumber}
         </p>
-        <p className="truncate text-xs text-neutral-500">{member.phoneNumber}</p>
+        <p className="text-foreground-tertiary truncate text-xs">{member.phoneNumber}</p>
       </div>
       <div className="flex shrink-0 flex-wrap justify-end gap-1">
         {member.roles.map((role) => (
           <span
             key={role.id}
-            className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700"
+            className="bg-surface-dim text-foreground-secondary rounded-full px-2 py-0.5 text-xs"
           >
             {role.name}
           </span>
         ))}
         {member.isPaused ? (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
             paused
           </span>
         ) : null}
