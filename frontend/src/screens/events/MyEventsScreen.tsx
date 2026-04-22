@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { useEvents } from '@/api/events';
 import { useAuthStore } from '@/auth/store';
 import type { Event } from '@/models/event';
-import { EventStatus, EventType } from '@/models/event';
+import { EventStatus, EventType, RsvpStatus } from '@/models/event';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
 
@@ -24,7 +24,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 const EMPTY_COPY: Record<Filter, string> = {
-  upcoming: 'nothing coming up 🌿 — events you create or co-host will show up here',
+  upcoming: "nothing coming up 🌿 — events you're hosting or going to will show up here",
   past: 'no past events yet 🌿',
   drafts: 'no drafts saved 🌿 — start one and we\u2019ll keep it here until you publish',
   cancelled: 'no cancelled events 🌿',
@@ -66,7 +66,11 @@ export default function MyEventsScreen() {
       );
     }
     const mineActive = sourceData.filter(
-      (e) => e.createdById === userId || e.coHostIds.includes(userId),
+      (e) =>
+        e.createdById === userId ||
+        e.coHostIds.includes(userId) ||
+        e.myRsvp === RsvpStatus.Attending ||
+        e.myRsvp === RsvpStatus.Maybe,
     );
     if (filter === 'upcoming') {
       return mineActive
