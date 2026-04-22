@@ -147,7 +147,7 @@ export function FeedbackButton() {
             onSubmit={(e) => {
               void onSubmit(e);
             }}
-            className="relative w-full max-w-md rounded-lg bg-white p-5 shadow-xl"
+            className="bg-surface text-foreground relative w-full max-w-md rounded-lg p-5 shadow-xl"
           >
             <h2 className="mb-4 text-base font-medium">send feedback</h2>
             <div className="flex flex-col gap-4">
@@ -171,25 +171,25 @@ export function FeedbackButton() {
                 error={descriptionError}
               />
               <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2 text-sm text-neutral-800">
+                <label className="text-foreground flex cursor-pointer items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={isBug}
                     onChange={(e) => {
                       setIsBug(e.target.checked);
                     }}
-                    className="text-brand-600 focus:ring-brand-200 h-4 w-4 rounded border-neutral-300"
+                    className="accent-brand-600 h-4 w-4 cursor-pointer rounded"
                   />
                   bug
                 </label>
-                <label className="flex items-center gap-2 text-sm text-neutral-800">
+                <label className="text-foreground flex cursor-pointer items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={isFeature}
                     onChange={(e) => {
                       setIsFeature(e.target.checked);
                     }}
-                    className="text-brand-600 focus:ring-brand-200 h-4 w-4 rounded border-neutral-300"
+                    className="accent-brand-600 h-4 w-4 cursor-pointer rounded"
                   />
                   feature request
                 </label>
