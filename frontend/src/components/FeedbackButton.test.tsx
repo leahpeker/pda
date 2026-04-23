@@ -155,7 +155,6 @@ describe('FeedbackButton', () => {
       metadata: {
         route: '/events/mine',
         userAgent: 'jsdom-test-agent',
-        userDisplayName: 'alice',
       },
     });
     await waitFor(() => {
@@ -166,7 +165,7 @@ describe('FeedbackButton', () => {
     });
   });
 
-  it('sends only the first word of the display name and never sends phone', async () => {
+  it('never sends user display name, phone, or id from the client — backend derives identity from auth', async () => {
     useAuthStore.setState({
       status: 'authed',
       user: makeUser({ displayName: 'alice smith' }),
@@ -185,8 +184,9 @@ describe('FeedbackButton', () => {
     });
     const payload = submitFeedbackMock.mock.calls[0]?.[0] as { metadata?: Record<string, unknown> };
     const metadata = payload.metadata ?? {};
-    expect(metadata.userDisplayName).toBe('alice');
+    expect(metadata).not.toHaveProperty('userDisplayName');
     expect(metadata).not.toHaveProperty('userPhone');
+    expect(metadata).not.toHaveProperty('userId');
   });
 
   it('exposes the github issue url in the success toast action', async () => {

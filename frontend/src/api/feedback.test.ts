@@ -37,7 +37,6 @@ describe('useSubmitFeedback', () => {
       metadata: {
         route: '/calendar',
         userAgent: 'jsdom',
-        userDisplayName: 'alice',
         appVersion: '',
       },
     });
@@ -50,7 +49,6 @@ describe('useSubmitFeedback', () => {
       metadata: {
         route: '/calendar',
         user_agent: 'jsdom',
-        user_display_name: 'alice',
         app_version: '',
       },
     });
@@ -67,7 +65,6 @@ describe('useSubmitFeedback', () => {
       metadata: {
         route: '/',
         userAgent: '',
-        userDisplayName: '',
         appVersion: '',
       },
     });
@@ -93,7 +90,6 @@ describe('useSubmitFeedback', () => {
         metadata: {
           route: '/',
           userAgent: '',
-          userDisplayName: '',
           appVersion: '',
         },
       }),

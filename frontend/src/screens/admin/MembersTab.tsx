@@ -62,7 +62,7 @@ export function MembersTab() {
         <div className="flex-1">
           <TextField
             label="search"
-            placeholder="name, phone, or email"
+            placeholder="name, phone, email, or user id"
             value={query}
             maxLength={100}
             onChange={(e) => {
@@ -291,7 +291,8 @@ function filterAndSort(
       (m) =>
         m.displayName.toLowerCase().includes(q) ||
         m.phoneNumber.toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q),
+        m.email.toLowerCase().includes(q) ||
+        m.id.toLowerCase().startsWith(q),
     );
   }
   if (selectedRoles.size > 0) {

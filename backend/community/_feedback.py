@@ -36,7 +36,6 @@ class ErrorReportOut(BaseModel):
 class FeedbackMetadataIn(BaseModel):
     route: str = Field(default="", max_length=500)
     user_agent: str = Field(default="", max_length=500)
-    user_display_name: str = Field(default="", max_length=100)
     app_version: str = Field(default="", max_length=50)
 
 
@@ -76,10 +75,6 @@ def _build_feedback_metadata(meta: FeedbackMetadataIn) -> str:
         lines.append(f"- **Route:** `{meta.route}`")
     if meta.user_agent:
         lines.append(f"- **User Agent:** {meta.user_agent}")
-    if meta.user_display_name:
-        first_name = meta.user_display_name.split()[0] if meta.user_display_name.split() else ""
-        if first_name:
-            lines.append(f"- **User:** {first_name}")
     if meta.app_version:
         lines.append(f"- **App Version:** {meta.app_version}")
     return "\n".join(lines) if len(lines) > 2 else ""
@@ -128,10 +123,8 @@ def _build_issue_body(payload: FeedbackIn, auth_user) -> str:
         if metadata_section:
             parts.append(metadata_section)
 
-    if not isinstance(auth_user, AnonymousUser) and auth_user.display_name:
-        first_name = auth_user.display_name.split()[0] if auth_user.display_name.split() else ""
-        if first_name:
-            parts.append(f"\n_Submitted by {first_name}_")
+    if not isinstance(auth_user, AnonymousUser):
+        parts.append(f"\n_Submitted by user id: `{auth_user.id}`_")
 
     return "\n\n".join(parts)
 
