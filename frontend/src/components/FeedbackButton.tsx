@@ -20,7 +20,6 @@ const DESCRIPTION_MAX = 2000;
 
 export function FeedbackButton() {
   const isAuthed = useAuthStore((s) => s.status === 'authed');
-  const user = useAuthStore((s) => s.user);
   const location = useLocation();
   const { mutateAsync, isPending } = useSubmitFeedback();
 
@@ -86,7 +85,6 @@ export function FeedbackButton() {
         metadata: {
           route: location.pathname,
           userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-          userDisplayName: (user?.displayName ?? '').split(' ')[0] ?? '',
           appVersion: '',
         },
       });

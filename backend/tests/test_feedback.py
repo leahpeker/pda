@@ -141,10 +141,10 @@ class TestFeedback:
         )
         assert response.status_code == 422
 
-    def test_feedback_issue_body_uses_first_name_and_omits_phone(
+    def test_feedback_issue_body_uses_user_id_and_omits_name_and_phone(
         self, api_client, settings, monkeypatch
     ):
-        """Submitter identity in issue body should be just the first word of display name."""
+        """Submitter identity in issue body should be the user's UUID, not name or phone."""
         import json
 
         for k, v in _APP_SETTINGS.items():
@@ -171,7 +171,7 @@ class TestFeedback:
             {
                 "title": "something broke",
                 "description": "details",
-                "metadata": {"user_display_name": "alice smith"},
+                "metadata": {},
             },
             content_type="application/json",
             **headers,
@@ -181,13 +181,15 @@ class TestFeedback:
         issue_request = captured["calls"][-1]
         body_payload = json.loads(issue_request.data.decode())
         issue_body = body_payload["body"]
-        assert "alice" in issue_body
+        assert str(user.id) in issue_body
+        assert "alice" not in issue_body
         assert "smith" not in issue_body
         assert "+15551239999" not in issue_body
         assert "Phone" not in issue_body
+        assert "User:" not in issue_body
 
-    def test_feedback_schema_rejects_user_phone_field(self, api_client, settings, monkeypatch):
-        """user_phone was intentionally removed — extra fields should not break anything."""
+    def test_feedback_schema_ignores_removed_fields(self, api_client, settings, monkeypatch):
+        """user_phone and user_display_name were removed — extra fields should be ignored, not break."""
         for k, v in _APP_SETTINGS.items():
             setattr(settings, k, v)
         monkeypatch.setattr(
@@ -200,7 +202,10 @@ class TestFeedback:
             {
                 "title": "t",
                 "description": "d",
-                "metadata": {"user_phone": "+15551234567"},
+                "metadata": {
+                    "user_phone": "+15551234567",
+                    "user_display_name": "alice smith",
+                },
             },
             content_type="application/json",
         )

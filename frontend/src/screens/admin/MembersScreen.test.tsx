@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -117,6 +118,22 @@ describe('MembersScreen', () => {
 
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
+  });
+
+  it('filters members by user id prefix when searching', async () => {
+    mockUsersResult({
+      data: [
+        makeMember({ id: 'abc12345-aaaa-bbbb-cccc-dddddddddddd', displayName: 'Ada Lovelace' }),
+        makeMember({ id: 'def67890-eeee-ffff-1111-222222222222', displayName: 'Grace Hopper' }),
+      ],
+    });
+
+    renderScreen();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/^search$/i), 'abc12');
+
+    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+    expect(screen.queryByText('Grace Hopper')).not.toBeInTheDocument();
   });
 
   it('shows the empty state when there are no members', () => {

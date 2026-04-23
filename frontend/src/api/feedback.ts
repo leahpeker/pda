@@ -16,7 +16,6 @@ export interface SubmitFeedbackPayload {
   metadata: {
     route: string;
     userAgent: string;
-    userDisplayName: string;
     appVersion: string;
   };
 }
@@ -35,7 +34,6 @@ export function useSubmitFeedback() {
         metadata: {
           route: payload.metadata.route,
           user_agent: payload.metadata.userAgent,
-          user_display_name: payload.metadata.userDisplayName,
           app_version: payload.metadata.appVersion,
         },
       });
