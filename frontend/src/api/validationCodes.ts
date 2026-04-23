@@ -68,6 +68,15 @@ export const Code = {
   Member: {
     NotFound: 'member.not_found',
   },
+  User: {
+    NotFound: 'user.not_found',
+    CannotDeleteSelf: 'user.cannot_delete_self',
+    CannotDeleteLastAdmin: 'user.cannot_delete_last_admin',
+    AlreadyArchived: 'user.already_archived',
+    CannotPauseSelf: 'user.cannot_pause_self',
+    CannotPauseAdmin: 'user.cannot_pause_admin',
+    RoleIdsNotFound: 'user.role_ids_not_found',
+  },
   Photo: {
     TypeNotAllowed: 'photo.type_not_allowed',
     TooLarge: 'photo.too_large',
@@ -197,6 +206,22 @@ export function messageForCode(err: FieldError): string {
     // Member
     case Code.Member.NotFound:
       return 'member not found';
+
+    // User (admin actions)
+    case Code.User.NotFound:
+      return 'user not found';
+    case Code.User.CannotDeleteSelf:
+      return "you can't delete your own account";
+    case Code.User.CannotDeleteLastAdmin:
+      return "can't delete the last admin — promote someone else first";
+    case Code.User.AlreadyArchived:
+      return 'this user is already archived';
+    case Code.User.CannotPauseSelf:
+      return "you can't pause your own account";
+    case Code.User.CannotPauseAdmin:
+      return "admins can't be paused";
+    case Code.User.RoleIdsNotFound:
+      return 'one or more role IDs not found';
 
     // Photo
     case Code.Photo.TypeNotAllowed:

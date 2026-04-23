@@ -7,14 +7,16 @@ responses of the form ``{detail: [{code, field, params?}, ...]}``. Use
 
 from typing import Any
 
+_ANY_FIELD = object()  # Sentinel: "don't check the field, match on code alone"
+
 
 def assert_error_code(
-    response: Any, expected_code: str, expected_field: str | None = ...
+    response: Any, expected_code: str, expected_field: Any = _ANY_FIELD
 ) -> dict:
     """Assert a response carries the given validation code. Returns the match.
 
     ``expected_field``:
-      - Default (``...``): field is not checked — any match on code works.
+      - Default: field is not checked — any match on code works.
       - ``None``: match only entries with ``field=None`` (model-level errors).
       - str: match only entries with that exact field name.
     """
@@ -26,11 +28,11 @@ def assert_error_code(
     for entry in detail:
         if entry.get("code") != expected_code:
             continue
-        if expected_field is not ... and entry.get("field") != expected_field:
+        if expected_field is not _ANY_FIELD and entry.get("field") != expected_field:
             continue
         return entry
     raise AssertionError(
         f"no error with code={expected_code!r}"
-        + (f" field={expected_field!r}" if expected_field is not ... else "")
+        + (f" field={expected_field!r}" if expected_field is not _ANY_FIELD else "")
         + f" in {detail!r}"
     )

@@ -73,6 +73,15 @@ class Code:
     class Member:
         NOT_FOUND = "member.not_found"
 
+    class User:
+        NOT_FOUND = "user.not_found"
+        CANNOT_DELETE_SELF = "user.cannot_delete_self"
+        CANNOT_DELETE_LAST_ADMIN = "user.cannot_delete_last_admin"
+        ALREADY_ARCHIVED = "user.already_archived"
+        CANNOT_PAUSE_SELF = "user.cannot_pause_self"
+        CANNOT_PAUSE_ADMIN = "user.cannot_pause_admin"
+        ROLE_IDS_NOT_FOUND = "user.role_ids_not_found"
+
     class Photo:
         TYPE_NOT_ALLOWED = "photo.type_not_allowed"  # params: { allowed: string[] }
         TOO_LARGE = "photo.too_large"  # params: { max_mb: int }

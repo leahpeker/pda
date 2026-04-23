@@ -61,7 +61,7 @@ def _create_user_with_role(
 ) -> tuple[User, str]:
     """Validate phone, create user, assign role. Returns (user, magic_link_token).
 
-    Raises ValueError on validation failure (bad phone, duplicate, bad role).
+    Raises ValidationException on validation failure (bad phone, duplicate, bad role).
     """
     validated_phone = _validate_phone(phone)
     if User.objects.filter(phone_number=validated_phone).exists():
@@ -89,32 +89,27 @@ def _create_user_with_role(
     return user, magic_token
 
 
-def _validate_admin_role_change(
-    user: User, requesting_user_pk, new_roles: list[Role]
-) -> str | None:
-    """Return error message if admin role change is invalid, None if OK."""
+def _validate_admin_role_change(user: User, requesting_user_pk, new_roles: list[Role]) -> None:
+    """Raise ValidationException if an admin role change is invalid."""
     admin_role = Role.objects.filter(name="admin", is_default=True).first()
     if not admin_role:
-        return None
+        return
 
     is_self = str(user.pk) == str(requesting_user_pk)
     is_current_admin = user.roles.filter(pk=admin_role.pk).exists()
     removing_admin = admin_role not in new_roles
 
     if is_self and is_current_admin and removing_admin:
-        return "You cannot remove your own admin role."
+        raise_validation(Code.Role.CANNOT_REMOVE_OWN_ADMIN, status_code=400)
 
     if _is_last_admin(user) and removing_admin:
-        return "Cannot remove admin from the last admin."
-
-    return None
+        raise_validation(Code.Role.CANNOT_REMOVE_LAST_ADMIN, status_code=400)
 
 
-def _validate_member_role_required(new_roles: list[Role]) -> str | None:
-    """Return error if the new role set is missing the built-in member role."""
+def _validate_member_role_required(new_roles: list[Role]) -> None:
+    """Raise ValidationException if the new role set is missing the built-in member role."""
     member_role = Role.objects.filter(name="member", is_default=True).first()
     if not member_role:
-        return None
+        return
     if member_role not in new_roles:
-        return "Every user must keep the member role."
-    return None
+        raise_validation(Code.Role.MEMBER_ROLE_REQUIRED, status_code=400)
