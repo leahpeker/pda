@@ -7,13 +7,11 @@ paths:
 
 ## Base Branch
 
-**All PRs default to `staging` as the base branch**, not `main`.
+**All PRs target `main` as the base branch.** `main` is the default branch; pushes to `main` auto-deploy to Railway staging. Production deploys are manual via `workflow_dispatch` on `deploy-railway.yml`.
 
 ```bash
-gh pr create --draft --base staging
+gh pr create --draft --base main
 ```
-
-Only target `main` directly for hotfixes that must go to production immediately — and only with explicit confirmation.
 
 ## Other Conventions
 

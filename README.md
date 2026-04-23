@@ -38,20 +38,18 @@ See [CLAUDE.md](./CLAUDE.md) for full command reference.
 
 | Environment | URL | Branch | Deploys |
 |-------------|-----|--------|---------|
-| **Production** | [pda.up.railway.app](https://pda.up.railway.app) | `main` | On merge to `main` |
-| **Staging** | [staging-pda.up.railway.app](https://staging-pda.up.railway.app) | `staging` | On push to `staging` |
+| **Staging** | [staging-pda.up.railway.app](https://staging-pda.up.railway.app) | `main` | On push to `main` (auto) |
+| **Production** | [proteindeficientsanonymous.com](https://proteindeficientsanonymous.com) | `main` | Manual via GitHub Actions |
 
-Staging is the preview environment for testing changes before they hit production. All new features and fixes should be verified on staging first.
+Staging is the preview environment — merging to `main` auto-deploys staging. Verify there, then manually promote to production via the `deploy railway (production)` workflow in GitHub Actions.
 
 Manual Railway deploys via GitHub Actions (`workflow_dispatch`) are documented in [CLAUDE.md](./CLAUDE.md) (environment section).
 
 ## Contributing
 
-All changes go through `staging` before `main`.
-
-1. Branch off `staging`: `git checkout staging && git pull && git checkout -b your-feature`
-2. Open a pull request targeting `staging` (not `main`)
+1. Branch off `main`: `git checkout main && git pull && git checkout -b your-feature`
+2. Open a pull request targeting `main`
 3. Verify on [staging-pda.up.railway.app](https://staging-pda.up.railway.app) after merge
-4. When ready for production, merge `staging` → `main`
+4. When ready, run the `deploy railway (production)` GitHub Action to promote to production
 
-Direct pushes to `staging` and `main` are not allowed for contributors.
+Direct pushes to `main` are not allowed for contributors.
