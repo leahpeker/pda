@@ -204,13 +204,15 @@ def me(request):
     return Status(200, UserOut.from_user(user))
 
 
-def _apply_me_patch(user, payload: MePatchIn):
-    """Apply MePatchIn fields to user. Returns (changed_fields, error_response)."""
-    changed = []
+def _apply_me_patch(user, payload: MePatchIn) -> list[str]:
+    """Apply MePatchIn fields to user. Returns the list of changed fields.
+
+    Raises ValidationException on invalid input — caller lets it propagate
+    to the global handler.
+    """
+    changed: list[str] = []
     if payload.display_name is not None:
-        name_error = validate_display_name(payload.display_name)
-        if name_error:
-            return None, Status(400, ErrorOut(detail=name_error))
+        validate_display_name(payload.display_name)
         user.display_name = payload.display_name.strip()
         changed.append("display_name")
     if payload.email is not None:
@@ -231,15 +233,13 @@ def _apply_me_patch(user, payload: MePatchIn):
     if payload.week_start is not None:
         user.week_start = payload.week_start
         changed.append("week_start")
-    return changed, None
+    return changed
 
 
 @router.patch("/me/", response={200: UserOut, 400: ErrorOut}, auth=JWTAuth())
 def update_me(request, payload: MePatchIn):
     user = User.objects.prefetch_related("roles").get(pk=request.auth.pk)
-    changed, err = _apply_me_patch(user, payload)
-    if err is not None:
-        return err
+    changed = _apply_me_patch(user, payload)
     user.save()
     if changed:
         audit_log(

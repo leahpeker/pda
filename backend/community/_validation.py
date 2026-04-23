@@ -1,45 +1,103 @@
 """Machine-readable validation errors.
 
 Validators raise ``ValidationException(code, field, params?)`` instead of
-``ValueError("free text")``. The global Ninja handler (see ``config/urls.py``)
-catches both ``ValidationException`` and Pydantic ``ValidationError`` and
-reshapes them to ``{ detail: [{code, field, params?}, ...] }`` so the frontend
-owns the UI copy.
+``ValueError("free text")``. The global Ninja handler (see
+``config/validation_handlers.py``) catches both ``ValidationException`` and
+Ninja's wrapped Pydantic errors and reshapes them to
+``{ detail: [{code, field, params?}, ...] }`` so the frontend owns UI copy.
 
-Adding a new validation error:
-  1. Add a constant to ``ValidationCode`` (stable string — don't rename once shipped).
-  2. Raise ``ValidationException(ValidationCode.YOUR_CODE, field="foo")``.
-  3. Add a case in the frontend's ``validationCodes.ts`` messageForCode().
+Code strings are part of the API contract — **never rename** once shipped.
+Organize codes under ``Code.<Domain>.<NAME>``; the frontend mirrors this.
+
+Adding a new code:
+  1. Add a constant under the right ``Code.<Domain>`` class.
+  2. ``raise_validation(Code.Domain.NAME, field="foo")`` (or
+     ``raise ValidationException(...)`` if you need custom args).
+  3. Add a ``case`` in the frontend's ``validationCodes.ts``
+     ``messageForCode()``.
 """
 
-from typing import Any
+from typing import Any, NoReturn
 
 
-class ValidationCode:
-    """Stable error codes. Strings are part of the API contract — don't rename."""
+class Code:
+    """Namespaced validation code catalog. Strings are the wire format."""
 
-    # Event form
-    START_DATETIME_REQUIRED_UNLESS_TBD = "start_datetime_required_unless_tbd"
-    MAX_ATTENDEES_MUST_BE_AT_LEAST_ONE = "max_attendees_must_be_at_least_one"
-    URL_INVALID = "url_invalid"
-    URL_PATH_REQUIRED = "url_path_required"
-    URL_SCHEME_MUST_BE_HTTP_OR_HTTPS = "url_scheme_must_be_http_or_https"
-    WHATSAPP_URL_NOT_RECOGNIZED = "whatsapp_url_not_recognized"
-    PARTIFUL_URL_NOT_RECOGNIZED = "partiful_url_not_recognized"
+    class Event:
+        START_DATETIME_REQUIRED_UNLESS_TBD = "event.start_datetime_required_unless_tbd"
+        MAX_ATTENDEES_MUST_BE_AT_LEAST_ONE = "event.max_attendees_must_be_at_least_one"
+        ATTENDANCE_INVALID_CHOICE = "event.attendance_invalid_choice"
 
-    # Event attendance
-    ATTENDANCE_INVALID_CHOICE = "attendance_invalid_choice"
+    class Url:
+        INVALID = "url.invalid"
+        PATH_REQUIRED = "url.path_required"
+        SCHEME_MUST_BE_HTTP_OR_HTTPS = "url.scheme_must_be_http_or_https"
+        WHATSAPP_NOT_RECOGNIZED = "url.whatsapp_not_recognized"
+        PARTIFUL_NOT_RECOGNIZED = "url.partiful_not_recognized"
+
+    class Phone:
+        INVALID = "phone.invalid"
+        REQUIRED = "phone.required"
+        ALREADY_EXISTS = "phone.already_exists"
+
+    class DisplayName:
+        REQUIRED = "display_name.required"
+        TOO_LONG = "display_name.too_long"  # params: { max_length: int }
+        INVALID_CHARS = "display_name.invalid_chars"
+        NEEDS_A_LETTER = "display_name.needs_a_letter"
+
+    class Auth:
+        INVALID_CREDENTIALS = "auth.invalid_credentials"
+        ACCOUNT_ARCHIVED = "auth.account_archived"
+        ACCOUNT_PAUSED = "auth.account_paused"
+        MAGIC_LINK_INVALID_OR_EXPIRED = "auth.magic_link_invalid_or_expired"
+        MAGIC_LINK_ALREADY_USED = "auth.magic_link_already_used"
+        ALREADY_SIGNED_IN_AS_DIFFERENT_USER = "auth.already_signed_in_as_different_user"
+        REFRESH_TOKEN_INVALID = "auth.refresh_token_invalid"
+        REFRESH_FAILED = "auth.refresh_failed"
+        CURRENT_PASSWORD_INCORRECT = "auth.current_password_incorrect"
+
+    class Password:
+        INVALID = "password.invalid"  # params: { reasons: string[] }
+
+    class Role:
+        NOT_FOUND = "role.not_found"
+        NAME_ALREADY_EXISTS = "role.name_already_exists"
+        PROTECTED_CANNOT_EDIT = "role.protected_cannot_edit"
+        PROTECTED_CANNOT_RENAME = "role.protected_cannot_rename"
+        PROTECTED_CANNOT_DELETE = "role.protected_cannot_delete"
+        CANNOT_REMOVE_OWN_ADMIN = "role.cannot_remove_own_admin"
+        CANNOT_REMOVE_LAST_ADMIN = "role.cannot_remove_last_admin"
+        MEMBER_ROLE_REQUIRED = "role.member_role_required"
+
+    class Member:
+        NOT_FOUND = "member.not_found"
+
+    class Photo:
+        TYPE_NOT_ALLOWED = "photo.type_not_allowed"  # params: { allowed: string[] }
+        TOO_LARGE = "photo.too_large"  # params: { max_mb: int }
+
+    class Perm:
+        DENIED = "perm.denied"  # params: { action?: str }
+
+    class Rate:
+        LIMITED = "rate.limited"
 
 
 class ValidationException(Exception):
-    """Raised by validators to signal a machine-readable error.
+    """Raised by validators and route handlers to signal a structured error.
 
-    ``field`` is the dotted field name (e.g. ``"start_datetime"`` or
-    ``"whatsapp_link"``). Leave ``None`` for model-level errors that don't
-    belong to a single field.
+    ``field`` is the dotted field name (``"start_datetime"``,
+    ``"whatsapp_link"``). ``None`` for model-level or non-field errors
+    (auth failures, permission denials, 404s).
 
     ``params`` lets the frontend interpolate values into the rendered
-    message (e.g. a list of allowed hosts). Keep them JSON-serializable.
+    message. Must be JSON-serializable.
+
+    ``status_code`` is the HTTP status returned by the global handler.
+    Defaults to 422 (appropriate for Pydantic-style validation). Routes
+    raising for auth/permission/not-found should override: 401, 403, 404,
+    409, 429.
     """
 
     def __init__(
@@ -47,8 +105,32 @@ class ValidationException(Exception):
         code: str,
         field: str | None = None,
         params: dict[str, Any] | None = None,
+        status_code: int = 422,
     ) -> None:
         super().__init__(code)
         self.code = code
         self.field = field
         self.params = params or {}
+        self.status_code = status_code
+
+
+def raise_validation(
+    code: str,
+    field: str | None = None,
+    *,
+    status_code: int = 422,
+    **params: Any,
+) -> NoReturn:
+    """Shorthand for ``raise ValidationException(code, field, params, status_code)``.
+
+    Examples:
+        ``raise_validation(Code.Role.NOT_FOUND, status_code=404)``
+        ``raise_validation(Code.Url.INVALID, field="whatsapp_link")``
+        ``raise_validation(Code.Perm.DENIED, status_code=403, action="delete_role")``
+    """
+    raise ValidationException(
+        code,
+        field=field,
+        params=params or None,
+        status_code=status_code,
+    )

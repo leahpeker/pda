@@ -5,6 +5,7 @@ import string
 
 import phonenumbers
 
+from community._validation import Code, raise_validation
 from users.models import MagicLoginToken, User
 from users.roles import Role
 
@@ -35,18 +36,18 @@ def _is_admin(user: User) -> bool:
     return user.roles.filter(name="admin", is_default=True).exists()
 
 
-def _validate_phone(raw: str) -> str:
-    """Parse, validate, and return E.164. Raises ValueError on invalid.
+def _validate_phone(raw: str, field: str = "phone_number") -> str:
+    """Parse, validate, and return E.164. Raises ValidationException on invalid.
 
     Defaults to US region so bare 10-digit numbers are accepted.
     Numbers with an explicit country code (e.g. +44...) are unaffected.
     """
     try:
         parsed = phonenumbers.parse(raw, "US")
-    except phonenumbers.phonenumberutil.NumberParseException as e:
-        raise ValueError(str(e)) from e
+    except phonenumbers.phonenumberutil.NumberParseException:
+        raise_validation(Code.Phone.INVALID, field=field)
     if not phonenumbers.is_valid_number(parsed):
-        raise ValueError(f"Invalid phone number: {raw}")
+        raise_validation(Code.Phone.INVALID, field=field)
     return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
 
 
@@ -64,7 +65,7 @@ def _create_user_with_role(
     """
     validated_phone = _validate_phone(phone)
     if User.objects.filter(phone_number=validated_phone).exists():
-        raise ValueError("A user with that phone number already exists.")
+        raise_validation(Code.Phone.ALREADY_EXISTS, field="phone_number", status_code=409)
     user = User.objects.create_user(
         phone_number=validated_phone,
         display_name=display_name,
@@ -83,7 +84,7 @@ def _create_user_with_role(
                 user.roles.add(member_role)
     except Role.DoesNotExist:
         user.delete()
-        raise ValueError("Role not found.")
+        raise_validation(Code.Role.NOT_FOUND, field="role_id", status_code=404)
     magic_token = _create_magic_token(user)
     return user, magic_token
 
