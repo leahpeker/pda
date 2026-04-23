@@ -68,6 +68,7 @@ export const Code = {
     AlreadyFinalized: 'poll.already_finalized',
     WinningOptionNotFound: 'poll.winning_option_not_found',
     MinTwoOptions: 'poll.min_two_options',
+    InvalidAvailability: 'poll.invalid_availability',
   },
   Url: {
     Invalid: 'url.invalid',
@@ -263,6 +264,8 @@ export function messageForCode(err: FieldError): string {
       return 'winning option not found in this poll';
     case Code.Poll.MinTwoOptions:
       return 'a poll must have at least 2 options';
+    case Code.Poll.InvalidAvailability:
+      return 'availability must be "yes", "maybe", or "no"';
 
     // URL
     case Code.Url.Invalid:

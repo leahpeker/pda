@@ -73,6 +73,7 @@ class Code:
         ALREADY_FINALIZED = "poll.already_finalized"
         WINNING_OPTION_NOT_FOUND = "poll.winning_option_not_found"
         MIN_TWO_OPTIONS = "poll.min_two_options"
+        INVALID_AVAILABILITY = "poll.invalid_availability"
 
     class Url:
         INVALID = "url.invalid"

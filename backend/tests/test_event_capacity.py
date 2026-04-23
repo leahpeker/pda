@@ -129,7 +129,7 @@ class TestEventCapacity:
         # user1 already attending; tries to add +1 (would exceed capacity)
         resp = _rsvp(api_client, capped_event, headers1, has_plus_one=True)
         assert resp.status_code == 400
-        assert "+1" in resp.json()["detail"].lower() or "spots" in resp.json()["detail"].lower()
+        assert resp.json()["detail"][0]["code"] == "event.no_plus_one_spots"
 
     def test_waitlisted_has_no_plus_one(  # noqa: PLR0913
         self, api_client, capped_event, user3, headers1, headers2, headers3
