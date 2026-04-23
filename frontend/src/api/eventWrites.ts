@@ -10,6 +10,7 @@ import { apiClient } from './client';
 import { useAuthStore } from '@/auth/store';
 import { eventKeys } from './events';
 import { mapEvent, type WireEvent } from './eventMapper';
+import { messagesFromFieldErrors, type FieldError } from './validationCodes';
 import type { Event } from '@/models/event';
 import { fromCashAppUrl, fromVenmoUrl, toCashAppUrl, toVenmoUrl } from '@/utils/paymentHandle';
 
@@ -221,12 +222,16 @@ export function extractEventError(err: unknown): string {
     }
     const data = err.response?.data as Record<string, unknown> | undefined;
     if (data) {
-      // Django Ninja returns { detail: [{ type, loc, msg, ctx }, ...] }
-      // for validation errors.
+      // Backend returns one of two shapes:
+      //   { detail: "free-text" } — unhandled 4xx from route handlers
+      //   { detail: [{ code, field, params? }, ...] } — validation errors
       if (typeof data.detail === 'string') return data.detail;
       if (Array.isArray(data.detail)) {
-        const msgs = (data.detail as { msg?: string }[]).map((e) => e.msg).filter(Boolean);
-        if (msgs.length > 0) return msgs.join(', ');
+        const fieldErrors = data.detail.filter(
+          (e): e is FieldError =>
+            typeof e === 'object' && e !== null && typeof (e as FieldError).code === 'string',
+        );
+        if (fieldErrors.length > 0) return messagesFromFieldErrors(fieldErrors);
       }
     }
   }

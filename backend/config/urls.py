@@ -7,6 +7,7 @@ from notifications.sse import notification_stream
 from users.api import router as auth_router
 
 from config.media_proxy import serve_media
+from config.validation_handlers import register_validation_handlers
 
 
 class NoCacheTemplateView(TemplateView):
@@ -19,6 +20,7 @@ class NoCacheTemplateView(TemplateView):
 
 
 api = NinjaAPI(title="PDA API", version="1.0.0")
+register_validation_handlers(api)
 api.add_router("/auth/", auth_router, tags=["auth"])
 api.add_router("/community/", community_router, tags=["community"])
 api.add_router("/notifications/", notifications_router, tags=["notifications"])

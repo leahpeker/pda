@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from community._field_limits import FieldLimit
+from community._validation import ValidationCode, ValidationException
 from community.models import (
     AttendanceStatus,
     EventStatus,
@@ -15,23 +16,20 @@ from community.models import (
 )
 
 
-def _require_path(url: str, domain_hint: str) -> str:
-    """Validate that a URL has a non-trivial path (not bare domain).
-
-    Returns the normalized https:// URL, or raises ValueError.
-    """
+def _require_path(url: str, field: str) -> str:
+    """Validate that a URL has a non-trivial path (not bare domain)."""
     if not url:
         return url
     normalized = url if url.startswith(("http://", "https://")) else f"https://{url}"
     try:
         parsed = urlparse(normalized)
     except ValueError:
-        raise ValueError("enter a valid URL")
+        raise ValidationException(ValidationCode.URL_INVALID, field=field)
     if not parsed.netloc:
-        raise ValueError("enter a valid URL")
+        raise ValidationException(ValidationCode.URL_INVALID, field=field)
     path = parsed.path.rstrip("/")
     if not path:
-        raise ValueError(f"link must point to a specific page, not just {domain_hint}")
+        raise ValidationException(ValidationCode.URL_PATH_REQUIRED, field=field)
     return normalized
 
 
@@ -43,34 +41,38 @@ def _strip_www(host: str) -> str:
     return host.removeprefix("www.")
 
 
-def _validate_whatsapp_url(url: str) -> str:
+def _validate_whatsapp_url(url: str, field: str) -> str:
     known_hosts = {"chat.whatsapp.com", "wa.me", "whats.app"}
     if not url:
         return url
     try:
         parsed = urlparse(_normalize_url(url))
     except ValueError:
-        raise ValueError("enter a valid URL")
+        raise ValidationException(ValidationCode.URL_INVALID, field=field)
     host = _strip_www(parsed.netloc.lower())
     if host not in known_hosts:
-        raise ValueError("must be a WhatsApp link (chat.whatsapp.com, wa.me, or whats.app)")
-    return _require_path(url, "whatsapp.com")
+        raise ValidationException(
+            ValidationCode.WHATSAPP_URL_NOT_RECOGNIZED,
+            field=field,
+            params={"allowed_hosts": sorted(known_hosts)},
+        )
+    return _require_path(url, field=field)
 
 
-def _validate_partiful_url(url: str) -> str:
+def _validate_partiful_url(url: str, field: str) -> str:
     if not url:
         return url
     try:
         parsed = urlparse(_normalize_url(url))
     except ValueError:
-        raise ValueError("enter a valid URL")
+        raise ValidationException(ValidationCode.URL_INVALID, field=field)
     host = _strip_www(parsed.netloc.lower())
     if "partiful.com" not in host:
-        raise ValueError("must be a Partiful link (partiful.com/...)")
-    return _require_path(url, "partiful.com")
+        raise ValidationException(ValidationCode.PARTIFUL_URL_NOT_RECOGNIZED, field=field)
+    return _require_path(url, field=field)
 
 
-def _validate_generic_url(url: str) -> str:
+def _validate_generic_url(url: str, field: str) -> str:
     # Accepts either a bare domain (fast.com) or a full URL and normalizes to
     # a full https:// URL on the way in. We don't require a path — "other_link"
     # is commonly used for landing pages and flyers.
@@ -80,11 +82,11 @@ def _validate_generic_url(url: str) -> str:
     try:
         parsed = urlparse(normalized)
     except ValueError:
-        raise ValueError("enter a valid URL")
+        raise ValidationException(ValidationCode.URL_INVALID, field=field)
     if not parsed.netloc or "." not in parsed.netloc:
-        raise ValueError("enter a valid URL")
+        raise ValidationException(ValidationCode.URL_INVALID, field=field)
     if parsed.scheme not in ("http", "https"):
-        raise ValueError("URL must use http or https")
+        raise ValidationException(ValidationCode.URL_SCHEME_MUST_BE_HTTP_OR_HTTPS, field=field)
     return normalized
 
 
@@ -211,7 +213,11 @@ class AttendanceIn(BaseModel):
     def validate_attendance(cls, v: str) -> str:
         valid = {AttendanceStatus.UNKNOWN, AttendanceStatus.ATTENDED, AttendanceStatus.NO_SHOW}
         if v not in valid:
-            raise ValueError(f"attendance must be one of: {', '.join(sorted(valid))}")
+            raise ValidationException(
+                ValidationCode.ATTENDANCE_INVALID_CHOICE,
+                field="attendance",
+                params={"allowed": sorted(valid)},
+            )
         return v
 
 
@@ -245,24 +251,31 @@ class EventIn(BaseModel):
 
     @model_validator(mode="after")
     def require_start_datetime_unless_tbd(self) -> "EventIn":
+        # Drafts are intentionally saveable with incomplete info; the
+        # "needs a date" rule only applies when publishing.
+        if self.status == EventStatus.DRAFT:
+            return self
         if not self.datetime_tbd and self.start_datetime is None:
-            raise ValueError("start_datetime is required when datetime_tbd is false")
+            raise ValidationException(
+                ValidationCode.START_DATETIME_REQUIRED_UNLESS_TBD,
+                field="start_datetime",
+            )
         return self
 
     @field_validator("whatsapp_link", mode="before")
     @classmethod
     def validate_whatsapp(cls, v: str) -> str:
-        return _validate_whatsapp_url(v or "")
+        return _validate_whatsapp_url(v or "", field="whatsapp_link")
 
     @field_validator("partiful_link", mode="before")
     @classmethod
     def validate_partiful(cls, v: str) -> str:
-        return _validate_partiful_url(v or "")
+        return _validate_partiful_url(v or "", field="partiful_link")
 
     @field_validator("other_link", mode="before")
     @classmethod
     def validate_other(cls, v: str) -> str:
-        return _validate_generic_url(v or "")
+        return _validate_generic_url(v or "", field="other_link")
 
 
 class EventPatchIn(BaseModel):
@@ -297,21 +310,21 @@ class EventPatchIn(BaseModel):
     def validate_whatsapp(cls, v: str | None) -> str | None:
         if v is None:
             return None
-        return _validate_whatsapp_url(v)
+        return _validate_whatsapp_url(v, field="whatsapp_link")
 
     @field_validator("partiful_link", mode="before")
     @classmethod
     def validate_partiful(cls, v: str | None) -> str | None:
         if v is None:
             return None
-        return _validate_partiful_url(v)
+        return _validate_partiful_url(v, field="partiful_link")
 
     @field_validator("other_link", mode="before")
     @classmethod
     def validate_other(cls, v: str | None) -> str | None:
         if v is None:
             return None
-        return _validate_generic_url(v)
+        return _validate_generic_url(v, field="other_link")
 
 
 _MAX_EVENT_PHOTO_SIZE = 10 * 1024 * 1024  # 10 MB
