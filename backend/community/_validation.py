@@ -98,6 +98,12 @@ class ValidationException(Exception):
     Defaults to 422 (appropriate for Pydantic-style validation). Routes
     raising for auth/permission/not-found should override: 401, 403, 404,
     409, 429.
+
+    ``clear_refresh_cookie`` lets auth route handlers signal that the
+    error response should clear the refresh cookie. Applied by the global
+    handler when building the response (regular raise bypasses the route's
+    ``response`` parameter, so side-effects declared here let us keep the
+    single-shape wire contract).
     """
 
     def __init__(
@@ -106,12 +112,14 @@ class ValidationException(Exception):
         field: str | None = None,
         params: dict[str, Any] | None = None,
         status_code: int = 422,
+        clear_refresh_cookie: bool = False,
     ) -> None:
         super().__init__(code)
         self.code = code
         self.field = field
         self.params = params or {}
         self.status_code = status_code
+        self.clear_refresh_cookie = clear_refresh_cookie
 
 
 def raise_validation(
@@ -119,6 +127,7 @@ def raise_validation(
     field: str | None = None,
     *,
     status_code: int = 422,
+    clear_refresh_cookie: bool = False,
     **params: Any,
 ) -> NoReturn:
     """Shorthand for ``raise ValidationException(code, field, params, status_code)``.
@@ -133,4 +142,5 @@ def raise_validation(
         field=field,
         params=params or None,
         status_code=status_code,
+        clear_refresh_cookie=clear_refresh_cookie,
     )

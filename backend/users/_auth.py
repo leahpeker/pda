@@ -179,12 +179,12 @@ def refresh_token(request, payload: RefreshIn, response: HttpResponse):
         refresh = RefreshToken(token)
         return Status(200, AccessOut(access=str(refresh.access_token)))
     except TokenError:
-        clear_refresh_cookie(response)
-        raise_validation(Code.Auth.REFRESH_TOKEN_INVALID, status_code=401)
+        raise_validation(
+            Code.Auth.REFRESH_TOKEN_INVALID, status_code=401, clear_refresh_cookie=True
+        )
     except Exception:
         logger.exception("Unexpected error during token refresh")
-        clear_refresh_cookie(response)
-        raise_validation(Code.Auth.REFRESH_FAILED, status_code=401)
+        raise_validation(Code.Auth.REFRESH_FAILED, status_code=401, clear_refresh_cookie=True)
 
 
 @router.post("/logout/", response={200: LogoutOut}, auth=None)

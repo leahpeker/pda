@@ -25,11 +25,18 @@ def register_validation_handlers(api: NinjaAPI) -> None:
     def _handle_validation_exception(
         request: HttpRequest, exc: ValidationException
     ) -> HttpResponse:
-        return api.create_response(
+        response = api.create_response(
             request,
             {"detail": [_serialize_validation_exception(exc)]},
             status=exc.status_code,
         )
+        if exc.clear_refresh_cookie:
+            # Lazy import to keep users/ out of config/ dependency graph for
+            # modules that don't need cookie-clearing.
+            from users._refresh_cookie import clear_refresh_cookie
+
+            clear_refresh_cookie(response)
+        return response
 
     @api.exception_handler(NinjaValidationError)
     def _handle_ninja_validation_error(
