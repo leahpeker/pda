@@ -1,6 +1,7 @@
 """Tests for RSVP capacity limits and waitlist behaviour."""
 
 import pytest
+from community._validation import Code
 from community.models import Event, EventRSVP, RSVPStatus
 from users.models import User
 
@@ -353,7 +354,7 @@ class TestMaxAttendeesValidation:
             **auth_headers,
         )
         assert resp.status_code == 422
-        assert any(e["code"] == "max_attendees_must_be_at_least_one" for e in resp.json()["detail"])
+        assert any(e["code"] == Code.Event.MAX_ATTENDEES_MUST_BE_AT_LEAST_ONE for e in resp.json()["detail"])
 
     def test_create_accepts_null_max_attendees(self, api_client, auth_headers):
         import json
@@ -383,7 +384,7 @@ class TestMaxAttendeesValidation:
             **auth_headers,
         )
         assert resp.status_code == 422
-        assert any(e["code"] == "max_attendees_must_be_at_least_one" for e in resp.json()["detail"])
+        assert any(e["code"] == Code.Event.MAX_ATTENDEES_MUST_BE_AT_LEAST_ONE for e in resp.json()["detail"])
 
     def test_patch_accepts_null_max_attendees(self, api_client, capped_event, auth_headers):
         import json
