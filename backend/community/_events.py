@@ -270,14 +270,16 @@ def create_event(request, payload: EventIn):
     if _is_invalid_official_visibility(payload.event_type, payload.visibility):
         return Status(400, ErrorOut(detail="Official events must be public."))
 
-    dt_error = _validate_event_datetimes(
-        payload.start_datetime,
-        payload.end_datetime,
-        payload.datetime_tbd,
-        check_past=payload.status != EventStatus.DRAFT,
-    )
-    if dt_error:
-        return Status(400, ErrorOut(detail=dt_error))
+    # Drafts are intentionally saveable incomplete — skip the date checks.
+    if payload.status != EventStatus.DRAFT:
+        dt_error = _validate_event_datetimes(
+            payload.start_datetime,
+            payload.end_datetime,
+            payload.datetime_tbd,
+            check_past=True,
+        )
+        if dt_error:
+            return Status(400, ErrorOut(detail=dt_error))
 
     event = Event.objects.create(
         title=payload.title,
