@@ -129,6 +129,26 @@ class Code:
         CANNOT_PAUSE_ADMIN = "user.cannot_pause_admin"
         ROLE_IDS_NOT_FOUND = "user.role_ids_not_found"
 
+    class Survey:
+        NOT_FOUND = "survey.not_found"
+        SLUG_ALREADY_EXISTS = "survey.slug_already_exists"
+        QUESTION_NOT_FOUND = "survey.question_not_found"
+        NO_DATETIME_POLL_QUESTION = "survey.no_datetime_poll_question"
+        WINNING_DATETIME_NOT_IN_OPTIONS = "survey.winning_datetime_not_in_options"
+        POLL_ALREADY_FINALIZED = "survey.poll_already_finalized"
+        ANSWER_REQUIRED = "survey.answer_required"  # params: { label }
+        ANSWER_INVALID_FORMAT = "survey.answer_invalid_format"  # params: { label }
+        ANSWER_INVALID_OPTION = "survey.answer_invalid_option"  # params: { label }
+        ANSWER_MUST_BE_NUMBER = "survey.answer_must_be_number"  # params: { label }
+        ANSWER_MUST_BE_YES_NO = "survey.answer_must_be_yes_no"  # params: { label }
+        ANSWER_RATING_OUT_OF_RANGE = "survey.answer_rating_out_of_range"  # params: { label }
+        ANSWER_INVALID_DATETIME_OPTION = (
+            "survey.answer_invalid_datetime_option"  # params: { label }
+        )
+        ANSWER_INVALID_AVAILABILITY = (
+            "survey.answer_invalid_availability"  # params: { label, value }
+        )
+
     class JoinRequest:
         NOT_FOUND = "join_request.not_found"
         ALREADY_DECIDED = "join_request.already_decided"
@@ -149,6 +169,24 @@ class Code:
 
     class Rate:
         LIMITED = "rate.limited"
+
+    class Page:
+        MEMBERS_ONLY = "page.members_only"
+
+    class Docs:
+        FOLDER_NOT_FOUND = "docs.folder_not_found"
+        PARENT_FOLDER_NOT_FOUND = "docs.parent_folder_not_found"
+        DOCUMENT_NOT_FOUND = "docs.document_not_found"
+
+    class JoinForm:
+        QUESTION_NOT_FOUND = "join_form.question_not_found"
+
+    class Feedback:
+        NOT_CONFIGURED = "feedback.not_configured"
+        CREATION_FAILED = "feedback.creation_failed"
+
+    class Notification:
+        NOT_FOUND = "notification.not_found"
 
 
 class ValidationException(Exception):

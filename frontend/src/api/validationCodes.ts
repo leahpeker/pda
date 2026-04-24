@@ -124,6 +124,22 @@ export const Code = {
     CannotPauseAdmin: 'user.cannot_pause_admin',
     RoleIdsNotFound: 'user.role_ids_not_found',
   },
+  Survey: {
+    NotFound: 'survey.not_found',
+    SlugAlreadyExists: 'survey.slug_already_exists',
+    QuestionNotFound: 'survey.question_not_found',
+    NoDatetimePollQuestion: 'survey.no_datetime_poll_question',
+    WinningDatetimeNotInOptions: 'survey.winning_datetime_not_in_options',
+    PollAlreadyFinalized: 'survey.poll_already_finalized',
+    AnswerRequired: 'survey.answer_required',
+    AnswerInvalidFormat: 'survey.answer_invalid_format',
+    AnswerInvalidOption: 'survey.answer_invalid_option',
+    AnswerMustBeNumber: 'survey.answer_must_be_number',
+    AnswerMustBeYesNo: 'survey.answer_must_be_yes_no',
+    AnswerRatingOutOfRange: 'survey.answer_rating_out_of_range',
+    AnswerInvalidDatetimeOption: 'survey.answer_invalid_datetime_option',
+    AnswerInvalidAvailability: 'survey.answer_invalid_availability',
+  },
   JoinRequest: {
     NotFound: 'join_request.not_found',
     AlreadyDecided: 'join_request.already_decided',
@@ -144,6 +160,24 @@ export const Code = {
   },
   Rate: {
     Limited: 'rate.limited',
+  },
+  Page: {
+    MembersOnly: 'page.members_only',
+  },
+  Docs: {
+    FolderNotFound: 'docs.folder_not_found',
+    ParentFolderNotFound: 'docs.parent_folder_not_found',
+    DocumentNotFound: 'docs.document_not_found',
+  },
+  JoinForm: {
+    QuestionNotFound: 'join_form.question_not_found',
+  },
+  Feedback: {
+    NotConfigured: 'feedback.not_configured',
+    CreationFailed: 'feedback.creation_failed',
+  },
+  Notification: {
+    NotFound: 'notification.not_found',
   },
 
   // Generic fallbacks emitted by the handler for Pydantic errors without
@@ -377,6 +411,54 @@ export function messageForCode(err: FieldError): string {
     case Code.User.RoleIdsNotFound:
       return 'one or more role IDs not found';
 
+    // Survey
+    case Code.Survey.NotFound:
+      return 'survey not found';
+    case Code.Survey.SlugAlreadyExists:
+      return 'a survey with that slug already exists';
+    case Code.Survey.QuestionNotFound:
+      return 'question not found';
+    case Code.Survey.NoDatetimePollQuestion:
+      return 'survey has no datetime poll question';
+    case Code.Survey.WinningDatetimeNotInOptions:
+      return 'winning datetime is not one of the poll options';
+    case Code.Survey.PollAlreadyFinalized:
+      return 'this poll has already been finalized';
+    case Code.Survey.AnswerRequired: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label ? `"${label}" is required` : 'an answer is required';
+    }
+    case Code.Survey.AnswerInvalidFormat: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label ? `invalid answer format for "${label}"` : 'invalid answer format';
+    }
+    case Code.Survey.AnswerInvalidOption: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label ? `invalid option for "${label}"` : 'invalid option';
+    }
+    case Code.Survey.AnswerMustBeNumber: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label ? `"${label}" must be a number` : 'must be a number';
+    }
+    case Code.Survey.AnswerMustBeYesNo: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label ? `"${label}" must be yes or no` : 'must be yes or no';
+    }
+    case Code.Survey.AnswerRatingOutOfRange: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label ? `"${label}" must be between 1 and 5` : 'rating must be between 1 and 5';
+    }
+    case Code.Survey.AnswerInvalidDatetimeOption: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label ? `invalid datetime option for "${label}"` : 'invalid datetime option';
+    }
+    case Code.Survey.AnswerInvalidAvailability: {
+      const label = typeof err.params?.label === 'string' ? err.params.label : null;
+      return label
+        ? `availability for "${label}" must be "yes" or "maybe"`
+        : 'availability must be "yes" or "maybe"';
+    }
+
     // Join request
     case Code.JoinRequest.NotFound:
       return 'join request not found';
@@ -418,6 +500,24 @@ export function messageForCode(err: FieldError): string {
       return "you don't have permission to do that";
     case Code.Rate.Limited:
       return "you're going too fast — try again in a moment";
+
+    // Page / Docs / JoinForm / Feedback / Notification
+    case Code.Page.MembersOnly:
+      return 'members only';
+    case Code.Docs.FolderNotFound:
+      return 'folder not found';
+    case Code.Docs.ParentFolderNotFound:
+      return 'parent folder not found';
+    case Code.Docs.DocumentNotFound:
+      return 'document not found';
+    case Code.JoinForm.QuestionNotFound:
+      return 'question not found';
+    case Code.Feedback.NotConfigured:
+      return 'feedback submission is not configured';
+    case Code.Feedback.CreationFailed:
+      return "couldn't submit feedback — try again";
+    case Code.Notification.NotFound:
+      return 'notification not found';
 
     // Generic fallbacks
     case Code.Generic.FieldRequired:
