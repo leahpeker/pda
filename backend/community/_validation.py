@@ -75,6 +75,9 @@ class Code:
         INVALID = "phone.invalid"
         ALREADY_EXISTS = "phone.already_exists"
 
+    class Zelle:
+        INVALID = "zelle.invalid"
+
     class DisplayName:
         REQUIRED = "display_name.required"
         TOO_LONG = "display_name.too_long"  # params: { max_length: int }

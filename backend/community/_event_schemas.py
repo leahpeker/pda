@@ -1,8 +1,10 @@
 """Pydantic schemas for event endpoints."""
 
+import re
 from datetime import datetime
 from urllib.parse import urlparse
 
+import phonenumbers
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from community._field_limits import FieldLimit
@@ -14,6 +16,33 @@ from community.models import (
     InvitePermission,
     PageVisibility,
 )
+
+# Loose RFC-5322-ish email check — Pydantic's full EmailStr validator is
+# overkill for a free-text payment field, and we don't need DNS lookups.
+_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+def _looks_like_email(s: str) -> bool:
+    return bool(_EMAIL_RE.match(s))
+
+
+def _looks_like_phone(s: str) -> bool:
+    """Accept E.164 (+15551234567) or any string phonenumbers can parse as US."""
+    try:
+        parsed = phonenumbers.parse(s, "US")
+    except phonenumbers.phonenumberutil.NumberParseException:
+        return False
+    return phonenumbers.is_valid_number(parsed)
+
+
+def _validate_zelle_info(v: str | None) -> str | None:
+    """Zelle is a free-text field but should be either an email or a phone number."""
+    if v is None or v == "":
+        return v
+    stripped = v.strip()
+    if _looks_like_email(stripped) or _looks_like_phone(stripped):
+        return stripped
+    raise_validation(Code.Zelle.INVALID, field="zelle_info")
 
 
 def _validate_max_attendees(v: int | None) -> int | None:
@@ -289,6 +318,11 @@ class EventIn(BaseModel):
     def validate_other(cls, v: str) -> str:
         return _validate_generic_url(v or "", field="other_link")
 
+    @field_validator("zelle_info", mode="after")
+    @classmethod
+    def validate_zelle(cls, v: str) -> str:
+        return _validate_zelle_info(v) or ""
+
     @field_validator("max_attendees", mode="after")
     @classmethod
     def validate_max_attendees(cls, v: int | None) -> int | None:
@@ -342,6 +376,11 @@ class EventPatchIn(BaseModel):
         if v is None:
             return None
         return _validate_generic_url(v, field="other_link")
+
+    @field_validator("zelle_info", mode="after")
+    @classmethod
+    def validate_zelle(cls, v: str | None) -> str | None:
+        return _validate_zelle_info(v)
 
     @field_validator("max_attendees", mode="after")
     @classmethod

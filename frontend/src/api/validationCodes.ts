@@ -70,6 +70,9 @@ export const Code = {
     Invalid: 'phone.invalid',
     AlreadyExists: 'phone.already_exists',
   },
+  Zelle: {
+    Invalid: 'zelle.invalid',
+  },
   DisplayName: {
     Required: 'display_name.required',
     TooLong: 'display_name.too_long',
@@ -280,6 +283,10 @@ export function messageForCode(err: FieldError): string {
       return "that doesn't look like a valid phone number";
     case Code.Phone.AlreadyExists:
       return 'a member with that phone number already exists';
+
+    // Zelle
+    case Code.Zelle.Invalid:
+      return 'zelle must be an email address or phone number';
 
     // Display name
     case Code.DisplayName.Required:

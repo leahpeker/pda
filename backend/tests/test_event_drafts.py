@@ -401,9 +401,7 @@ class TestPublishDraft:
             **creator_headers,
         )
         assert response.status_code == 400
-        assert_error_code(
-            response, Code.Event.START_DATETIME_REQUIRED_UNLESS_TBD, "start_datetime"
-        )
+        assert_error_code(response, Code.Event.START_DATETIME_REQUIRED_UNLESS_TBD, "start_datetime")
         draft.refresh_from_db()
         assert draft.status == EventStatus.DRAFT
 
