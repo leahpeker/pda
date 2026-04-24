@@ -384,6 +384,46 @@ class TestPublishDraft:
         )
         assert response.status_code == 400
 
+    def test_publish_dateless_draft_rejected(self, api_client, creator_headers, creator):
+        """A draft with no start_datetime and datetime_tbd=False can't be published.
+        Drafts may be saved incomplete, but publishing requires a real date or tbd."""
+        draft = Event.objects.create(
+            title="Dateless Draft",
+            start_datetime=None,
+            datetime_tbd=False,
+            created_by=creator,
+            status=EventStatus.DRAFT,
+        )
+        response = api_client.patch(
+            f"/api/community/events/{draft.id}/",
+            data=json.dumps({"status": "active"}),
+            content_type="application/json",
+            **creator_headers,
+        )
+        assert response.status_code == 400
+        assert_error_code(
+            response, Code.Event.START_DATETIME_REQUIRED_UNLESS_TBD, "start_datetime"
+        )
+        draft.refresh_from_db()
+        assert draft.status == EventStatus.DRAFT
+
+    def test_publish_dateless_draft_with_tbd_succeeds(self, api_client, creator_headers, creator):
+        """A draft with no start_datetime but datetime_tbd=True can be published."""
+        draft = Event.objects.create(
+            title="TBD Dateless Draft",
+            start_datetime=None,
+            datetime_tbd=True,
+            created_by=creator,
+            status=EventStatus.DRAFT,
+        )
+        response = api_client.patch(
+            f"/api/community/events/{draft.id}/",
+            data=json.dumps({"status": "active"}),
+            content_type="application/json",
+            **creator_headers,
+        )
+        assert response.status_code == 200
+
     def test_publish_tbd_draft_with_past_start_ok(self, api_client, creator_headers, creator):
         """datetime_tbd=True drafts skip the future-date check on publish."""
         draft = Event.objects.create(

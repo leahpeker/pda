@@ -89,6 +89,12 @@ def _set_event_participants(
 
 def _publish_draft(request, event: Event) -> None:
     """DRAFT → ACTIVE. Re-validates dates, fires invitee notifications, audit logs."""
+    if event.start_datetime is None and not event.datetime_tbd:
+        raise_validation(
+            Code.Event.START_DATETIME_REQUIRED_UNLESS_TBD,
+            field="start_datetime",
+            status_code=400,
+        )
     if not event.datetime_tbd and event.start_datetime and event.start_datetime < timezone.now():
         raise_validation(
             Code.Event.START_DATETIME_MUST_BE_FUTURE, field="start_datetime", status_code=400
