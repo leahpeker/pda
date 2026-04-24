@@ -62,6 +62,7 @@ class UserOut(BaseModel):
     is_paused: bool = False
     login_link_requested: bool = False
     week_start: str = "sunday"
+    calendar_feed_scope: str = "all"
     roles: list[RoleOut]
 
     @classmethod
@@ -80,6 +81,7 @@ class UserOut(BaseModel):
             is_paused=user.is_paused,
             login_link_requested=user.login_link_requested,
             week_start=user.week_start,
+            calendar_feed_scope=user.calendar_feed_scope,
             roles=[
                 RoleOut(
                     id=str(r.id),
@@ -157,6 +159,7 @@ class MePatchIn(BaseModel):
     show_phone: bool | None = None
     show_email: bool | None = None
     week_start: Literal["sunday", "monday"] | None = None
+    calendar_feed_scope: Literal["all", "mine"] | None = None
 
 
 class ChangePasswordIn(BaseModel):

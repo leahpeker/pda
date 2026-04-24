@@ -21,6 +21,7 @@ export interface User {
   showPhone: boolean;
   showEmail: boolean;
   weekStart: 'sunday' | 'monday';
+  calendarFeedScope: 'all' | 'mine';
   profilePhotoUrl: string;
   photoUpdatedAt: string | null;
   roles: Role[];

@@ -3,17 +3,19 @@
 import secrets
 from datetime import timedelta
 
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.utils import timezone
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
 from pydantic import BaseModel
+from users.models import CalendarFeedScope
 from users.models import User as UserModel
 
 from community._event_helpers import _can_see_invite_only
 from community._shared import ErrorOut  # noqa: F401
-from community.models import Event, EventStatus, PageVisibility
+from community.models import Event, EventStatus, PageVisibility, RSVPStatus
 
 router = Router()
 
@@ -76,12 +78,26 @@ def calendar_feed(request, token: str = ""):
 
     cutoff = timezone.now() - timedelta(days=30)
     events = (
-        Event.objects.filter(start_datetime__gte=cutoff, datetime_tbd=False)
-        .exclude(status=EventStatus.CANCELLED)
+        Event.objects.filter(
+            start_datetime__gte=cutoff,
+            datetime_tbd=False,
+            status=EventStatus.ACTIVE,
+        )
         .select_related("created_by")
         .prefetch_related("co_hosts", "invited_users")
         .order_by("start_datetime")
     )
+
+    if user.calendar_feed_scope == CalendarFeedScope.MINE:
+        events = events.filter(
+            Q(created_by=user)
+            | Q(co_hosts=user)
+            | Q(invited_users=user)
+            | Q(
+                rsvps__user=user,
+                rsvps__status__in=[RSVPStatus.ATTENDING, RSVPStatus.MAYBE],
+            )
+        ).distinct()
 
     for event in events:
         if event.visibility == PageVisibility.INVITE_ONLY:

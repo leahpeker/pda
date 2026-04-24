@@ -73,6 +73,10 @@ export default function SettingsScreen() {
 
       <Section label="calendar">
         <WeekStartToggle value={user.weekStart} onChange={(v) => updateProfile({ weekStart: v })} />
+        <CalendarFeedScopeToggle
+          value={user.calendarFeedScope}
+          onChange={(v) => updateProfile({ calendarFeedScope: v })}
+        />
         <CalendarFeedSubscription />
       </Section>
 
@@ -339,6 +343,27 @@ function WeekStartToggle({
   return (
     <SegmentedControl
       label="week starts on"
+      value={value}
+      options={options}
+      onChange={(v) => void onChange(v)}
+    />
+  );
+}
+
+function CalendarFeedScopeToggle({
+  value,
+  onChange,
+}: {
+  value: 'all' | 'mine';
+  onChange: (v: 'all' | 'mine') => Promise<void>;
+}) {
+  const options: { value: 'all' | 'mine'; label: string }[] = [
+    { value: 'all', label: 'all events' },
+    { value: 'mine', label: 'my events' },
+  ];
+  return (
+    <SegmentedControl
+      label="calendar feed shows"
       value={value}
       options={options}
       onChange={(v) => void onChange(v)}

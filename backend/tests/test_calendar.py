@@ -118,6 +118,205 @@ class TestCalendarFeed:
 
 
 @pytest.mark.django_db
+class TestCalendarFeedScope:
+    """Scope preference: 'all' (default, excludes drafts) vs 'mine' (user's events only)."""
+
+    def _token_for(self, api_client, auth_headers):
+        resp = api_client.post("/api/community/calendar/token/", **auth_headers)
+        return resp.json()["token"]
+
+    def _make_other_user(self, suffix="0102"):
+        from users.models import User
+
+        return User.objects.create_user(
+            phone_number=f"+1202555{suffix}",
+            password="testpass123",
+            display_name=f"Other {suffix}",
+        )
+
+    def test_all_mode_excludes_drafts(self, api_client, auth_headers, test_user):
+        from community.models import Event, EventStatus
+        from django.utils import timezone
+
+        token = self._token_for(api_client, auth_headers)
+        other = self._make_other_user("0201")
+
+        Event.objects.create(
+            title="Active Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+            status=EventStatus.ACTIVE,
+        )
+        Event.objects.create(
+            title="Draft Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+            status=EventStatus.DRAFT,
+        )
+
+        resp = api_client.get(f"/api/community/calendar/feed/?token={token}")
+        content = resp.content.decode()
+        assert "Active Event" in content
+        assert "Draft Event" not in content
+
+    def test_all_mode_excludes_deleted_and_cancelled(self, api_client, auth_headers, test_user):
+        from community.models import Event, EventStatus
+        from django.utils import timezone
+
+        token = self._token_for(api_client, auth_headers)
+        other = self._make_other_user("0202")
+
+        Event.objects.create(
+            title="Cancelled Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+            status=EventStatus.CANCELLED,
+        )
+        Event.objects.create(
+            title="Deleted Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+            status=EventStatus.DELETED,
+        )
+
+        resp = api_client.get(f"/api/community/calendar/feed/?token={token}")
+        content = resp.content.decode()
+        assert "Cancelled Event" not in content
+        assert "Deleted Event" not in content
+
+    def test_mine_mode_includes_creator_cohost_invited_and_rsvps(
+        self, api_client, auth_headers, test_user
+    ):
+        from community.models import Event, EventRSVP, RSVPStatus
+        from django.utils import timezone
+        from users.models import CalendarFeedScope
+
+        test_user.calendar_feed_scope = CalendarFeedScope.MINE
+        test_user.save(update_fields=["calendar_feed_scope"])
+        token = self._token_for(api_client, auth_headers)
+        other = self._make_other_user("0301")
+
+        # creator
+        Event.objects.create(
+            title="Creator Event",
+            start_datetime=timezone.now(),
+            created_by=test_user,
+        )
+        # co-host
+        cohost_event = Event.objects.create(
+            title="Cohost Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+        )
+        cohost_event.co_hosts.add(test_user)
+        # invited
+        invited_event = Event.objects.create(
+            title="Invited Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+        )
+        invited_event.invited_users.add(test_user)
+        # rsvp attending
+        rsvp_going = Event.objects.create(
+            title="Rsvp Attending",
+            start_datetime=timezone.now(),
+            created_by=other,
+        )
+        EventRSVP.objects.create(event=rsvp_going, user=test_user, status=RSVPStatus.ATTENDING)
+        # rsvp maybe
+        rsvp_maybe = Event.objects.create(
+            title="Rsvp Maybe",
+            start_datetime=timezone.now(),
+            created_by=other,
+        )
+        EventRSVP.objects.create(event=rsvp_maybe, user=test_user, status=RSVPStatus.MAYBE)
+
+        resp = api_client.get(f"/api/community/calendar/feed/?token={token}")
+        content = resp.content.decode()
+        assert "Creator Event" in content
+        assert "Cohost Event" in content
+        assert "Invited Event" in content
+        assert "Rsvp Attending" in content
+        assert "Rsvp Maybe" in content
+
+    def test_mine_mode_excludes_cant_go_waitlisted_and_unrelated(
+        self, api_client, auth_headers, test_user
+    ):
+        from community.models import Event, EventRSVP, RSVPStatus
+        from django.utils import timezone
+        from users.models import CalendarFeedScope
+
+        test_user.calendar_feed_scope = CalendarFeedScope.MINE
+        test_user.save(update_fields=["calendar_feed_scope"])
+        token = self._token_for(api_client, auth_headers)
+        other = self._make_other_user("0302")
+
+        Event.objects.create(
+            title="Unrelated Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+        )
+        rsvp_cant_go = Event.objects.create(
+            title="Cant Go Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+        )
+        EventRSVP.objects.create(event=rsvp_cant_go, user=test_user, status=RSVPStatus.CANT_GO)
+        rsvp_waitlisted = Event.objects.create(
+            title="Waitlisted Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+        )
+        EventRSVP.objects.create(
+            event=rsvp_waitlisted, user=test_user, status=RSVPStatus.WAITLISTED
+        )
+
+        resp = api_client.get(f"/api/community/calendar/feed/?token={token}")
+        content = resp.content.decode()
+        assert "Unrelated Event" not in content
+        assert "Cant Go Event" not in content
+        assert "Waitlisted Event" not in content
+
+    def test_mine_mode_still_hides_invite_only_when_not_participant(
+        self, api_client, auth_headers, test_user
+    ):
+        from community.models import Event, PageVisibility
+        from django.utils import timezone
+        from users.models import CalendarFeedScope
+
+        test_user.calendar_feed_scope = CalendarFeedScope.MINE
+        test_user.save(update_fields=["calendar_feed_scope"])
+        token = self._token_for(api_client, auth_headers)
+        other = self._make_other_user("0303")
+
+        # Invite-only event the test_user has no relationship to
+        Event.objects.create(
+            title="Secret Event",
+            start_datetime=timezone.now(),
+            created_by=other,
+            visibility=PageVisibility.INVITE_ONLY,
+        )
+
+        resp = api_client.get(f"/api/community/calendar/feed/?token={token}")
+        content = resp.content.decode()
+        assert "Secret Event" not in content
+
+    def test_patch_me_persists_scope(self, api_client, auth_headers, test_user):
+        import json
+
+        resp = api_client.patch(
+            "/api/auth/me/",
+            data=json.dumps({"calendar_feed_scope": "mine"}),
+            content_type="application/json",
+            **auth_headers,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["calendar_feed_scope"] == "mine"
+        test_user.refresh_from_db()
+        assert test_user.calendar_feed_scope == "mine"
+
+
+@pytest.mark.django_db
 class TestSingleEventIcs:
     def test_returns_ics_for_existing_event(self, api_client, test_user):
         from community.models import Event

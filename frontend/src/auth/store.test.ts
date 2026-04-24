@@ -38,6 +38,7 @@ const mockUser: User = {
   showPhone: false,
   showEmail: false,
   weekStart: 'sunday',
+  calendarFeedScope: 'all',
   profilePhotoUrl: '',
   photoUpdatedAt: null,
   roles: [],

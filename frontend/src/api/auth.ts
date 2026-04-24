@@ -26,6 +26,7 @@ interface WireUser {
   show_phone?: boolean;
   show_email?: boolean;
   week_start?: 'sunday' | 'monday';
+  calendar_feed_scope?: 'all' | 'mine';
   profile_photo_url?: string;
   photo_updated_at?: string | null;
   roles: WireRole[];
@@ -64,6 +65,7 @@ function mapUser(u: WireUser): User {
     showPhone: u.show_phone ?? false,
     showEmail: u.show_email ?? false,
     weekStart: u.week_start ?? 'sunday',
+    calendarFeedScope: u.calendar_feed_scope ?? 'all',
     profilePhotoUrl: u.profile_photo_url ?? '',
     photoUpdatedAt: u.photo_updated_at ?? null,
     roles: u.roles.map(mapRole),
@@ -155,6 +157,7 @@ export interface ProfileUpdate {
   showPhone?: boolean;
   showEmail?: boolean;
   weekStart?: 'sunday' | 'monday';
+  calendarFeedScope?: 'all' | 'mine';
 }
 
 export async function updateProfile(patch: ProfileUpdate): Promise<User> {
@@ -166,6 +169,7 @@ export async function updateProfile(patch: ProfileUpdate): Promise<User> {
   if (patch.showPhone !== undefined) body.show_phone = patch.showPhone;
   if (patch.showEmail !== undefined) body.show_email = patch.showEmail;
   if (patch.weekStart !== undefined) body.week_start = patch.weekStart;
+  if (patch.calendarFeedScope !== undefined) body.calendar_feed_scope = patch.calendarFeedScope;
   const { data } = await apiClient.patch<WireUser>('/api/auth/me/', body);
   return mapUser(data);
 }
