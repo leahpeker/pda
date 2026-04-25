@@ -6,6 +6,7 @@ import { TextField } from '@/components/ui/TextField';
 import { useAuthStore } from '@/auth/store';
 import { useAccessibilityStore, type ThemeMode, type TextScale } from '@/accessibility/store';
 import { useCalendarToken, useRegenerateCalendarToken } from '@/api/calendar';
+import { CalendarFeedScope, type CalendarFeedScopeValue } from '@/models/user';
 import { useVersion } from '@/api/version';
 import { ContentContainer } from '@/screens/public/ContentContainer';
 import { AvatarUpload } from './AvatarUpload';
@@ -73,6 +74,10 @@ export default function SettingsScreen() {
 
       <Section label="calendar">
         <WeekStartToggle value={user.weekStart} onChange={(v) => updateProfile({ weekStart: v })} />
+        <CalendarFeedScopeToggle
+          value={user.calendarFeedScope}
+          onChange={(v) => updateProfile({ calendarFeedScope: v })}
+        />
         <CalendarFeedSubscription />
       </Section>
 
@@ -339,6 +344,27 @@ function WeekStartToggle({
   return (
     <SegmentedControl
       label="week starts on"
+      value={value}
+      options={options}
+      onChange={(v) => void onChange(v)}
+    />
+  );
+}
+
+function CalendarFeedScopeToggle({
+  value,
+  onChange,
+}: {
+  value: CalendarFeedScopeValue;
+  onChange: (v: CalendarFeedScopeValue) => Promise<void>;
+}) {
+  const options: { value: CalendarFeedScopeValue; label: string }[] = [
+    { value: CalendarFeedScope.All, label: 'all events' },
+    { value: CalendarFeedScope.Mine, label: 'my events' },
+  ];
+  return (
+    <SegmentedControl
+      label="calendar feed shows"
       value={value}
       options={options}
       onChange={(v) => void onChange(v)}
