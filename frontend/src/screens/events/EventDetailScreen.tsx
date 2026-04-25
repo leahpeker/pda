@@ -1,7 +1,7 @@
 import { isAxiosError } from 'axios';
 import { Link, useParams } from 'react-router-dom';
+import { extractApiError } from '@/api/apiErrors';
 import { useEvent } from '@/api/events';
-import { Code } from '@/api/validationCodes';
 import { useAuthStore } from '@/auth/store';
 import type { Event } from '@/models/event';
 import { EventStatus, EventType, EventVisibility } from '@/models/event';
@@ -12,15 +12,6 @@ import { EventActions } from './EventActions';
 import { EventMemberSection } from './EventMemberSection';
 import { EventPollCard } from './poll/EventPollCard';
 
-function errorCodes(err: unknown): string[] {
-  if (!isAxiosError(err)) return [];
-  const data = err.response?.data as { detail?: unknown } | undefined;
-  if (!data || !Array.isArray(data.detail)) return [];
-  return data.detail
-    .filter((e): e is { code: string } => typeof (e as { code?: unknown }).code === 'string')
-    .map((e) => e.code);
-}
-
 export default function EventDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const isAuthed = useAuthStore((s) => s.status === 'authed');
@@ -29,9 +20,8 @@ export default function EventDetailScreen() {
   if (isPending) return <ContentLoading />;
   if (isError) {
     if (isAxiosError(error) && error.response?.status === 403) {
-      const codes = errorCodes(error);
-      if (codes.includes(Code.Event.PermDenied)) return <NoPermissionNotice />;
-      return <InviteOnlyNotice />;
+      const message = extractApiError(error) ?? "you don't have permission to see this event";
+      return <ForbiddenNotice message={message} />;
     }
     return <ContentError message="couldn't load this event — try refreshing" />;
   }
@@ -115,30 +105,11 @@ function Badge({
   return <span className={`rounded-full px-2 py-0.5 text-xs ${tones[tone]}`}>{children}</span>;
 }
 
-function InviteOnlyNotice() {
+function ForbiddenNotice({ message }: { message: string }) {
   return (
     <ContentContainer>
       <section className="border-border bg-surface mt-8 rounded-lg border p-6">
-        <h2 className="mb-2 text-base font-medium">invite only 🌿</h2>
-        <p className="text-foreground-tertiary mb-4 text-sm">
-          this event is invite only — reach out to the host if you'd like to come along
-        </p>
-        <Link
-          to="/calendar"
-          className="border-border-strong text-foreground-secondary hover:bg-background inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium"
-        >
-          back to calendar
-        </Link>
-      </section>
-    </ContentContainer>
-  );
-}
-
-function NoPermissionNotice() {
-  return (
-    <ContentContainer>
-      <section className="border-border bg-surface mt-8 rounded-lg border p-6">
-        <h2 className="mb-2 text-base font-medium">you don't have permission to see this event</h2>
+        <h2 className="mb-2 text-base font-medium">{message}</h2>
         <p className="text-foreground-tertiary mb-4 text-sm">
           if you think this is a mistake, reach out to the host
         </p>
