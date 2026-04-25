@@ -373,3 +373,62 @@ class TestEventOutVisibility:
         assert data["my_pending_cohost_invite_id"] == str(invite.id)
         # Outsider visibility check: still no pending list for the invitee.
         assert data["pending_cohost_invites"] == []
+
+
+# ─── Draft visibility for invitees ────────────────────────────────────────────
+
+
+@pytest.mark.django_db
+class TestDraftVisibility:
+    """A pending cohost invitee must be able to see the draft they were invited
+    to so they can find the accept/decline banner — otherwise the notification
+    deep-link 404s."""
+
+    def test_cohost_invitee_can_see_draft_event(self, api_client, creator, invitee):
+        data = _create_event_via_api(
+            api_client,
+            creator,
+            status=EventStatus.DRAFT,
+            co_host_ids=[str(invitee.pk)],
+        )
+        event_id = data["id"]
+        response = api_client.get(
+            f"/api/community/events/{event_id}/",
+            **_auth_headers(invitee),
+        )
+        assert response.status_code == 200
+        body = response.json()
+        invite = EventCoHostInvite.objects.get(event_id=event_id, user=invitee)
+        assert body["my_pending_cohost_invite_id"] == str(invite.id)
+        # The invitee is not yet a host, so they don't see the pending list.
+        assert body["pending_cohost_invites"] == []
+
+    def test_outsider_still_404s_on_draft(self, api_client, creator, invitee, other_member):
+        data = _create_event_via_api(
+            api_client,
+            creator,
+            status=EventStatus.DRAFT,
+            co_host_ids=[str(invitee.pk)],
+        )
+        response = api_client.get(
+            f"/api/community/events/{data['id']}/",
+            **_auth_headers(other_member),
+        )
+        assert response.status_code == 404
+
+    def test_cohost_invitee_can_accept_invite_to_a_draft(self, api_client, creator, invitee):
+        data = _create_event_via_api(
+            api_client,
+            creator,
+            status=EventStatus.DRAFT,
+            co_host_ids=[str(invitee.pk)],
+        )
+        event_id = data["id"]
+        invite = EventCoHostInvite.objects.get(event_id=event_id, user=invitee)
+        response = api_client.post(
+            f"/api/community/events/{event_id}/cohost-invites/{invite.id}/accept/",
+            **_auth_headers(invitee),
+        )
+        assert response.status_code == 200
+        invite.refresh_from_db()
+        assert invite.status == CoHostInviteStatus.ACCEPTED

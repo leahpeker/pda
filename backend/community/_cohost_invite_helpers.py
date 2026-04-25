@@ -144,3 +144,17 @@ def get_my_pending_invite(event: Event, user) -> EventCoHostInvite | None:
     return EventCoHostInvite.objects.filter(
         event=event, user=user, status=CoHostInviteStatus.PENDING
     ).first()
+
+
+def has_pending_cohost_invite(event: Event, user) -> bool:
+    """Cheap EXISTS check used by the draft visibility gate.
+
+    Without this, a pending cohost invitee would 404 on the draft they were
+    invited to and never get to the accept/decline banner.
+    """
+    if user is None:
+        return False
+    expire_stale_cohost_invites(event)
+    return EventCoHostInvite.objects.filter(
+        event=event, user=user, status=CoHostInviteStatus.PENDING
+    ).exists()
