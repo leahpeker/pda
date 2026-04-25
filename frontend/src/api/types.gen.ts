@@ -727,6 +727,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/community/events/{event_id}/cohost-invites/{invite_id}/accept/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Cohost Invite */
+        post: operations["community__event_cohost_invites_accept_cohost_invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/community/events/{event_id}/cohost-invites/{invite_id}/decline/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline Cohost Invite */
+        post: operations["community__event_cohost_invites_decline_cohost_invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/community/events/{event_id}/cohost-invites/{invite_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Rescind Cohost Invite */
+        delete: operations["community__event_cohost_invites_rescind_cohost_invite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/community/events/{event_id}/flag/": {
         parameters: {
             query?: never;
@@ -1222,7 +1273,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Create Document */
-        post: operations["community__docs_create_document"];
+        post: operations["community__docs_documents_create_document"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1238,7 +1289,7 @@ export interface paths {
         };
         get?: never;
         /** Reorder Documents */
-        put: operations["community__docs_reorder_documents"];
+        put: operations["community__docs_documents_reorder_documents"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1254,15 +1305,15 @@ export interface paths {
             cookie?: never;
         };
         /** Get Document */
-        get: operations["community__docs_get_document"];
+        get: operations["community__docs_documents_get_document"];
         put?: never;
         post?: never;
         /** Delete Document */
-        delete: operations["community__docs_delete_document"];
+        delete: operations["community__docs_documents_delete_document"];
         options?: never;
         head?: never;
         /** Update Document */
-        patch: operations["community__docs_update_document"];
+        patch: operations["community__docs_documents_update_document"];
         trace?: never;
     };
     "/api/community/geocode/": {
@@ -2277,6 +2328,32 @@ export interface components {
              * @default active
              */
             status: string;
+            /**
+             * Pending Cohost Invites
+             * @default []
+             */
+            pending_cohost_invites: components["schemas"]["PendingCoHostInviteOut"][];
+            /** My Pending Cohost Invite Id */
+            my_pending_cohost_invite_id?: string | null;
+        };
+        /** PendingCoHostInviteOut */
+        PendingCoHostInviteOut: {
+            /** Id */
+            id: string;
+            /** User Id */
+            user_id: string;
+            /** User Name */
+            user_name: string;
+            /**
+             * User Photo Url
+             * @default
+             */
+            user_photo_url: string;
+            /**
+             * Invited At
+             * Format: date-time
+             */
+            invited_at: string;
         };
         /** RSVPGuestOut */
         RSVPGuestOut: {
@@ -5113,6 +5190,156 @@ export interface operations {
             };
         };
     };
+    community__event_cohost_invites_accept_cohost_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__event_cohost_invites_decline_cohost_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__event_cohost_invites_rescind_cohost_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
     community__event_flags_flag_event: {
         parameters: {
             query?: never;
@@ -6661,7 +6888,7 @@ export interface operations {
             };
         };
     };
-    community__docs_create_document: {
+    community__docs_documents_create_document: {
         parameters: {
             query?: never;
             header?: never;
@@ -6703,7 +6930,7 @@ export interface operations {
             };
         };
     };
-    community__docs_reorder_documents: {
+    community__docs_documents_reorder_documents: {
         parameters: {
             query?: never;
             header?: never;
@@ -6738,7 +6965,7 @@ export interface operations {
             };
         };
     };
-    community__docs_get_document: {
+    community__docs_documents_get_document: {
         parameters: {
             query?: never;
             header?: never;
@@ -6778,7 +7005,7 @@ export interface operations {
             };
         };
     };
-    community__docs_delete_document: {
+    community__docs_documents_delete_document: {
         parameters: {
             query?: never;
             header?: never;
@@ -6820,7 +7047,7 @@ export interface operations {
             };
         };
     };
-    community__docs_update_document: {
+    community__docs_documents_update_document: {
         parameters: {
             query?: never;
             header?: never;

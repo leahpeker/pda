@@ -6,6 +6,7 @@ import type { Event } from '@/models/event';
 import { EventStatus, EventType, EventVisibility } from '@/models/event';
 import { formatEventDateTime } from '@/utils/datetime';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
+import { CohostInviteBanner } from './CohostInviteBanner';
 import { EventActions } from './EventActions';
 import { EventMemberSection } from './EventMemberSection';
 import { EventPollCard } from './poll/EventPollCard';
@@ -41,6 +42,7 @@ export default function EventDetailScreen() {
 
       <WhenLine event={event} />
       <EventActions event={event} />
+      {isAuthed ? <CohostInviteBanner event={event} /> : null}
       <EventPollCard event={event} />
 
       {event.description ? (

@@ -361,6 +361,14 @@ function messageForKnownCode(code: KnownCode, err: FieldError): string {
       return "couldn't submit feedback — try again";
     case Code.Notification.NotFound:
       return 'notification not found';
+    case Code.CoHostInvite.NotFound:
+      return 'invite not found';
+    case Code.CoHostInvite.NotPending:
+      return 'this invite has already been resolved';
+    case Code.CoHostInvite.NotInvitee:
+      return "this isn't your invite to respond to";
+    case Code.CoHostInvite.NotHost:
+      return 'only the event host can do that';
 
     // Generic (FE-only, emitted for Pydantic errors without a ValidationException)
     case Code.Generic.FieldRequired:
