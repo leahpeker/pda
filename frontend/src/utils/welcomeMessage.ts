@@ -9,5 +9,10 @@ export function buildWelcomeMessage(displayName: string | null | undefined, url:
 }
 
 export function buildSmsHref(phoneNumber: string, body: string): string {
-  return `sms:${phoneNumber}?body=${encodeURIComponent(body)}`;
+  // iOS expects `&body=` after the number; Android/others use `?body=`.
+  // Using the wrong separator on iOS causes Messages to show the raw URL
+  // instead of opening a draft.
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const separator = isIos ? '&' : '?';
+  return `sms:${phoneNumber}${separator}body=${encodeURIComponent(body)}`;
 }
