@@ -218,9 +218,7 @@ export function useWelcomeTemplate() {
   return useQuery({
     queryKey: ['welcome-template'],
     queryFn: async () => {
-      const { data } = await apiClient.get<WireWelcomeTemplate>(
-        '/api/community/welcome-template/',
-      );
+      const { data } = await apiClient.get<WireWelcomeTemplate>('/api/community/welcome-template/');
       return mapWelcomeTemplate(data);
     },
     enabled: isAuthed,

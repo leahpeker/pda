@@ -3,10 +3,11 @@ import { buildWhatsAppHref, renderWelcomeMessage } from './welcomeMessage';
 
 describe('renderWelcomeMessage', () => {
   it('substitutes all three placeholders', () => {
-    const out = renderWelcomeMessage(
-      'hi ${NAME}, this is ${SENDER_NAME}, sign in: ${MAGIC_LINK}',
-      { name: 'Sam', senderName: 'Vetter', magicLink: 'https://pda.test/m/abc' },
-    );
+    const out = renderWelcomeMessage('hi ${NAME}, this is ${SENDER_NAME}, sign in: ${MAGIC_LINK}', {
+      name: 'Sam',
+      senderName: 'Vetter',
+      magicLink: 'https://pda.test/m/abc',
+    });
     expect(out).toBe('hi Sam, this is Vetter, sign in: https://pda.test/m/abc');
   });
 

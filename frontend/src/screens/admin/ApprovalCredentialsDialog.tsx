@@ -77,16 +77,8 @@ export function ApprovalCredentialsDialog({
           <Button variant="secondary" onClick={() => void copyLink()}>
             {copied ? 'copied ✓' : 'copy link'}
           </Button>
-          <SendLink
-            href={smsHref}
-            label="send via sms"
-            disabled={sendButtonsDisabled}
-          />
-          <SendLink
-            href={whatsappHref}
-            label="send via whatsapp"
-            disabled={sendButtonsDisabled}
-          />
+          <SendLink href={smsHref} label="send via sms" disabled={sendButtonsDisabled} />
+          <SendLink href={whatsappHref} label="send via whatsapp" disabled={sendButtonsDisabled} />
         </div>
         {canEditTemplate ? (
           <div className="mt-3">
@@ -116,15 +108,7 @@ export function ApprovalCredentialsDialog({
   );
 }
 
-function SendLink({
-  href,
-  label,
-  disabled,
-}: {
-  href: string;
-  label: string;
-  disabled: boolean;
-}) {
+function SendLink({ href, label, disabled }: { href: string; label: string; disabled: boolean }) {
   const className =
     'focus-visible:ring-brand-200 bg-surface text-foreground border-border-strong hover:bg-background inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none';
   if (disabled) {

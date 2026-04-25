@@ -49,24 +49,18 @@ describe('WelcomeTemplateEditorDialog', () => {
 
   it('shows the FE-rendered too-long error from a structured 422', async () => {
     mutateAsyncMock.mockReset();
-    const axiosErr = new AxiosError(
-      'Request failed',
-      'ERR',
-      undefined,
-      undefined,
-      {
-        status: 422,
-        data: {
-          detail: [
-            {
-              code: 'welcome_template.body_too_long',
-              field: 'body',
-              params: { max_length: 4000 },
-            },
-          ],
-        },
-      } as AxiosResponse,
-    );
+    const axiosErr = new AxiosError('Request failed', 'ERR', undefined, undefined, {
+      status: 422,
+      data: {
+        detail: [
+          {
+            code: 'welcome_template.body_too_long',
+            field: 'body',
+            params: { max_length: 4000 },
+          },
+        ],
+      },
+    } as AxiosResponse);
     mutateAsyncMock.mockRejectedValue(axiosErr);
     renderEditor({ body: 'hi', updatedAt: '2026-01-01' });
     await userEvent.click(screen.getByRole('button', { name: /save/i }));

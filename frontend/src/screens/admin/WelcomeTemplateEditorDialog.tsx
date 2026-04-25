@@ -25,11 +25,7 @@ export function WelcomeTemplateEditorDialog({ open, onClose, template }: Props) 
   // without an effect.
   return (
     <Dialog open onClose={onClose} title="edit welcome message">
-      <EditorForm
-        key={template?.body ?? ''}
-        initialBody={template?.body ?? ''}
-        onClose={onClose}
-      />
+      <EditorForm key={template?.body ?? ''} initialBody={template?.body ?? ''} onClose={onClose} />
     </Dialog>
   );
 }
@@ -64,8 +60,7 @@ function EditorForm({ initialBody, onClose }: { initialBody: string; onClose: ()
         this text is shared with all vetters. changes apply everywhere.
       </p>
       <p className="text-muted text-xs">
-        available placeholders:{' '}
-        <code className="bg-surface-dim rounded px-1">{'${NAME}'}</code>,{' '}
+        available placeholders: <code className="bg-surface-dim rounded px-1">{'${NAME}'}</code>,{' '}
         <code className="bg-surface-dim rounded px-1">{'${SENDER_NAME}'}</code>,{' '}
         <code className="bg-surface-dim rounded px-1">{'${MAGIC_LINK}'}</code>
       </p>
