@@ -35,7 +35,7 @@ def unbackfill(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("community", "0049_event_cohost_invite"),
+        ("community", "0051_event_cohost_invite"),
     ]
 
     operations = [
