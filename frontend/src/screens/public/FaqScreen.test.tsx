@@ -39,6 +39,7 @@ const baseUser: User = {
   showPhone: false,
   showEmail: false,
   weekStart: 'monday',
+  calendarFeedScope: 'all',
   profilePhotoUrl: '',
   photoUpdatedAt: null,
   roles: [],

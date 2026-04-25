@@ -34,6 +34,7 @@ function makeUser(id: string, permissions: string[] = []): User {
     showPhone: false,
     showEmail: false,
     weekStart: 'sunday',
+    calendarFeedScope: 'all',
     profilePhotoUrl: '',
     photoUpdatedAt: null,
     roles: permissions.length ? [{ id: 'r1', name: 'custom', isDefault: true, permissions }] : [],

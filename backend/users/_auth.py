@@ -231,6 +231,9 @@ def _apply_me_patch(user, payload: MePatchIn) -> list[str]:
     if payload.week_start is not None:
         user.week_start = payload.week_start
         changed.append("week_start")
+    if payload.calendar_feed_scope is not None:
+        user.calendar_feed_scope = payload.calendar_feed_scope
+        changed.append("calendar_feed_scope")
     return changed
 
 

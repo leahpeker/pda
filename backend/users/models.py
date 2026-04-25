@@ -17,6 +17,13 @@ class WeekStart:
     CHOICES = [(SUNDAY, "Sunday"), (MONDAY, "Monday")]
 
 
+class CalendarFeedScope:
+    ALL = "all"
+    MINE = "mine"
+    VALID = {ALL, MINE}
+    CHOICES = [(ALL, "all events"), (MINE, "my events")]
+
+
 class UserManager(BaseUserManager):
     def create_user(self, phone_number, password=None, **extra_fields):
         if not phone_number:
@@ -49,6 +56,11 @@ class User(AbstractUser):
     login_link_requested = models.BooleanField(default=False)
     week_start = models.CharField(
         max_length=10, choices=WeekStart.CHOICES, default=WeekStart.SUNDAY
+    )
+    calendar_feed_scope = models.CharField(
+        max_length=10,
+        choices=CalendarFeedScope.CHOICES,
+        default=CalendarFeedScope.ALL,
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -1285,6 +1285,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/community/version/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Version */
+        get: operations["community__version_get_version"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/": {
         parameters: {
             query?: never;
@@ -1485,6 +1502,11 @@ export interface components {
              * @default sunday
              */
             week_start: string;
+            /**
+             * Calendar Feed Scope
+             * @default all
+             */
+            calendar_feed_scope: string;
             /** Roles */
             roles: components["schemas"]["RoleOut"][];
         };
@@ -1504,6 +1526,8 @@ export interface components {
             show_email?: boolean | null;
             /** Week Start */
             week_start?: ("sunday" | "monday") | null;
+            /** Calendar Feed Scope */
+            calendar_feed_scope?: ("all" | "mine") | null;
         };
         /** MemberDirectoryOut */
         MemberDirectoryOut: {
@@ -1939,16 +1963,6 @@ export interface components {
              * @default
              */
             user_agent: string;
-            /**
-             * User Display Name
-             * @default
-             */
-            user_display_name: string;
-            /**
-             * User Phone
-             * @default
-             */
-            user_phone: string;
             /**
              * App Version
              * @default
@@ -3026,6 +3040,15 @@ export interface components {
             content_pm?: string | null;
             /** Folder Id */
             folder_id?: string | null;
+        };
+        /** VersionOut */
+        VersionOut: {
+            /** Commit Sha */
+            commit_sha: string;
+            /** Commit Sha Short */
+            commit_sha_short: string;
+            /** Environment */
+            environment: string;
         };
         /** NotificationOut */
         NotificationOut: {
@@ -6871,6 +6894,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__version_get_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"];
                 };
             };
         };
