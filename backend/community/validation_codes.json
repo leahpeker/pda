@@ -551,6 +551,16 @@
         "params": [
           "allowed"
         ]
+      },
+      {
+        "name": "NOT_APPROVED",
+        "value": "join_request.not_approved",
+        "params": []
+      },
+      {
+        "name": "ALREADY_LOGGED_IN",
+        "value": "join_request.already_logged_in",
+        "params": []
       }
     ],
     "Photo": [
@@ -655,6 +665,20 @@
         "name": "NOT_HOST",
         "value": "cohost_invite.not_host",
         "params": []
+      }
+    ],
+    "WelcomeTemplate": [
+      {
+        "name": "BODY_REQUIRED",
+        "value": "welcome_template.body_required",
+        "params": []
+      },
+      {
+        "name": "BODY_TOO_LONG",
+        "value": "welcome_template.body_too_long",
+        "params": [
+          "max_length"
+        ]
       }
     ]
   }

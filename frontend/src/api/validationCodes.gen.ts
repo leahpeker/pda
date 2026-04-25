@@ -130,6 +130,8 @@ export const Code = {
     AnswerTooLong: 'join_request.answer_too_long',
     AnswerInvalidOption: 'join_request.answer_invalid_option',
     InvalidStatus: 'join_request.invalid_status',
+    NotApproved: 'join_request.not_approved',
+    AlreadyLoggedIn: 'join_request.already_logged_in',
   },
   Photo: {
     TypeNotAllowed: 'photo.type_not_allowed',
@@ -164,6 +166,10 @@ export const Code = {
     NotPending: 'cohost_invite.not_pending',
     NotInvitee: 'cohost_invite.not_invitee',
     NotHost: 'cohost_invite.not_host',
+  },
+  WelcomeTemplate: {
+    BodyRequired: 'welcome_template.body_required',
+    BodyTooLong: 'welcome_template.body_too_long',
   },
 } as const;
 
@@ -267,6 +273,8 @@ export type ValidationCode =
   | 'join_request.answer_too_long'
   | 'join_request.answer_invalid_option'
   | 'join_request.invalid_status'
+  | 'join_request.not_approved'
+  | 'join_request.already_logged_in'
   | 'photo.type_not_allowed'
   | 'photo.too_large'
   | 'perm.denied'
@@ -282,7 +290,9 @@ export type ValidationCode =
   | 'cohost_invite.not_found'
   | 'cohost_invite.not_pending'
   | 'cohost_invite.not_invitee'
-  | 'cohost_invite.not_host';
+  | 'cohost_invite.not_host'
+  | 'welcome_template.body_required'
+  | 'welcome_template.body_too_long';
 
 export const CODE_PARAMS: Record<ValidationCode, readonly string[]> = {
   'event.not_found': [],
@@ -384,6 +394,8 @@ export const CODE_PARAMS: Record<ValidationCode, readonly string[]> = {
   'join_request.answer_too_long': ['label', 'max'],
   'join_request.answer_invalid_option': ['label'],
   'join_request.invalid_status': ['allowed'],
+  'join_request.not_approved': [],
+  'join_request.already_logged_in': [],
   'photo.type_not_allowed': ['allowed'],
   'photo.too_large': ['max_mb'],
   'perm.denied': ['action'],
@@ -400,4 +412,6 @@ export const CODE_PARAMS: Record<ValidationCode, readonly string[]> = {
   'cohost_invite.not_pending': [],
   'cohost_invite.not_invitee': [],
   'cohost_invite.not_host': [],
+  'welcome_template.body_required': [],
+  'welcome_template.body_too_long': ['max_length'],
 };

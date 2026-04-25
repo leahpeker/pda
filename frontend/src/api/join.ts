@@ -94,7 +94,12 @@ export async function checkPhone(phoneNumber: string): Promise<CheckPhoneStatus>
 
 // --- admin ------------------------------------------------------------------
 
-export type JoinRequestStatus = 'pending' | 'approved' | 'rejected';
+export const JoinRequestStatus = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+} as const;
+export type JoinRequestStatus = (typeof JoinRequestStatus)[keyof typeof JoinRequestStatus];
 
 export interface JoinRequestAnswer {
   questionId: string;
@@ -115,6 +120,7 @@ export interface JoinRequestSummary {
   approvedByName: string | null;
   rejectedAt: string | null;
   rejectedByName: string | null;
+  onboardedAt: string | null;
 }
 
 interface WireAnswer {
@@ -136,6 +142,7 @@ interface WireJoinRequest {
   approved_by_name?: string | null;
   rejected_at?: string | null;
   rejected_by_name?: string | null;
+  onboarded_at?: string | null;
 }
 
 function mapJoinRequest(w: WireJoinRequest): JoinRequestSummary {
@@ -156,6 +163,7 @@ function mapJoinRequest(w: WireJoinRequest): JoinRequestSummary {
     approvedByName: w.approved_by_name ?? null,
     rejectedAt: w.rejected_at ?? null,
     rejectedByName: w.rejected_by_name ?? null,
+    onboardedAt: w.onboarded_at ?? null,
   };
 }
 
@@ -279,7 +287,10 @@ interface WireDecision {
 export function useDecideJoinRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (args: { id: string; status: 'approved' | 'rejected' }) => {
+    mutationFn: async (args: {
+      id: string;
+      status: typeof JoinRequestStatus.APPROVED | typeof JoinRequestStatus.REJECTED;
+    }) => {
       const { data } = await apiClient.patch<WireDecision>(
         `/api/community/join-requests/${args.id}/`,
         { status: args.status },
@@ -307,6 +318,24 @@ export function useUnrejectJoinRequest() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['join-requests'] });
+    },
+  });
+}
+
+export function useResendMagicLink() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.post<WireDecision>(
+        `/api/community/join-requests/${id}/resend-magic-link/`,
+      );
+      return {
+        id: data.id,
+        displayName: data.display_name,
+        phoneNumber: data.phone_number,
+        status: data.status,
+        magicLinkToken: data.magic_link_token,
+        userId: data.user_id,
+      } satisfies JoinRequestDecision;
     },
   });
 }

@@ -151,6 +151,8 @@ class Code:
         ANSWER_TOO_LONG = "join_request.answer_too_long"  # params: { label: str, max: int }
         ANSWER_INVALID_OPTION = "join_request.answer_invalid_option"  # params: { label: str }
         INVALID_STATUS = "join_request.invalid_status"  # params: { allowed: [str] }
+        NOT_APPROVED = "join_request.not_approved"
+        ALREADY_LOGGED_IN = "join_request.already_logged_in"
 
     class Photo:
         TYPE_NOT_ALLOWED = "photo.type_not_allowed"  # params: { allowed: string[] }
@@ -185,6 +187,10 @@ class Code:
         NOT_PENDING = "cohost_invite.not_pending"
         NOT_INVITEE = "cohost_invite.not_invitee"
         NOT_HOST = "cohost_invite.not_host"
+
+    class WelcomeTemplate:
+        BODY_REQUIRED = "welcome_template.body_required"
+        BODY_TOO_LONG = "welcome_template.body_too_long"  # params: { max_length: int }
 
 
 class ValidationException(Exception):

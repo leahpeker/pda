@@ -564,6 +564,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/community/join-requests/{id}/resend-magic-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend Magic Link
+         * @description Mint a fresh magic-login link for an approved join request whose user
+         *     has not yet onboarded. Invalidates any prior unused magic tokens for the
+         *     user so the welcome message in the wild can't be claimed twice. Refuses
+         *     on already-logged-in users (use the members screen's password reset
+         *     flow for that).
+         */
+        post: operations["community__join_request_resend_resend_magic_link"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/community/request-login-link/": {
         parameters: {
             query?: never;
@@ -879,6 +903,24 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/community/welcome-template/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Welcome Template */
+        get: operations["community__welcome_template_get_welcome_template"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Welcome Template */
+        patch: operations["community__welcome_template_update_welcome_template"];
         trace?: never;
     };
     "/api/community/whatsapp/config/": {
@@ -1887,6 +1929,8 @@ export interface components {
             rejected_at?: string | null;
             /** Rejected By Name */
             rejected_by_name?: string | null;
+            /** Onboarded At */
+            onboarded_at?: string | null;
         };
         /** JoinRequestIn */
         JoinRequestIn: {
@@ -2656,6 +2700,21 @@ export interface components {
             token: string;
             /** Feed Url */
             feed_url: string;
+        };
+        /** WelcomeTemplateOut */
+        WelcomeTemplateOut: {
+            /** Body */
+            body: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** WelcomeTemplatePatchIn */
+        WelcomeTemplatePatchIn: {
+            /** Body */
+            body?: string | null;
         };
         /** WhatsAppConfigOut */
         WhatsAppConfigOut: {
@@ -4623,6 +4682,55 @@ export interface operations {
             };
         };
     };
+    community__join_request_resend_resend_magic_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApproveJoinRequestOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
     community__login_link_request_login_link: {
         parameters: {
             query?: never;
@@ -5563,6 +5671,68 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    community__welcome_template_get_welcome_template: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WelcomeTemplateOut"];
+                };
+            };
+        };
+    };
+    community__welcome_template_update_welcome_template: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WelcomeTemplatePatchIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WelcomeTemplateOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
             };
         };
     };

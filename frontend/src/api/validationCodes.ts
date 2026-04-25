@@ -331,6 +331,10 @@ function messageForKnownCode(code: KnownCode, err: FieldError): string {
     }
     case Code.JoinRequest.InvalidStatus:
       return 'invalid status for this action';
+    case Code.JoinRequest.NotApproved:
+      return 'this request needs to be approved first';
+    case Code.JoinRequest.AlreadyLoggedIn:
+      return "they've already logged in — re-sending a welcome link won't help";
 
     // Photo
     case Code.Photo.TypeNotAllowed:
@@ -371,6 +375,16 @@ function messageForKnownCode(code: KnownCode, err: FieldError): string {
       return "this isn't your invite to respond to";
     case Code.CoHostInvite.NotHost:
       return 'only the event host can do that';
+
+    // Welcome template
+    case Code.WelcomeTemplate.BodyRequired:
+      return 'welcome message body is required';
+    case Code.WelcomeTemplate.BodyTooLong: {
+      const max = typeof err.params?.max_length === 'number' ? err.params.max_length : null;
+      return max !== null
+        ? `welcome message must be at most ${String(max)} characters`
+        : 'welcome message is too long';
+    }
 
     // Generic (FE-only, emitted for Pydantic errors without a ValidationException)
     case Code.Generic.FieldRequired:
