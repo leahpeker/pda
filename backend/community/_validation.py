@@ -179,6 +179,12 @@ class Code:
     class Notification:
         NOT_FOUND = "notification.not_found"
 
+    class CoHostInvite:
+        NOT_FOUND = "cohost_invite.not_found"
+        NOT_PENDING = "cohost_invite.not_pending"
+        NOT_INVITEE = "cohost_invite.not_invitee"
+        NOT_HOST = "cohost_invite.not_host"
+
 
 class ValidationException(Exception):
     """Raised by validators and route handlers to signal a structured error.

@@ -627,6 +627,28 @@
         "value": "notification.not_found",
         "params": []
       }
+    ],
+    "CoHostInvite": [
+      {
+        "name": "NOT_FOUND",
+        "value": "cohost_invite.not_found",
+        "params": []
+      },
+      {
+        "name": "NOT_PENDING",
+        "value": "cohost_invite.not_pending",
+        "params": []
+      },
+      {
+        "name": "NOT_INVITEE",
+        "value": "cohost_invite.not_invitee",
+        "params": []
+      },
+      {
+        "name": "NOT_HOST",
+        "value": "cohost_invite.not_host",
+        "params": []
+      }
     ]
   }
 }
