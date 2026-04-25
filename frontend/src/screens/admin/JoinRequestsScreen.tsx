@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { extractApiErrorOr } from '@/api/apiErrors';
 import {
+  JoinRequestStatus,
   useDecideJoinRequest,
   useJoinRequests,
   useUnrejectJoinRequest,
-  type JoinRequestStatus,
   type JoinRequestSummary,
 } from '@/api/join';
 import { Button } from '@/components/ui/Button';
@@ -16,13 +16,19 @@ import { formatPhone } from '@/utils/formatPhone';
 import { ContentContainer, ContentError, ContentLoading } from '@/screens/public/ContentContainer';
 import { ApprovalCredentialsDialog } from './ApprovalCredentialsDialog';
 
-type Filter = 'all' | JoinRequestStatus;
+const Filter = {
+  ALL: 'all',
+  ...JoinRequestStatus,
+} as const;
+type Filter = (typeof Filter)[keyof typeof Filter];
+
+type Decision = typeof JoinRequestStatus.APPROVED | typeof JoinRequestStatus.REJECTED;
 
 const FILTERS: { value: Filter; label: string }[] = [
-  { value: 'all', label: 'all' },
-  { value: 'pending', label: 'pending' },
-  { value: 'approved', label: 'approved' },
-  { value: 'rejected', label: 'rejected' },
+  { value: Filter.ALL, label: 'all' },
+  { value: Filter.PENDING, label: 'pending' },
+  { value: Filter.APPROVED, label: 'approved' },
+  { value: Filter.REJECTED, label: 'rejected' },
 ];
 
 export default function JoinRequestsScreen() {
@@ -31,7 +37,7 @@ export default function JoinRequestsScreen() {
   const unreject = useUnrejectJoinRequest();
   const { confirm, element: confirmElement } = useConfirm();
 
-  const [filter, setFilter] = useState<Filter>('pending');
+  const [filter, setFilter] = useState<Filter>(Filter.PENDING);
   const [error, setError] = useState<string | null>(null);
   const [credsFor, setCredsFor] = useState<{
     displayName: string;
@@ -40,31 +46,31 @@ export default function JoinRequestsScreen() {
   } | null>(null);
 
   const visible = useMemo(() => {
-    if (filter === 'all') return data;
+    if (filter === Filter.ALL) return data;
     return data.filter((r) => r.status === filter);
   }, [data, filter]);
 
   if (isPending) return <ContentLoading />;
   if (isError) return <ContentError message="couldn't load join requests — try refreshing" />;
 
-  async function decideRequest(request: JoinRequestSummary, status: 'approved' | 'rejected') {
+  async function decideRequest(request: JoinRequestSummary, status: Decision) {
     const name = request.displayName || formatPhone(request.phoneNumber);
-    const message =
-      status === 'approved'
-        ? `approve ${name}? once you approve someone you can't un-approve them — are you sure?`
-        : `reject ${name}? once you reject someone you can't un-reject them — are you sure?`;
+    const isApprove = status === JoinRequestStatus.APPROVED;
+    const message = isApprove
+      ? `approve ${name}? once you approve someone you can't un-approve them — are you sure?`
+      : `reject ${name}? once you reject someone you can't un-reject them — are you sure?`;
     const ok = await confirm({
-      title: status === 'approved' ? 'approve request' : 'reject request',
+      title: isApprove ? 'approve request' : 'reject request',
       message,
-      confirmLabel: status === 'approved' ? 'approve' : 'reject',
-      destructive: status === 'rejected',
+      confirmLabel: isApprove ? 'approve' : 'reject',
+      destructive: !isApprove,
     });
     if (!ok) return;
 
     setError(null);
     try {
       const result = await decide.mutateAsync({ id: request.id, status });
-      if (status === 'approved' && result.magicLinkToken) {
+      if (isApprove && result.magicLinkToken) {
         setCredsFor({
           displayName: result.displayName,
           phoneNumber: result.phoneNumber,
@@ -106,6 +112,13 @@ export default function JoinRequestsScreen() {
           onChange={setFilter}
         />
       </div>
+
+      {filter === Filter.APPROVED ? (
+        <p className="text-muted mb-3 text-xs">
+          approved members stay here for 3 days after their first login — then they drop off the
+          list automatically
+        </p>
+      ) : null}
 
       {error ? (
         <p role="alert" className="text-destructive mb-3 text-sm">
@@ -158,11 +171,11 @@ function JoinRequestCard({
 }: {
   request: JoinRequestSummary;
   busy: boolean;
-  onDecide: (status: 'approved' | 'rejected') => void;
+  onDecide: (status: Decision) => void;
   onUnreject: () => void;
 }) {
-  const isPending = request.status === 'pending';
-  const isRejected = request.status === 'rejected';
+  const isPending = request.status === JoinRequestStatus.PENDING;
+  const isRejected = request.status === JoinRequestStatus.REJECTED;
   return (
     <article className="border-border bg-surface rounded-lg border p-4">
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -201,7 +214,7 @@ function JoinRequestCard({
         <div className="mt-4 flex gap-2">
           <Button
             onClick={() => {
-              onDecide('approved');
+              onDecide(JoinRequestStatus.APPROVED);
             }}
             disabled={busy}
           >
@@ -210,7 +223,7 @@ function JoinRequestCard({
           <Button
             variant="secondary"
             onClick={() => {
-              onDecide('rejected');
+              onDecide(JoinRequestStatus.REJECTED);
             }}
             disabled={busy}
           >
@@ -234,16 +247,19 @@ function JoinRequestCard({
 }
 
 function DecisionAttribution({ request }: { request: JoinRequestSummary }) {
-  if (request.status === 'approved' && request.approvedAt) {
+  if (request.status === JoinRequestStatus.APPROVED && request.approvedAt) {
     const who = request.approvedByName ?? 'an admin';
     return (
-      <p className="text-muted mt-3 text-xs">
-        approved by {who.toLowerCase()} on{' '}
-        {format(new Date(request.approvedAt), 'MMM d, h:mm a').toLowerCase()}
-      </p>
+      <>
+        <p className="text-muted mt-3 text-xs">
+          approved by {who.toLowerCase()} on{' '}
+          {format(new Date(request.approvedAt), 'MMM d, h:mm a').toLowerCase()}
+        </p>
+        <LoginStatus onboardedAt={request.onboardedAt} />
+      </>
     );
   }
-  if (request.status === 'rejected' && request.rejectedAt) {
+  if (request.status === JoinRequestStatus.REJECTED && request.rejectedAt) {
     const who = request.rejectedByName ?? 'an admin';
     return (
       <p className="text-muted mt-3 text-xs">
@@ -255,15 +271,24 @@ function DecisionAttribution({ request }: { request: JoinRequestSummary }) {
   return null;
 }
 
+function LoginStatus({ onboardedAt }: { onboardedAt: string | null }) {
+  if (!onboardedAt) {
+    return <p className="text-muted mt-1 text-xs">hasn&rsquo;t logged in yet</p>;
+  }
+  const relative = formatDistanceToNow(new Date(onboardedAt), { addSuffix: true }).toLowerCase();
+  return <p className="text-muted mt-1 text-xs">logged in {relative}</p>;
+}
+
 function StatusBadge({ status }: { status: JoinRequestStatus }) {
-  const tone =
-    status === 'approved'
-      ? 'bg-success-subtle text-success'
-      : status === 'rejected'
-        ? 'bg-surface-raised text-foreground-secondary'
-        : 'bg-warning-subtle text-warning';
+  const tone = STATUS_TONES[status];
   return <span className={cn('rounded-full px-2 py-0.5 text-xs', tone)}>{status}</span>;
 }
+
+const STATUS_TONES: Record<JoinRequestStatus, string> = {
+  [JoinRequestStatus.PENDING]: 'bg-warning-subtle text-warning',
+  [JoinRequestStatus.APPROVED]: 'bg-success-subtle text-success',
+  [JoinRequestStatus.REJECTED]: 'bg-surface-raised text-foreground-secondary',
+};
 
 function extractError(err: unknown): string {
   return extractApiErrorOr(err, "couldn't complete that action — try again");
