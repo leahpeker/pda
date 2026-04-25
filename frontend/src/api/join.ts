@@ -94,7 +94,12 @@ export async function checkPhone(phoneNumber: string): Promise<CheckPhoneStatus>
 
 // --- admin ------------------------------------------------------------------
 
-export type JoinRequestStatus = 'pending' | 'approved' | 'rejected';
+export const JoinRequestStatus = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+} as const;
+export type JoinRequestStatus = (typeof JoinRequestStatus)[keyof typeof JoinRequestStatus];
 
 export interface JoinRequestAnswer {
   questionId: string;
@@ -282,7 +287,10 @@ interface WireDecision {
 export function useDecideJoinRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (args: { id: string; status: 'approved' | 'rejected' }) => {
+    mutationFn: async (args: {
+      id: string;
+      status: typeof JoinRequestStatus.APPROVED | typeof JoinRequestStatus.REJECTED;
+    }) => {
       const { data } = await apiClient.patch<WireDecision>(
         `/api/community/join-requests/${args.id}/`,
         { status: args.status },
