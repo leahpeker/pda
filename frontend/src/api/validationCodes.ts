@@ -375,6 +375,10 @@ function messageForKnownCode(code: KnownCode, err: FieldError): string {
       return "this isn't your invite to respond to";
     case Code.CoHostInvite.NotHost:
       return 'only the event host can do that';
+    case Code.CoHostInvite.NotRemovable:
+      return "this invite can't be removed";
+    case Code.CoHostInvite.WouldLeaveHostless:
+      return "you can't step down — every event needs at least one host";
 
     // Welcome template
     case Code.WelcomeTemplate.BodyRequired:

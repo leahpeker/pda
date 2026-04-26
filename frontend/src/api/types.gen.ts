@@ -795,7 +795,16 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Rescind Cohost Invite */
+        /**
+         * Rescind Cohost Invite
+         * @description Rescind a pending invite OR remove an accepted co-host.
+         *
+         *     PENDING → host-only, flips to RESCINDED.
+         *     ACCEPTED → host or the co-host themselves, flips to REMOVED and drops
+         *     the user from event.co_hosts. Blocks self-step-down that would leave
+         *     the event without any host.
+         *     Other statuses (DECLINED / RESCINDED / EXPIRED / REMOVED) → 400.
+         */
         delete: operations["community__event_cohost_invites_rescind_cohost_invite"];
         options?: never;
         head?: never;
@@ -2281,6 +2290,11 @@ export interface components {
              * @default []
              */
             co_host_photo_urls: string[];
+            /**
+             * Co Host Invite Ids
+             * @default []
+             */
+            co_host_invite_ids: (string | null)[];
             /**
              * Guests
              * @default []

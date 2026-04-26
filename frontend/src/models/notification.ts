@@ -6,6 +6,7 @@ export const NotificationType = {
   CohostInvite: 'cohost_invite',
   CohostInviteAccepted: 'cohost_invite_accepted',
   CohostInviteDeclined: 'cohost_invite_declined',
+  CohostRemoved: 'cohost_removed',
   MagicLinkRequest: 'magic_link_request',
   WaitlistPromoted: 'waitlist_promoted',
   EventCancelled: 'event_cancelled',

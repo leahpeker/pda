@@ -182,6 +182,7 @@ function notificationTarget(n: AppNotification): string | null {
     case NotificationType.CohostInvite:
     case NotificationType.CohostInviteAccepted:
     case NotificationType.CohostInviteDeclined:
+    case NotificationType.CohostRemoved:
     case NotificationType.WaitlistPromoted:
     case NotificationType.EventCancelled:
       return n.eventId ? `/events/${n.eventId}` : null;

@@ -115,6 +115,10 @@ export interface Event {
   coHostIds: string[];
   coHostNames: string[];
   coHostPhotoUrls: string[];
+  // Parallel to coHostIds: accepted co-host's invite id, used by the × on
+  // host chips. null for legacy rows missing an invite (defensive — shouldn't
+  // happen post-#363 data migration). Detail-only.
+  coHostInviteIds: (string | null)[];
 
   // Detail-only.
   guests: EventGuest[];

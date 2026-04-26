@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { extractApiError } from '@/api/apiErrors';
 import { useRescindCohostInvite } from '@/api/cohostInvites';
 import { RsvpSection } from './RsvpSection';
 import { InvitedList } from './RsvpGuestList';
@@ -19,6 +20,7 @@ import type { Event, PendingCohostInvite } from '@/models/event';
 import { EventStatus, InvitePermission } from '@/models/event';
 import { useAuthStore } from '@/auth/store';
 import { Button } from '@/components/ui/Button';
+import { useConfirm } from '@/components/ui/useConfirm';
 import { ensureHttps } from '@/utils/url';
 
 interface Props {
@@ -40,7 +42,7 @@ export function EventMemberSection({ event }: Props) {
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      <HostSection event={event} canEdit={isCoHost && !isCancelled} />
+      <HostSection event={event} canEdit={isCoHost && !isCancelled} viewerId={user.id} />
       <LocationSection event={event} />
       <LinksSection event={event} />
       <CostSection event={event} />
@@ -95,21 +97,41 @@ function Card({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-function HostSection({ event, canEdit }: { event: Event; canEdit: boolean }) {
+interface HostRow {
+  userId: string;
+  name: string;
+  photoUrl: string;
+  inviteId: string | null; // null for the creator (not a co-host invite)
+}
+
+function HostSection({
+  event,
+  canEdit,
+  viewerId,
+}: {
+  event: Event;
+  canEdit: boolean;
+  viewerId: string;
+}) {
   const [addOpen, setAddOpen] = useState(false);
-  const hosts: { id: string; name: string; photoUrl: string }[] = [];
+  const { confirm, element: confirmElement } = useConfirm();
+  const remove = useRescindCohostInvite();
+
+  const hosts: HostRow[] = [];
   if (event.createdById && event.createdByName) {
     hosts.push({
-      id: event.createdById,
+      userId: event.createdById,
       name: event.createdByName,
       photoUrl: event.createdByPhotoUrl,
+      inviteId: null,
     });
   }
   event.coHostIds.forEach((id, i) => {
     hosts.push({
-      id,
+      userId: id,
       name: event.coHostNames[i] ?? 'member',
       photoUrl: event.coHostPhotoUrls[i] ?? '',
+      inviteId: event.coHostInviteIds[i] ?? null,
     });
   });
   // Backend only includes pending invites for the creator + accepted co-hosts.
@@ -118,11 +140,45 @@ function HostSection({ event, canEdit }: { event: Event; canEdit: boolean }) {
   if (hosts.length === 0 && pending.length === 0 && !canEdit) return null;
   const totalChips = hosts.length + pending.length;
   const label = totalChips > 1 ? 'hosts' : 'host';
+
+  async function removeCohost(host: HostRow) {
+    if (!host.inviteId) return; // creator can't be removed via this flow
+    const isSelf = host.userId === viewerId;
+    if (isSelf) {
+      const ok = await confirm({
+        title: 'step down as co-host?',
+        message: "you'll lose co-host access — the host can re-invite you later.",
+        confirmLabel: 'step down',
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    remove.mutate(
+      { eventId: event.id, inviteId: host.inviteId },
+      {
+        onError: (err) => {
+          const message = extractApiError(err) ?? "couldn't remove — try again";
+          toast.error(message);
+        },
+      },
+    );
+  }
+
   return (
     <Card label={label}>
       <div className="flex flex-wrap items-center gap-2">
         {hosts.map((h) => (
-          <HostChip key={h.id} id={h.id} name={h.name} photoUrl={h.photoUrl} />
+          <HostChip
+            key={h.userId}
+            host={h}
+            canRemove={
+              h.inviteId !== null && (canEdit || h.userId === viewerId) && !remove.isPending
+            }
+            onRemove={() => {
+              void removeCohost(h);
+            }}
+            isSelf={h.userId === viewerId}
+          />
         ))}
         {pending.map((inv) => (
           <PendingHostChip key={inv.id} eventId={event.id} invite={inv} canRescind={canEdit} />
@@ -149,28 +205,53 @@ function HostSection({ event, canEdit }: { event: Event; canEdit: boolean }) {
           }}
         />
       ) : null}
+      {confirmElement}
     </Card>
   );
 }
 
-function HostChip({ id, name, photoUrl }: { id: string; name: string; photoUrl: string }) {
+function HostChip({
+  host,
+  canRemove,
+  onRemove,
+  isSelf,
+}: {
+  host: HostRow;
+  canRemove: boolean;
+  onRemove: () => void;
+  isSelf: boolean;
+}) {
   return (
-    <Link
-      to={`/members/${id}`}
-      className="bg-surface-dim hover:bg-surface-dim/70 inline-flex items-center gap-2 rounded-full px-2 py-1 text-sm"
-    >
-      {photoUrl ? (
-        <img src={photoUrl} alt="" className="h-6 w-6 rounded-full object-cover" loading="lazy" />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="bg-toggle-off text-foreground-secondary flex h-6 w-6 items-center justify-center rounded-full text-xs"
+    <span className="bg-surface-dim hover:bg-surface-dim/70 inline-flex items-center gap-2 rounded-full px-2 py-1 text-sm">
+      <Link to={`/members/${host.userId}`} className="inline-flex items-center gap-2">
+        {host.photoUrl ? (
+          <img
+            src={host.photoUrl}
+            alt=""
+            className="h-6 w-6 rounded-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="bg-toggle-off text-foreground-secondary flex h-6 w-6 items-center justify-center rounded-full text-xs"
+          >
+            {host.name.slice(0, 1).toLowerCase()}
+          </span>
+        )}
+        {host.name}
+      </Link>
+      {canRemove ? (
+        <button
+          type="button"
+          aria-label={isSelf ? 'step down as co-host' : `remove ${host.name} as co-host`}
+          onClick={onRemove}
+          className="text-muted hover:text-foreground ms-1"
         >
-          {name.slice(0, 1).toLowerCase()}
-        </span>
-      )}
-      {name}
-    </Link>
+          ×
+        </button>
+      ) : null}
+    </span>
   );
 }
 
