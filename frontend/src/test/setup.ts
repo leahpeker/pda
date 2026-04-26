@@ -34,3 +34,8 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: () => false,
   }),
 });
+
+// jsdom doesn't implement HTMLCanvasElement.getContext — return null so
+// jsdom stops emitting "Not implemented" warnings during component rendering.
+// No test currently inspects canvas output.
+HTMLCanvasElement.prototype.getContext = (() => null) as never;
