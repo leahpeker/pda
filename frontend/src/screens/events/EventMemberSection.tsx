@@ -190,17 +190,23 @@ function HostSection({
         {pending.map((inv) => (
           <PendingHostChip key={inv.id} eventId={event.id} invite={inv} canRescind={canEdit} />
         ))}
-        {canInviteCohost ? (
-          <button
-            type="button"
-            onClick={() => {
-              setAddOpen(true);
-            }}
-            aria-label="add co-host"
-            className="bg-surface-dim text-foreground-secondary hover:bg-surface-dim/70 inline-flex h-8 w-8 items-center justify-center rounded-full text-lg"
+        {canEdit ? (
+          <span
+            title={canInviteCohost ? undefined : "can't invite co-hosts to a past event"}
+            className="inline-flex"
           >
-            +
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (canInviteCohost) setAddOpen(true);
+              }}
+              disabled={!canInviteCohost}
+              aria-label="add co-host"
+              className="bg-surface-dim text-foreground-secondary hover:bg-surface-dim/70 disabled:hover:bg-surface-dim inline-flex h-8 w-8 items-center justify-center rounded-full pb-0.5 text-xl leading-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              +
+            </button>
+          </span>
         ) : null}
       </div>
       {canInviteCohost ? (

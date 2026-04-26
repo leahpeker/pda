@@ -188,18 +188,23 @@ describe('EventMemberSection — accepted host row', () => {
 });
 
 describe('EventMemberSection — past event gates (#385)', () => {
-  it('hides the + button on past events', () => {
+  it('disables the + button on past events with a tooltip explaining why', () => {
     useAuthStore.setState({ status: 'authed', user: CREATOR, accessToken: 'tok' });
     renderSection({ ...BASE_EVENT, isPast: true });
-    expect(screen.queryByRole('button', { name: /add co-host/i })).not.toBeInTheDocument();
+    const addBtn = screen.getByRole('button', { name: /add co-host/i });
+    expect(addBtn).toBeDisabled();
+    // Tooltip lives on the wrapper span — browsers don't fire mouseenter on
+    // disabled buttons, so wrapping is the standard fix.
+    expect(addBtn.parentElement).toHaveAttribute('title', "can't invite co-hosts to a past event");
   });
 
-  it('shows the + button on non-past events for host viewer', () => {
-    // Sanity check that the gate is doing the right thing — should still render
-    // when the event is in the future.
+  it('+ button is enabled on non-past events for host viewer', () => {
+    // Sanity check that the gate is doing the right thing — should still be
+    // active when the event is in the future.
     useAuthStore.setState({ status: 'authed', user: CREATOR, accessToken: 'tok' });
     renderSection(BASE_EVENT);
-    expect(screen.getByRole('button', { name: /add co-host/i })).toBeInTheDocument();
+    const addBtn = screen.getByRole('button', { name: /add co-host/i });
+    expect(addBtn).toBeEnabled();
   });
 
   it('still allows × on accepted host chips for past events (housekeeping)', () => {
