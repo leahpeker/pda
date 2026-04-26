@@ -105,13 +105,9 @@ def diff_cohost_invites(
     revive a pending invite on a past event. Removals continue to work — the
     host can still trim the roster after the fact.
     """
-    next_ids = {str(uid) for uid in co_host_ids}
-    if event.created_by_id is not None:
-        next_ids.discard(str(event.created_by_id))
+    next_ids = _next_ids_excluding_creator(event, co_host_ids)
     existing_by_user = {str(inv.user_id): inv for inv in event.cohost_invites.all()}
-
-    if event.is_past and _would_upsert_any(next_ids, existing_by_user):
-        raise_validation(Code.CoHostInvite.EVENT_IS_PAST, status_code=400)
+    _check_past_event_guard(event, next_ids, existing_by_user)
 
     newly_invited: list[str] = []
     accepted_co_host_ids_to_remove: list[str] = []
@@ -131,21 +127,32 @@ def diff_cohost_invites(
     return newly_invited, accepted_co_host_ids_to_remove
 
 
-def _would_upsert_any(next_ids: set[str], existing_by_user: dict[str, EventCoHostInvite]) -> bool:
-    """True if any requested id would result in a create-or-revive.
+def _next_ids_excluding_creator(event: Event, co_host_ids: Iterable[str]) -> set[str]:
+    """Normalize requested ids and drop the creator (they're already a host)."""
+    next_ids = {str(uid) for uid in co_host_ids}
+    if event.created_by_id is not None:
+        next_ids.discard(str(event.created_by_id))
+    return next_ids
 
-    Mirrors the logic in ``_upsert_pending_invite`` so we can guard before
-    running it: an id is "upsert-y" if there's no existing row, OR there is
-    one but it's in a non-active state (declined / rescinded / expired /
-    removed) that would get flipped back to pending.
+
+def _check_past_event_guard(
+    event: Event,
+    next_ids: set[str],
+    existing_by_user: dict[str, EventCoHostInvite],
+) -> None:
+    """Raise EVENT_IS_PAST if any requested id would create or revive an invite.
+
+    Mirrors the logic in ``_upsert_pending_invite`` — a request is "upsert-y"
+    if there's no existing row, or there is one but it's in a non-active state
+    (declined / rescinded / expired / removed) that would get flipped back to
+    pending. Removals are unaffected; the guard is a no-op for those.
     """
+    if not event.is_past:
+        return
     for user_id in next_ids:
         existing = existing_by_user.get(user_id)
-        if existing is None:
-            return True
-        if existing.status not in _ACTIVE_OR_PENDING:
-            return True
-    return False
+        if existing is None or existing.status not in _ACTIVE_OR_PENDING:
+            raise_validation(Code.CoHostInvite.EVENT_IS_PAST, status_code=400)
 
 
 def get_pending_invites_for_event(event: Event) -> list[EventCoHostInvite]:
