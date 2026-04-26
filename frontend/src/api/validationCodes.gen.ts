@@ -166,6 +166,8 @@ export const Code = {
     NotPending: 'cohost_invite.not_pending',
     NotInvitee: 'cohost_invite.not_invitee',
     NotHost: 'cohost_invite.not_host',
+    NotRemovable: 'cohost_invite.not_removable',
+    WouldLeaveHostless: 'cohost_invite.would_leave_hostless',
   },
   WelcomeTemplate: {
     BodyRequired: 'welcome_template.body_required',
@@ -291,6 +293,8 @@ export type ValidationCode =
   | 'cohost_invite.not_pending'
   | 'cohost_invite.not_invitee'
   | 'cohost_invite.not_host'
+  | 'cohost_invite.not_removable'
+  | 'cohost_invite.would_leave_hostless'
   | 'welcome_template.body_required'
   | 'welcome_template.body_too_long';
 
@@ -412,6 +416,8 @@ export const CODE_PARAMS: Record<ValidationCode, readonly string[]> = {
   'cohost_invite.not_pending': [],
   'cohost_invite.not_invitee': [],
   'cohost_invite.not_host': [],
+  'cohost_invite.not_removable': [],
+  'cohost_invite.would_leave_hostless': [],
   'welcome_template.body_required': [],
   'welcome_template.body_too_long': ['max_length'],
 };

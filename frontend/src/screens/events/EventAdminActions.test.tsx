@@ -73,6 +73,7 @@ const BASE_EVENT: Event = {
   coHostIds: [COHOST_ID],
   coHostNames: ['Co-Host'],
   coHostPhotoUrls: [''],
+  coHostInviteIds: [null],
   guests: [],
   myRsvp: null,
   surveySlugs: [],

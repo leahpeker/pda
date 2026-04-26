@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -57,6 +57,7 @@ const BASE_EVENT: Event = {
   coHostIds: [],
   coHostNames: [],
   coHostPhotoUrls: [],
+  coHostInviteIds: [],
   guests: [],
   myRsvp: null,
   surveySlugs: [],
@@ -106,6 +107,88 @@ function renderSection(event: Event) {
 
 beforeEach(() => {
   rescindMutate.mockReset();
+});
+
+const ACCEPTED_COHOST_EVENT: Event = {
+  ...BASE_EVENT,
+  coHostIds: ['user-bob'],
+  coHostNames: ['Bob'],
+  coHostPhotoUrls: [''],
+  coHostInviteIds: ['inv-accepted-1'],
+};
+
+const COHOST_BOB: User = { ...CREATOR, id: 'user-bob', displayName: 'Bob' };
+
+describe('EventMemberSection — accepted host row', () => {
+  it('renders × on accepted co-host chip for host viewer', () => {
+    useAuthStore.setState({ status: 'authed', user: CREATOR, accessToken: 'tok' });
+    renderSection(ACCEPTED_COHOST_EVENT);
+    expect(
+      screen.getByRole('button', { name: /remove bob as co-host/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('does NOT render × on creator chip', () => {
+    useAuthStore.setState({ status: 'authed', user: CREATOR, accessToken: 'tok' });
+    renderSection(ACCEPTED_COHOST_EVENT);
+    // Creator chip is "Alice" — no × should appear next to it.
+    expect(
+      screen.queryByRole('button', { name: /remove alice as co-host/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does NOT render × on accepted co-host chip for outsider', () => {
+    useAuthStore.setState({ status: 'authed', user: STRANGER, accessToken: 'tok' });
+    renderSection(ACCEPTED_COHOST_EVENT);
+    expect(
+      screen.queryByRole('button', { name: /remove bob as co-host/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('host removal fires the mutation immediately (no confirm)', () => {
+    useAuthStore.setState({ status: 'authed', user: CREATOR, accessToken: 'tok' });
+    renderSection(ACCEPTED_COHOST_EVENT);
+    fireEvent.click(screen.getByRole('button', { name: /remove bob as co-host/i }));
+    expect(rescindMutate).toHaveBeenCalledWith(
+      { eventId: 'ev1', inviteId: 'inv-accepted-1' },
+      expect.any(Object),
+    );
+  });
+
+  it('shows step-down × when viewer is the cohost themselves', () => {
+    useAuthStore.setState({ status: 'authed', user: COHOST_BOB, accessToken: 'tok' });
+    renderSection(ACCEPTED_COHOST_EVENT);
+    expect(
+      screen.getByRole('button', { name: /step down as co-host/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('self-step-down shows confirm dialog and does NOT fire mutation until confirmed', async () => {
+    useAuthStore.setState({ status: 'authed', user: COHOST_BOB, accessToken: 'tok' });
+    renderSection(ACCEPTED_COHOST_EVENT);
+    fireEvent.click(screen.getByRole('button', { name: /step down as co-host/i }));
+    // Dialog appears; mutation has NOT fired yet.
+    expect(rescindMutate).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /^step down$/i })).toBeInTheDocument();
+    // Confirm.
+    fireEvent.click(screen.getByRole('button', { name: /^step down$/i }));
+    await waitFor(() => {
+      expect(rescindMutate).toHaveBeenCalledWith(
+        { eventId: 'ev1', inviteId: 'inv-accepted-1' },
+        expect.any(Object),
+      );
+    });
+  });
+
+  it('cancelling the step-down confirm does NOT fire the mutation', async () => {
+    useAuthStore.setState({ status: 'authed', user: COHOST_BOB, accessToken: 'tok' });
+    renderSection(ACCEPTED_COHOST_EVENT);
+    fireEvent.click(screen.getByRole('button', { name: /step down as co-host/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
+    // Give the promise chain a tick to resolve before asserting "didn't fire".
+    await Promise.resolve();
+    expect(rescindMutate).not.toHaveBeenCalled();
+  });
 });
 
 describe('EventMemberSection — pending host row', () => {
