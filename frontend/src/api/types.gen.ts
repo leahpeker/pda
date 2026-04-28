@@ -2547,6 +2547,11 @@ export interface components {
             /** Phone Number */
             phone_number: string;
             /**
+             * Sms Consent
+             * @default false
+             */
+            sms_consent: boolean;
+            /**
              * Website
              * @default
              */
@@ -6336,6 +6341,15 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

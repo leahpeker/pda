@@ -2427,6 +2427,11 @@
             "title": "Phone Number",
             "type": "string"
           },
+          "sms_consent": {
+            "default": false,
+            "title": "Sms Consent",
+            "type": "boolean"
+          },
           "website": {
             "default": "",
             "maxLength": 64,
@@ -8555,6 +8560,16 @@
               }
             },
             "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
             "content": {
