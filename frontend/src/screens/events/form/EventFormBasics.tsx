@@ -1,9 +1,10 @@
-// Always-visible zone: title, start + end, tbd toggle, poll button, location.
+// Always-visible zone: title, tbd toggle, start + end, poll button, location.
 // Description / visibility / event type moved into the details section.
 //
-// Layout order (when no poll/buffered dates): start/end pickers → tbd toggle
-// → centered "poll for dates" button. Toggling tbd disables (rather than
-// hides) the pickers so the toggle doesn't jump up when ticked.
+// Layout order (when no poll/buffered dates): tbd toggle → start/end pickers
+// → centered "poll for dates" button. The tbd toggle stays above the pickers
+// so checking it cleanly hides the picker row without making any control
+// below shift in place.
 //
 // Poll integration: the "poll for dates" button has two modes:
 //   - create-flow (no existing event): opens PollCreateDialog in buffer
@@ -84,29 +85,6 @@ export function EventFormBasics({
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DateTimePicker
-              label="starts"
-              value={values.startDatetime}
-              onChange={(iso) => {
-                onChange({ startDatetime: iso });
-              }}
-              error={errors.startDatetime}
-              disablePast
-              disabled={values.datetimeTbd}
-            />
-            <DateTimePicker
-              label="ends"
-              value={values.endDatetime}
-              onChange={(iso) => {
-                onChange({ endDatetime: iso });
-              }}
-              error={errors.endDatetime}
-              optional
-              disabled={values.datetimeTbd}
-            />
-          </div>
-
           <Toggle
             label="date & time tbd"
             checked={values.datetimeTbd}
@@ -114,6 +92,29 @@ export function EventFormBasics({
               onChange({ datetimeTbd: checked });
             }}
           />
+
+          {!values.datetimeTbd ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DateTimePicker
+                label="starts"
+                value={values.startDatetime}
+                onChange={(iso) => {
+                  onChange({ startDatetime: iso });
+                }}
+                error={errors.startDatetime}
+                disablePast
+              />
+              <DateTimePicker
+                label="ends"
+                value={values.endDatetime}
+                onChange={(iso) => {
+                  onChange({ endDatetime: iso });
+                }}
+                error={errors.endDatetime}
+                optional
+              />
+            </div>
+          ) : null}
 
           {canShowProposeButton ? (
             <Button
