@@ -84,8 +84,17 @@ export function EventForm({ existing }: Props) {
   const [values, setValues] = useState<EventFormValues>(() =>
     existing ? eventToFormValues(existing) : emptyEventFormValues(),
   );
+  // coHosts is picker-driven local state. We can't fully reconstruct
+  // MemberSearchResult from `existing` (no phone numbers in the event-out wire
+  // shape, by design), so it starts empty even on edit. To avoid clobbering
+  // server-side relations on edit-PATCH, we track whether the picker has been
+  // touched and only include co_host_ids in the payload when dirty. Untouched
+  // → key is omitted, BE preserves the existing list.
+  //
+  // Member invites are handled out-of-band by InviteDialog on the event page;
+  // the form doesn't manage invited_user_ids anymore.
   const [coHosts, setCoHosts] = useState<MemberSearchResult[]>([]);
-  const [invited, setInvited] = useState<MemberSearchResult[]>([]);
+  const [coHostsDirty, setCoHostsDirty] = useState(false);
   // On edit, pre-run validation so issues in the loaded values (e.g. a stale
   // draft whose start is now in the past) are visible immediately instead of
   // waiting for the first save attempt.
@@ -127,7 +136,6 @@ export function EventForm({ existing }: Props) {
     const merged: EventFormValues = {
       ...values,
       coHostIds: coHosts.map((m) => m.id),
-      invitedUserIds: invited.map((m) => m.id),
       status: nextStatus,
     };
     const errs = validateEventForm(merged);
@@ -148,12 +156,17 @@ export function EventForm({ existing }: Props) {
         // While a poll is active, the poll owns the time. Send a Partial
         // that omits start/end/tbd so useUpdateEvent's undefined-filter drops
         // them from the PATCH body (backend rejects those edits).
+        // Also drop coHostIds when the picker hasn't been touched: it's a
+        // many-to-many relation the form can't fully reconstruct from
+        // EventOut (no phone numbers on the wire), so an empty list would
+        // clobber whatever's already on the BE.
         const patchBody: Partial<EventFormValues> = timeLocked
           ? (() => {
               const { startDatetime: _s, endDatetime: _e, datetimeTbd: _t, ...rest } = merged;
               return rest;
             })()
-          : merged;
+          : { ...merged };
+        if (!coHostsDirty) delete patchBody.coHostIds;
         await update.mutateAsync(patchBody);
         if (nextStatus === 'draft') toast.success('saved draft');
         void navigate(`/events/${existing.id}`);
@@ -254,7 +267,10 @@ export function EventForm({ existing }: Props) {
           <MemberPicker
             label="co-hosts"
             selected={coHosts}
-            onChange={setCoHosts}
+            onChange={(next) => {
+              setCoHosts(next);
+              setCoHostsDirty(true);
+            }}
             excludeIds={user ? [user.id] : []}
             hint="co-hosts get an invite — once they accept, they can edit the event and manage rsvps"
           />
@@ -273,16 +289,6 @@ export function EventForm({ existing }: Props) {
           errors={errors}
           canTagOfficial={canTagOfficial}
         />
-        {values.visibility === 'invite_only' ? (
-          <div className="mt-4">
-            <MemberPicker
-              label="invited members"
-              selected={invited}
-              onChange={setInvited}
-              excludeIds={user ? [user.id, ...coHosts.map((m) => m.id)] : coHosts.map((m) => m.id)}
-            />
-          </div>
-        ) : null}
       </CollapsibleCard>
 
       <CollapsibleCard
