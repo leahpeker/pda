@@ -1,14 +1,17 @@
-// Always-visible zone: title, start + end, tbd toggle, location.
+// Always-visible zone: title, start + end, tbd toggle, poll button, location.
 // Description / visibility / event type moved into the details section.
 //
-// Poll integration: a "propose dates" button lives above the start/end
-// pickers. Two modes:
+// Layout order (when no poll/buffered dates): start/end pickers → tbd toggle
+// → centered "poll for dates" button. Toggling tbd disables (rather than
+// hides) the pickers so the toggle doesn't jump up when ticked.
+//
+// Poll integration: the "poll for dates" button has two modes:
 //   - create-flow (no existing event): opens PollCreateDialog in buffer
 //     mode; the parent queues Date[]s and fires them after useCreateEvent.
-//     Queued options hide the tbd toggle + pickers.
+//     Queued options replace the pickers + toggle with a summary card.
 //   - edit-flow (existing, no poll): opens PollCreateDialog in live mode,
 //     which POSTs immediately. Once the poll exists the parent re-renders
-//     with timeLocked=true and the create button disappears.
+//     with timeLocked=true and the button disappears.
 
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -81,17 +84,28 @@ export function EventFormBasics({
         />
       ) : (
         <>
-          {canShowProposeButton ? (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setPollOpen(true);
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <DateTimePicker
+              label="starts"
+              value={values.startDatetime}
+              onChange={(iso) => {
+                onChange({ startDatetime: iso });
               }}
-              className="self-start"
-            >
-              poll for dates
-            </Button>
-          ) : null}
+              error={errors.startDatetime}
+              disablePast
+              disabled={values.datetimeTbd}
+            />
+            <DateTimePicker
+              label="ends"
+              value={values.endDatetime}
+              onChange={(iso) => {
+                onChange({ endDatetime: iso });
+              }}
+              error={errors.endDatetime}
+              optional
+              disabled={values.datetimeTbd}
+            />
+          </div>
 
           <Toggle
             label="date & time tbd"
@@ -101,27 +115,16 @@ export function EventFormBasics({
             }}
           />
 
-          {!values.datetimeTbd ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <DateTimePicker
-                label="starts"
-                value={values.startDatetime}
-                onChange={(iso) => {
-                  onChange({ startDatetime: iso });
-                }}
-                error={errors.startDatetime}
-                disablePast
-              />
-              <DateTimePicker
-                label="ends"
-                value={values.endDatetime}
-                onChange={(iso) => {
-                  onChange({ endDatetime: iso });
-                }}
-                error={errors.endDatetime}
-                optional
-              />
-            </div>
+          {canShowProposeButton ? (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setPollOpen(true);
+              }}
+              className="self-center"
+            >
+              poll for dates
+            </Button>
           ) : null}
         </>
       )}
