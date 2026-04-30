@@ -3,12 +3,17 @@ import pytest
 
 @pytest.mark.django_db
 class TestCalendarToken:
-    def test_get_token_empty_before_generation(self, api_client, auth_headers):
+    def test_get_token_auto_generates_for_first_visit(self, api_client, auth_headers):
         resp = api_client.get("/api/community/calendar/token/", **auth_headers)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["token"] == ""
-        assert data["feed_url"] == ""
+        assert len(data["token"]) > 0
+        assert f"calendar/feed/?token={data['token']}" in data["feed_url"]
+
+    def test_get_token_is_idempotent(self, api_client, auth_headers):
+        first = api_client.get("/api/community/calendar/token/", **auth_headers).json()
+        second = api_client.get("/api/community/calendar/token/", **auth_headers).json()
+        assert first["token"] == second["token"]
 
     def test_generate_token(self, api_client, auth_headers):
         resp = api_client.post("/api/community/calendar/token/", **auth_headers)
