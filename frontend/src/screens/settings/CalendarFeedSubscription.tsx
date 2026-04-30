@@ -1,10 +1,12 @@
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import { useConfirm } from '@/components/ui/useConfirm';
 import { useCalendarToken, useRegenerateCalendarToken } from '@/api/calendar';
 
 export function CalendarFeedSubscription() {
   const tokenQ = useCalendarToken();
   const regenerate = useRegenerateCalendarToken();
+  const { confirm, element: confirmElement } = useConfirm();
 
   if (tokenQ.isPending) {
     return <p className="text-muted text-sm">loading feed link…</p>;
@@ -14,15 +16,31 @@ export function CalendarFeedSubscription() {
   }
 
   const feedUrl = tokenQ.data.feedUrl;
-  const hasUrl = Boolean(feedUrl);
 
   async function copyFeedUrl() {
-    if (!feedUrl) return;
     try {
       await navigator.clipboard.writeText(feedUrl);
       toast.success('feed link copied 🌱');
     } catch {
       toast.error("couldn't copy — try selecting the text");
+    }
+  }
+
+  async function handleRegenerate() {
+    const ok = await confirm({
+      title: 'revoke and create new link?',
+      message:
+        "this will break any calendar already subscribed to your old link — you'll need to resubscribe everywhere. only do this if your link leaked or you want to revoke shared access.",
+      confirmLabel: 'revoke and create new',
+      cancelLabel: 'cancel',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await regenerate.mutateAsync();
+      toast.success('new feed link generated 🌱');
+    } catch {
+      toast.error("couldn't regenerate feed link");
     }
   }
 
@@ -32,60 +50,30 @@ export function CalendarFeedSubscription() {
         subscribe to the community calendar in apple calendar, google calendar, etc — paste the
         private url once and it'll stay in sync. step-by-step instructions below.
       </p>
-      {hasUrl ? (
-        <>
-          <label className="text-muted text-xs" htmlFor="cal-feed-url">
-            feed url
-          </label>
-          <input
-            id="cal-feed-url"
-            readOnly
-            className="border-border bg-background text-foreground w-full rounded-md border px-3 py-2 font-mono text-xs"
-            value={feedUrl}
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" onClick={() => void copyFeedUrl()}>
-              copy link
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={regenerate.isPending}
-              onClick={() => {
-                void regenerate
-                  .mutateAsync()
-                  .then(() => {
-                    toast.success('new feed link generated 🌱');
-                  })
-                  .catch(() => {
-                    toast.error("couldn't regenerate feed link");
-                  });
-              }}
-            >
-              {regenerate.isPending ? 'generating…' : 'regenerate link'}
-            </Button>
-          </div>
-          <CalendarFeedHowTo />
-        </>
-      ) : (
+      <label className="text-muted text-xs" htmlFor="cal-feed-url">
+        feed url
+      </label>
+      <input
+        id="cal-feed-url"
+        readOnly
+        className="border-border bg-background text-foreground w-full rounded-md border px-3 py-2 font-mono text-xs"
+        value={feedUrl}
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="primary" onClick={() => void copyFeedUrl()}>
+          copy link
+        </Button>
         <Button
           type="button"
           variant="secondary"
           disabled={regenerate.isPending}
-          onClick={() => {
-            void regenerate
-              .mutateAsync()
-              .then(() => {
-                toast.success('feed link ready — copy it below 🌱');
-              })
-              .catch(() => {
-                toast.error("couldn't create feed link");
-              });
-          }}
+          onClick={() => void handleRegenerate()}
         >
-          {regenerate.isPending ? 'generating…' : 'create subscription link'}
+          {regenerate.isPending ? 'generating…' : 'revoke and create new link'}
         </Button>
-      )}
+      </div>
+      <CalendarFeedHowTo />
+      {confirmElement}
     </div>
   );
 }

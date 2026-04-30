@@ -28,14 +28,21 @@ def _build_feed_url(request: HttpRequest, token: str) -> str:
     return request.build_absolute_uri(f"/api/community/calendar/feed/?token={token}")
 
 
+def _rotate_calendar_token(user: UserModel) -> None:
+    user.calendar_token = secrets.token_urlsafe(32)
+    user.save(update_fields=["calendar_token"])
+
+
 @router.get("/calendar/token/", response={200: CalendarTokenOut}, auth=JWTAuth())
 def get_calendar_token(request):
     user = request.auth
+    if not user.calendar_token:
+        _rotate_calendar_token(user)
     return Status(
         200,
         CalendarTokenOut(
             token=user.calendar_token,
-            feed_url=_build_feed_url(request, user.calendar_token) if user.calendar_token else "",
+            feed_url=_build_feed_url(request, user.calendar_token),
         ),
     )
 
@@ -43,8 +50,7 @@ def get_calendar_token(request):
 @router.post("/calendar/token/", response={200: CalendarTokenOut}, auth=JWTAuth())
 def generate_calendar_token(request):
     user = request.auth
-    user.calendar_token = secrets.token_urlsafe(32)
-    user.save(update_fields=["calendar_token"])
+    _rotate_calendar_token(user)
     return Status(
         200,
         CalendarTokenOut(
