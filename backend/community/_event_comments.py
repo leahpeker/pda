@@ -212,8 +212,11 @@ def post_comment(request, event_id: UUID, payload: CommentBodyIn):
     user = request.auth
     _enforce_event_read_visibility(event, user)
     _require_rsvp_for_post(event, user)
+    from notifications.service import notify_event_comment
+
     with transaction.atomic():
         comment = EventComment.objects.create(event=event, author=user, body=payload.body)
+        notify_event_comment(comment)
     return Status(201, _comment_out(comment, event, user))
 
 

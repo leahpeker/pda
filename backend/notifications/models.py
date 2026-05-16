@@ -16,6 +16,7 @@ class NotificationType(models.TextChoices):
     WAITLIST_PROMOTED = "waitlist_promoted", "Waitlist Promoted"
     EVENT_FLAGGED = "event_flagged", "Event Flagged"
     COMMENT_REPLY = "comment_reply", "Comment Reply"
+    EVENT_COMMENT = "event_comment", "Event Comment"
 
 
 class Notification(models.Model):

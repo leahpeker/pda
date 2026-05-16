@@ -11,6 +11,7 @@ export const NotificationType = {
   WaitlistPromoted: 'waitlist_promoted',
   EventCancelled: 'event_cancelled',
   CommentReply: 'comment_reply',
+  EventComment: 'event_comment',
 } as const;
 
 export interface AppNotification {
