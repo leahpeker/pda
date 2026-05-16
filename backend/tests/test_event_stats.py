@@ -137,8 +137,8 @@ class TestCancellations:
         )
         rows = _cancellations(stats_event)
         assert len(rows) == 1
-        assert rows[0]["user_id"] == str(members[0].pk)
-        assert rows[0]["days_before_event"] == 3
+        assert rows[0].user_id == str(members[0].pk)
+        assert rows[0].days_before_event == 3
 
     def test_excludes_attending_users(self, stats_event, members):
         EventRSVP.objects.create(event=stats_event, user=members[0], status=RSVPStatus.ATTENDING)
@@ -148,7 +148,7 @@ class TestCancellations:
         )
         rows = _cancellations(stats_event)
         assert len(rows) == 1
-        assert rows[0]["user_id"] == str(members[1].pk)
+        assert rows[0].user_id == str(members[1].pk)
 
     def test_empty_when_no_start_datetime(self, host_user, members):
         event = Event.objects.create(

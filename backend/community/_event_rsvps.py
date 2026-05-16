@@ -241,6 +241,8 @@ def set_attendance(request, event_id: UUID, user_id: UUID, payload: AttendanceIn
     )
 
     event = _load_event_with_stats_prefetch(event_id)
+    if event is None:
+        raise_validation(Code.Event.NOT_FOUND, status_code=404)
     return Status(200, _event_out(event, request.auth))
 
 

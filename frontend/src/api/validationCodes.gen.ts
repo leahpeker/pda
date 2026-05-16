@@ -48,6 +48,14 @@ export const Code = {
     MinTwoOptions: 'poll.min_two_options',
     InvalidAvailability: 'poll.invalid_availability',
   },
+  Comment: {
+    NotFound: 'comment.not_found',
+    ReplyDepthExceeded: 'comment.reply_depth_exceeded',
+    InvalidEmoji: 'comment.invalid_emoji',
+    RsvpRequired: 'comment.rsvp_required',
+    PermDenied: 'comment.perm_denied',
+    EventMismatch: 'comment.event_mismatch',
+  },
   Url: {
     Invalid: 'url.invalid',
     PathRequired: 'url.path_required',
@@ -216,6 +224,12 @@ export type ValidationCode =
   | 'poll.winning_option_not_found'
   | 'poll.min_two_options'
   | 'poll.invalid_availability'
+  | 'comment.not_found'
+  | 'comment.reply_depth_exceeded'
+  | 'comment.invalid_emoji'
+  | 'comment.rsvp_required'
+  | 'comment.perm_denied'
+  | 'comment.event_mismatch'
   | 'url.invalid'
   | 'url.path_required'
   | 'url.scheme_must_be_http_or_https'
@@ -341,6 +355,12 @@ export const CODE_PARAMS: Record<ValidationCode, readonly string[]> = {
   'poll.winning_option_not_found': [],
   'poll.min_two_options': [],
   'poll.invalid_availability': [],
+  'comment.not_found': [],
+  'comment.reply_depth_exceeded': [],
+  'comment.invalid_emoji': [],
+  'comment.rsvp_required': [],
+  'comment.perm_denied': [],
+  'comment.event_mismatch': [],
   'url.invalid': [],
   'url.path_required': [],
   'url.scheme_must_be_http_or_https': [],

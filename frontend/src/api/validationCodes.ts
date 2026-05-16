@@ -144,6 +144,20 @@ function messageForKnownCode(code: KnownCode, err: FieldError): string {
     case Code.Poll.InvalidAvailability:
       return 'availability must be "yes", "maybe", or "no"';
 
+    // Comment
+    case Code.Comment.NotFound:
+      return 'comment not found';
+    case Code.Comment.ReplyDepthExceeded:
+      return "replies can't have replies";
+    case Code.Comment.InvalidEmoji:
+      return 'that emoji is not available';
+    case Code.Comment.RsvpRequired:
+      return 'rsvp to join the conversation';
+    case Code.Comment.PermDenied:
+      return "you don't have permission to do that";
+    case Code.Comment.EventMismatch:
+      return "that reply target isn't in this event";
+
     // URL
     case Code.Url.Invalid:
       return 'enter a valid url';

@@ -19,6 +19,8 @@ from community.models.choices import (
 if TYPE_CHECKING:
     from django.db.models import Manager
 
+    from community.models.cohost_invite import EventCoHostInvite
+    from community.models.comment import EventComment
     from community.models.poll import EventPoll
     from community.models.survey import Survey
 
@@ -71,6 +73,8 @@ class Event(models.Model):
         rsvps: "Manager[EventRSVP]"
         surveys: "Manager[Survey]"
         poll: "EventPoll"
+        comments: "Manager[EventComment]"
+        cohost_invites: "Manager[EventCoHostInvite]"
     created_by = models.ForeignKey(
         "users.User",
         null=True,

@@ -12,7 +12,12 @@ from community._cohost_invite_helpers import (
     get_my_pending_invite,
     get_pending_invites_for_event,
 )
-from community._event_schemas import EventOut, PendingCoHostInviteOut, RSVPGuestOut
+from community._event_schemas import (
+    CancellationOut,
+    EventOut,
+    PendingCoHostInviteOut,
+    RSVPGuestOut,
+)
 from community._shared import _authenticated_user, _members_only
 from community.models import AttendanceStatus, Event, EventRSVP, RSVPStatus, SurveyQuestionType
 
@@ -126,7 +131,7 @@ def _not_marked_count(event: Event) -> int:
     )
 
 
-def _cancellations(event: Event) -> list[dict]:
+def _cancellations(event: Event) -> list[CancellationOut]:
     """Return currently-CANT_GO RSVPs with inferred lead time (days before start).
 
     Lossy for users who flipped between statuses — uses updated_at as proxy.
@@ -135,16 +140,16 @@ def _cancellations(event: Event) -> list[dict]:
     if event.start_datetime is None:
         return []
     rows = [
-        {
-            "user_id": str(r.user_id),
-            "name": r.user.display_name or r.user.phone_number,
-            "cancelled_at": r.updated_at,
-            "days_before_event": (event.start_datetime - r.updated_at).days,
-        }
+        CancellationOut(
+            user_id=str(r.user_id),
+            name=r.user.display_name or r.user.phone_number,
+            cancelled_at=r.updated_at,
+            days_before_event=(event.start_datetime - r.updated_at).days,
+        )
         for r in event.rsvps.all()
         if r.status == RSVPStatus.CANT_GO
     ]
-    rows.sort(key=lambda x: x["cancelled_at"], reverse=True)
+    rows.sort(key=lambda x: x.cancelled_at, reverse=True)
     return rows
 
 
@@ -286,6 +291,14 @@ def _accepted_invite_ids_for_co_hosts(event: Event, co_hosts: list) -> list[str 
     return [str(invite_id_by_user[u.id]) if u.id in invite_id_by_user else None for u in co_hosts]
 
 
+def _resolve_comment_count(event: Event) -> int:
+    """Read the annotated comment_count, falling back to a per-event count query."""
+    annotated = getattr(event, "comment_count", None)
+    if annotated is not None:
+        return annotated
+    return event.comments.filter(deleted_at__isnull=True).count()
+
+
 def _event_out(event: Event, requesting_user=None) -> EventOut:
     co_hosts = list(event.co_hosts.all())
     creator = event.created_by
@@ -301,6 +314,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
     my_pending_invite = get_my_pending_invite(event, auth_user)
     my_pending_invite_id = str(my_pending_invite.id) if my_pending_invite else None
     co_host_invite_ids = _accepted_invite_ids_for_co_hosts(event, co_hosts)
+    comment_count = _resolve_comment_count(event)
     return EventOut(
         id=str(event.id),
         title=event.title,
@@ -324,6 +338,7 @@ def _event_out(event: Event, requesting_user=None) -> EventOut:
         attending_count=_attending_headcount(event),
         waitlisted_count=_waitlisted_count(event),
         invited_count=len(all_invited),
+        comment_count=comment_count,
         created_by_id=str(event.created_by_id) if event.created_by_id else None,
         created_by_name=_get_creator_name(creator),
         created_by_photo_url=media_path(creator.profile_photo) if creator else "",
