@@ -643,6 +643,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/community/events/{event_id}/comments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Comments */
+        get: operations["community__event_comments_list_comments"];
+        put?: never;
+        /** Post Comment */
+        post: operations["community__event_comments_post_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/community/events/{event_id}/comments/{comment_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Comment */
+        delete: operations["community__event_comments_delete_comment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/community/events/{event_id}/comments/{comment_id}/reactions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toggle Reaction */
+        post: operations["community__event_comments_toggle_reaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/community/events/{event_id}/comments/{comment_id}/replies/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Reply */
+        post: operations["community__event_comments_post_reply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/community/events/{event_id}/flag/": {
         parameters: {
             query?: never;
@@ -1583,6 +1652,20 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** CommentBodyIn */
+        CommentBodyIn: {
+            /** Body */
+            body: string;
+        };
+        /** CommentReactionSummaryOut */
+        CommentReactionSummaryOut: {
+            /** Count */
+            count: number;
+            /** Emoji */
+            emoji: string;
+            /** Reacted By Me */
+            reacted_by_me: boolean;
+        };
         /** DocFolderOut */
         DocFolderOut: {
             /** Children */
@@ -1740,6 +1823,65 @@ export interface components {
         ErrorReportOut: {
             /** Detail */
             detail: string;
+        };
+        /** EventCommentListOut */
+        EventCommentListOut: {
+            /** Can Post */
+            can_post: boolean;
+            /** Cannot Post Reason */
+            cannot_post_reason?: ("login_required" | "rsvp_required") | null;
+            /** Items */
+            items: components["schemas"]["EventCommentOut"][];
+        };
+        /** EventCommentOut */
+        EventCommentOut: {
+            /** Author Display Name */
+            author_display_name: string;
+            /** Author Id */
+            author_id: string;
+            /** Author Photo Url */
+            author_photo_url: string;
+            /** Body */
+            body: string;
+            /** Can Delete */
+            can_delete: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Is Deleted */
+            is_deleted: boolean;
+            /** Reactions */
+            reactions: components["schemas"]["CommentReactionSummaryOut"][];
+            /** Replies */
+            replies: components["schemas"]["EventCommentReplyOut"][];
+        };
+        /** EventCommentReplyOut */
+        EventCommentReplyOut: {
+            /** Author Display Name */
+            author_display_name: string;
+            /** Author Id */
+            author_id: string;
+            /** Author Photo Url */
+            author_photo_url: string;
+            /** Body */
+            body: string;
+            /** Can Delete */
+            can_delete: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Is Deleted */
+            is_deleted: boolean;
+            /** Reactions */
+            reactions: components["schemas"]["CommentReactionSummaryOut"][];
         };
         /** EventFlagIn */
         EventFlagIn: {
@@ -1907,6 +2049,11 @@ export interface components {
              * @default []
              */
             co_host_photo_urls: string[];
+            /**
+             * Comment Count
+             * @default 0
+             */
+            comment_count: number;
             /** Created By Id */
             created_by_id?: string | null;
             /** Created By Name */
@@ -2047,6 +2194,11 @@ export interface components {
              * @default []
              */
             co_host_photo_urls: string[];
+            /**
+             * Comment Count
+             * @default 0
+             */
+            comment_count: number;
             /** Created By Id */
             created_by_id?: string | null;
             /** Created By Name */
@@ -2810,6 +2962,11 @@ export interface components {
             has_plus_one: boolean;
             /** Status */
             status: string;
+        };
+        /** ReactionToggleIn */
+        ReactionToggleIn: {
+            /** Emoji */
+            emoji: string;
         };
         /** RefreshIn */
         RefreshIn: {
@@ -5020,6 +5177,282 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__event_comments_list_comments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventCommentListOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__event_comments_post_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentBodyIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventCommentOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__event_comments_delete_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__event_comments_toggle_reaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionToggleIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventCommentOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    community__event_comments_post_reply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentBodyIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventCommentReplyOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
