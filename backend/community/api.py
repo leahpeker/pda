@@ -7,6 +7,7 @@ from community._docs import router as docs_router
 from community._docs_documents import router as docs_documents_router
 from community._event_actions import router as event_actions_router
 from community._event_cohost_invites import router as event_cohost_invites_router
+from community._event_comments import router as event_comments_router
 from community._event_flags import router as event_flags_router
 
 # Re-export symbols imported directly in tests
@@ -54,6 +55,7 @@ router.add_router("", calendar_router)
 router.add_router("", welcome_template_router)
 router.add_router("", whatsapp_router)
 router.add_router("", polls_router)
+router.add_router("", event_comments_router)
 router.add_router("", surveys_router)
 router.add_router("", surveys_public_router)
 router.add_router("", docs_router)
