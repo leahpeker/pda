@@ -10,6 +10,7 @@ export const NotificationType = {
   MagicLinkRequest: 'magic_link_request',
   WaitlistPromoted: 'waitlist_promoted',
   EventCancelled: 'event_cancelled',
+  CommentReply: 'comment_reply',
 } as const;
 
 export interface AppNotification {
