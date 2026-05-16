@@ -369,3 +369,28 @@ def create_waitlist_promoted_notifications(
         ]
     )
     _notify_users(user_ids)
+
+
+def notify_comment_reply(reply) -> None:
+    """Notify the parent comment's author that someone replied to them.
+
+    No-op if `reply` is a top-level comment or if the replier is the
+    parent's author.
+    """
+    from notifications.models import Notification, NotificationType
+
+    if reply.parent_id is None:
+        return
+    parent_author_id = reply.parent.author_id
+    if str(parent_author_id) == str(reply.author_id):
+        return
+    replier_name = reply.author.display_name or reply.author.phone_number
+    event_title = reply.event.title
+    Notification.objects.create(
+        recipient_id=parent_author_id,
+        notification_type=NotificationType.COMMENT_REPLY,
+        event=reply.event,
+        related_user=reply.author,
+        message=f"{replier_name} replied to your comment on {event_title}",
+    )
+    _notify_users([str(parent_author_id)])
