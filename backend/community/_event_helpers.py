@@ -12,7 +12,12 @@ from community._cohost_invite_helpers import (
     get_my_pending_invite,
     get_pending_invites_for_event,
 )
-from community._event_schemas import EventOut, PendingCoHostInviteOut, RSVPGuestOut
+from community._event_schemas import (
+    CancellationOut,
+    EventOut,
+    PendingCoHostInviteOut,
+    RSVPGuestOut,
+)
 from community._shared import _authenticated_user, _members_only
 from community.models import AttendanceStatus, Event, EventRSVP, RSVPStatus, SurveyQuestionType
 
@@ -126,7 +131,7 @@ def _not_marked_count(event: Event) -> int:
     )
 
 
-def _cancellations(event: Event) -> list[dict]:
+def _cancellations(event: Event) -> list[CancellationOut]:
     """Return currently-CANT_GO RSVPs with inferred lead time (days before start).
 
     Lossy for users who flipped between statuses — uses updated_at as proxy.
@@ -135,16 +140,16 @@ def _cancellations(event: Event) -> list[dict]:
     if event.start_datetime is None:
         return []
     rows = [
-        {
-            "user_id": str(r.user_id),
-            "name": r.user.display_name or r.user.phone_number,
-            "cancelled_at": r.updated_at,
-            "days_before_event": (event.start_datetime - r.updated_at).days,
-        }
+        CancellationOut(
+            user_id=str(r.user_id),
+            name=r.user.display_name or r.user.phone_number,
+            cancelled_at=r.updated_at,
+            days_before_event=(event.start_datetime - r.updated_at).days,
+        )
         for r in event.rsvps.all()
         if r.status == RSVPStatus.CANT_GO
     ]
-    rows.sort(key=lambda x: x["cancelled_at"], reverse=True)
+    rows.sort(key=lambda x: x.cancelled_at, reverse=True)
     return rows
 
 
