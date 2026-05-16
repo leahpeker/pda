@@ -174,3 +174,42 @@ def post_comment(request, event_id: UUID, payload: CommentBodyIn):
     with transaction.atomic():
         comment = EventComment.objects.create(event=event, author=user, body=payload.body)
     return Status(201, _comment_out(comment, event, user))
+
+
+@router.post(
+    "/events/{event_id}/comments/{comment_id}/replies/",
+    response={
+        201: EventCommentReplyOut,
+        403: ErrorOut,
+        404: ErrorOut,
+        422: ErrorOut,
+        429: ErrorOut,
+    },
+    auth=JWTAuth(),
+)
+@rate_limit(key_func=lambda r: str(r.auth.pk), rate="10/m")
+def post_reply(request, event_id: UUID, comment_id: UUID, payload: CommentBodyIn):
+    try:
+        event = (
+            Event.objects.select_related("created_by")
+            .prefetch_related("co_hosts", "invited_users")
+            .get(id=event_id)
+        )
+    except Event.DoesNotExist:
+        raise_validation(Code.Event.NOT_FOUND, status_code=404)
+    user = request.auth
+    _enforce_event_read_visibility(event, user)
+    _require_rsvp_for_post(event, user)
+    try:
+        parent = EventComment.objects.get(id=comment_id, event=event)
+    except EventComment.DoesNotExist:
+        raise_validation(Code.Comment.NOT_FOUND, status_code=404)
+    if parent.deleted_at is not None:
+        raise_validation(Code.Comment.NOT_FOUND, status_code=404)
+    if parent.parent_id is not None:
+        raise_validation(Code.Comment.REPLY_DEPTH_EXCEEDED, status_code=422)
+    with transaction.atomic():
+        reply = EventComment.objects.create(
+            event=event, author=user, body=payload.body, parent=parent
+        )
+    return Status(201, _comment_reply_out(reply, event, user))

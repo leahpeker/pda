@@ -3,7 +3,8 @@
 import json
 
 import pytest
-from community.models import Event, EventRSVP, RSVPStatus
+from community.models import Event, EventComment, EventRSVP, RSVPStatus
+from django.utils import timezone
 
 from tests.conftest import future_iso
 
@@ -105,3 +106,48 @@ class TestPostComment:
             **rsvp_headers,
         )
         assert response.status_code == 422
+
+
+@pytest.mark.django_db
+class TestPostReply:
+    def test_reply_to_top_level_comment(self, api_client, rsvp_headers, event_with_rsvp, rsvp_user):
+        parent = EventComment.objects.create(event=event_with_rsvp, author=rsvp_user, body="parent")
+        response = api_client.post(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{parent.id}/replies/",
+            data=json.dumps({"body": "reply"}),
+            content_type="application/json",
+            **rsvp_headers,
+        )
+        assert response.status_code == 201, response.content
+        # The reply itself is returned (shape: EventCommentReplyOut)
+        body = response.json()
+        assert body["body"] == "reply"
+        assert body["is_deleted"] is False
+
+    def test_reply_to_reply_fails_422(self, api_client, rsvp_headers, event_with_rsvp, rsvp_user):
+        parent = EventComment.objects.create(event=event_with_rsvp, author=rsvp_user, body="parent")
+        reply = EventComment.objects.create(
+            event=event_with_rsvp, author=rsvp_user, body="reply", parent=parent
+        )
+        response = api_client.post(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{reply.id}/replies/",
+            data=json.dumps({"body": "nested"}),
+            content_type="application/json",
+            **rsvp_headers,
+        )
+        assert response.status_code == 422
+        assert response.json()["detail"][0]["code"] == "comment.reply_depth_exceeded"
+
+    def test_reply_to_deleted_parent_404(
+        self, api_client, rsvp_headers, event_with_rsvp, rsvp_user
+    ):
+        parent = EventComment.objects.create(event=event_with_rsvp, author=rsvp_user, body="parent")
+        parent.deleted_at = timezone.now()
+        parent.save(update_fields=["deleted_at"])
+        response = api_client.post(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{parent.id}/replies/",
+            data=json.dumps({"body": "reply"}),
+            content_type="application/json",
+            **rsvp_headers,
+        )
+        assert response.status_code == 404
