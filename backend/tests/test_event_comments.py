@@ -151,3 +151,101 @@ class TestPostReply:
             **rsvp_headers,
         )
         assert response.status_code == 404
+
+
+@pytest.fixture
+def admin_user(db):
+    from users.models import User
+    from users.roles import Role
+
+    user = User.objects.create_user(
+        phone_number="+12025550404",
+        password="adminpass123",
+        display_name="Admin",
+    )
+    admin_role, _ = Role.objects.get_or_create(name="admin", defaults={"is_default": True})
+    user.roles.add(admin_role)
+    return user
+
+
+@pytest.fixture
+def admin_headers(admin_user):
+    from ninja_jwt.tokens import RefreshToken
+
+    refresh = RefreshToken.for_user(admin_user)
+    return {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}
+
+
+@pytest.mark.django_db
+class TestDeleteComment:
+    def test_author_can_delete_own(self, api_client, rsvp_headers, event_with_rsvp, rsvp_user):
+        comment = EventComment.objects.create(event=event_with_rsvp, author=rsvp_user, body="mine")
+        response = api_client.delete(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{comment.id}/",
+            **rsvp_headers,
+        )
+        assert response.status_code == 204
+        comment.refresh_from_db()
+        assert comment.deleted_at is not None
+
+    def test_other_rsvper_cannot_delete(self, api_client, event_with_rsvp):
+        from ninja_jwt.tokens import RefreshToken
+        from users.models import User
+
+        # A plain RSVP'd member who is not the event creator or admin
+        bystander = User.objects.create_user(
+            phone_number="+12025550606",
+            password="bystanderpass",
+            display_name="Bystander",
+        )
+        EventRSVP.objects.create(event=event_with_rsvp, user=bystander, status=RSVPStatus.ATTENDING)
+        bystander_headers = {
+            "HTTP_AUTHORIZATION": f"Bearer {RefreshToken.for_user(bystander).access_token}"
+        }
+
+        author = User.objects.create_user(
+            phone_number="+12025550505",
+            password="authorpass",
+            display_name="Author",
+        )
+        EventRSVP.objects.create(event=event_with_rsvp, user=author, status=RSVPStatus.ATTENDING)
+        comment = EventComment.objects.create(event=event_with_rsvp, author=author, body="theirs")
+        response = api_client.delete(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{comment.id}/",
+            **bystander_headers,
+        )
+        assert response.status_code == 403
+
+    def test_event_creator_can_delete_others(self, api_client, auth_headers, event, rsvp_user):
+        # event.created_by is test_user (auth_headers); comment is by rsvp_user
+        comment = EventComment.objects.create(event=event, author=rsvp_user, body="theirs")
+        response = api_client.delete(
+            f"/api/community/events/{event.id}/comments/{comment.id}/",
+            **auth_headers,
+        )
+        assert response.status_code == 204
+        comment.refresh_from_db()
+        assert comment.deleted_at is not None
+
+    def test_admin_can_delete_others(self, api_client, admin_headers, event, rsvp_user):
+        comment = EventComment.objects.create(event=event, author=rsvp_user, body="theirs")
+        response = api_client.delete(
+            f"/api/community/events/{event.id}/comments/{comment.id}/",
+            **admin_headers,
+        )
+        assert response.status_code == 204
+
+    def test_double_delete_is_idempotent(
+        self, api_client, rsvp_headers, event_with_rsvp, rsvp_user
+    ):
+        comment = EventComment.objects.create(event=event_with_rsvp, author=rsvp_user, body="mine")
+        first = api_client.delete(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{comment.id}/",
+            **rsvp_headers,
+        )
+        second = api_client.delete(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{comment.id}/",
+            **rsvp_headers,
+        )
+        assert first.status_code == 204
+        assert second.status_code == 204

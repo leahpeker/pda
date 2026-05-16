@@ -5,6 +5,7 @@ from uuid import UUID
 from config.media_proxy import media_path
 from config.ratelimit import rate_limit
 from django.db import transaction
+from django.utils import timezone
 from ninja import Router
 from ninja.responses import Status
 from ninja_jwt.authentication import JWTAuth
@@ -213,3 +214,33 @@ def post_reply(request, event_id: UUID, comment_id: UUID, payload: CommentBodyIn
             event=event, author=user, body=payload.body, parent=parent
         )
     return Status(201, _comment_reply_out(reply, event, user))
+
+
+@router.delete(
+    "/events/{event_id}/comments/{comment_id}/",
+    response={204: None, 403: ErrorOut, 404: ErrorOut, 429: ErrorOut},
+    auth=JWTAuth(),
+)
+@rate_limit(key_func=lambda r: str(r.auth.pk), rate="10/m")
+def delete_comment(request, event_id: UUID, comment_id: UUID):
+    try:
+        event = (
+            Event.objects.select_related("created_by")
+            .prefetch_related("co_hosts", "invited_users")
+            .get(id=event_id)
+        )
+    except Event.DoesNotExist:
+        raise_validation(Code.Event.NOT_FOUND, status_code=404)
+    user = request.auth
+    _enforce_event_read_visibility(event, user)
+    try:
+        comment = EventComment.objects.get(id=comment_id, event=event)
+    except EventComment.DoesNotExist:
+        raise_validation(Code.Comment.NOT_FOUND, status_code=404)
+    if not _can_delete_comment(event, comment, user):
+        raise_validation(Code.Comment.PERM_DENIED, status_code=403, action="delete_comment")
+    if comment.deleted_at is None:
+        with transaction.atomic():
+            comment.deleted_at = timezone.now()
+            comment.save(update_fields=["deleted_at", "updated_at"])
+    return Status(204, None)
