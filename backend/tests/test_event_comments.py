@@ -164,6 +164,9 @@ def admin_user(db):
         display_name="Admin",
     )
     admin_role, _ = Role.objects.get_or_create(name="admin", defaults={"is_default": True})
+    if not admin_role.is_default:
+        admin_role.is_default = True
+        admin_role.save(update_fields=["is_default"])
     user.roles.add(admin_role)
     return user
 
@@ -234,6 +237,13 @@ class TestDeleteComment:
             **admin_headers,
         )
         assert response.status_code == 204
+
+    def test_delete_requires_auth(self, api_client, event_with_rsvp, rsvp_user):
+        comment = EventComment.objects.create(event=event_with_rsvp, author=rsvp_user, body="mine")
+        response = api_client.delete(
+            f"/api/community/events/{event_with_rsvp.id}/comments/{comment.id}/"
+        )
+        assert response.status_code == 401
 
     def test_double_delete_is_idempotent(
         self, api_client, rsvp_headers, event_with_rsvp, rsvp_user
