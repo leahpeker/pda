@@ -191,7 +191,7 @@ function toggleOnRow<T extends EventCommentReply>(row: T, commentId: string, emo
   if (row.id !== commentId) return row;
   const existing = row.reactions.find((r) => r.emoji === emoji);
   let next = row.reactions.slice();
-  if (existing && existing.reactedByMe) {
+  if (existing?.reactedByMe) {
     next = next
       .map((r) =>
         r.emoji === emoji ? { ...r, count: r.count - 1, reactedByMe: false } : r,
