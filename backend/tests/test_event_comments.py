@@ -3,7 +3,14 @@
 import json
 
 import pytest
-from community.models import Event, EventComment, EventCommentReaction, EventRSVP, RSVPStatus
+from community.models import (
+    Event,
+    EventComment,
+    EventCommentReaction,
+    EventRSVP,
+    PageVisibility,
+    RSVPStatus,
+)
 from django.utils import timezone
 
 from tests.conftest import future_iso
@@ -354,3 +361,47 @@ class TestReactionToggle:
         )
         assert r.status_code == 429
         assert r.json()["detail"][0]["code"] == "rate.limited"
+
+
+@pytest.mark.django_db
+class TestCommentVisibility:
+    def test_invite_only_non_invitee_cannot_list(self, api_client, db, rsvp_user, rsvp_headers):
+        creator = rsvp_user  # using rsvp_user as the event creator
+        from ninja_jwt.tokens import RefreshToken
+        from users.models import User
+
+        stranger = User.objects.create_user(
+            phone_number="+12025550606",
+            password="strangerpass",
+            display_name="Stranger",
+        )
+        refresh = RefreshToken.for_user(stranger)
+        stranger_headers = {"HTTP_AUTHORIZATION": f"Bearer {refresh.access_token}"}
+        event = Event.objects.create(
+            title="Invite-only",
+            start_datetime=future_iso(days=30),
+            created_by=creator,
+            visibility=PageVisibility.INVITE_ONLY,
+        )
+        response = api_client.get(
+            f"/api/community/events/{event.id}/comments/",
+            **stranger_headers,
+        )
+        # _can_see_invite_only returns False → _enforce_event_read_visibility
+        # raises Code.Event.INVITE_ONLY with status 403.
+        assert response.status_code == 403
+
+    def test_invite_only_invitee_can_list(self, api_client, db, rsvp_user, rsvp_headers):
+        creator = rsvp_user
+        event = Event.objects.create(
+            title="Invite-only",
+            start_datetime=future_iso(days=30),
+            created_by=creator,
+            visibility=PageVisibility.INVITE_ONLY,
+        )
+        # rsvp_user is the creator, so they can always see
+        response = api_client.get(
+            f"/api/community/events/{event.id}/comments/",
+            **rsvp_headers,
+        )
+        assert response.status_code == 200
